@@ -1,0 +1,40 @@
+<project name="NGSUtils">
+    <property name="lib.dir" value="lib"/>
+    <property name="build.dir" value="build"/>
+    <property name="dist.dir" value="dist"/>
+    <property name="src.dir" value="src"/>
+	
+    <target name="clean">
+        <delete dir="${build.dir}"/>
+        <delete dir="${dist.dir}"/>
+    </target>
+
+	<path id="classpath">
+        <fileset dir="${lib.dir}" includes="**/*.jar"/>
+    </path>
+
+	<target name="compile">
+        <mkdir dir="${build.dir}/classes"/>
+        <javac srcdir="${src.dir}" destdir="${build.dir}/classes" classpathref="classpath"/>
+        <path location="${lib.dir}/jewelcli-0.8.9.jar"/>
+    </target>
+
+	<target name="jar" depends="compile">
+		<mkdir dir="${dist.dir}"/>
+	    <taskdef name="jarjar" classname="com.tonicsystems.jarjar.JarJarTask"
+	        classpath="${lib.dir}/jarjar-1.4.jar"/>
+	    <jarjar jarfile="${dist.dir}/NGSUtils.jar">
+            <manifest>
+                <attribute name="Main-Class" value="org.ngsutils.NGSUtils"/>
+            </manifest>
+	        <zipfileset src="${lib.dir}/objenesis-2.1.jar"/>
+	        <zipfileset src="${lib.dir}/jewelcli-0.8.9.jar"/>
+	        <fileset dir="${build.dir}/classes"/>
+	    </jarjar>
+	</target>
+	
+    <target name="run">
+        <java jar="${dist.dir}/NGSUtils.jar" fork="true"/>
+    </target>
+</project>
+
