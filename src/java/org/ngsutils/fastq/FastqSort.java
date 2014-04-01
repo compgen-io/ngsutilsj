@@ -115,6 +115,7 @@ public class FastqSort implements NGSExec {
 		writeTemp(buffer);
 		buffer.clear();
 		if (verbose) {
+			System.err.println("Total reads: "+readCount);
 			System.err.println("Total number of subfiles: "+tempFiles.size());
 			System.err.println("Merging subfiles...");
 		}
@@ -124,6 +125,9 @@ public class FastqSort implements NGSExec {
 			iterators.add(new FastqReader(tmpname).iterator());
 			buffer.add(null);
 		}
+
+		readCount = 0;
+		int j = 0;
 
 		while (addedRead) {
 			ArrayList<Pair<String, Integer>> sortList = new ArrayList<Pair<String, Integer>>();
@@ -161,10 +165,17 @@ public class FastqSort implements NGSExec {
 				buffer.get(bestIdx).write(out);
 				buffer.set(bestIdx, null);
 			} else {
+				// Nothing left to read from files... just write them all.
 				for (Pair<String, Integer> pair : sortList) {
 					buffer.get(pair.two).write(out);
 				}
 			}
+			if (j >= bufferSize && verbose) {
+				j = 0;
+				System.err.println("Merged: "+j);
+			}
+			j++;
+
 		}
 	}
 

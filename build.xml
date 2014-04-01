@@ -1,4 +1,4 @@
-<project name="ngsutilsj">
+<project name="ngsutilsj" default="jar">
     <property name="lib.dir" value="lib"/>
     <property name="build.dir" value="build"/>
     <property name="dist.dir" value="dist"/>
@@ -31,6 +31,12 @@
 	        <zipfileset src="${lib.dir}/jewelcli-0.8.9.jar"/>
 	        <fileset dir="${build.dir}/classes"/>
 	    </jarjar>
+        <delete file="${dist.dir}/ngsutilsj"/>
+ 		<concat destfile="${dist.dir}/ngsutilsj" binary="true">
+ 		     <fileset file="${src.dir}/scripts/ngsutilsj.sh" />
+ 		     <fileset file="${dist.dir}/ngsutilsj.jar" />
+ 		</concat>
+		<chmod file="${dist.dir}/ngsutilsj" perm="755"/>
 	</target>
 </project>
 

@@ -5,7 +5,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.ngsutils.fastq.FastqMerge;
 import org.ngsutils.fastq.FastqSort;
+import org.ngsutils.fastq.FastqSplit;
 
 import com.lexicalscope.jewel.cli.ArgumentValidationException;
 import com.lexicalscope.jewel.cli.Cli;
@@ -16,6 +18,8 @@ public class NGSUtils {
 	static private Map<String, Class<NGSExec>> execs = new HashMap<String, Class<NGSExec>>();
 	static {
 		loadExec(FastqSort.class);
+		loadExec(FastqMerge.class);
+		loadExec(FastqSplit.class);
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -81,7 +85,9 @@ public class NGSUtils {
 			} catch (HelpRequestedException e) {
 				System.err.println(e.getMessage());	
 			}   catch(ArgumentValidationException e) {
-				System.err.println(e);
+				System.err.println(e.getMessage());
+				Cli<NGSExec> result0 = CliFactory.createCli(execs.get(args[0]));
+				System.err.println(result0.getHelpMessage());
 			}
 		} else {
 			usage("Unknown command: "+args[0]);

@@ -2,6 +2,7 @@ package org.ngsutils.fastq;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -19,12 +20,26 @@ public class FastqReader implements Iterable<FastqRead> {
 		if (filename.endsWith(".gz")) {
 			in = new BufferedReader(new InputStreamReader(new GZIPInputStream(
 					new FileInputStream(filename))));
+		} else if (filename.equals("-")) {
+			in = new BufferedReader(new InputStreamReader(
+					new BufferedInputStream(System.in)));
 		} else {
 			in = new BufferedReader(new InputStreamReader(
 					new BufferedInputStream(new FileInputStream(filename))));
 		}
 	}
 
+	public FastqReader(File file) throws IOException {
+		filename = file.getName();
+		if (filename.endsWith(".gz")) {
+			in = new BufferedReader(new InputStreamReader(new GZIPInputStream(
+					new FileInputStream(file))));
+		} else {
+			in = new BufferedReader(new InputStreamReader(
+					new BufferedInputStream(new FileInputStream(file))));
+		}
+	}
+	
 	@Override
 	public Iterator<FastqRead> iterator() {
 		nextRead = FastqRead.read(in);
