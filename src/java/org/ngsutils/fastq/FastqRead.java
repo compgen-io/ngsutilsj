@@ -11,7 +11,13 @@ public class FastqRead {
 	private String seq;
 	private String qual;
 	
-	public FastqRead(String name, String comment, String seq, String qual) {
+	public FastqRead(String name, String seq, String qual) {
+		this.name = name;
+		this.comment = null;
+		this.seq = seq;
+		this.qual = qual;		
+	}
+	public FastqRead(String name, String seq, String qual, String comment) {
 		this.name = name;
 		if (comment != null && !comment.equals("")) {
 			this.comment = comment;
@@ -56,7 +62,7 @@ public class FastqRead {
 			if (qual == null) {
 				return null;
 			}
-			return new FastqRead(name, comment, seq, qual);
+			return new FastqRead(name, seq, qual, comment);
 		} catch (IOException e) {
 			return null;
 		}
