@@ -20,8 +20,8 @@ import com.lexicalscope.jewel.cli.CommandLineInterface;
 import com.lexicalscope.jewel.cli.Option;
 import com.lexicalscope.jewel.cli.Unparsed;
 
-@CommandLineInterface(application="ngsutils fastqsort")
-@Command(name="fastqsort", desc="Sorts a FASTQ file")
+@CommandLineInterface(application="ngsutils fastq-sort")
+@Command(name="fastq-sort", desc="Sorts a FASTQ file", cat="fastq")
 public class FastqSort implements NGSExec {
 	private FastqReader reader;
 

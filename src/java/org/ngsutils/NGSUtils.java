@@ -1,6 +1,8 @@
 package org.ngsutils;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -48,15 +50,34 @@ public class NGSUtils {
 				minsize = cmd.length();
 			}
 		}
+		Map<String, List<String>> progs = new HashMap<String, List<String>>();
+		
 		for (String cmd : execs.keySet()) {
 			Command c = execs.get(cmd).getAnnotation(Command.class);
+			
+			if (!progs.containsKey(c.cat())) {
+				progs.put(c.cat(), new ArrayList<String>());
+			}
+			
 			spacer = "";
 			for (int i=cmd.length(); i< minsize; i++) {
 				spacer += " ";
 			}
 			spacer += " - ";
-			System.err.println("  "+ cmd + spacer + c.desc());
+			progs.get(c.cat()).add("  "+ cmd + spacer + c.desc());
 		}
+
+		List<String> cats = new ArrayList<String>(progs.keySet());
+		Collections.sort(cats);
+		
+		for (String cat: cats) {
+			System.err.println("["+cat+"]");
+			Collections.sort(progs.get(cat));
+			for (String line: progs.get(cat)) {
+				System.err.println(line);
+			}
+		}
+		
 		System.err.println("");
 		spacer = "";
 		for (int i=12; i< minsize; i++) {

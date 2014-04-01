@@ -17,7 +17,7 @@ import com.lexicalscope.jewel.cli.Option;
 import com.lexicalscope.jewel.cli.Unparsed;
 
 @CommandLineInterface(application = "ngsutils fastq-split")
-@Command(name = "fastq-split", desc = "Splits an interlaced FASTQ file by read number.")
+@Command(name = "fastq-split", desc = "Splits an interlaced FASTQ file by read number.", cat="fastq")
 public class FastqSplit implements NGSExec {
 	private FastqReader reader;
 
@@ -35,12 +35,12 @@ public class FastqSplit implements NGSExec {
 		this.reader = new FastqReader(filename);
 	}
 
-	@Option(description = "Export read 1", shortName = "R1")
+	@Option(description = "Export read 1", shortName = "1", longName="read1")
 	public void setReadOne(boolean value) {
 		this.readOne = value;
 	}
 
-	@Option(description = "Export read 2", shortName = "R2")
+	@Option(description = "Export read 2", shortName = "2", longName="read2")
 	public void setReadTwo(boolean value) {
 		this.readTwo = value;
 	}
