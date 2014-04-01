@@ -12,8 +12,8 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.zip.GZIPOutputStream;
 
-import org.ngsutils.Command;
-import org.ngsutils.NGSExec;
+import org.ngsutils.cli.Command;
+import org.ngsutils.cli.NGSExec;
 import org.ngsutils.support.Pair;
 
 import com.lexicalscope.jewel.cli.CommandLineInterface;

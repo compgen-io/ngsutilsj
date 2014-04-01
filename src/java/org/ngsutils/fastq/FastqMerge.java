@@ -9,8 +9,8 @@ import java.io.OutputStream;
 import java.util.List;
 import java.util.zip.GZIPOutputStream;
 
-import org.ngsutils.Command;
-import org.ngsutils.NGSExec;
+import org.ngsutils.cli.Command;
+import org.ngsutils.cli.NGSExec;
 import org.ngsutils.support.Counter;
 import org.ngsutils.support.IterUtils;
 

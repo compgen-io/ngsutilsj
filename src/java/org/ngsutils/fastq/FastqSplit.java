@@ -6,9 +6,9 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.zip.GZIPOutputStream;
 
-import org.ngsutils.Command;
-import org.ngsutils.NGSExec;
 import org.ngsutils.NGSUtilsException;
+import org.ngsutils.cli.Command;
+import org.ngsutils.cli.NGSExec;
 
 import com.lexicalscope.jewel.cli.CommandLineInterface;
 import com.lexicalscope.jewel.cli.Option;

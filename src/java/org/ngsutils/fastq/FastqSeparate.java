@@ -6,10 +6,8 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.zip.GZIPOutputStream;
 
-import org.ngsutils.Command;
-import org.ngsutils.NGSExec;
-import org.ngsutils.fastq.FastqRead;
-import org.ngsutils.fastq.FastqReader;
+import org.ngsutils.cli.Command;
+import org.ngsutils.cli.NGSExec;
 import org.ngsutils.support.Counter;
 
 import com.lexicalscope.jewel.cli.CommandLineInterface;

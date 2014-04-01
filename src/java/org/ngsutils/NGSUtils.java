@@ -7,6 +7,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.ngsutils.cli.Command;
+import org.ngsutils.cli.NGSExec;
 import org.ngsutils.fastq.FastqMerge;
 import org.ngsutils.fastq.FastqSeparate;
 import org.ngsutils.fastq.FastqSort;
