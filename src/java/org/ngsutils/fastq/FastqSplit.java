@@ -8,23 +8,20 @@ import java.util.zip.GZIPOutputStream;
 
 import org.ngsutils.Command;
 import org.ngsutils.NGSExec;
-import org.ngsutils.fastq.FastqRead;
-import org.ngsutils.fastq.FastqReader;
-import org.ngsutils.support.Counter;
+import org.ngsutils.NGSUtilsException;
 
 import com.lexicalscope.jewel.cli.CommandLineInterface;
 import com.lexicalscope.jewel.cli.Option;
 import com.lexicalscope.jewel.cli.Unparsed;
 
-@CommandLineInterface(application = "ngsutils fastq-split")
-@Command(name = "fastq-split", desc = "Splits an interlaced FASTQ file by read number.", cat="fastq")
+@CommandLineInterface(application = "ngsutilsj fastq-split")
+@Command(name = "fastq-split", desc = "Splits an FASTQ file into smaller files", cat="fastq")
 public class FastqSplit implements NGSExec {
 	private FastqReader reader;
 
-	private boolean readOne = false;
-	private boolean readTwo = false;
-	private String outputName = "-";
+	private String outputTemplate = null;
 	private boolean compressOuput = false;
+	private int num = 2;
 	private boolean verbose = false;
 
 	public FastqSplit() {
@@ -35,19 +32,14 @@ public class FastqSplit implements NGSExec {
 		this.reader = new FastqReader(filename);
 	}
 
-	@Option(description = "Export read 1", shortName = "1", longName="read1")
-	public void setReadOne(boolean value) {
-		this.readOne = value;
+	@Option(description = "Number of subfiles to split into", shortName = "n", longName="num")
+	public void setNum(int num) {
+		this.num = num;
 	}
 
-	@Option(description = "Export read 2", shortName = "2", longName="read2")
-	public void setReadTwo(boolean value) {
-		this.readTwo = value;
-	}
-
-	@Option(description = "Output filename (default: stdout)", shortName = "o", defaultValue = "-", longName = "output")
-	public void setOutputName(String outputName) throws IOException {
-		this.outputName = outputName;
+	@Option(description = "Output filename template", shortName = "o", defaultToNull=true, longName = "output")
+	public void setOutputTemplate(String outputTemplate) throws IOException {
+		this.outputTemplate = outputTemplate;
 	}
 
 	@Option(helpRequest = true, description = "Display help", shortName = "h")
@@ -65,45 +57,51 @@ public class FastqSplit implements NGSExec {
 	}
 
 	public void split() throws IOException {
-		final OutputStream out;
-		if (outputName.equals("-")) {
-			out = System.out;
-		} else if (compressOuput) {
-			out = new GZIPOutputStream(new FileOutputStream(outputName));
+		final OutputStream[] outs = new OutputStream[num];
+		for (int i=0; i<num; i++) {
+			if (compressOuput) {
+				outs[i] = new GZIPOutputStream(new FileOutputStream(outputTemplate+"."+i+".fastq.gz"));
 
-		} else {
-			out = new BufferedOutputStream(new FileOutputStream(outputName));
+			} else {
+				outs[i] = new BufferedOutputStream(new FileOutputStream(outputTemplate+"."+i+".fastq"));
+			}
 		}
 
 		if (verbose) {
 			System.err.println("Spliting file:" + reader.getFilename());
-			if (readOne) {
-				System.err.println("Exporting read 1");
-			} else {
-				System.err.println("Exporting read 1");
-			}
+			System.err.println("Output template:" + outputTemplate);
 		}
 
-		Counter counter = new Counter();
-		boolean isRead1 = true;
+		int i = -1;
+		String lastName = null;
 		for (FastqRead read : reader) {
-			if (readOne && isRead1) {
-				counter.incr();
-				read.write(out);
-			} else if (readTwo && !isRead1) {
-				counter.incr();
-				read.write(out);
+			if (read.getName().equals(lastName)) {
+				read.write(outs[i]);
+			} else {
+				i++;
+				if (i >= num) {
+					i = 0;
+				}
+				read.write(outs[i]);
+				lastName = read.getName();
 			}
-			isRead1 = !isRead1;
-		}
-		
-		if (verbose) {
-			System.err.println("Total reads: " + counter.getValue());
-		}
+		}	
 	}
 
 	@Override
 	public void exec() throws Exception {
+		if (outputTemplate == null) {
+			if (reader.getFilename().equals("-")) {
+				throw new NGSUtilsException("You must specify an output template if reading from stdin");
+			}
+			if (reader.getFilename().contains(".fastq")) {
+				outputTemplate = reader.getFilename().substring(0, reader.getFilename().indexOf(".fastq"));
+			} else if (reader.getFilename().contains(".fq")) {
+				outputTemplate = reader.getFilename().substring(0, reader.getFilename().indexOf(".fq"));
+			} else {
+				outputTemplate = reader.getFilename();
+			}
+		}
 		split();
 	}
 }

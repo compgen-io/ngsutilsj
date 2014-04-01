@@ -8,11 +8,11 @@ import java.util.List;
 import java.util.Map;
 
 import org.ngsutils.fastq.FastqMerge;
+import org.ngsutils.fastq.FastqSeparate;
 import org.ngsutils.fastq.FastqSort;
 import org.ngsutils.fastq.FastqSplit;
 
 import com.lexicalscope.jewel.cli.ArgumentValidationException;
-import com.lexicalscope.jewel.cli.Cli;
 import com.lexicalscope.jewel.cli.CliFactory;
 import com.lexicalscope.jewel.cli.HelpRequestedException;
 
@@ -21,9 +21,10 @@ public class NGSUtils {
 	static {
 		loadExec(FastqSort.class);
 		loadExec(FastqMerge.class);
+		loadExec(FastqSeparate.class);
 		loadExec(FastqSplit.class);
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	private static void loadExec(Class<?> cls) {
 		String name = cls.getName().toLowerCase();
@@ -37,11 +38,16 @@ public class NGSUtils {
 	public static void usage() {
 		usage(null);
 	}
+
 	public static void usage(String msg) {
 		if (msg != null) {
 			System.err.println(msg);
 			System.err.println();
 		}
+		System.err.println("NGSUtilsJ - Tools for processing NGS datafiles");
+		System.err.println("");
+		System.err.println("Usage: ngsutilsj cmd {options}");
+		System.err.println("");
 		System.err.println("Available commands:");
 		int minsize = 12;
 		String spacer = "            ";
@@ -51,42 +57,54 @@ public class NGSUtils {
 			}
 		}
 		Map<String, List<String>> progs = new HashMap<String, List<String>>();
-		
+
 		for (String cmd : execs.keySet()) {
 			Command c = execs.get(cmd).getAnnotation(Command.class);
-			
-			if (!progs.containsKey(c.cat())) {
-				progs.put(c.cat(), new ArrayList<String>());
+			if (c != null) {
+				if (!progs.containsKey(c.cat())) {
+					progs.put(c.cat(), new ArrayList<String>());
+				}
+
+				if (!c.desc().equals("")) {
+					spacer = "";
+					for (int i = cmd.length(); i < minsize; i++) {
+						spacer += " ";
+					}
+					spacer += " - ";
+					progs.get(c.cat()).add("  " + cmd + spacer + c.desc());
+				} else {
+					progs.get(c.cat()).add("  " + cmd);
+				}
+			} else {
+				if (!progs.containsKey("General")) {
+					progs.put("General", new ArrayList<String>());
+				}
+				progs.get("General").add("  " + cmd);
+
 			}
-			
-			spacer = "";
-			for (int i=cmd.length(); i< minsize; i++) {
-				spacer += " ";
-			}
-			spacer += " - ";
-			progs.get(c.cat()).add("  "+ cmd + spacer + c.desc());
 		}
 
 		List<String> cats = new ArrayList<String>(progs.keySet());
 		Collections.sort(cats);
-		
-		for (String cat: cats) {
-			System.err.println("["+cat+"]");
+
+		for (String cat : cats) {
+			System.err.println("[" + cat + "]");
 			Collections.sort(progs.get(cat));
-			for (String line: progs.get(cat)) {
+			for (String line : progs.get(cat)) {
 				System.err.println(line);
 			}
 		}
-		
+
 		System.err.println("");
 		spacer = "";
-		for (int i=12; i< minsize; i++) {
+		for (int i = 12; i < minsize; i++) {
 			spacer += " ";
 		}
 		spacer += " - ";
-		System.err.println("  help command" + spacer + "Help message for the given command");
+		System.err.println("  help command" + spacer
+				+ "Help message for the given command");
 	}
-	
+
 	public static void main(String[] args) throws Exception {
 		if (args.length == 0) {
 			usage();
@@ -94,24 +112,51 @@ public class NGSUtils {
 			if (args.length == 1) {
 				usage();
 			} else {
-//				NGSExec exec = CliFactory.parseArgumentsUsingInstance(execs.get(args[0]).newInstance(), (String[]) l.toArray(new String[args.length-1]));
-				Cli<NGSExec> result0 = CliFactory.createCli(execs.get(args[1]));
-				System.err.println(result0.getHelpMessage());
+				if (!execs.containsKey(args[1])) {
+					usage("Unknown command: " + args[1]);
+				} else {
+					showHelp(execs.get(args[1]));
+				}
 			}
 		} else if (execs.containsKey(args[0])) {
 			List<String> l = Arrays.asList(args).subList(1, args.length);
-			try{
-				NGSExec exec = CliFactory.parseArgumentsUsingInstance(execs.get(args[0]).newInstance(), (String[]) l.toArray(new String[args.length-1]));
+			try {
+				NGSExec exec = CliFactory.parseArgumentsUsingInstance(execs
+						.get(args[0]).newInstance(), (String[]) l
+						.toArray(new String[l.size()]));
 				exec.exec();
 			} catch (HelpRequestedException e) {
-				System.err.println(e.getMessage());	
-			}   catch(ArgumentValidationException e) {
 				System.err.println(e.getMessage());
-				Cli<NGSExec> result0 = CliFactory.createCli(execs.get(args[0]));
-				System.err.println(result0.getHelpMessage());
+			} catch (ArgumentValidationException e) {
+				System.err.println(e.getMessage());
+				showHelp(execs.get(args[0]));
 			}
 		} else {
-			usage("Unknown command: "+args[0]);
+			usage("Unknown command: " + args[0]);
+		}
+	}
+
+	private static void showHelp(Class<NGSExec> clazz) throws Exception {
+		Command cmd = clazz.getAnnotation(Command.class);
+		if (cmd != null) {
+			if (cmd.desc().equals("")) {
+				System.err.println(cmd.name());
+			} else {
+				System.err.println(cmd.name() + " - " + cmd.desc());
+			}
+			System.err.println("");
+
+			if (!cmd.doc().equals("")) {
+				System.err.println(cmd.doc());
+			}
+		} else {
+			System.err.println(clazz.getName().toLowerCase());
+		}
+		String[] args = { "--help" };
+		try {
+			CliFactory.parseArgumentsUsingInstance(clazz.newInstance(), args);
+		} catch (HelpRequestedException e) {
+			System.err.println(e.getMessage());
 		}
 	}
 }

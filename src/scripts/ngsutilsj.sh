@@ -1,9 +1,15 @@
 #!/bin/sh
 MYSELF=`which "$0" 2>/dev/null`
-[ $? -gt 0 -a -f "$0" ] && MYSELF="./$0"
-java=java
-if test -n "$JAVA_HOME"; then
-    java="$JAVA_HOME/bin/java"
+if [ "$?" -gt 0 ]; then
+	MYSELF="./$0"
 fi
-exec "$java" $java_args -jar $MYSELF "$@"
+
+if [ -e $HOME/.ngsutilsjrc ]; then
+	. $HOME/.ngsutilsjrc
+fi
+JAVABIN=`which java`
+if [ "${JAVA_HOME}" != "" ]; then
+    JAVABIN="$JAVA_HOME/bin/java"
+fi
+exec "${JAVABIN}" ${JAVA_OPTS} -jar $0 "$@"
 exit 1

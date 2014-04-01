@@ -18,7 +18,7 @@ import com.lexicalscope.jewel.cli.CommandLineInterface;
 import com.lexicalscope.jewel.cli.Option;
 import com.lexicalscope.jewel.cli.Unparsed;
 
-@CommandLineInterface(application="ngsutils fastq-merge")
+@CommandLineInterface(application="ngsutilsj fastq-merge")
 @Command(name="fastq-merge", desc="Merges two FASTQ files (R1/R2) into one interlaced file.", cat="fastq")
 public class FastqMerge implements NGSExec {
 	private FastqReader[] readers;
