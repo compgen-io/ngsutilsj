@@ -13,6 +13,7 @@ import java.util.Map;
 
 import org.ngsutils.cli.Command;
 import org.ngsutils.cli.NGSExec;
+import org.ngsutils.fastq.FastqFilter;
 import org.ngsutils.fastq.FastqMerge;
 import org.ngsutils.fastq.FastqSeparate;
 import org.ngsutils.fastq.FastqSort;
@@ -29,6 +30,7 @@ public class NGSUtils {
 		loadExec(FastqMerge.class);
 		loadExec(FastqSeparate.class);
 		loadExec(FastqSplit.class);
+		loadExec(FastqFilter.class);
 	}
 
 	@SuppressWarnings("unchecked")
