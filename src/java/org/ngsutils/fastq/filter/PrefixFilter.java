@@ -8,7 +8,7 @@ public class PrefixFilter extends SingleReadFilter {
 	public PrefixFilter(Iterable<FastqRead> parent, boolean verbose, int removeSize) throws NGSUtilsException {
 		super(parent, verbose);
 		if (removeSize < 0) {
-			throw new NGSUtilsException("Number of bases to remove must be greated than 0!");
+			throw new NGSUtilsException("Number of bases to remove must be greated than zero!");
 		}
 		this.removeSize = removeSize;
 		
