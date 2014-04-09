@@ -63,7 +63,7 @@ public class FastqRead {
 				return null;
 			}
 			return new FastqRead(name, seq, qual, comment);
-		} catch (IOException e) {
+		} catch (Exception e) {
 			return null;
 		}
 	}	
