@@ -1,5 +1,9 @@
 package org.ngsutils;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -105,6 +109,19 @@ public class NGSUtils {
 		spacer += " - ";
 		System.err.println("  help command" + spacer
 				+ "Help message for the given command");
+		
+		System.err.println("");
+		System.err.println(getVersion());
+	}
+	
+	public static String getVersion() {
+		try {
+			InputStream is = NGSUtils.class.getResourceAsStream("/VERSION"); 
+			BufferedReader r = new BufferedReader(new InputStreamReader(is));
+			return r.readLine();
+		} catch (IOException e) {
+			return "ngsutilsj-unknown";
+		}
 	}
 
 	public static void main(String[] args) throws Exception {
@@ -129,6 +146,8 @@ public class NGSUtils {
 				exec.exec();
 			} catch (HelpRequestedException e) {
 				System.err.println(e.getMessage());
+				System.err.println("");
+				System.err.println(getVersion());
 			} catch (ArgumentValidationException e) {
 				System.err.println(e.getMessage());
 				showHelp(execs.get(args[0]));
@@ -160,5 +179,7 @@ public class NGSUtils {
 		} catch (HelpRequestedException e) {
 			System.err.println(e.getMessage());
 		}
+		System.err.println("");
+		System.err.println(getVersion());
 	}
 }

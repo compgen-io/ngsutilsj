@@ -1,4 +1,5 @@
 <project name="ngsutilsj" default="jar">
+    <property name="version" value="0.1"/>
     <property name="lib.dir" value="lib"/>
     <property name="build.dir" value="build"/>
     <property name="dist.dir" value="dist"/>
@@ -19,7 +20,10 @@
         <path location="${lib.dir}/jewelcli-0.8.9.jar"/>
     </target>
 
-	<target name="jar" depends="compile">
+	<target name="jar" depends="compile, git.revision">
+        <delete file="${build.dir}/classes/VERSION"/>
+ 		<echo file="${build.dir}/classes/VERSION" message="ngsutilsj-${version}-${repository.version}"/>
+
 		<mkdir dir="${dist.dir}"/>
 	    <taskdef name="jarjar" classname="com.tonicsystems.jarjar.JarJarTask"
 	        classpath="${lib.dir}/jarjar-1.4.jar"/>
@@ -38,5 +42,23 @@
  		</concat>
 		<chmod file="${dist.dir}/ngsutilsj" perm="755"/>
 	</target>
+
+	<!-- See http://stackoverflow.com/questions/2974106/how-to-lookup-the-latest-git-commit-hash-from-an-ant-build-script -->
+	<available file=".git" type="dir" property="git.present"/>
+	<target name="git.revision" description="Store git revision in ${repository.version}" if="git.present">
+	    <exec executable="git" outputproperty="git.revision" failifexecutionfails="false" errorproperty="">
+	        <arg value="describe"/>
+	        <arg value="--tags"/>
+	        <arg value="--always"/>
+	        <arg value="HEAD"/>
+	    </exec>
+	    <condition property="repository.version" value="${git.revision}" else="unknown">
+	        <and>
+	            <isset property="git.revision"/>
+	            <length string="${git.revision}" trim="yes" length="0" when="greater"/>
+	        </and>
+	    </condition>
+	</target>
+
 </project>
 
