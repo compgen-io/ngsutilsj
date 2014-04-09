@@ -57,7 +57,7 @@ public class FastqSeparate implements NGSExec {
 		this.compressOuput = compressOuput;
 	}
 
-	@Option(description = "Verbose output", shortName = "v", defaultValue = "false")
+	@Option(description = "Verbose output", shortName = "v")
 	public void setVerbose(boolean verbose) {
 		this.verbose = verbose;
 	}

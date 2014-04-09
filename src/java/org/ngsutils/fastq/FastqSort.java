@@ -71,7 +71,7 @@ public class FastqSort implements NGSExec {
 		this.tmpdir = new File(tmpdir);
 	}
 
-	@Option(description="Verbose output", shortName="v", defaultValue="false")
+	@Option(description="Verbose output", shortName="v")
 	public void setVerbose(boolean verbose) {
 		this.verbose = verbose;
 	}
