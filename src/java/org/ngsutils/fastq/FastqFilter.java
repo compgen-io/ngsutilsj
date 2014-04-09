@@ -40,7 +40,7 @@ public class FastqFilter implements NGSExec {
         reader = new FastqReader(filename);
     }
 
-    @Option(description = "Paired filter (Default: not used)", longName = "paired", defaultValue = "false")
+    @Option(description = "Paired filter (for interleaved files) (Default: not used)", longName = "paired", defaultValue = "false")
     public void setPaired(boolean paired) {
         this.paired = paired;
     }
