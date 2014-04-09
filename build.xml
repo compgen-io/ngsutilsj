@@ -16,7 +16,7 @@
 
 	<target name="compile">
         <mkdir dir="${build.dir}/classes"/>
-        <javac srcdir="${src.dir}" destdir="${build.dir}/classes" classpathref="classpath"/>
+        <javac srcdir="${src.dir}/java" destdir="${build.dir}/classes" classpathref="classpath" debug="true" debuglevel="lines,vars,source"/>
         <path location="${lib.dir}/jewelcli-0.8.9.jar"/>
     </target>
 
