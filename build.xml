@@ -37,7 +37,7 @@
 	    </jarjar>
         <delete file="${dist.dir}/ngsutilsj"/>
  		<concat destfile="${dist.dir}/ngsutilsj" binary="true">
- 		     <fileset file="${src.dir}/scripts/ngsutilsj.sh" />
+ 		     <fileset file="${src.dir}/scripts/stub.sh" />
  		     <fileset file="${dist.dir}/ngsutilsj.jar" />
  		</concat>
 		<chmod file="${dist.dir}/ngsutilsj" perm="755"/>
