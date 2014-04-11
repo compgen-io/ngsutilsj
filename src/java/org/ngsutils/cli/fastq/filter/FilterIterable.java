@@ -1,4 +1,4 @@
-package org.ngsutils.fastq.filter;
+package org.ngsutils.cli.fastq.filter;
 
 import java.util.Iterator;
 
@@ -14,13 +14,13 @@ public class FilterIterable implements Iterable<FastqRead>{
 		return filter;
 	}
 
-	public int getTotal() {
+	public long getTotal() {
 		return filter.getTotal();
 	}
-	public int getAltered() {
+	public long getAltered() {
 		return filter.getAltered();
 	}
-	public int getRemoved() {
+	public long getRemoved() {
 		return filter.getRemoved();
 	}
 	public String getName() {

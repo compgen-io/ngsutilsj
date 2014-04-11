@@ -1,4 +1,4 @@
-package org.ngsutils.fastq;
+package org.ngsutils.cli.fastq;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -12,8 +12,10 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.zip.GZIPOutputStream;
 
+import org.ngsutils.cli.AbstractOutputCommand;
 import org.ngsutils.cli.Command;
-import org.ngsutils.cli.NGSExec;
+import org.ngsutils.fastq.FastqRead;
+import org.ngsutils.fastq.FastqReader;
 import org.ngsutils.support.Pair;
 
 import com.lexicalscope.jewel.cli.CommandLineInterface;
@@ -22,10 +24,9 @@ import com.lexicalscope.jewel.cli.Unparsed;
 
 @CommandLineInterface(application="ngsutilsj fastq-sort")
 @Command(name="fastq-sort", desc="Sorts a FASTQ file", cat="fastq")
-public class FastqSort implements NGSExec {
+public class FastqSort extends AbstractOutputCommand {
 	private FastqReader reader;
 
-	private String outputName = "-";
 	private int bufferSize = 200000;
 	private boolean bySequence = false;
 	private boolean noCompressTemp = false;
@@ -53,11 +54,6 @@ public class FastqSort implements NGSExec {
 		this.reader = new FastqReader(filename);
 	}
 
-	@Option(description="Output filename (default: stdout)", shortName="o", defaultValue="-", longName="output")
-	public void setOutputName(String outputName) throws IOException {
-		this.outputName = outputName;
-	}
-
     @Option(helpRequest=true, description="Display help", shortName="h")
     public void setHelp(boolean help) {
 	}
@@ -77,13 +73,6 @@ public class FastqSort implements NGSExec {
 	}
 
 	public void sort() throws IOException {
-		OutputStream out;
-		if (outputName.equals("-")) {
-			out = System.out;
-		} else {
-			out = new FileOutputStream(outputName);
-		}
-
 		long readCount = 0;
 		ArrayList<FastqRead> buffer = new ArrayList<FastqRead>();
 		if (verbose) {
@@ -100,12 +89,13 @@ public class FastqSort implements NGSExec {
 					writeTemp(buffer);
 					buffer.clear();
 				}
-			} else {
-				// only write temp files when the used memory is over 85%.
-				double usedPercent=(double)(Runtime.getRuntime().totalMemory()
+			} else if (readCount % 1000 == 0) {
+				// only write temp files when the used memory is over 80%.
+			    // only check every 1000 reads...
+
+			    double usedPercent=(double)(Runtime.getRuntime().totalMemory()
 					    -Runtime.getRuntime().freeMemory())/Runtime.getRuntime().maxMemory();
-//				System.err.println("Memory usage: "+usedPercent);
-				if (usedPercent > 0.85) {
+				if (usedPercent > 0.80) {
 					writeTemp(buffer);
 					buffer.clear();
 					Runtime.getRuntime().gc();

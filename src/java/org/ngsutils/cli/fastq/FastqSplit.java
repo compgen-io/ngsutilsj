@@ -1,4 +1,4 @@
-package org.ngsutils.fastq;
+package org.ngsutils.cli.fastq;
 
 import java.io.BufferedOutputStream;
 import java.io.FileOutputStream;
@@ -7,8 +7,10 @@ import java.io.OutputStream;
 import java.util.zip.GZIPOutputStream;
 
 import org.ngsutils.NGSUtilsException;
+import org.ngsutils.cli.AbstractCommand;
 import org.ngsutils.cli.Command;
-import org.ngsutils.cli.NGSExec;
+import org.ngsutils.fastq.FastqRead;
+import org.ngsutils.fastq.FastqReader;
 
 import com.lexicalscope.jewel.cli.CommandLineInterface;
 import com.lexicalscope.jewel.cli.Option;
@@ -16,13 +18,12 @@ import com.lexicalscope.jewel.cli.Unparsed;
 
 @CommandLineInterface(application = "ngsutilsj fastq-split")
 @Command(name = "fastq-split", desc = "Splits an FASTQ file into smaller files", cat="fastq")
-public class FastqSplit implements NGSExec {
+public class FastqSplit extends AbstractCommand {
 	private FastqReader reader;
 
 	private String outputTemplate = null;
 	private boolean compressOuput = false;
 	private int num = 2;
-	private boolean verbose = false;
 
 	public FastqSplit() {
 	}
@@ -42,18 +43,9 @@ public class FastqSplit implements NGSExec {
 		this.outputTemplate = outputTemplate;
 	}
 
-	@Option(helpRequest = true, description = "Display help", shortName = "h")
-	public void setHelp(boolean help) {
-	}
-
 	@Option(description = "Compress output (default: false)", shortName = "z", longName = "compress")
 	public void setCompressOuput(boolean compressOuput) {
 		this.compressOuput = compressOuput;
-	}
-
-	@Option(description = "Verbose output", shortName = "v")
-	public void setVerbose(boolean verbose) {
-		this.verbose = verbose;
 	}
 
 	public void split() throws IOException {

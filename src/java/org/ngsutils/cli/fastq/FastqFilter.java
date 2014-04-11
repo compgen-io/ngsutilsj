@@ -1,17 +1,20 @@
-package org.ngsutils.fastq;
+package org.ngsutils.cli.fastq;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.ngsutils.NGSUtilsException;
+import org.ngsutils.cli.AbstractOutputCommand;
 import org.ngsutils.cli.Command;
-import org.ngsutils.cli.NGSExec;
-import org.ngsutils.fastq.filter.FilterIterable;
-import org.ngsutils.fastq.filter.PrefixFilter;
-import org.ngsutils.fastq.filter.SizeFilter;
-import org.ngsutils.fastq.filter.SuffixQualFilter;
-import org.ngsutils.fastq.filter.WildcardFilter;
+import org.ngsutils.cli.fastq.filter.FilterIterable;
+import org.ngsutils.cli.fastq.filter.PairedFilter;
+import org.ngsutils.cli.fastq.filter.PrefixFilter;
+import org.ngsutils.cli.fastq.filter.SizeFilter;
+import org.ngsutils.cli.fastq.filter.SuffixQualFilter;
+import org.ngsutils.cli.fastq.filter.WildcardFilter;
+import org.ngsutils.fastq.FastqRead;
+import org.ngsutils.fastq.FastqReader;
 
 import com.lexicalscope.jewel.cli.CommandLineInterface;
 import com.lexicalscope.jewel.cli.Option;
@@ -19,9 +22,9 @@ import com.lexicalscope.jewel.cli.Unparsed;
 
 @CommandLineInterface(application = "ngsutilsj fastq-filter")
 @Command(name = "fastq-filter", desc = "Filters reads from a FASTQ file.", cat = "fastq")
-public class FastqFilter implements NGSExec {
+public class FastqFilter extends AbstractOutputCommand {
     private FastqReader reader;
-    private boolean verbose = false;
+
     private boolean paired = false;
     private String suffixQuality = null;
     private int prefixTrimLength = -1;
@@ -31,16 +34,12 @@ public class FastqFilter implements NGSExec {
     public FastqFilter() {
     }
 
-    @Option(helpRequest = true, description = "Display help", shortName = "h")
-    public void setHelp(boolean help) {
-    }
-
     @Unparsed(name = "FILE")
     public void setFilename(String filename) throws IOException {
         reader = new FastqReader(filename);
     }
 
-    @Option(description = "Paired filter (for interleaved files) (Default: not used)", longName = "paired", defaultValue = "false")
+    @Option(description = "Paired filter (for interleaved files) (Default: not used)", longName = "paired")
     public void setPaired(boolean paired) {
         this.paired = paired;
     }
@@ -63,11 +62,6 @@ public class FastqFilter implements NGSExec {
     @Option(description = "Maximum wildcard calls (Default: 2)", longName = "wildcard", defaultValue = "2")
     public void setMaxWildcard(int maxWildcard) {
         this.maxWildcard = maxWildcard;
-    }
-
-    @Option(description = "Verbose output", shortName = "v")
-    public void setVerbose(boolean verbose) {
-        this.verbose = verbose;
     }
 
     public void filter() throws IOException, NGSUtilsException {
@@ -100,9 +94,14 @@ public class FastqFilter implements NGSExec {
             iters.add((FilterIterable) parent);
         }
 
+        if (paired) {
+            parent = new FilterIterable(new PairedFilter(parent, verbose));
+            iters.add((FilterIterable) parent);
+        }
+
         for (final FastqRead read : parent) {
             if (read != null) {
-                read.write(System.out);
+                read.write(out);
             }
         }
 

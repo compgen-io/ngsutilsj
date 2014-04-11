@@ -1,35 +1,35 @@
-package org.ngsutils.fastq.filter;
+package org.ngsutils.cli.fastq.filter;
 
 import java.util.Iterator;
 
 import org.ngsutils.NGSUtilsException;
 import org.ngsutils.fastq.FastqRead;
 
-public abstract class SingleReadFilter implements Filter {
-	protected int total = 0;
-	protected int altered = 0;
-	protected int removed = 0;
+public abstract class AbstractSingleReadFilter implements Filter {
+	protected long total = 0;
+	protected long altered = 0;
+	protected long removed = 0;
 	protected boolean isdone = false;
 	protected boolean isfirst = false;
 	protected boolean verbose = false;
 	protected Iterator<FastqRead> parent;
 
-	public SingleReadFilter(Iterable<FastqRead> parent, boolean verbose) {
+	public AbstractSingleReadFilter(Iterable<FastqRead> parent, boolean verbose) {
 		this.parent = parent.iterator();
 		this.verbose = verbose;
 		this.isdone = false;
 		this.isfirst = true;
 	}
 
-	public int getTotal() {
+	public long getTotal() {
 		return total;
 	}
 
-	public int getAltered() {
+	public long getAltered() {
 		return altered;
 	}
 
-	public int getRemoved() {
+	public long getRemoved() {
 		return removed;
 	}
 

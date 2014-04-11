@@ -1,9 +1,9 @@
-package org.ngsutils.fastq.filter;
+package org.ngsutils.cli.fastq.filter;
 
 import org.ngsutils.NGSUtilsException;
 import org.ngsutils.fastq.FastqRead;
 
-public class PrefixFilter extends SingleReadFilter {
+public class PrefixFilter extends AbstractSingleReadFilter {
 	private int removeSize;
 	public PrefixFilter(Iterable<FastqRead> parent, boolean verbose, int removeSize) throws NGSUtilsException {
 		super(parent, verbose);
@@ -11,6 +11,9 @@ public class PrefixFilter extends SingleReadFilter {
 			throw new NGSUtilsException("Number of bases to remove must be greated than zero!");
 		}
 		this.removeSize = removeSize;
+        if (verbose) {
+            System.err.println("["+this.getClass().getSimpleName()+"] Removing: " + removeSize + "bases from 5' end of reads");
+        }
 		
 	}
 

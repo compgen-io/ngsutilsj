@@ -1,12 +1,15 @@
-package org.ngsutils.fastq.filter;
+package org.ngsutils.cli.fastq.filter;
 
 import org.ngsutils.fastq.FastqRead;
 
-public class SuffixQualFilter extends SingleReadFilter {
+public class SuffixQualFilter extends AbstractSingleReadFilter {
 	private char qualval;
 	public SuffixQualFilter(Iterable<FastqRead> parent, boolean verbose, char qualval) {
 		super(parent, verbose);
 		this.qualval = qualval;
+        if (verbose) {
+            System.err.println("["+this.getClass().getSimpleName()+"] Removing calls with a quality PHRED score of: " + qualval);
+        }
 	}
 	@Override
 	protected FastqRead filterRead(FastqRead read) {

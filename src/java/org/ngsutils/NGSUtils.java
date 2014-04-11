@@ -13,11 +13,11 @@ import java.util.Map;
 
 import org.ngsutils.cli.Command;
 import org.ngsutils.cli.NGSExec;
-import org.ngsutils.fastq.FastqFilter;
-import org.ngsutils.fastq.FastqMerge;
-import org.ngsutils.fastq.FastqSeparate;
-import org.ngsutils.fastq.FastqSort;
-import org.ngsutils.fastq.FastqSplit;
+import org.ngsutils.cli.fastq.FastqFilter;
+import org.ngsutils.cli.fastq.FastqMerge;
+import org.ngsutils.cli.fastq.FastqSeparate;
+import org.ngsutils.cli.fastq.FastqSort;
+import org.ngsutils.cli.fastq.FastqSplit;
 
 import com.lexicalscope.jewel.cli.ArgumentValidationException;
 import com.lexicalscope.jewel.cli.CliFactory;
