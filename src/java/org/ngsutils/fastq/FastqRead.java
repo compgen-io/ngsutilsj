@@ -14,7 +14,7 @@ public class FastqRead {
 	public FastqRead(String name, String seq, String qual) {
 		this.name = name;
 		this.comment = null;
-		this.seq = seq;
+		this.seq = seq.toUpperCase();
 		this.qual = qual;		
 	}
 	public FastqRead(String name, String seq, String qual, String comment) {
@@ -24,7 +24,7 @@ public class FastqRead {
 		} else {
 			this.comment = null;
 		}
-		this.seq = seq;
+		this.seq = seq.toUpperCase();
 		this.qual = qual;
 	}
 

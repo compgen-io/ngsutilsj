@@ -10,6 +10,7 @@ import org.ngsutils.cli.Command;
 import org.ngsutils.cli.fastq.filter.FilterIterable;
 import org.ngsutils.cli.fastq.filter.PairedFilter;
 import org.ngsutils.cli.fastq.filter.PrefixFilter;
+import org.ngsutils.cli.fastq.filter.SeqTrimFilter;
 import org.ngsutils.cli.fastq.filter.SizeFilter;
 import org.ngsutils.cli.fastq.filter.SuffixQualFilter;
 import org.ngsutils.cli.fastq.filter.WildcardFilter;
@@ -30,6 +31,10 @@ public class FastqFilter extends AbstractOutputCommand {
     private int prefixTrimLength = -1;
     private int minimumSize = -1;
     private int maxWildcard = -1;
+    
+    private String trimSeq = null;
+    private int trimMinOverlap = 4;
+    private double trimMinPctMatch = 0.9;
 
     public FastqFilter() {
     }
@@ -39,6 +44,23 @@ public class FastqFilter extends AbstractOutputCommand {
         reader = new FastqReader(filename);
     }
 
+    @Option(description = "Sequence trim filter (adapters) (Default: not used)", longName = "trim-seq", defaultToNull=true)
+    public void setTrimSeq(String trimSeq) {
+        this.trimSeq = trimSeq;
+    }
+
+    @Option(description = "Sequence trim minimum overlap (default: 4)", longName = "trim-overlap", defaultValue="4")
+    public void setTrimMinOverlap(int trimMinOverlap) {
+        this.trimMinOverlap = trimMinOverlap;
+    }
+
+    @Option(description = "Sequence trim minimum percent match (default: 0.9)", longName = "trim-pct", defaultValue="0.9")
+    public void setTrimMinPctMatch(double trimMinPctMatch) {
+        this.trimMinPctMatch = trimMinPctMatch;
+    }
+
+    
+    
     @Option(description = "Paired filter (for interleaved files) (Default: not used)", longName = "paired")
     public void setPaired(boolean paired) {
         this.paired = paired;
@@ -88,6 +110,12 @@ public class FastqFilter extends AbstractOutputCommand {
             iters.add((FilterIterable) parent);
         }
 
+        if (trimSeq != null) {
+            parent = new FilterIterable(new SeqTrimFilter(parent, verbose,
+                    trimSeq, trimMinOverlap, trimMinPctMatch));
+            iters.add((FilterIterable) parent);            
+        }
+        
         if (minimumSize > 0) {
             parent = new FilterIterable(new SizeFilter(parent, verbose,
                     minimumSize));
