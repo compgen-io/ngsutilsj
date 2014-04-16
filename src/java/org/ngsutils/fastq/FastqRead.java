@@ -50,8 +50,8 @@ public class FastqRead {
 			name = name.substring(1); // strip the @
 			String comment = null;
 			if (name.indexOf(' ') > -1) {
+                comment = name.substring(name.indexOf(' ') + 1);
 				name = name.substring(0, name.indexOf(' '));
-				comment = name.substring(name.indexOf(' ') + 1);
 			}
 			String seq = in.readLine();
 			if (seq == null) {
