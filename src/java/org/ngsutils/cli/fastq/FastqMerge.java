@@ -61,7 +61,7 @@ public class FastqMerge extends AbstractOutputCommand {
 				}
 			}
 		});
-		
+		close();
 		if (verbose) {
 			System.err.println("Total reads: "+counter.getValue());
 		}

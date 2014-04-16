@@ -21,4 +21,10 @@ public abstract class AbstractOutputCommand extends AbstractCommand {
             out = new BufferedOutputStream(new FileOutputStream(outputName));
         }
     }
+    
+    public void close() throws IOException {
+        if (out != System.out) {
+            out.close();
+        }
+    }
 }

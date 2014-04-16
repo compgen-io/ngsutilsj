@@ -77,7 +77,10 @@ public class FastqSplit extends AbstractCommand {
 				read.write(outs[i]);
 				lastName = read.getName();
 			}
-		}	
+		}
+		for (OutputStream out: outs) {
+		    out.close();
+		}
 	}
 
 	@Override

@@ -140,6 +140,7 @@ public class FastqFilter extends AbstractOutputCommand {
                         + "\t" + iter.getAltered() + "\t" + iter.getRemoved());
             }
         }
+        close();
     }
 
     @Override

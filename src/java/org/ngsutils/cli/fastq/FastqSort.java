@@ -165,8 +165,8 @@ public class FastqSort extends AbstractOutputCommand {
 				System.err.println("Merged: "+j);
 			}
 			j++;
-
 		}
+		close();
 	}
 
 	private void writeTemp(ArrayList<FastqRead> buffer) throws IOException {
