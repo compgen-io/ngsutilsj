@@ -58,8 +58,6 @@ public class FastqFilter extends AbstractOutputCommand {
     public void setTrimMinPctMatch(double trimMinPctMatch) {
         this.trimMinPctMatch = trimMinPctMatch;
     }
-
-    
     
     @Option(description = "Paired filter (for interleaved files) (Default: not used)", longName = "paired")
     public void setPaired(boolean paired) {
