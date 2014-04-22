@@ -72,7 +72,8 @@ public class FastqSort extends AbstractOutputCommand {
 		this.verbose = verbose;
 	}
 
-	public void sort() throws IOException {
+    @Override
+	public void exec() throws IOException {
 		long readCount = 0;
 		ArrayList<FastqRead> buffer = new ArrayList<FastqRead>();
 		if (verbose) {
@@ -203,15 +204,5 @@ public class FastqSort extends AbstractOutputCommand {
 			read1.write(tmpOut);
 		}
 		tmpOut.close();
-	}
-
-	@Override
-	public void exec() throws Exception {
-//		System.err.println("outputName: "+outputName);
-//		System.err.println("verbose: "+verbose);
-//		System.err.println("noCompressTemp: "+noCompressTemp);
-//		System.err.println("bySequence: "+bySequence);
-//		System.err.println("bufferSize: "+bufferSize);
-			sort();
 	}
 }

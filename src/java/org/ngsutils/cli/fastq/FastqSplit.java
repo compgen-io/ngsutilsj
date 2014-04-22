@@ -48,7 +48,20 @@ public class FastqSplit extends AbstractCommand {
 		this.compressOuput = compressOuput;
 	}
 
-	public void split() throws IOException {
+	@Override
+	public void exec() throws IOException, NGSUtilsException {
+        if (outputTemplate == null) {
+            if (reader.getFilename().equals("-")) {
+                throw new NGSUtilsException("You must specify an output template if reading from stdin");
+            }
+            if (reader.getFilename().contains(".fastq")) {
+                outputTemplate = reader.getFilename().substring(0, reader.getFilename().indexOf(".fastq"));
+            } else if (reader.getFilename().contains(".fq")) {
+                outputTemplate = reader.getFilename().substring(0, reader.getFilename().indexOf(".fq"));
+            } else {
+                outputTemplate = reader.getFilename();
+            }
+        }
 		final OutputStream[] outs = new OutputStream[num];
 		for (int i=0; i<num; i++) {
 			if (compressOuput) {
@@ -81,22 +94,5 @@ public class FastqSplit extends AbstractCommand {
 		for (OutputStream out: outs) {
 		    out.close();
 		}
-	}
-
-	@Override
-	public void exec() throws Exception {
-		if (outputTemplate == null) {
-			if (reader.getFilename().equals("-")) {
-				throw new NGSUtilsException("You must specify an output template if reading from stdin");
-			}
-			if (reader.getFilename().contains(".fastq")) {
-				outputTemplate = reader.getFilename().substring(0, reader.getFilename().indexOf(".fastq"));
-			} else if (reader.getFilename().contains(".fq")) {
-				outputTemplate = reader.getFilename().substring(0, reader.getFilename().indexOf(".fq"));
-			} else {
-				outputTemplate = reader.getFilename();
-			}
-		}
-		split();
 	}
 }

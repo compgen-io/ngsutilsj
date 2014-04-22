@@ -39,7 +39,8 @@ public class FastqSeparate extends AbstractOutputCommand {
 	}
 
 
-	public void split() throws IOException {
+    @Override
+	public void exec() throws IOException {
 		if (verbose) {
 			System.err.println("Spliting file:" + reader.getFilename());
 			if (readOne) {
@@ -68,8 +69,4 @@ public class FastqSeparate extends AbstractOutputCommand {
 		close();
 	}
 
-	@Override
-	public void exec() throws Exception {
-		split();
-	}
 }

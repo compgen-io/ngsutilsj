@@ -84,7 +84,8 @@ public class FastqFilter extends AbstractOutputCommand {
         this.maxWildcard = maxWildcard;
     }
 
-    public void filter() throws IOException, NGSUtilsException {
+    @Override
+    public void exec() throws IOException, NGSUtilsException {
         if (verbose) {
             System.err.println("Filtering file:" + reader.getFilename());
         }
@@ -139,10 +140,5 @@ public class FastqFilter extends AbstractOutputCommand {
             }
         }
         close();
-    }
-
-    @Override
-    public void exec() throws Exception {
-        filter();
     }
 }

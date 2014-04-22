@@ -35,7 +35,8 @@ public class FastqMerge extends AbstractOutputCommand {
 		this.readers[1] = new FastqReader(files.get(1));
 	}
 
-	public void merge() throws IOException {
+   @Override
+   public void exec() throws IOException {
 		if (verbose) {
 			System.err.println("Merging files:");
 			System.err.println("    "+readers[0].getFilename());
@@ -67,8 +68,4 @@ public class FastqMerge extends AbstractOutputCommand {
 		}
 	}
 
-	@Override
-	public void exec() throws Exception {
-			merge();
-	}
 }
