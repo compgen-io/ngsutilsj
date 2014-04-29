@@ -27,6 +27,9 @@ public class BlacklistFilter extends AbstractSingleReadFilter {
 	@Override
 	protected FastqRead filterRead(FastqRead read) {
 	    if (names.contains(read.getName())) {
+	        if (verbose) {
+	            System.err.println("Removed: " + read.getName());
+	        }
 	        return null;
 	    }
 

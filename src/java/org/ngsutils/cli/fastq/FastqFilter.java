@@ -156,7 +156,15 @@ public class FastqFilter extends AbstractOutputCommand {
             iters.add((FilterIterable) parent);
         }
 
+        int i = 0;
         for (final FastqRead read : parent) {
+            if (verbose) {
+                i++;
+                if (i % 100000 == 0) {
+                    System.err.println("Read: " + i);
+                }
+                
+            }
             if (read != null) {
                 read.write(out);
             }

@@ -27,6 +27,9 @@ public class WhitelistFilter extends AbstractSingleReadFilter {
 	@Override
 	protected FastqRead filterRead(FastqRead read) {
 	    if (names.contains(read.getName())) {
+            if (verbose) {
+                System.err.println("Kept: " + read.getName());
+            }
 	        return read;
 	    }
 
