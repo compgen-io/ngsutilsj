@@ -7,12 +7,14 @@ import java.util.List;
 import org.ngsutils.NGSUtilsException;
 import org.ngsutils.cli.AbstractOutputCommand;
 import org.ngsutils.cli.Command;
+import org.ngsutils.cli.fastq.filter.BlacklistFilter;
 import org.ngsutils.cli.fastq.filter.FilterIterable;
 import org.ngsutils.cli.fastq.filter.PairedFilter;
 import org.ngsutils.cli.fastq.filter.PrefixFilter;
 import org.ngsutils.cli.fastq.filter.SeqTrimFilter;
 import org.ngsutils.cli.fastq.filter.SizeFilter;
 import org.ngsutils.cli.fastq.filter.SuffixQualFilter;
+import org.ngsutils.cli.fastq.filter.WhitelistFilter;
 import org.ngsutils.cli.fastq.filter.WildcardFilter;
 import org.ngsutils.fastq.FastqRead;
 import org.ngsutils.fastq.FastqReader;
@@ -35,6 +37,9 @@ public class FastqFilter extends AbstractOutputCommand {
     private String trimSeq = null;
     private int trimMinOverlap = 4;
     private double trimMinPctMatch = 0.9;
+    
+    private String whitelist = null;
+    private String blacklist = null;
 
     public FastqFilter() {
     }
@@ -84,8 +89,22 @@ public class FastqFilter extends AbstractOutputCommand {
         this.maxWildcard = maxWildcard;
     }
 
+    @Option(description = "Blacklist (read names)", longName = "blacklist", defaultToNull=true)
+    public void setBlacklist(String blacklist) {
+        this.blacklist = blacklist;
+    }
+
+    @Option(description = "Whitelist (read names)", longName = "whitelist", defaultToNull=true)
+    public void setWhitelist(String whitelist) {
+        this.whitelist = whitelist;
+    }
+    
     @Override
     public void exec() throws IOException, NGSUtilsException {
+        if (whitelist != null && blacklist != null) {
+            throw new NGSUtilsException("You can not specify both a whitelist and a blacklist!");
+        }
+        
         if (verbose) {
             System.err.println("Filtering file:" + reader.getFilename());
         }
@@ -123,6 +142,16 @@ public class FastqFilter extends AbstractOutputCommand {
 
         if (paired) {
             parent = new FilterIterable(new PairedFilter(parent, verbose));
+            iters.add((FilterIterable) parent);
+        }
+
+        if (whitelist!=null) {
+            parent = new FilterIterable(new WhitelistFilter(parent, verbose, whitelist));
+            iters.add((FilterIterable) parent);
+        }
+
+        if (blacklist!=null) {
+            parent = new FilterIterable(new BlacklistFilter(parent, verbose, blacklist));
             iters.add((FilterIterable) parent);
         }
 
