@@ -62,14 +62,10 @@ public class FastqSort extends AbstractOutputCommand {
 	public void setNoCompressTemp(boolean noCompressTemp) {
 		this.noCompressTemp = noCompressTemp;
 	}
+
 	@Option(description="Write temporary files to this directory", longName="tmp", defaultToNull=true)
 	public void setTmpdir(String tmpdir) {
 		this.tmpdir = new File(tmpdir);
-	}
-
-	@Option(description="Verbose output", shortName="v")
-	public void setVerbose(boolean verbose) {
-		this.verbose = verbose;
 	}
 
     @Override

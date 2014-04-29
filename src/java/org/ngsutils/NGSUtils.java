@@ -13,6 +13,7 @@ import java.util.Map;
 
 import org.ngsutils.cli.Command;
 import org.ngsutils.cli.NGSExec;
+import org.ngsutils.cli.bam.BAMCountSpan;
 import org.ngsutils.cli.fastq.FastqFilter;
 import org.ngsutils.cli.fastq.FastqMerge;
 import org.ngsutils.cli.fastq.FastqSeparate;
@@ -30,7 +31,8 @@ public class NGSUtils {
 		loadExec(FastqMerge.class);
 		loadExec(FastqSeparate.class);
 		loadExec(FastqSplit.class);
-		loadExec(FastqFilter.class);
+        loadExec(FastqFilter.class);
+        loadExec(BAMCountSpan.class);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -96,14 +98,14 @@ public class NGSUtils {
 		Collections.sort(cats);
 
 		for (String cat : cats) {
-			System.err.println("[" + cat + "]");
+            System.err.println("[" + cat + "]");
 			Collections.sort(progs.get(cat));
 			for (String line : progs.get(cat)) {
 				System.err.println(line);
 			}
+            System.err.println("");
 		}
 
-		System.err.println("");
 		spacer = "";
 		for (int i = 12; i < minsize; i++) {
 			spacer += " ";

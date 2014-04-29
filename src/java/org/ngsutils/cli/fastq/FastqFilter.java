@@ -108,6 +108,7 @@ public class FastqFilter extends AbstractOutputCommand {
         if (verbose) {
             System.err.println("Filtering file:" + reader.getFilename());
         }
+
         final List<FilterIterable> iters = new ArrayList<FilterIterable>();
         Iterable<FastqRead> parent = reader;
 
