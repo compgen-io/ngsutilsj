@@ -89,12 +89,12 @@ public class FastqFilter extends AbstractOutputCommand {
         this.maxWildcard = maxWildcard;
     }
 
-    @Option(description = "Blacklist (read names)", longName = "blacklist", defaultToNull=true)
+    @Option(description = "Blacklist filename (read names)", longName = "blacklist", defaultToNull=true)
     public void setBlacklist(String blacklist) {
         this.blacklist = blacklist;
     }
 
-    @Option(description = "Whitelist (read names)", longName = "whitelist", defaultToNull=true)
+    @Option(description = "Whitelist filename (read names)", longName = "whitelist", defaultToNull=true)
     public void setWhitelist(String whitelist) {
         this.whitelist = whitelist;
     }
