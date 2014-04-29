@@ -13,7 +13,7 @@ import java.util.Map;
 
 import org.ngsutils.cli.Command;
 import org.ngsutils.cli.NGSExec;
-import org.ngsutils.cli.bam.BAMCountSpan;
+import org.ngsutils.cli.bam.BAMCount;
 import org.ngsutils.cli.fastq.FastqFilter;
 import org.ngsutils.cli.fastq.FastqMerge;
 import org.ngsutils.cli.fastq.FastqSeparate;
@@ -32,7 +32,7 @@ public class NGSUtils {
 		loadExec(FastqSeparate.class);
 		loadExec(FastqSplit.class);
         loadExec(FastqFilter.class);
-        loadExec(BAMCountSpan.class);
+        loadExec(BAMCount.class);
 	}
 
 	@SuppressWarnings("unchecked")
