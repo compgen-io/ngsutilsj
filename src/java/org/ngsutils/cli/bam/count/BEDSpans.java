@@ -3,16 +3,24 @@ package org.ngsutils.cli.bam.count;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 import org.ngsutils.bam.Strand;
 import org.ngsutils.support.StringUtils;
 
-public class BEDSpans implements Iterable<Span> {
+public class BEDSpans implements SpanSource {
     final private String filename;
+    private int numCols;
     
-    public BEDSpans(String filename) {
+    public BEDSpans(String filename) throws IOException {
         this.filename=filename;
+        BufferedReader br = new BufferedReader(new FileReader(filename));
+        String line = br.readLine();
+        String[] cols = line.split("\\t", -1);
+        numCols = cols.length;
+        br.close();
     }
 
     @Override
@@ -76,5 +84,25 @@ public class BEDSpans implements Iterable<Span> {
             e.printStackTrace();
             return null;
         }
+    }
+
+    @Override
+    public String[] getHeader() {
+        String[] tmpl = new String[]{"chrom", "start", "end", "name", "score", "strand"};
+
+        List<String> out = new ArrayList<String>();
+       
+        
+        for (int i=0; i< numCols; i++) {
+            if (i < tmpl.length) {
+                out.add(tmpl[i]);
+            } else {
+                out.add("col"+(i+1));
+            }
+        }
+
+        String[] target = new String[out.size()];
+        out.toArray(target);
+        return target;
     }
 }

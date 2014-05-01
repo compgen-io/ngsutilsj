@@ -14,12 +14,13 @@ import org.ngsutils.NGSUtils;
 import org.ngsutils.NGSUtilsException;
 import org.ngsutils.bam.Orientation;
 import org.ngsutils.bam.Strand;
+import org.ngsutils.bam.support.ReadUtils;
 import org.ngsutils.cli.AbstractOutputCommand;
 import org.ngsutils.cli.Command;
 import org.ngsutils.cli.bam.count.BEDSpans;
 import org.ngsutils.cli.bam.count.BinSpans;
 import org.ngsutils.cli.bam.count.Span;
-import org.ngsutils.support.ReadUtils;
+import org.ngsutils.cli.bam.count.SpanSource;
 import org.ngsutils.support.TabWriter;
 
 import com.lexicalscope.jewel.cli.CommandLineInterface;
@@ -30,12 +31,6 @@ import com.lexicalscope.jewel.cli.Unparsed;
 @Command(name="bam-count", desc="Counts the number of reads within a BED region or by bins (--bed or --bins required)", cat="bam")
 public class BAMCount extends AbstractOutputCommand {
     
-    private enum CountType {
-        READ_COUNT,
-        PROPER_PAIRS,
-        INSERT_SIZE;
-    };
-    
     private String samFilename=null;
     
     private String bedFilename=null;
@@ -45,7 +40,9 @@ public class BAMCount extends AbstractOutputCommand {
     private boolean lenient = false;
     private boolean silent = false;
     
-    private CountType countType = CountType.READ_COUNT;
+    private boolean proper = false;
+    private boolean insert = false;
+    
     private Orientation orient = Orientation.UNSTRANDED;
     
     @Unparsed(name = "FILE")
@@ -99,18 +96,14 @@ public class BAMCount extends AbstractOutputCommand {
         }
     }
 
-    @Option(description = "Tally number of properly-paired reads", longName="proper-pairs")
+    @Option(description = "Also report the number/ratio of properly-paired reads", longName="proper-pairs")
     public void setProperPairs(boolean val) {
-        if (val) {
-            countType = CountType.PROPER_PAIRS;
-        }
+        proper = val;
     }
 
-    @Option(description = "Tally average insert-size of reads", longName="insert-size")
+    @Option(description = "Also report the average insert-size of reads", longName="insert-size")
     public void setInsertSize(boolean val) {
-        if (val) {
-            countType = CountType.INSERT_SIZE;
-        }
+        insert = val;
     }
 
     @Override
@@ -122,39 +115,56 @@ public class BAMCount extends AbstractOutputCommand {
         SAMFileReader reader = new SAMFileReader(new File(samFilename));
         if (lenient) {
             reader.setValidationStringency(ValidationStringency.LENIENT);
-        }
-        if (silent) {
+        } else if (silent) {
             reader.setValidationStringency(ValidationStringency.SILENT);
         }
 
         TabWriter writer = new TabWriter();
         writer.write_line("## " + NGSUtils.getVersion());
+        writer.write_line("## cmd: " + NGSUtils.getArgs());
+        writer.write_line("## input: " + samFilename);
         writer.write_line("## library-orientation: " + orient.toString());
         
-        Iterable<Span> spanIter = null;
+        SpanSource spanSource = null;
         if (binSize > 0) {
             writer.write_line("## source: bins " + binSize);
-            spanIter = new BinSpans(reader.getFileHeader().getSequenceDictionary(), binSize, orient);
+            spanSource = new BinSpans(reader.getFileHeader().getSequenceDictionary(), binSize, orient);
         } else if (bedFilename != null) {
             writer.write_line("## source: bed " + bedFilename);
-            spanIter = new BEDSpans(bedFilename);
+            spanSource = new BEDSpans(bedFilename);
         } else {
             reader.close();
             writer.close();
             throw new NGSUtilsException("You must specify either a bin-size or a BED file!");
         }
 
-        if (countType == CountType.READ_COUNT) {
-            writer.write_line("## counts: number of reads ");
-        } else if (countType == CountType.PROPER_PAIRS) {
-            writer.write_line("## counts: number of properly-paired reads ");
-        } else if (countType == CountType.INSERT_SIZE) {
+        writer.write_line("## counts: number of reads ");
+        if (proper) {
+            writer.write_line("## counts: number of properly-paired reads (and not-proper pairs, and not-proper:proper ratio) ");
+        }
+        if (insert) {
             writer.write_line("## counts: average insert-size ");
         }
 
+        // write header cols
+        for (String header: spanSource.getHeader()) {
+            writer.write(header);
+        }
+        writer.write("read_count");
+        if (proper) {
+            writer.write("proper");
+            writer.write("not_proper");
+            writer.write("proper_ratio");
+        }
+        if (insert) {
+            writer.write("ave_insert_size");
+        }
+        writer.eol();
+
+        
         int spanCount = 0;
         
-        for (Span span: spanIter) {
+        for (Span span: spanSource) {
             spanCount ++;
             if (verbose && spanCount % 1000 == 0) {
                 System.err.println("[" +spanCount + "]" + span.getRefName()+":"+span.getStarts()[0]);
@@ -162,27 +172,38 @@ public class BAMCount extends AbstractOutputCommand {
             }
             
             int count = 0;
-            long acc = 0;
+            int proper_count = 0;
+            int notproper_count = 0;
+            int insert_count = 0;
+            long insert_acc = 0;
+            
             Set<String> reads = new HashSet<String>();
             
             for (int i = 0; i < span.getStarts().length; i++) {            
-                // reader.query is 1-based
                 SAMRecordIterator it = reader.query(span.getRefName(), span.getStarts()[i]+1, span.getEnds()[i], contained);
                 while (it.hasNext()) {
                     SAMRecord read = it.next();
+
+                    if (read.isSecondaryOrSupplementary() || read.getDuplicateReadFlag() || read.getNotPrimaryAlignmentFlag() || read.getReadUnmappedFlag()) {
+                        // skip all secondary / duplicate / unmapped reads
+                        continue;
+                    }
+
                     if (!reads.contains(read.getReadName())) {
                         reads.add(read.getReadName());
                         if (span.getStrand() == Strand.NONE || (ReadUtils.getFragmentEffectiveStrand(read, orient) == span.getStrand())) {
-                            if (countType == CountType.READ_COUNT) {
-                                count ++;
-                            } else if (countType == CountType.PROPER_PAIRS) {
+                            count ++;
+                            if (proper) {
                                 if (read.getReadPairedFlag() && read.getProperPairFlag()) {
-                                    count ++;
+                                    proper_count ++;
+                                } else if (read.getReadPairedFlag() && !read.getProperPairFlag()) {
+                                    notproper_count ++;
                                 }
-                            } else if (countType == CountType.INSERT_SIZE) {
+                            }
+                            if (insert) {
                                 if (read.getReadPairedFlag() && read.getProperPairFlag()) {
-                                    count ++;
-                                    acc += read.getInferredInsertSize();
+                                    insert_acc += Math.abs(read.getInferredInsertSize());
+                                    insert_count ++;
                                 }
                             }
                         }
@@ -192,13 +213,19 @@ public class BAMCount extends AbstractOutputCommand {
             }
 
             writer.write(span.getFields());
-            if (countType == CountType.READ_COUNT) {
-                writer.write(count);
-            } else if (countType == CountType.PROPER_PAIRS) {
-                writer.write(count);
-            } else if (countType == CountType.INSERT_SIZE) {
-                if (count > 0) {
-                    writer.write((double) acc / count);
+            writer.write(count);
+            if (proper) {
+                writer.write(proper_count);
+                writer.write(notproper_count);
+                if (proper_count > 0) {
+                    writer.write((double) notproper_count / proper_count);
+                } else {
+                    writer.write(0);
+                }
+            }
+            if (insert) {
+                if (insert_count > 0) {
+                    writer.write((double) insert_acc / insert_count);
                 } else {
                     writer.write(0);
                 }

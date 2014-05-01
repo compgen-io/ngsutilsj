@@ -7,7 +7,7 @@ import net.sf.samtools.SAMSequenceDictionary;
 import org.ngsutils.bam.Orientation;
 import org.ngsutils.bam.Strand;
 
-public class BinSpans implements Iterable<Span> {
+public class BinSpans implements SpanSource {
     final private SAMSequenceDictionary seqdict;
     final private int binsize;
     final private Orientation orient;
@@ -44,7 +44,7 @@ public class BinSpans implements Iterable<Span> {
                 int end = currentPos + binsize;
                 String ref = seqdict.getSequence(currentSeq).getSequenceName();
                 
-                if (end > seqdict.getSequence(currentSeq).getSequenceLength()) {
+                if (end >= seqdict.getSequence(currentSeq).getSequenceLength()) {
                     end = seqdict.getSequence(currentSeq).getSequenceLength();
                     currentSeq++;
                     currentPos = 0;
@@ -65,5 +65,10 @@ public class BinSpans implements Iterable<Span> {
             }
             
         };
+    }
+
+    @Override
+    public String[] getHeader() {
+        return new String[]{"chrom", "start", "end", "strand"};
     }
 }

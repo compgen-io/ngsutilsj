@@ -128,7 +128,22 @@ public class NGSUtils {
 		}
 	}
 
+	private static String args;
+	
+	public static String getArgs() {
+	    return args;
+	}
+	
 	public static void main(String[] args) throws Exception {
+	    NGSUtils.args = "";
+	    for (String arg: args) {
+	        if (NGSUtils.args.equals("")) {
+	            NGSUtils.args = arg;
+	        } else {
+	            NGSUtils.args = NGSUtils.args + " " + arg;
+	        }
+	    }
+	    
 		if (args.length == 0) {
 			usage();
 		} else if (args[0].equals("help")) {
