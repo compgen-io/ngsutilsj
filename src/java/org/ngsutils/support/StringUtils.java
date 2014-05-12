@@ -1,5 +1,6 @@
 package org.ngsutils.support;
 
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -47,5 +48,33 @@ public class StringUtils {
             }
         }
         return matches;
+    }
+    
+    public static String join(String delim, String[] args) {
+        String out = "";
+        
+        for (String arg: args) {
+            if (out.equals("")) {
+                out = arg;
+            } else {
+                out = out + delim + arg;
+            }
+        }
+        
+        return out;
+    }
+    
+    public static String join(String delim, List<? extends Object> args) {
+        String out = "";
+        
+        for (Object arg: args) {
+            if (out.equals("")) {
+                out = arg.toString();
+            } else {
+                out = out + delim + arg.toString();
+            }
+        }
+        
+        return out;
     }
 }

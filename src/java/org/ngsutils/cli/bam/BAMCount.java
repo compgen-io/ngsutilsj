@@ -42,6 +42,7 @@ public class BAMCount extends AbstractOutputCommand {
     
     private boolean proper = false;
     private boolean insert = false;
+    private boolean inverted = false;
     
     private Orientation orient = Orientation.UNSTRANDED;
     
@@ -106,6 +107,11 @@ public class BAMCount extends AbstractOutputCommand {
         insert = val;
     }
 
+    @Option(description = "Also report the number of inverted reads (FF,RR)", longName="inverted")
+    public void setInverted(boolean val) {
+        inverted = val;
+    }
+
     @Override
     public void exec() throws NGSUtilsException, IOException {
         if (binSize > 0 && bedFilename != null) {
@@ -120,7 +126,7 @@ public class BAMCount extends AbstractOutputCommand {
         }
 
         TabWriter writer = new TabWriter();
-        writer.write_line("## " + NGSUtils.getVersion());
+        writer.write_line("## program: " + NGSUtils.getVersion());
         writer.write_line("## cmd: " + NGSUtils.getArgs());
         writer.write_line("## input: " + samFilename);
         writer.write_line("## library-orientation: " + orient.toString());
@@ -145,6 +151,9 @@ public class BAMCount extends AbstractOutputCommand {
         if (insert) {
             writer.write_line("## counts: average insert-size ");
         }
+        if (inverted) {
+            writer.write_line("## counts: number of inverted (FF, RR) reads ");
+        }
 
         // write header cols
         for (String header: spanSource.getHeader()) {
@@ -158,6 +167,9 @@ public class BAMCount extends AbstractOutputCommand {
         }
         if (insert) {
             writer.write("ave_insert_size");
+        }
+        if (inverted) {
+            writer.write("inverted_count");
         }
         writer.eol();
 
@@ -176,6 +188,7 @@ public class BAMCount extends AbstractOutputCommand {
             int notproper_count = 0;
             int insert_count = 0;
             long insert_acc = 0;
+            int inverted_count = 0;
             
             Set<String> reads = new HashSet<String>();
             
@@ -206,6 +219,11 @@ public class BAMCount extends AbstractOutputCommand {
                                     insert_count ++;
                                 }
                             }
+                            if (inverted) {
+                                if (read.getReadPairedFlag() && read.getProperPairFlag() && read.getReadNegativeStrandFlag() == read.getMateNegativeStrandFlag()) {
+                                    inverted_count ++;
+                                }
+                            }
                         }
                     }
                 }
@@ -229,6 +247,9 @@ public class BAMCount extends AbstractOutputCommand {
                 } else {
                     writer.write(0);
                 }
+            }
+            if (inverted) {
+                writer.write(inverted_count);
             }
             writer.eol();
         }
