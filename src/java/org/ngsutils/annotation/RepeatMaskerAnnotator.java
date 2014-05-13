@@ -3,10 +3,10 @@ package org.ngsutils.annotation;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.NavigableMap;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
 import org.ngsutils.bam.Strand;
 import org.ngsutils.support.StringLineReader;
@@ -14,48 +14,46 @@ import org.ngsutils.support.StringUtils;
 
 /**
  * Loads annotations from a RepeatMasker output
+ * 
  * @author mbreese
- *
+ * 
  */
 public class RepeatMaskerAnnotator implements Annotator {
-    private Map<String, List<GenomeCoordinates>> repeats = new HashMap<String, List<GenomeCoordinates>>();
+    private final NavigableMap<GenomeCoordinates, List<String[]>> repeats = new TreeMap<GenomeCoordinates, List<String[]>>();
 
     public RepeatMaskerAnnotator(String filename) throws FileNotFoundException, IOException {
         int skip = 3;
-        for (String line: new StringLineReader(filename)) {
+        for (final String line : new StringLineReader(filename)) {
             if (skip > 0) {
                 skip--;
                 continue;
             }
-            
-            String[] cols = StringUtils.strip(line).split(" +", -1);
-            String chrom = cols[4];
-            int start = Integer.parseInt(cols[5]);
-            int end = Integer.parseInt(cols[6]);
+
+            final String[] cols = StringUtils.strip(line).split(" +", -1);
+            final String chrom = cols[4];
+            final int start = Integer.parseInt(cols[5]) - 1; // file is 1-based
+            final int end = Integer.parseInt(cols[6]);
             Strand strand;
 
             if (cols[8].equals("+")) {
                 strand = Strand.PLUS;
             } else if (cols[8].equals("C")) {
                 strand = Strand.MINUS;
-            } else{
-                strand = Strand.NONE;                
+            } else {
+                // this shouldn't happen
+                strand = Strand.NONE;
+            }
+            final GenomeCoordinates coord = new GenomeCoordinates(chrom, start, end, strand);
+            final String[] annotations = new String[] { cols[9], cols[10] };
+
+            if (!repeats.containsKey(coord)) {
+                repeats.put(coord, new ArrayList<String[]>());
             }
 
-            String[] annotations = new String[] { cols[9], cols[10] };
-            
-            if (!repeats.containsKey(chrom)) {
-                repeats.put(chrom, new ArrayList<GenomeCoordinates>());
-            }
-            
-            repeats.get(chrom).add(new GenomeCoordinates(chrom, start, end, strand, annotations));
+            repeats.get(coord).add(annotations);
         }
-
-        for (String chrom: repeats.keySet()) {
-            Collections.sort(repeats.get(chrom));
-        }        
     }
-    
+
     @Override
     public String[] getAnnotationNames() {
         return new String[] { "repeat", "repeat_family" };
@@ -73,20 +71,19 @@ public class RepeatMaskerAnnotator implements Annotator {
 
     @Override
     public List<String[]> findAnnotation(String ref, int start, int end, Strand strand) {
-        List<String[]> outs = new ArrayList<String[]> ();         
-        if (!repeats.containsKey(ref)) {
-            return outs;
-        }
-        
-        /* TODO: change this to use a NavigableMap/Set */
-        for (GenomeCoordinates coord: repeats.get(ref)) {
-            if (coord.contains(start,  end, strand)) {
-                outs.add(coord.annotations);
-            }
-            if (coord.start > start) {
-                break;
+        final List<String[]> outs = new ArrayList<String[]>();
+
+        final GenomeCoordinates coord = new GenomeCoordinates(ref, start, end, strand);
+        final GenomeCoordinates floor = repeats.floorKey(coord);
+        final GenomeCoordinates ceil = repeats.ceilingKey(coord);
+        final SortedMap<GenomeCoordinates, List<String[]>> submap = repeats.subMap(floor, true,
+                ceil, true);
+        for (final GenomeCoordinates key : submap.keySet()) {
+            if (key.contains(coord)) {
+                outs.addAll(submap.get(key));
             }
         }
+
         return outs;
     }
 }

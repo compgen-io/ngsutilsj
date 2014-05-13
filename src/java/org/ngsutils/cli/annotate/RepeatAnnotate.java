@@ -19,7 +19,7 @@ import com.lexicalscope.jewel.cli.Option;
 import com.lexicalscope.jewel.cli.Unparsed;
 
 @CommandLineInterface(application="ngsutilsj annotate-repeat")
-@Command(name="annotate-repeat", desc="Calculates Repeat masker annotations", cat="annotation")
+@Command(name="annotate-repeat", desc="Calculates Repeat masker annotations", doc="Note: Column indexes start at 1.", cat="annotation")
 public class RepeatAnnotate extends AbstractOutputCommand {
     
     private String filename=null;
@@ -34,7 +34,8 @@ public class RepeatAnnotate extends AbstractOutputCommand {
     private boolean hasHeader = true;
     private boolean headerComment = false;
     
-  
+    private boolean zeroBased = true;
+    
     @Unparsed(name = "FILE")
     public void setFilename(String filename) {
         this.filename = filename;
@@ -46,7 +47,7 @@ public class RepeatAnnotate extends AbstractOutputCommand {
     }
 
 
-    @Option(description = "Column of chromosome (1-based) (Default: 1)", longName="col-chrom", defaultValue="1")
+    @Option(description = "Column of chromosome (Default: 1)", longName="col-chrom", defaultValue="1")
     public void setChromCol(int val) {
         if (val > 0) {
             // stored as 0-based, given as 1-based
@@ -56,7 +57,7 @@ public class RepeatAnnotate extends AbstractOutputCommand {
         }
     }
 
-    @Option(description = "Column of start-position (1-based) (Default: 2)", longName="col-start", defaultValue="2")
+    @Option(description = "Column of start-position (1-based position) (Default: 2)", longName="col-start", defaultValue="2")
     public void setStartCol(int val) {
         if (val > 0) {
             // stored as 0-based, given as 1-based
@@ -66,7 +67,7 @@ public class RepeatAnnotate extends AbstractOutputCommand {
         }
     }
 
-    @Option(description = "Column of end-position (1-based) (Default: -1, no end)", longName="col-end", defaultValue="-1")
+    @Option(description = "Column of end-position (Default: -1, no end col)", longName="col-end", defaultValue="-1")
     public void setEndCol(int val) {
         if (val > 0) {
             // stored as 0-based, given as 1-based
@@ -76,7 +77,7 @@ public class RepeatAnnotate extends AbstractOutputCommand {
         }
     }
 
-    @Option(description = "Column of strand (1-based) (Default: -1, not strand-specific)", longName="col-strand", defaultValue="-1")
+    @Option(description = "Column of strand (Default: -1, not strand-specific)", longName="col-strand", defaultValue="-1")
     public void setStrandCol(int val) {
         if (val > 0) {
             // stored as 0-based, given as 1-based
@@ -84,6 +85,11 @@ public class RepeatAnnotate extends AbstractOutputCommand {
         } else { 
             this.strandCol = -1;
         }
+    }
+
+    @Option(description = "Input file uses one-based coordinates (default is 0-based)", longName="one")
+    public void setOneBased(boolean val) {
+        zeroBased = !val;
     }
 
     @Option(description = "Input file doesn't have a header row", longName="noheader")
@@ -175,6 +181,10 @@ public class RepeatAnnotate extends AbstractOutputCommand {
             int start = Integer.parseInt(cols[startCol])-within;
             int end = start+within;
             Strand strand = Strand.NONE;
+            
+            if (!zeroBased && start > 0) {
+                start = start - 1;
+            }
             
             if (endCol>-1) { 
                 end = Integer.parseInt(cols[endCol])+within;

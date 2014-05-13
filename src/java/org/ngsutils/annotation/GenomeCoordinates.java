@@ -7,31 +7,37 @@ public class GenomeCoordinates implements Comparable<GenomeCoordinates> {
     final public int start;
     final public int end;
     final public Strand strand;
-    final public String[] annotations;
+//    final public String[] annotations;
     
-    public GenomeCoordinates(String ref, int start, int end, Strand strand, String[] annotations) {
+    public GenomeCoordinates(String ref, int start, int end, Strand strand){//, String[] annotations) {
         super();
         this.ref = ref;
         this.start = start;
         this.end = end;
         this.strand = strand;
-        this.annotations = annotations;
+//        this.annotations = annotations;
     }
-    public GenomeCoordinates(String ref, int start, Strand strand,String[] annotations) {
+    public GenomeCoordinates(String ref, int start, Strand strand){//,String[] annotations) {
         super();
         this.ref = ref;
         this.start = start;
         this.end = start;
         this.strand = strand;
-        this.annotations = annotations;
+//        this.annotations = annotations;
     }
     
+    public boolean contains(GenomeCoordinates coord) {
+        return contains(coord.ref, coord.start, coord.end, coord.strand);
+    }
 
-    public boolean contains(int qstart, int qend, Strand qstrand) { 
-        return contains(qstart, qend, qstrand, true);
+    public boolean contains(String qref, int qstart, int qend, Strand qstrand) { 
+        return contains(qref, qstart, qend, qstrand, true);
     }
     
-    public boolean contains(int qstart, int qend, Strand qstrand, boolean onlyWithin){
+    public boolean contains(String qref, int qstart, int qend, Strand qstrand, boolean onlyWithin){
+        if (!ref.equals(qref)) {
+            return false;
+        }
         if (qstrand != Strand.NONE && strand != Strand.NONE && qstrand != strand) {
             return false;            
         }
@@ -99,12 +105,21 @@ public class GenomeCoordinates implements Comparable<GenomeCoordinates> {
 
     @Override
     public int compareTo(GenomeCoordinates o) {
-        if (!ref.equals(o)) {
+        if (!ref.equals(o.ref)) {
             return ref.compareTo(o.ref);
         }
-        if (start == o.start) {
-            return Integer.compare(end, o.end);
-        }
-        return Integer.compare(start, o.start);
+
+        if (start < o.start) {
+            return -1;
+        } else if (start > o.start) {
+            return 1;
+        } else {
+            if (end < o.end) {
+                return -1;
+            } else if (end > o.end) {
+                return 1;
+            }
+            return 0;
+        } 
     }
 }
