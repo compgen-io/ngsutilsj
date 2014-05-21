@@ -7,27 +7,29 @@ public class GenomeCoordinates implements Comparable<GenomeCoordinates> {
     final public int start;
     final public int end;
     final public Strand strand;
-//    final public String[] annotations;
     
-    public GenomeCoordinates(String ref, int start, int end, Strand strand){//, String[] annotations) {
+    public GenomeCoordinates(String ref, int start, int end, Strand strand){
         super();
         this.ref = ref;
         this.start = start;
         this.end = end;
         this.strand = strand;
-//        this.annotations = annotations;
     }
-    public GenomeCoordinates(String ref, int start, Strand strand){//,String[] annotations) {
+
+    public GenomeCoordinates(String ref, int start, Strand strand){
         super();
         this.ref = ref;
         this.start = start;
         this.end = start;
         this.strand = strand;
-//        this.annotations = annotations;
     }
     
+    public boolean contains(GenomeCoordinates coord, boolean onlyWithin) {
+        return contains(coord.ref, coord.start, coord.end, coord.strand, onlyWithin);
+    }
+
     public boolean contains(GenomeCoordinates coord) {
-        return contains(coord.ref, coord.start, coord.end, coord.strand);
+        return contains(coord, true);
     }
 
     public boolean contains(String qref, int qstart, int qend, Strand qstrand) { 
@@ -62,7 +64,7 @@ public class GenomeCoordinates implements Comparable<GenomeCoordinates> {
         if (start == end) {
             return ref+":"+Integer.toString(start);
         }
-        return ref+":"+Integer.toString(start)+"-"+Integer.toString(end);
+        return ref+strand+":"+Integer.toString(start)+"-"+Integer.toString(end);
     }
 
     @Override                                                                                                                                                                                                                                                     
@@ -105,21 +107,27 @@ public class GenomeCoordinates implements Comparable<GenomeCoordinates> {
 
     @Override
     public int compareTo(GenomeCoordinates o) {
-        if (!ref.equals(o.ref)) {
-            return ref.compareTo(o.ref);
-        }
-
-        if (start < o.start) {
-            return -1;
-        } else if (start > o.start) {
-            return 1;
-        } else {
-            if (end < o.end) {
-                return -1;
-            } else if (end > o.end) {
-                return 1;
+        if (strand == Strand.NONE || o.strand == Strand.NONE || strand == o.strand) {
+            if (!ref.equals(o.ref)) {
+                return ref.compareTo(o.ref);
             }
-            return 0;
-        } 
+    
+            if (start < o.start) {
+                return -1;
+            } else if (start > o.start) {
+                return 1;
+            } else {
+                if (end < o.end) {
+                    return -1;
+                } else if (end > o.end) {
+                    return 1;
+                }
+                return 0;
+            }
+        } else if (strand == Strand.PLUS) {
+            return -1;
+        } else {
+            return 1;
+        }
     }
 }

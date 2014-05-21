@@ -4,7 +4,7 @@ import java.util.List;
 
 import org.ngsutils.bam.Strand;
 
-public interface Annotator {
+public interface Annotator<T> {
     /** 
      * headers / annotation keys
      * @return
@@ -13,7 +13,6 @@ public interface Annotator {
     
     /**
      * Find all of of the Annotation values for these coordinates. There may be more than one for each coordinate.
-     * The order of each String[] is the same order as `getAnnotationNames`; 
      * 
      * @param ref - chromosome
      * @param start - zero-based coordinate!
@@ -21,7 +20,16 @@ public interface Annotator {
      * @param strand - if known
      * @return
      */
-    public List<String[]> findAnnotation(String ref, int start, int end, Strand strand);
-    public List<String[]> findAnnotation(String ref, int start);
-    public List<String[]> findAnnotation(String ref, int start, int end);
+    public List<T> findAnnotation(GenomeCoordinates coord);
+    public List<T> findAnnotation(String ref, int start);
+    public List<T> findAnnotation(String ref, int start, Strand strand);
+    public List<T> findAnnotation(String ref, int start, int end);
+    public List<T> findAnnotation(String ref, int start, int end, Strand strand);
+
+    /**
+     * Does the annotator provide values of the name key
+     * @param string
+     * @return
+     */
+    public boolean provides(String key);
 }

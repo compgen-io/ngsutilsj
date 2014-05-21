@@ -1,13 +1,14 @@
 package org.ngsutils.cli.annotate;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.ngsutils.NGSUtils;
 import org.ngsutils.NGSUtilsException;
 import org.ngsutils.annotation.Annotator;
-import org.ngsutils.annotation.RepeatMaskerAnnotator;
-import org.ngsutils.annotation.RepeatMaskerAnnotator.RepeatAnnotation;
+import org.ngsutils.annotation.GTFAnnotator;
+import org.ngsutils.annotation.GTFAnnotator.GTFGene;
 import org.ngsutils.bam.Strand;
 import org.ngsutils.cli.AbstractOutputCommand;
 import org.ngsutils.cli.Command;
@@ -19,12 +20,12 @@ import com.lexicalscope.jewel.cli.CommandLineInterface;
 import com.lexicalscope.jewel.cli.Option;
 import com.lexicalscope.jewel.cli.Unparsed;
 
-@CommandLineInterface(application="ngsutilsj annotate-repeat")
-@Command(name="annotate-repeat", desc="Calculates Repeat masker annotations", doc="Note: Column indexes start at 1.", cat="annotation")
-public class RepeatAnnotate extends AbstractOutputCommand {
+@CommandLineInterface(application="ngsutilsj annotate-gtf")
+@Command(name="annotate-gtf", desc="Finds gene annotations from a GTF model", doc="Note: Column indexes start at 1.", cat="annotation")
+public class GTFAnnotate extends AbstractOutputCommand {
     
     private String filename=null;
-    private String repeatFilename=null;
+    private String gtfFilename=null;
     
     private int refCol = -1;
     private int startCol = -1;
@@ -37,14 +38,16 @@ public class RepeatAnnotate extends AbstractOutputCommand {
     
     private boolean zeroBased = true;
     
+    private List<String> outputs = new ArrayList<String>();
+    
     @Unparsed(name = "FILE")
     public void setFilename(String filename) {
         this.filename = filename;
     }
 
-    @Option(description = "RepeatMasker annotation filename", longName="repeat", defaultToNull=true)
-    public void setRepeatFilename(String repeatFilename) {
-        this.repeatFilename = repeatFilename;
+    @Option(description = "GTF  filename", longName="gtf", defaultToNull=true)
+    public void setGTFFilename(String gtfFilename) {
+        this.gtfFilename = gtfFilename;
     }
 
 
@@ -108,6 +111,22 @@ public class RepeatAnnotate extends AbstractOutputCommand {
         }
     }
 
+    @Option(description = "Add gene_id annotation", longName="gene-id")
+    public void setGeneId(boolean val) {
+        outputs.add("gene_id");
+    }
+
+    @Option(description = "Add gene_name annotation", longName="gene-name")
+    public void setGeneName(boolean val) {
+        outputs.add("gene_name");
+    }
+
+    @Option(description = "Add biotype annotation", longName="biotype")
+    public void setBioType(boolean val) {
+        outputs.add("biotype");
+    }
+
+
     @Option(description = "Input file uses one-based coordinates (default is 0-based)", longName="one")
     public void setOneBased(boolean val) {
         zeroBased = !val;
@@ -131,8 +150,8 @@ public class RepeatAnnotate extends AbstractOutputCommand {
 
     @Override
     public void exec() throws NGSUtilsException, IOException {
-        if (repeatFilename == null) {
-            throw new NGSUtilsException("You must specify a repeatmasker annotation file!");
+        if (gtfFilename == null) {
+            throw new NGSUtilsException("You must specify a GTF file!");
         }
         
         if (filename == null) {
@@ -147,12 +166,12 @@ public class RepeatAnnotate extends AbstractOutputCommand {
         TabWriter writer = new TabWriter();
         writer.write_line("## program: " + NGSUtils.getVersion());
         writer.write_line("## cmd: " + NGSUtils.getArgs());
-        writer.write_line("## repeat-annotations: " + repeatFilename);
+        writer.write_line("## gtf-annotations: " + gtfFilename);
         
         if (verbose) {
-            System.err.print("Reading RepeatMasker annotation file: "+repeatFilename);
+            System.err.print("Reading GTF annotation file: "+gtfFilename);
         }
-        Annotator<RepeatAnnotation> ann = new RepeatMaskerAnnotator(repeatFilename);
+        Annotator<GTFGene> ann = new GTFAnnotator(gtfFilename);
         if (verbose) {
             System.err.println(" [done]");
         }
@@ -189,7 +208,21 @@ public class RepeatAnnotate extends AbstractOutputCommand {
             if (hasHeader && first) {
                 first = false;
                 colNum = cols.length;
-                writer.write(ann.getAnnotationNames());
+                
+                if (outputs.size()>0) {
+                    for (String output: outputs) {
+                        if (output.equals("biotype") && !ann.provides("biotype")) {
+                            continue;
+                        }
+                        writer.write(output);
+                    }
+                } else {
+                    writer.write("gene_id");
+                    writer.write("gene_name");
+                    if (ann.provides("biotype")) {
+                        writer.write("biotype");                    
+                    }
+                }
                 writer.eol();
                 continue;
             }
@@ -215,15 +248,48 @@ public class RepeatAnnotate extends AbstractOutputCommand {
                 strand = Strand.parse(cols[strandCol]);
             }
             
-            List<RepeatAnnotation> annVals = ann.findAnnotation(ref, start, end, strand); 
+            List<GTFGene> annVals = ann.findAnnotation(ref, start, end, strand);
+//            if (ref.equals("chr6") && strand.equals(Strand.MINUS)) {
+//                System.err.println("q: "+ref+":"+start+"-"+end);
+//                for (int i=0; i < annVals.size(); i++) {
+//                    System.err.println(" "+annVals.get(i));
+//                }
+//            }
+            String[] geneIds = new String[annVals.size()];
+            String[] geneNames = new String[annVals.size()];
+            String[] bioTypes = new String[annVals.size()];
            
-            for (int i=0; i < ann.getAnnotationNames().length; i++) {
-                String[] outvals = new String[annVals.size()];
-                for (int j=0; j < annVals.size(); j++) {
-                    outvals[j] = annVals.get(j).toStringArray()[i];
-                }
-                writer.write(StringUtils.join(",", outvals));
+            for (int i=0; i < annVals.size(); i++) {
+                GTFGene gene = annVals.get(i);
+                geneIds[i] = gene.getGeneId();
+                geneNames[i] = gene.getGeneName();
+                bioTypes[i] = gene.getBioType();
             }
+            if (outputs.size()>0) {
+                for (String output: outputs) {
+                    if (output.equals("biotype") && !ann.provides("biotype")) {
+                        continue;
+                    }
+                    switch(output) {
+                    case "gene_id":
+                        writer.write(StringUtils.join(",", geneIds));
+                        break;
+                    case "gene_name":
+                        writer.write(StringUtils.join(",", geneNames));
+                        break;
+                    case "biotype":
+                        writer.write(StringUtils.join(",", bioTypes));
+                        break;
+                    }
+                }
+            } else {
+                writer.write(StringUtils.join(",", geneIds));
+                writer.write(StringUtils.join(",", geneNames));
+                if (ann.provides("biotype")) {
+                    writer.write(StringUtils.join(",", bioTypes));
+                }
+            }
+
             writer.eol();
         }
 

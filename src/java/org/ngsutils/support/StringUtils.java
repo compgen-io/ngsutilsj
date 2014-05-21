@@ -15,12 +15,15 @@ public class StringUtils {
         return str.substring(str.length()+end);
     }
     
-    public static String strip(String str) {
-        Pattern pattern = Pattern.compile("^\\s*(.*)\\s*$");
+    public static String strip(String str, String rem) {
+        Pattern pattern = Pattern.compile("^"+ rem +"(.*)"+ rem +"$");
         
         Matcher m = pattern.matcher(str);
         m.find();
         return m.group(1);
+    }
+    public static String strip(String str) {
+        return strip(str, "\\s*");
     }
     
     public static String rstrip(String str) {

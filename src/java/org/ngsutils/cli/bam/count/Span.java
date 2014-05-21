@@ -44,4 +44,15 @@ public class Span {
     public String[] getFields() {
         return fields;
     }
+
+    public boolean within(String ref, int pos) {
+        if (refName.equals(ref)) {
+            for (int i=0; i < starts.length; i++) {
+                if (starts[i] <= pos && pos <= ends[i]) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
 }

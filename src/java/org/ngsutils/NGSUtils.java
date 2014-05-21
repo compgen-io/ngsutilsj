@@ -13,6 +13,7 @@ import java.util.Map;
 
 import org.ngsutils.cli.Command;
 import org.ngsutils.cli.NGSExec;
+import org.ngsutils.cli.annotate.GTFAnnotate;
 import org.ngsutils.cli.annotate.RepeatAnnotate;
 import org.ngsutils.cli.bam.BAMCount;
 import org.ngsutils.cli.fastq.FastqFilter;
@@ -35,6 +36,7 @@ public class NGSUtils {
         loadExec(FastqFilter.class);
         loadExec(BAMCount.class);
         loadExec(RepeatAnnotate.class);
+        loadExec(GTFAnnotate.class);
 	}
 
 	@SuppressWarnings("unchecked")

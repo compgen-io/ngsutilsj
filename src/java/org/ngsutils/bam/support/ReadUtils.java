@@ -19,6 +19,7 @@ public class ReadUtils {
             return null;
         }
         if (!read.getReadPairedFlag() || read.getFirstOfPairFlag()) {
+            // unpaired or first read in a pair
             if (orient == Orientation.FR || orient == Orientation.UNSTRANDED) {
                 if (read.getReadNegativeStrandFlag()) {
                     return Strand.MINUS;
@@ -33,6 +34,7 @@ public class ReadUtils {
                 }
             }
         } else {
+            // paired end and second read...
             if (orient == Orientation.FR || orient == Orientation.UNSTRANDED) {
                 // this assumes read1 and read2 are sequenced in opposite
                 if (read.getReadNegativeStrandFlag()) {

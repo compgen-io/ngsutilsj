@@ -44,6 +44,8 @@ public class BAMCount extends AbstractOutputCommand {
     private boolean insert = false;
     private boolean inverted = false;
     
+    private boolean startOnly = false;
+    
     private Orientation orient = Orientation.UNSTRANDED;
     
     @Unparsed(name = "FILE")
@@ -110,6 +112,11 @@ public class BAMCount extends AbstractOutputCommand {
     @Option(description = "Also report the number of inverted reads (FF,RR)", longName="inverted")
     public void setInverted(boolean val) {
         inverted = val;
+    }
+
+    @Option(description = "Only count the starting mapped position (strand specific)", longName="startonly")
+    public void setStartOnly(boolean val) {
+        startOnly = val;
     }
 
     @Override
@@ -193,6 +200,7 @@ public class BAMCount extends AbstractOutputCommand {
             Set<String> reads = new HashSet<String>();
             
             for (int i = 0; i < span.getStarts().length; i++) {            
+                // spans are 0-based, reader query is 1-based
                 SAMRecordIterator it = reader.query(span.getRefName(), span.getStarts()[i]+1, span.getEnds()[i], contained);
                 while (it.hasNext()) {
                     SAMRecord read = it.next();
@@ -203,8 +211,24 @@ public class BAMCount extends AbstractOutputCommand {
                     }
 
                     if (!reads.contains(read.getReadName())) {
-                        reads.add(read.getReadName());
                         if (span.getStrand() == Strand.NONE || (ReadUtils.getFragmentEffectiveStrand(read, orient) == span.getStrand())) {
+                            if (startOnly) {                                
+                                if (read.getReadPairedFlag() && read.getSecondOfPairFlag()) {
+                                    continue;
+                                }
+                                
+                                int startpos;
+                                if (ReadUtils.getFragmentEffectiveStrand(read, orient) == Strand.PLUS) {
+                                    startpos = read.getAlignmentStart();
+                                } else {
+                                    startpos = read.getAlignmentEnd();
+                                }
+                                
+                                if (!span.within(span.getRefName(), startpos)) {
+                                    continue;
+                                }
+                            }
+                            reads.add(read.getReadName());
                             count ++;
                             if (proper) {
                                 if (read.getReadPairedFlag() && read.getProperPairFlag()) {

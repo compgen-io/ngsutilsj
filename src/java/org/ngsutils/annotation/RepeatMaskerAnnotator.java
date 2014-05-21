@@ -2,12 +2,8 @@ package org.ngsutils.annotation;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.NavigableMap;
-import java.util.SortedMap;
-import java.util.TreeMap;
 
+import org.ngsutils.annotation.RepeatMaskerAnnotator.RepeatAnnotation;
 import org.ngsutils.bam.Strand;
 import org.ngsutils.support.StringLineReader;
 import org.ngsutils.support.StringUtils;
@@ -18,8 +14,30 @@ import org.ngsutils.support.StringUtils;
  * @author mbreese
  * 
  */
-public class RepeatMaskerAnnotator implements Annotator {
-    private final NavigableMap<GenomeCoordinates, List<String[]>> repeats = new TreeMap<GenomeCoordinates, List<String[]>>();
+
+public class RepeatMaskerAnnotator extends AbstractAnnotator<RepeatAnnotation> {
+    public class RepeatAnnotation implements Annotation {
+        final private String repeat;
+        final private String repeatFamily;
+
+        public RepeatAnnotation(String repeat, String repeatFamily) {
+            this.repeat = repeat;
+            this.repeatFamily = repeatFamily;
+        }
+
+        public String getRepeat() {
+            return repeat;
+        }
+
+        public String getRepeatFamily() {
+            return repeatFamily;
+        }
+
+        @Override
+        public String[] toStringArray() {
+            return new String[] { repeat, repeatFamily };
+        }
+    }
 
     public RepeatMaskerAnnotator(String filename) throws FileNotFoundException, IOException {
         int skip = 3;
@@ -44,13 +62,10 @@ public class RepeatMaskerAnnotator implements Annotator {
                 strand = Strand.NONE;
             }
             final GenomeCoordinates coord = new GenomeCoordinates(chrom, start, end, strand);
-            final String[] annotations = new String[] { cols[9], cols[10] };
+            final RepeatAnnotation annotation = new RepeatAnnotation(cols[9], cols[10]);
 
-            if (!repeats.containsKey(coord)) {
-                repeats.put(coord, new ArrayList<String[]>());
-            }
-
-            repeats.get(coord).add(annotations);
+            addAnnotation(coord, annotation);
+            
         }
     }
 
@@ -59,31 +74,4 @@ public class RepeatMaskerAnnotator implements Annotator {
         return new String[] { "repeat", "repeat_family" };
     }
 
-    @Override
-    public List<String[]> findAnnotation(String ref, int start) {
-        return findAnnotation(ref, start, start, Strand.NONE);
-    }
-
-    @Override
-    public List<String[]> findAnnotation(String ref, int start, int end) {
-        return findAnnotation(ref, start, end, Strand.NONE);
-    }
-
-    @Override
-    public List<String[]> findAnnotation(String ref, int start, int end, Strand strand) {
-        final List<String[]> outs = new ArrayList<String[]>();
-
-        final GenomeCoordinates coord = new GenomeCoordinates(ref, start, end, strand);
-        final GenomeCoordinates floor = repeats.floorKey(coord);
-        final GenomeCoordinates ceil = repeats.ceilingKey(coord);
-        final SortedMap<GenomeCoordinates, List<String[]>> submap = repeats.subMap(floor, true,
-                ceil, true);
-        for (final GenomeCoordinates key : submap.keySet()) {
-            if (key.contains(coord)) {
-                outs.addAll(submap.get(key));
-            }
-        }
-
-        return outs;
-    }
 }
