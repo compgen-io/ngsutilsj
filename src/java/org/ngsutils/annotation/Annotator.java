@@ -1,6 +1,7 @@
 package org.ngsutils.annotation;
 
 import java.util.List;
+import java.util.Set;
 
 import org.ngsutils.bam.Strand;
 
@@ -10,7 +11,8 @@ public interface Annotator<T> {
      * @return
      */
     public String[] getAnnotationNames();
-    
+    public Set<GenomeAnnotation<T>> allAnnotations();
+
     /**
      * Find all of of the Annotation values for these coordinates. There may be more than one for each coordinate.
      * 
@@ -20,7 +22,7 @@ public interface Annotator<T> {
      * @param strand - if known
      * @return
      */
-    public List<T> findAnnotation(GenomeCoordinates coord);
+    public List<T> findAnnotation(GenomeRegion coord);
     public List<T> findAnnotation(String ref, int start);
     public List<T> findAnnotation(String ref, int start, Strand strand);
     public List<T> findAnnotation(String ref, int start, int end);

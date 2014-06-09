@@ -2,13 +2,13 @@ package org.ngsutils.annotation;
 
 import org.ngsutils.bam.Strand;
 
-public class GenomeCoordinates implements Comparable<GenomeCoordinates> {
+public class GenomeRegion implements Comparable<GenomeRegion> {
     final public String ref;
     final public int start;
     final public int end;
     final public Strand strand;
     
-    public GenomeCoordinates(String ref, int start, int end, Strand strand){
+    public GenomeRegion(String ref, int start, int end, Strand strand){
         super();
         this.ref = ref;
         this.start = start;
@@ -16,7 +16,7 @@ public class GenomeCoordinates implements Comparable<GenomeCoordinates> {
         this.strand = strand;
     }
 
-    public GenomeCoordinates(String ref, int start, Strand strand){
+    public GenomeRegion(String ref, int start, Strand strand){
         super();
         this.ref = ref;
         this.start = start;
@@ -24,11 +24,11 @@ public class GenomeCoordinates implements Comparable<GenomeCoordinates> {
         this.strand = strand;
     }
     
-    public boolean contains(GenomeCoordinates coord, boolean onlyWithin) {
+    public boolean contains(GenomeRegion coord, boolean onlyWithin) {
         return contains(coord.ref, coord.start, coord.end, coord.strand, onlyWithin);
     }
 
-    public boolean contains(GenomeCoordinates coord) {
+    public boolean contains(GenomeRegion coord) {
         return contains(coord, true);
     }
 
@@ -88,7 +88,7 @@ public class GenomeCoordinates implements Comparable<GenomeCoordinates> {
         if (getClass() != obj.getClass()) {
             return false;
         }
-        GenomeCoordinates other = (GenomeCoordinates) obj;
+        GenomeRegion other = (GenomeRegion) obj;
         if (end != other.end) {
             return false;
         }
@@ -106,28 +106,28 @@ public class GenomeCoordinates implements Comparable<GenomeCoordinates> {
     }
 
     @Override
-    public int compareTo(GenomeCoordinates o) {
-        if (strand == Strand.NONE || o.strand == Strand.NONE || strand == o.strand) {
-            if (!ref.equals(o.ref)) {
-                return ref.compareTo(o.ref);
-            }
-    
-            if (start < o.start) {
-                return -1;
-            } else if (start > o.start) {
-                return 1;
-            } else {
-                if (end < o.end) {
-                    return -1;
-                } else if (end > o.end) {
-                    return 1;
-                }
-                return 0;
-            }
-        } else if (strand == Strand.PLUS) {
+    public int compareTo(GenomeRegion o) {
+        if (!ref.equals(o.ref)) {
+            return ref.compareTo(o.ref);
+        }
+
+        if (start < o.start) {
             return -1;
-        } else {
+        } else if (start > o.start) {
             return 1;
+        } else {
+            if (end < o.end) {
+                return -1;
+            } else if (end > o.end) {
+                return 1;
+            }
+            if (strand == Strand.NONE || o.strand == Strand.NONE || strand == o.strand) {
+                return 0;
+            } else if (strand == Strand.PLUS) {
+                return -1;
+            } else {
+                return 1;
+            }
         }
     }
 }

@@ -31,24 +31,24 @@ public class SimpleValueAnnotator extends AbstractAnnotator<SimpleValueAnnotatio
 
     }
 
-    public void addAnnotation(GenomeCoordinates coord, String val) {
+    public void addAnnotation(GenomeRegion coord, String val) {
         this.addAnnotation(coord, new SimpleValueAnnotation(val));
     }
     
     public void addAnnotation(String ref, int pos, String val) {
-        this.addAnnotation(new GenomeCoordinates(ref, pos, Strand.NONE), new SimpleValueAnnotation(val));
+        this.addAnnotation(new GenomeRegion(ref, pos, Strand.NONE), new SimpleValueAnnotation(val));
     }
     
     public void addAnnotation(String ref, int pos, Strand strand, String val) {
-        this.addAnnotation(new GenomeCoordinates(ref, pos, strand), new SimpleValueAnnotation(val));
+        this.addAnnotation(new GenomeRegion(ref, pos, strand), new SimpleValueAnnotation(val));
     }
     
     public void addAnnotation(String ref, int start, int end, String val) {
-        this.addAnnotation(new GenomeCoordinates(ref, start, end, Strand.NONE), new SimpleValueAnnotation(val));
+        this.addAnnotation(new GenomeRegion(ref, start, end, Strand.NONE), new SimpleValueAnnotation(val));
     }
 
     public void addAnnotation(String ref, int start, int end, Strand strand, String val) {
-        this.addAnnotation(new GenomeCoordinates(ref, start, end, strand), new SimpleValueAnnotation(val));
+        this.addAnnotation(new GenomeRegion(ref, start, end, strand), new SimpleValueAnnotation(val));
     }
     
     

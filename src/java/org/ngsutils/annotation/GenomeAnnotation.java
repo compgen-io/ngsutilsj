@@ -1,15 +1,15 @@
 package org.ngsutils.annotation;
 
 public class GenomeAnnotation<T> implements Comparable<GenomeAnnotation<T>>{
-    final private GenomeCoordinates coordinates;
+    final private GenomeRegion coordinates;
     final private T value;
 
-    public GenomeAnnotation(GenomeCoordinates coordinates, T value) {
+    public GenomeAnnotation(GenomeRegion coordinates, T value) {
         this.coordinates = coordinates;
         this.value = value;
     }
 
-    public GenomeCoordinates getCoordinates() {
+    public GenomeRegion getCoordinates() {
         return coordinates;
     }
 

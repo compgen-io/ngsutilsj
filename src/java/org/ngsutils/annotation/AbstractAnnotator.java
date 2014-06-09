@@ -3,8 +3,10 @@ package org.ngsutils.annotation;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.ngsutils.bam.Strand;
 
@@ -54,7 +56,7 @@ abstract public class AbstractAnnotator<T> implements Annotator<T> {
             }
             return true;
         }
-        public static List<RefBin> getBins(GenomeCoordinates coord) {
+        public static List<RefBin> getBins(GenomeRegion coord) {
             int start = coord.start / BINSIZE;
             int end = coord.end / BINSIZE;
 
@@ -68,65 +70,65 @@ abstract public class AbstractAnnotator<T> implements Annotator<T> {
     }
     
     protected final Map<RefBin,List<GenomeAnnotation<T>>> annotationBins = new HashMap<RefBin, List<GenomeAnnotation<T>>>();
-    protected final static int BINSIZE=10_000;
+    protected final Set<GenomeAnnotation<T>> annotations = new HashSet<GenomeAnnotation<T>>();
+    protected final static int BINSIZE=100_000;
     
     @Override
     public List<T> findAnnotation(String ref, int start) {
-        return findAnnotation(new GenomeCoordinates(ref, start, Strand.NONE));
+        return findAnnotation(new GenomeRegion(ref, start, Strand.NONE));
     }
 
     @Override
     public List<T> findAnnotation(String ref, int start, int end) {
-        return findAnnotation(new GenomeCoordinates(ref, start, end, Strand.NONE));
+        return findAnnotation(new GenomeRegion(ref, start, end, Strand.NONE));
     }
 
     @Override
     public List<T> findAnnotation(String ref, int start, Strand strand) {
-        return findAnnotation(new GenomeCoordinates(ref, start, strand));
+        return findAnnotation(new GenomeRegion(ref, start, strand));
     }
 
     @Override
     public List<T> findAnnotation(String ref, int start, int end, Strand strand) {
-        return findAnnotation(new GenomeCoordinates(ref, start, end, strand));
+        return findAnnotation(new GenomeRegion(ref, start, end, strand));
     }
 
     @Override
-    public List<T> findAnnotation(final GenomeCoordinates coord) {
-        final List<T> outs = new ArrayList<T>();
-//        System.err.println("Searching for: "+ coord);
-
-        
+    public List<T> findAnnotation(final GenomeRegion coord) {
+        final Set<T> outs = new HashSet<T>();
+       
         for (RefBin bin: RefBin.getBins(coord)) {
             if (annotationBins.containsKey(bin)) {
                 for (GenomeAnnotation<T> ga: annotationBins.get(bin)) {
                     if (ga.getCoordinates().start > coord.end) {
-//                        System.err.println("      *** break ***");
                         break;
                     }
-//                    System.err.print("    - checking ga: "+ga.getCoordinates());
                     if (ga.getCoordinates().contains(coord, false)) {
-//                        System.err.print(" **MATCH**");
                         outs.add(ga.getValue());
                     }
-//                    System.err.println("");
                 }                
             }
         }
         
-        return outs;
+        return new ArrayList<T>(outs);
     }
     
-    protected void addAnnotation(GenomeCoordinates coord, T value) {
+    protected void addAnnotation(GenomeRegion coord, T value) {
+        GenomeAnnotation<T> ga = new GenomeAnnotation<T>(coord, value);
         for (RefBin bin: RefBin.getBins(coord)) {
-//            System.err.println("Adding: " + coord + " to bin: " + bin);
             if (!annotationBins.containsKey(bin)) {
-                annotationBins.put(bin,  new ArrayList<GenomeAnnotation<T>>());
+                annotationBins.put(bin, new ArrayList<GenomeAnnotation<T>>());
             }
-            annotationBins.get(bin).add(new GenomeAnnotation<T>(coord, value));
+            annotationBins.get(bin).add(ga);
             Collections.sort(annotationBins.get(bin));
         }
+        annotations.add(ga);
     }
-
+    
+    public Set<GenomeAnnotation<T>> allAnnotations() {
+        return annotations;
+    }
+    
     @Override
     public boolean provides(String key) {
         final String[] names = getAnnotationNames();

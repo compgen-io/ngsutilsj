@@ -61,7 +61,7 @@ public class RepeatMaskerAnnotator extends AbstractAnnotator<RepeatAnnotation> {
                 // this shouldn't happen
                 strand = Strand.NONE;
             }
-            final GenomeCoordinates coord = new GenomeCoordinates(chrom, start, end, strand);
+            final GenomeRegion coord = new GenomeRegion(chrom, start, end, strand);
             final RepeatAnnotation annotation = new RepeatAnnotation(cols[9], cols[10]);
 
             addAnnotation(coord, annotation);

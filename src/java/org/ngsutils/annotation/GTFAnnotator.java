@@ -290,7 +290,7 @@ public class GTFAnnotator extends AbstractAnnotator<GTFGene> {
 
         for (final String geneId : cache.keySet()) {
             final GTFGene gene = cache.get(geneId);
-            final GenomeCoordinates coord = new GenomeCoordinates(gene.getRef(),
+            final GenomeRegion coord = new GenomeRegion(gene.getRef(),
                     gene.getStart(), gene.getEnd(), gene.getStrand());
             addAnnotation(coord, gene);
         }
