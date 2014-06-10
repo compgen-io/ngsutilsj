@@ -171,6 +171,7 @@ public class GTFAnnotate extends AbstractOutputCommand {
         if (verbose) {
             System.err.print("Reading GTF annotation file: "+gtfFilename);
         }
+
         Annotator<GTFGene> ann = new GTFAnnotator(gtfFilename);
         if (verbose) {
             System.err.println(" [done]");
@@ -180,117 +181,137 @@ public class GTFAnnotate extends AbstractOutputCommand {
         String lastline = null;
         int colNum = -1;
         for (String line: new StringLineReader(filename)) {
-            if (line.charAt(0) == '#') {
-                if (lastline != null) {
-                    writer.write_line(lastline);
+            try {
+                if (line.charAt(0) == '#') {
+                    if (lastline != null) {
+                        writer.write_line(lastline);
+                    }
+                    lastline = line;
+                    continue;
                 }
-                lastline = line;
-                continue;
-            }
-            
-            if (lastline!=null) {
-                if (headerComment && hasHeader) {
-                    String[] cols = lastline.split("\\t", -1);
-                    colNum = cols.length;
-                    writer.write(cols);
-                    writer.write(ann.getAnnotationNames());
-                    writer.eol();
+                
+                if (lastline!=null) {
+                    if (headerComment && hasHeader) {
+                        String[] cols = lastline.split("\\t", -1);
+                        colNum = cols.length;
+                        writer.write(cols);
+                        if (outputs.size()>0) {
+                            for (String output: outputs) {
+                                if (output.equals("biotype") && !ann.provides("biotype")) {
+                                    continue;
+                                }
+                                writer.write(output);
+                            }
+                        } else {
+                            writer.write("gene_id");
+                            writer.write("gene_name");
+                            if (ann.provides("biotype")) {
+                                writer.write("biotype");                    
+                            }
+                        }
+                        writer.eol();
+                        first = false;
+                    } else {
+                        writer.write_line(lastline);
+                    }
+                    
+                    lastline = null;
+                }
+                
+                String[] cols = line.split("\\t", -1);
+                writer.write(cols);
+                if (hasHeader && first) {
                     first = false;
-                } else {
-                    writer.write_line(lastline);
+                    colNum = cols.length;
+                    
+                    if (outputs.size()>0) {
+                        for (String output: outputs) {
+                            if (output.equals("biotype") && !ann.provides("biotype")) {
+                                continue;
+                            }
+                            writer.write(output);
+                        }
+                    } else {
+                        writer.write("gene_id");
+                        writer.write("gene_name");
+                        if (ann.provides("biotype")) {
+                            writer.write("biotype");                    
+                        }
+                    }
+                    writer.eol();
+                    continue;
                 }
                 
-                lastline = null;
-            }
-            
-            String[] cols = line.split("\\t", -1);
-            writer.write(cols);
-            if (hasHeader && first) {
-                first = false;
-                colNum = cols.length;
+                for (int i=cols.length; i<colNum; i++) {
+                    writer.write("");
+                }
                 
+                String ref = cols[refCol];
+                int start = Integer.parseInt(cols[startCol])-within;
+                int end = start+within;
+                Strand strand = Strand.NONE;
+                
+                if (!zeroBased && start > 0) {
+                    start = start - 1;
+                }
+                
+                if (endCol>-1) { 
+                    end = Integer.parseInt(cols[endCol])+within;
+                }
+                
+                if (strandCol>-1) {
+                    strand = Strand.parse(cols[strandCol]);
+                }
+                
+                List<GTFGene> annVals = ann.findAnnotation(ref, start, end, strand);
+//                if (ref.equals("chr17") && start >= 7_560_000 && end <= 8_000_000) {
+//                    System.err.println("q: "+ref+":"+start+"-"+end);
+//                    for (int i=0; i < annVals.size(); i++) {
+//                        System.err.println(" "+annVals.get(i));
+//                    }
+//                }
+                String[] geneIds = new String[annVals.size()];
+                String[] geneNames = new String[annVals.size()];
+                String[] bioTypes = new String[annVals.size()];
+               
+                for (int i=0; i < annVals.size(); i++) {
+                    GTFGene gene = annVals.get(i);
+                    geneIds[i] = gene.getGeneId();
+                    geneNames[i] = gene.getGeneName();
+                    bioTypes[i] = gene.getBioType();
+                }
                 if (outputs.size()>0) {
                     for (String output: outputs) {
                         if (output.equals("biotype") && !ann.provides("biotype")) {
                             continue;
                         }
-                        writer.write(output);
+                        switch(output) {
+                        case "gene_id":
+                            writer.write(StringUtils.join(",", geneIds));
+                            break;
+                        case "gene_name":
+                            writer.write(StringUtils.join(",", geneNames));
+                            break;
+                        case "biotype":
+                            writer.write(StringUtils.join(",", bioTypes));
+                            break;
+                        }
                     }
                 } else {
-                    writer.write("gene_id");
-                    writer.write("gene_name");
+                    writer.write(StringUtils.join(",", geneIds));
+                    writer.write(StringUtils.join(",", geneNames));
                     if (ann.provides("biotype")) {
-                        writer.write("biotype");                    
-                    }
-                }
-                writer.eol();
-                continue;
-            }
-            
-            for (int i=cols.length; i<colNum; i++) {
-                writer.write("");
-            }
-            
-            String ref = cols[refCol];
-            int start = Integer.parseInt(cols[startCol])-within;
-            int end = start+within;
-            Strand strand = Strand.NONE;
-            
-            if (!zeroBased && start > 0) {
-                start = start - 1;
-            }
-            
-            if (endCol>-1) { 
-                end = Integer.parseInt(cols[endCol])+within;
-            }
-            
-            if (strandCol>-1) {
-                strand = Strand.parse(cols[strandCol]);
-            }
-            
-            List<GTFGene> annVals = ann.findAnnotation(ref, start, end, strand);
-//            if (ref.equals("chr6") && strand.equals(Strand.MINUS)) {
-//                System.err.println("q: "+ref+":"+start+"-"+end);
-//                for (int i=0; i < annVals.size(); i++) {
-//                    System.err.println(" "+annVals.get(i));
-//                }
-//            }
-            String[] geneIds = new String[annVals.size()];
-            String[] geneNames = new String[annVals.size()];
-            String[] bioTypes = new String[annVals.size()];
-           
-            for (int i=0; i < annVals.size(); i++) {
-                GTFGene gene = annVals.get(i);
-                geneIds[i] = gene.getGeneId();
-                geneNames[i] = gene.getGeneName();
-                bioTypes[i] = gene.getBioType();
-            }
-            if (outputs.size()>0) {
-                for (String output: outputs) {
-                    if (output.equals("biotype") && !ann.provides("biotype")) {
-                        continue;
-                    }
-                    switch(output) {
-                    case "gene_id":
-                        writer.write(StringUtils.join(",", geneIds));
-                        break;
-                    case "gene_name":
-                        writer.write(StringUtils.join(",", geneNames));
-                        break;
-                    case "biotype":
                         writer.write(StringUtils.join(",", bioTypes));
-                        break;
                     }
                 }
-            } else {
-                writer.write(StringUtils.join(",", geneIds));
-                writer.write(StringUtils.join(",", geneNames));
-                if (ann.provides("biotype")) {
-                    writer.write(StringUtils.join(",", bioTypes));
-                }
+    
+                writer.eol();
+            } catch (Exception ex) {
+                System.err.println("ERROR processing line: "+line);
+                System.err.println(ex);
+                ex.printStackTrace(System.err);
+                throw(ex);
             }
-
-            writer.eol();
         }
 
         writer.close();
