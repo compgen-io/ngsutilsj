@@ -16,11 +16,14 @@ import org.ngsutils.cli.NGSExec;
 import org.ngsutils.cli.annotate.GTFAnnotate;
 import org.ngsutils.cli.annotate.RepeatAnnotate;
 import org.ngsutils.cli.bam.BAMCount;
+import org.ngsutils.cli.bam.PileupCli;
+import org.ngsutils.cli.fasta.FASTACli;
 import org.ngsutils.cli.fastq.FastqFilter;
 import org.ngsutils.cli.fastq.FastqMerge;
 import org.ngsutils.cli.fastq.FastqSeparate;
 import org.ngsutils.cli.fastq.FastqSort;
 import org.ngsutils.cli.fastq.FastqSplit;
+import org.ngsutils.cli.gtf.GTFExport;
 
 import com.lexicalscope.jewel.cli.ArgumentValidationException;
 import com.lexicalscope.jewel.cli.CliFactory;
@@ -35,8 +38,11 @@ public class NGSUtils {
 		loadExec(FastqSplit.class);
         loadExec(FastqFilter.class);
         loadExec(BAMCount.class);
+        loadExec(FASTACli.class);
+        loadExec(PileupCli.class);
         loadExec(RepeatAnnotate.class);
         loadExec(GTFAnnotate.class);
+        loadExec(GTFExport.class);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -115,6 +121,7 @@ public class NGSUtils {
 			spacer += " ";
 		}
 		spacer += " - ";
+		System.err.println("[help]");
 		System.err.println("  help command" + spacer
 				+ "Help message for the given command");
 		

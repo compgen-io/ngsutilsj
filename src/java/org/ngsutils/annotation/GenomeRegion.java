@@ -24,6 +24,26 @@ public class GenomeRegion implements Comparable<GenomeRegion> {
         this.strand = strand;
     }
     
+    public static GenomeRegion parse(String str) {
+        if (str.indexOf(':') <= 0) {
+            return null;
+        }
+
+        String ref = str.substring(0,str.indexOf(':'));
+        String startend = str.substring(str.indexOf(':')+1);
+
+        if (startend.indexOf('-') == 0) {
+            return null;
+        } else if (startend.indexOf('-') == -1) {
+            int pos = Integer.parseInt(startend);
+            return new GenomeRegion(ref, pos, Strand.NONE);
+        } else {
+            int start = Integer.parseInt(startend.substring(0, startend.indexOf('-')));
+            int end = Integer.parseInt(startend.substring(startend.indexOf('-')+1));
+            return new GenomeRegion(ref, start, end, Strand.NONE);
+        }
+    }
+    
     public boolean contains(GenomeRegion coord, boolean onlyWithin) {
         return contains(coord.ref, coord.start, coord.end, coord.strand, onlyWithin);
     }
@@ -63,6 +83,9 @@ public class GenomeRegion implements Comparable<GenomeRegion> {
     public String toString() {
         if (start == end) {
             return ref+":"+Integer.toString(start);
+        }
+        if (strand==Strand.NONE) {
+            return ref+":"+Integer.toString(start)+"-"+Integer.toString(end);
         }
         return ref+strand+":"+Integer.toString(start)+"-"+Integer.toString(end);
     }
