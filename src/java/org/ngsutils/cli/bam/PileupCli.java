@@ -122,6 +122,7 @@ public class PileupCli extends AbstractOutputCommand {
                 }
 
                 bases += pr.getStrandedBaseCall(pileupPos.refBase);
+
                 if (pr.isEnd()) {
                     bases += "$";
                 }

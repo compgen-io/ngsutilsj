@@ -145,7 +145,7 @@ public class Pileup {
         }
         public String getStrandedBaseCall(String refBase) {
             String call = getBaseCall();
-            if (call.equals(refBase)) {
+            if (call.equals(refBase.toUpperCase())) {
                 if (read.getReadNegativeStrandFlag()) {
                     return ",";
                 }
@@ -164,6 +164,10 @@ public class Pileup {
 //            }
             return (char) (read.getBaseQualities()[readPos] + 33);
         }
+
+        public SAMRecord getRead() {
+            return read;
+        }
     }
 
     public class PileupPos {
@@ -178,7 +182,7 @@ public class Pileup {
         public PileupPos(int refIndex, int pos, String refBase) {
             this.refIndex = refIndex;
             this.pos = pos;
-            this.refBase = refBase.toUpperCase();
+            this.refBase = refBase;
         }
         
         public PileupPos(int refIndex, int pos) {
@@ -187,10 +191,13 @@ public class Pileup {
             this.refBase = "N";
         }
         
-        private void addRead(SAMRecord read, int readPos, CigarOperator cigarOp, int cigarLen, boolean isStart, String deletedSeq) {
+        private void addRead(SAMRecord read, int readPos, CigarOperator cigarOp, int cigarLen, boolean isStart, boolean isLast, String deletedSeq) {
             if (cigarOp == CigarOperator.M) {
-                last = new PileupRead(read, readPos, cigarOp, 1, isStart);
-                reads.add(last);
+                PileupRead pr = new PileupRead(read, readPos, cigarOp, 1, isStart);
+                reads.add(pr);
+                if (isLast) {
+                    last = pr;
+                }
                 coverage += 1;
             } else if (cigarOp == CigarOperator.I) {
                 reads.add(new PileupRead(read, readPos, cigarOp, cigarLen, isStart));
@@ -333,7 +340,7 @@ public class Pileup {
                         }
 
                         SAMRecord first = buffer.getFirst();
-                        if (nextPos == -1 || first.getAlignmentStart() <= nextPos) {
+                        if (nextPos == -1 || first.getAlignmentStart() <= nextPos || pileupPos.size() == 0) {
                             SAMRecord head = buffer.peekFirst();
                             while (head != null && head.getReferenceIndex() == first.getReferenceIndex() && head.getAlignmentStart() == first.getAlignmentStart()) {
                                 populateRead(head);
@@ -348,40 +355,42 @@ public class Pileup {
                         int readPos = 0;
                         
                         boolean first = true;
+                        int lastqual = -1;
                         for (CigarElement cigarEl:read.getCigar().getCigarElements()) {
                             CigarOperator cigarOp = cigarEl.getOperator();
                             int cigarLen = cigarEl.getLength();
                             
                             if (cigarOp == CigarOperator.M) {
                                 for (int i=0; i<cigarLen; i++) {
-                                    int qual = read.getBaseQualities()[readPos+i];
-                                    if (qual >= minBaseQual) {
-                                        addRefPosRead(read, refPos+i, readPos+i, cigarOp, 1, first);
+                                    lastqual = read.getBaseQualities()[readPos+i];
+                                    if (lastqual >= minBaseQual) {
+                                        addRefPosRead(read, refPos+i, readPos+i, cigarOp, 1, first, i==cigarLen-1);
                                     }
                                     first = false;
                                 }
                                 readPos += cigarLen;
                                 refPos += cigarLen;
                             } else if (cigarOp == CigarOperator.I) {
-                                addRefPosRead(read, refPos, readPos, cigarOp, cigarLen, false);
+                                if (lastqual >= minBaseQual) {
+                                    addRefPosRead(read, refPos-1, readPos, cigarOp, cigarLen, false, false);
+                                }
                                 readPos += cigarLen;
                             } else if (cigarOp == CigarOperator.D) {
-                                String deletedSeq = "X";
+                                String deletedSeq = "?";
+                                
                                 try {
                                     deletedSeq = fastaRef.fetch(read.getReferenceName(), refPos-1, refPos-1+cigarLen);
                                 } catch (IOException e) {
                                     e.printStackTrace();
                                 }
-                                addRefPosRead(read, refPos-1, readPos, cigarOp, cigarLen, false, deletedSeq);
-
-                                for (int i=0; i<cigarLen; i++) {
-                                    addRefPosRead(read, refPos+i, readPos, cigarOp, 0, false);
+                                if (lastqual >= minBaseQual) {
+                                    addRefPosRead(read, refPos-1, readPos, cigarOp, cigarLen, false, false, deletedSeq);
                                 }
-
-                                
-                                
-                                
+                                for (int i=0; i<cigarLen; i++) {
+                                    addRefPosRead(read, refPos+i, readPos, cigarOp, 0, false, false);
+                                }
                                 refPos += cigarLen;
+
                             } else if (cigarOp == CigarOperator.N) {
                                 refPos += cigarLen;
                             } else if (cigarOp == CigarOperator.S) {
@@ -397,14 +406,17 @@ public class Pileup {
                         if (pileupPos.containsKey(refPosKey)) {
                             // Note: when you are filtering out calls based on the call quality, 
                             // then the last base may not be displayed to mark.
-                            pileupPos.get(refPosKey).getLast().setEnd();
+                            PileupRead last = pileupPos.get(refPosKey).getLast();
+                            if (last!=null) {
+                                last.setEnd();
+                            }
                         }
                     }
                     
-                    private void addRefPosRead(SAMRecord read, int refPos, int readPos, CigarOperator cigarOp, int cigarLen, boolean isStart) {
-                        addRefPosRead(read, refPos, readPos, cigarOp, cigarLen, isStart, null);
+                    private void addRefPosRead(SAMRecord read, int refPos, int readPos, CigarOperator cigarOp, int cigarLen, boolean isStart, boolean isEnd) {
+                        addRefPosRead(read, refPos, readPos, cigarOp, cigarLen, isStart, isEnd, null);
                     }
-                    private void addRefPosRead(SAMRecord read, int refPos, int readPos, CigarOperator cigarOp, int cigarLen, boolean isStart, String deletedSeq) {
+                    private void addRefPosRead(SAMRecord read, int refPos, int readPos, CigarOperator cigarOp, int cigarLen, boolean isStart, boolean isEnd, String deletedSeq) {
                         RefPos refPosKey = new RefPos(read.getReferenceIndex(), refPos);
                         if (!pileupPos.containsKey(refPosKey)) {
                             if (fastaRef != null) {
@@ -417,7 +429,7 @@ public class Pileup {
                                 pileupPos.put(refPosKey, new PileupPos(read.getReferenceIndex(), refPos));
                             }
                         }
-                        pileupPos.get(refPosKey).addRead(read, readPos, cigarOp, cigarLen, isStart, deletedSeq);
+                        pileupPos.get(refPosKey).addRead(read, readPos, cigarOp, cigarLen, isStart, isEnd, deletedSeq);
                     }
                     
                     @Override
