@@ -7,7 +7,8 @@ import org.ngsutils.NGSUtilsException;
 import org.ngsutils.annotation.GenomeRegion;
 import org.ngsutils.cli.AbstractOutputCommand;
 import org.ngsutils.cli.Command;
-import org.ngsutils.fasta.FASTAFile;
+import org.ngsutils.fasta.IndexedFASTAFile;
+import org.ngsutils.fasta.FASTAReader;
 
 import com.lexicalscope.jewel.cli.CommandLineInterface;
 import com.lexicalscope.jewel.cli.Unparsed;
@@ -31,7 +32,7 @@ public class FASTACli extends AbstractOutputCommand {
 
     @Override
     public void exec() throws NGSUtilsException, IOException {
-        FASTAFile fasta = new FASTAFile(filename);
+        FASTAReader fasta = new IndexedFASTAFile(filename);
         System.out.println(">"+region);
         String seq = fasta.fetch(region.ref, region.start-1, region.end);
         while (seq.length() > wrap) {

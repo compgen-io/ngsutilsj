@@ -9,7 +9,7 @@ import java.util.Map;
 import org.ngsutils.support.StringLineReader;
 import org.ngsutils.support.StringUtils;
 
-public class FASTAFile {
+public class IndexedFASTAFile implements FASTAReader {
     public class IndexRecord {
         public final String name;
         public final long length;
@@ -31,7 +31,7 @@ public class FASTAFile {
 
     private Map<String, IndexRecord> indexMap = new HashMap<String, IndexRecord>();
     
-    public FASTAFile(String filename) throws IOException {
+    public IndexedFASTAFile(String filename) throws IOException {
         
         if (!new File(filename+".fai").exists()) {
             throw new IOException("Missing FAI index file!");
@@ -47,6 +47,10 @@ public class FASTAFile {
     /*
      * start is zero-based
      */
+    /* (non-Javadoc)
+     * @see org.ngsutils.fasta.FASTAReader#fetch(java.lang.String, int, int)
+     */
+    @Override
     public String fetch(String ref, int start, int end) throws IOException {
         if (!indexMap.containsKey(ref)) {
             throw new RuntimeException("Invalid reference name! \""+ref+"\" not found in FASTA file!");
@@ -75,6 +79,10 @@ public class FASTAFile {
         
     }
     
+    /* (non-Javadoc)
+     * @see org.ngsutils.fasta.FASTAReader#close()
+     */
+    @Override
     public void close() throws IOException {
         file.close();
     }
