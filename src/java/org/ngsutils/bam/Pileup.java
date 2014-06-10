@@ -2,8 +2,10 @@ package org.ngsutils.bam;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Deque;
 import java.util.Iterator;
 import java.util.List;
 import java.util.SortedMap;
@@ -16,7 +18,9 @@ import net.sf.samtools.SAMRecord;
 import net.sf.samtools.SAMRecordIterator;
 
 import org.ngsutils.annotation.GenomeRegion;
-import org.ngsutils.fasta.FASTAFile;
+import org.ngsutils.fasta.IndexedFASTAFile;
+import org.ngsutils.fasta.FASTAReader;
+import org.ngsutils.fasta.NullFASTA;
 
 public class Pileup {
     public class RefPos implements Comparable<RefPos> {
@@ -87,6 +91,7 @@ public class Pileup {
         public final CigarOperator cigarOp;
         private boolean isStart;
         private boolean isEnd = false;
+        private String deletedSeq = null;
         
         
         public PileupRead(SAMRecord read, int readPos, CigarOperator cigarOp, int length, boolean isStart) {
@@ -95,6 +100,15 @@ public class Pileup {
             this.cigarOp = cigarOp;
             this.length = length;
             this.isStart = isStart;
+        }
+        
+        public PileupRead(SAMRecord read, int readPos, CigarOperator cigarOp, int length, boolean isStart, String deletedSeq) {
+            this.read = read;
+            this.readPos = readPos;
+            this.cigarOp = cigarOp;
+            this.length = length;
+            this.isStart = isStart;
+            this.deletedSeq = deletedSeq;
         }
 
         public boolean isStart() {
@@ -120,7 +134,10 @@ public class Pileup {
             if (cigarOp == CigarOperator.M) {
                 return read.getReadString().substring(readPos, readPos+1);
             } else if (cigarOp == CigarOperator.D) {
-                return "-";
+                if (this.deletedSeq != null) {
+                    return this.deletedSeq;
+                }
+                return "*";
             } else if (cigarOp == CigarOperator.I) {
                 return read.getReadString().substring(readPos, readPos+length);
             }
@@ -142,9 +159,9 @@ public class Pileup {
         }
 
         public char getBaseQual() {
-            if (cigarOp != CigarOperator.M) {
-                return '!'; // Phred 33
-            }
+//            if (cigarOp != CigarOperator.M) {
+//                return '!'; // Phred 33
+//            }
             return (char) (read.getBaseQualities()[readPos] + 33);
         }
     }
@@ -170,7 +187,7 @@ public class Pileup {
             this.refBase = "N";
         }
         
-        private void addRead(SAMRecord read, int readPos, CigarOperator cigarOp, int cigarLen, boolean isStart) {
+        private void addRead(SAMRecord read, int readPos, CigarOperator cigarOp, int cigarLen, boolean isStart, String deletedSeq) {
             if (cigarOp == CigarOperator.M) {
                 last = new PileupRead(read, readPos, cigarOp, 1, isStart);
                 reads.add(last);
@@ -178,7 +195,10 @@ public class Pileup {
             } else if (cigarOp == CigarOperator.I) {
                 reads.add(new PileupRead(read, readPos, cigarOp, cigarLen, isStart));
             } else if (cigarOp == CigarOperator.D) {
-                reads.add(new PileupRead(read, readPos, cigarOp, cigarLen, isStart));
+                reads.add(new PileupRead(read, readPos, cigarOp, cigarLen, isStart, deletedSeq));
+                if (cigarLen == 0) {
+                    coverage += 1;
+                }
             }
         }
         
@@ -197,7 +217,7 @@ public class Pileup {
 
     private SAMFileReader reader;
     private SAMRecordIterator samIterator = null;
-    private FASTAFile fastaRef = null;
+    private FASTAReader fastaRef = new NullFASTA();
     
     private int minMappingQual = 0;
     private int minBaseQual = 0;
@@ -210,7 +230,7 @@ public class Pileup {
     }
     
     public void setFASTARef(String filename) throws IOException {
-        fastaRef = new FASTAFile(filename);
+        fastaRef = new IndexedFASTAFile(filename);
     }
     
     public void setMinMappingQual(int minMappingQual) {
@@ -264,12 +284,13 @@ public class Pileup {
                 return new Iterator<PileupPos>() {
                     private final SortedMap<RefPos, PileupPos> pileupPos = new TreeMap<RefPos, PileupPos>();
                     private boolean initializeme = true;
+                    private Deque<SAMRecord> buffer = new ArrayDeque<SAMRecord>();
 
-                    private void populate() {
-                        int curRefIdx = -1;
-                        int curPos = -1;
+                    private void addReadsToBuffer() {
+                        SAMRecord first = null;
                         while (samIterator.hasNext()) {
                             SAMRecord read = samIterator.next();
+
                             if (read.getMappingQuality() < minMappingQual) {
                                 continue;
                             }
@@ -288,13 +309,36 @@ public class Pileup {
                                 continue;
                             }
                             
-                            if (curPos == -1) {
-                                curPos = read.getAlignmentStart();
-                                curRefIdx = read.getReferenceIndex();
+                            buffer.add(read);
+                            if (first == null) {
+                                first = buffer.getFirst();
                             }
-                            populateRead(read);
-                            if (read.getAlignmentStart() > curPos || read.getReferenceIndex() != curRefIdx) {
-                                return;
+                            
+                            if (first.getReferenceIndex() != read.getReferenceIndex() || first.getAlignmentStart() != read.getAlignmentStart()) {
+                                break;
+                            }
+                        }                        
+                    }
+                    
+                    private void populate(int nextPos) {
+                        // TODO : VERIFY HOW THIS WORKS WHEN SWITCHING REF's
+                        if (buffer.size() < 2) {
+                            // read in reads so long as they have the same ref/start pos
+                            // this will keep the next read at the end of the buffer.
+                            addReadsToBuffer();
+                        }
+                        
+                        if (buffer.size() == 0) {
+                            return;
+                        }
+
+                        SAMRecord first = buffer.getFirst();
+                        if (nextPos == -1 || first.getAlignmentStart() <= nextPos) {
+                            SAMRecord head = buffer.peekFirst();
+                            while (head != null && head.getReferenceIndex() == first.getReferenceIndex() && head.getAlignmentStart() == first.getAlignmentStart()) {
+                                populateRead(head);
+                                buffer.removeFirst();
+                                head = buffer.peekFirst();
                             }
                         }
                     }
@@ -322,7 +366,21 @@ public class Pileup {
                                 addRefPosRead(read, refPos, readPos, cigarOp, cigarLen, false);
                                 readPos += cigarLen;
                             } else if (cigarOp == CigarOperator.D) {
-                                addRefPosRead(read, refPos, readPos, cigarOp, cigarLen, false);
+                                String deletedSeq = "X";
+                                try {
+                                    deletedSeq = fastaRef.fetch(read.getReferenceName(), refPos-1, refPos-1+cigarLen);
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
+                                addRefPosRead(read, refPos-1, readPos, cigarOp, cigarLen, false, deletedSeq);
+
+                                for (int i=0; i<cigarLen; i++) {
+                                    addRefPosRead(read, refPos+i, readPos, cigarOp, 0, false);
+                                }
+
+                                
+                                
+                                
                                 refPos += cigarLen;
                             } else if (cigarOp == CigarOperator.N) {
                                 refPos += cigarLen;
@@ -335,10 +393,18 @@ public class Pileup {
 
                     private void markLast(SAMRecord read, int refPos) {
                         RefPos refPosKey = new RefPos(read.getReferenceIndex(), refPos);
-                        pileupPos.get(refPosKey).getLast().setEnd();
+                        //System.err.println("markLast:"+read.getReadName()+" / "+read.getAlignmentStart()+" / "+read.getCigarString()+" / "+read.getReferenceIndex() +","+ refPos);
+                        if (pileupPos.containsKey(refPosKey)) {
+                            // Note: when you are filtering out calls based on the call quality, 
+                            // then the last base may not be displayed to mark.
+                            pileupPos.get(refPosKey).getLast().setEnd();
+                        }
                     }
                     
                     private void addRefPosRead(SAMRecord read, int refPos, int readPos, CigarOperator cigarOp, int cigarLen, boolean isStart) {
+                        addRefPosRead(read, refPos, readPos, cigarOp, cigarLen, isStart, null);
+                    }
+                    private void addRefPosRead(SAMRecord read, int refPos, int readPos, CigarOperator cigarOp, int cigarLen, boolean isStart, String deletedSeq) {
                         RefPos refPosKey = new RefPos(read.getReferenceIndex(), refPos);
                         if (!pileupPos.containsKey(refPosKey)) {
                             if (fastaRef != null) {
@@ -351,13 +417,13 @@ public class Pileup {
                                 pileupPos.put(refPosKey, new PileupPos(read.getReferenceIndex(), refPos));
                             }
                         }
-                        pileupPos.get(refPosKey).addRead(read, readPos, cigarOp, cigarLen, isStart);
+                        pileupPos.get(refPosKey).addRead(read, readPos, cigarOp, cigarLen, isStart, deletedSeq);
                     }
                     
                     @Override
                     public boolean hasNext() {
                         if (initializeme) {
-                            populate();
+                            populate(-1);
                             initializeme = false;
                         }
                         return !pileupPos.isEmpty();
@@ -368,7 +434,7 @@ public class Pileup {
                         if (pileupPos.size()>0) {
                             RefPos first = pileupPos.firstKey();
                             PileupPos pp = pileupPos.remove(first);
-                            populate();
+                            populate(pp.pos+1);
                             return pp;
                         }
                         return null;

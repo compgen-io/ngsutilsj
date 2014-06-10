@@ -110,7 +110,11 @@ public class PileupCli extends AbstractOutputCommand {
                 }
                 
                 if (pr.cigarOp == CigarOperator.D) {
-                    bases += "-" + Integer.toString(pr.length);
+                    if (pr.length > 0) {
+                        bases += "-" + Integer.toString(pr.length);
+                    } else {
+                        quals += pr.getBaseQual();
+                    }
                 } else if (pr.cigarOp == CigarOperator.I) {
                     bases += "+" + Integer.toString(pr.length);
                 } else if (pr.cigarOp == CigarOperator.M) {
