@@ -24,6 +24,7 @@ import org.ngsutils.cli.fastq.FastqSeparate;
 import org.ngsutils.cli.fastq.FastqSort;
 import org.ngsutils.cli.fastq.FastqSplit;
 import org.ngsutils.cli.gtf.GTFExport;
+import org.ngsutils.cli.varcall.GermlineVarCall;
 
 import com.lexicalscope.jewel.cli.ArgumentValidationException;
 import com.lexicalscope.jewel.cli.CliFactory;
@@ -43,6 +44,7 @@ public class NGSUtils {
         loadExec(RepeatAnnotate.class);
         loadExec(GTFAnnotate.class);
         loadExec(GTFExport.class);
+        loadExec(GermlineVarCall.class);
 	}
 
 	@SuppressWarnings("unchecked")
