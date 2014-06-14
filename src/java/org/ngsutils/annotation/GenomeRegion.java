@@ -64,10 +64,10 @@ public class GenomeRegion implements Comparable<GenomeRegion> {
             return false;            
         }
         
-        if (start <= qstart && qstart <= end) {
+        if (start <= qstart && qstart < end) {
             return true;
         }
-        if (start <= qend && qend <= end) {
+        if (start < qend && qend <= end) {
             return true;
         }
         

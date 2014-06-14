@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 import org.ngsutils.annotation.GTFAnnotator.GTFGene;
 import org.ngsutils.bam.Strand;
@@ -40,6 +42,10 @@ public class GTFAnnotator extends AbstractAnnotator<GTFGene> {
 
         public int getEnd() {
             return end;
+        }
+        
+        public GenomeRegion toRegion() {
+            return new GenomeRegion(parent.getParent().getRef(), start, end, parent.getParent().getStrand());
         }
     }
 
@@ -87,6 +93,10 @@ public class GTFAnnotator extends AbstractAnnotator<GTFGene> {
 
         public List<GTFExon> getExons() {
             return exons;
+        }
+
+        public GenomeRegion toRegion() {
+            return new GenomeRegion(parent.getRef(), start, end, parent.getStrand());
         }
 
         public void addExon(int start, int end) {
@@ -198,9 +208,10 @@ public class GTFAnnotator extends AbstractAnnotator<GTFGene> {
         }
 
         public void addExon(String transcriptId, int start, int end) {
-            if (transcripts.containsKey(transcriptId)) {
-                transcripts.get(transcriptId).addExon(start, end);
+            if (!transcripts.containsKey(transcriptId)) {
+                transcripts.put(transcriptId, new GTFTranscript(this, transcriptId));
             }
+            transcripts.get(transcriptId).addExon(start, end);
             if (this.start == -1 || this.start > start) {
                 this.start = start;
             }
@@ -210,11 +221,30 @@ public class GTFAnnotator extends AbstractAnnotator<GTFGene> {
         }
 
         public void addCDS(String transcriptId, int start, int end) {
-            if (transcripts.containsKey(transcriptId)) {
-                transcripts.get(transcriptId).addCDS(start, end);
+            if (!transcripts.containsKey(transcriptId)) {
+                transcripts.put(transcriptId, new GTFTranscript(this, transcriptId));
             }
+            transcripts.get(transcriptId).addCDS(start, end);
         }
 
+        public List<GTFTranscript> getTranscripts() {
+            return new ArrayList<GTFTranscript>(transcripts.values());
+        }
+
+        public List<GenomeRegion> getExons() {
+            SortedSet<GenomeRegion> exons = new TreeSet<GenomeRegion>();
+//            System.err.println("Getting exons for gene: "+geneName);
+//            System.err.println("  txpts: "+transcripts.size() + " " + StringUtils.join(",",transcripts.keySet()));
+            for (GTFTranscript t:transcripts.values()){
+//                System.err.println("  txpt: "+t.transcriptId);
+                for (GTFExon ex: t.getExons()) {
+//                    System.err.println("    exon: "+ex.toString());
+                    exons.add(ex.toRegion());
+                }
+            }
+            return new ArrayList<GenomeRegion>(exons);
+        }
+        
         @Override
         public String[] toStringArray() {
             if (bioType == null) {
@@ -222,6 +252,10 @@ public class GTFAnnotator extends AbstractAnnotator<GTFGene> {
             } else {
                 return new String[] { geneId, geneName, bioType };
             }
+        }
+
+        public GenomeRegion toRegion() {
+            return new GenomeRegion(ref, start, end, strand);
         }
     }
 
