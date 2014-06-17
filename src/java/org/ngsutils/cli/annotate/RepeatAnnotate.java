@@ -5,9 +5,9 @@ import java.util.List;
 
 import org.ngsutils.NGSUtils;
 import org.ngsutils.NGSUtilsException;
-import org.ngsutils.annotation.Annotator;
-import org.ngsutils.annotation.RepeatMaskerAnnotator;
-import org.ngsutils.annotation.RepeatMaskerAnnotator.RepeatAnnotation;
+import org.ngsutils.annotation.AnnotationSource;
+import org.ngsutils.annotation.RepeatMaskerAnnotationSource;
+import org.ngsutils.annotation.RepeatMaskerAnnotationSource.RepeatAnnotation;
 import org.ngsutils.bam.Strand;
 import org.ngsutils.cli.AbstractOutputCommand;
 import org.ngsutils.cli.Command;
@@ -152,7 +152,7 @@ public class RepeatAnnotate extends AbstractOutputCommand {
         if (verbose) {
             System.err.print("Reading RepeatMasker annotation file: "+repeatFilename);
         }
-        Annotator<RepeatAnnotation> ann = new RepeatMaskerAnnotator(repeatFilename);
+        AnnotationSource<RepeatAnnotation> ann = new RepeatMaskerAnnotationSource(repeatFilename);
         if (verbose) {
             System.err.println(" [done]");
         }

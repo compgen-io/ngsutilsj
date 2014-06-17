@@ -10,7 +10,7 @@ import java.util.Set;
 
 import org.ngsutils.bam.Strand;
 
-abstract public class AbstractAnnotator<T> implements Annotator<T> {
+abstract public class AbstractAnnotationSource<T> implements AnnotationSource<T> {
     public static class RefBin {
         final private String ref;
         final private int bin;

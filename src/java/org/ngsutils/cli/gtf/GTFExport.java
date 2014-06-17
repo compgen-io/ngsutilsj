@@ -8,9 +8,9 @@ import java.util.List;
 import java.util.Set;
 
 import org.ngsutils.NGSUtilsException;
-import org.ngsutils.annotation.Annotator;
-import org.ngsutils.annotation.GTFAnnotator;
-import org.ngsutils.annotation.GTFAnnotator.GTFGene;
+import org.ngsutils.annotation.AnnotationSource;
+import org.ngsutils.annotation.GTFAnnotationSource;
+import org.ngsutils.annotation.GTFAnnotationSource.GTFGene;
 import org.ngsutils.annotation.GenomeAnnotation;
 import org.ngsutils.annotation.GenomeRegion;
 import org.ngsutils.cli.AbstractOutputCommand;
@@ -38,7 +38,7 @@ public class GTFExport extends AbstractOutputCommand {
         this.filename = filename;
     }
 
-    @Option(description = "Whitelist", longName="whitelist", defaultToNull=true)
+    @Option(description = "Whitelist of gene names to use", longName="whitelist", defaultToNull=true)
     public void setWhitelist(String whitelist) {
         this.whitelist = whitelist;
     }
@@ -108,7 +108,7 @@ public class GTFExport extends AbstractOutputCommand {
             System.err.print("Reading GTF annotation file: "+filename);
         }
 
-        Annotator<GTFGene> ann = new GTFAnnotator(filename);
+        AnnotationSource<GTFGene> ann = new GTFAnnotationSource(filename);
         
         if (verbose) {
             System.err.println(" [done]");

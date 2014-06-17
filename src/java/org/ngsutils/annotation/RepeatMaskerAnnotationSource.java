@@ -3,7 +3,7 @@ package org.ngsutils.annotation;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
-import org.ngsutils.annotation.RepeatMaskerAnnotator.RepeatAnnotation;
+import org.ngsutils.annotation.RepeatMaskerAnnotationSource.RepeatAnnotation;
 import org.ngsutils.bam.Strand;
 import org.ngsutils.support.StringLineReader;
 import org.ngsutils.support.StringUtils;
@@ -15,7 +15,7 @@ import org.ngsutils.support.StringUtils;
  * 
  */
 
-public class RepeatMaskerAnnotator extends AbstractAnnotator<RepeatAnnotation> {
+public class RepeatMaskerAnnotationSource extends AbstractAnnotationSource<RepeatAnnotation> {
     public class RepeatAnnotation implements Annotation {
         final private String repeat;
         final private String repeatFamily;
@@ -39,7 +39,7 @@ public class RepeatMaskerAnnotator extends AbstractAnnotator<RepeatAnnotation> {
         }
     }
 
-    public RepeatMaskerAnnotator(String filename) throws FileNotFoundException, IOException {
+    public RepeatMaskerAnnotationSource(String filename) throws FileNotFoundException, IOException {
         int skip = 3;
         for (final String line : new StringLineReader(filename)) {
             if (skip > 0) {

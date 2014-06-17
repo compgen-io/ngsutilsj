@@ -8,15 +8,15 @@ import java.util.List;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.ngsutils.annotation.SimpleValueAnnotator.SimpleValueAnnotation;
+import org.ngsutils.annotation.SimpleAnnotationSource.SimpleValueAnnotation;
 import org.ngsutils.support.StringUtils;
 
 public class TestSimpleValueAnnotation {
-    SimpleValueAnnotator sva;
+    SimpleAnnotationSource sva;
     
     @Before
     public void setUp() throws Exception {
-        sva = new SimpleValueAnnotator();
+        sva = new SimpleAnnotationSource();
         sva.addAnnotation("chr2", 100, 200, "X");
         sva.addAnnotation("chr1", 100, 200, "A");
         sva.addAnnotation("chr1", 300, 400, "B");

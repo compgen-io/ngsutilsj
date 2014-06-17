@@ -5,7 +5,7 @@ import java.util.Set;
 
 import org.ngsutils.bam.Strand;
 
-public interface Annotator<T> {
+public interface AnnotationSource<T> {
     /** 
      * headers / annotation keys
      * @return

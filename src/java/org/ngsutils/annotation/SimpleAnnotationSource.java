@@ -1,9 +1,9 @@
 package org.ngsutils.annotation;
 
-import org.ngsutils.annotation.SimpleValueAnnotator.SimpleValueAnnotation;
+import org.ngsutils.annotation.SimpleAnnotationSource.SimpleValueAnnotation;
 import org.ngsutils.bam.Strand;
 
-public class SimpleValueAnnotator extends AbstractAnnotator<SimpleValueAnnotation> {
+public class SimpleAnnotationSource extends AbstractAnnotationSource<SimpleValueAnnotation> {
 
     public class SimpleValueAnnotation implements Annotation, Comparable<SimpleValueAnnotation> {
         final private String value;
