@@ -24,7 +24,7 @@ import com.lexicalscope.jewel.cli.Option;
 import com.lexicalscope.jewel.cli.Unparsed;
 
 @CommandLineInterface(application="ngsutilsj gtf-export")
-@Command(name="gtf-tobed", desc="Export gene annotations from a GTF file as BED regions", cat="gtf")
+@Command(name="gtf-export", desc="Export gene annotations from a GTF file as BED regions", cat="gtf")
 public class GTFExport extends AbstractOutputCommand {
     private String filename=null;
     private String whitelist = null;
@@ -43,17 +43,17 @@ public class GTFExport extends AbstractOutputCommand {
         this.whitelist = whitelist;
     }
 
-    @Option(description = "Export whole gene region", longName="gene")
+    @Option(description = "Export whole gene region", longName="genes")
     public void setGene(boolean val) {
         exportGene = true;
     }
 
-    @Option(description = "Export introns", longName="intron")
+    @Option(description = "Export introns", longName="introns")
     public void setIntron(boolean val) {
         exportIntron = true;
     }
 
-    @Option(description = "Export exons", longName="exon")
+    @Option(description = "Export exons", longName="exons")
     public void setExon(boolean val) {
         exportExon = true;
     }
