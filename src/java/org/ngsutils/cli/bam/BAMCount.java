@@ -201,7 +201,9 @@ public class BAMCount extends AbstractOutputCommand {
             
             for (int i = 0; i < span.getStarts().length; i++) {            
                 // spans are 0-based, reader query is 1-based
-                SAMRecordIterator it = reader.query(span.getRefName(), span.getStarts()[i]+1, span.getEnds()[i], contained);
+                int spanStart = span.getStarts()[i]+1;
+                int spanEnd = span.getEnds()[i];
+                SAMRecordIterator it = reader.query(span.getRefName(), spanStart, spanEnd, contained);
                 while (it.hasNext()) {
                     SAMRecord read = it.next();
 
@@ -211,7 +213,7 @@ public class BAMCount extends AbstractOutputCommand {
                     }
 
                     if (!reads.contains(read.getReadName())) {
-                        if (span.getStrand() == Strand.NONE || (ReadUtils.getFragmentEffectiveStrand(read, orient) == span.getStrand())) {
+                        if (span.getStrand() == Strand.NONE || orient == Orientation.UNSTRANDED || (ReadUtils.getFragmentEffectiveStrand(read, orient) == span.getStrand())) {
                             if (startOnly) {                                
                                 if (read.getReadPairedFlag() && read.getSecondOfPairFlag()) {
                                     continue;
@@ -228,6 +230,20 @@ public class BAMCount extends AbstractOutputCommand {
                                     continue;
                                 }
                             }
+                            
+                            boolean inspan = false;
+                            for (int j=0; j< read.getReadLength(); j++) {
+                                int refpos = read.getReferencePositionAtReadPosition(j);
+                                if (spanStart <=  refpos && refpos < spanEnd) {
+                                    inspan=true;
+                                    break;
+                                }
+                            }
+                            
+                            if (!inspan) {
+                                continue;
+                            }
+                            
                             reads.add(read.getReadName());
                             count ++;
                             if (proper) {
