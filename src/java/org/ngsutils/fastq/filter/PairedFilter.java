@@ -1,4 +1,4 @@
-package org.ngsutils.cli.fastq.filter;
+package org.ngsutils.fastq.filter;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -6,7 +6,7 @@ import java.util.List;
 
 import org.ngsutils.fastq.FastqRead;
 
-public class PairedFilter implements Filter {
+public class PairedFilter implements FastqFilter, Iterable<FastqRead> {
     private Iterator<FastqRead> parent;
     private boolean verbose=false;
     private boolean done = false;
@@ -113,5 +113,11 @@ public class PairedFilter implements Filter {
             return next();
         }
         return null;
+    }
+
+
+    @Override
+    public Iterator<FastqRead> iterator() {
+        return this;
     }
 }

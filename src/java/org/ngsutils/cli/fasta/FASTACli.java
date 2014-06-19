@@ -10,6 +10,7 @@ import org.ngsutils.cli.Command;
 import org.ngsutils.fasta.IndexedFASTAFile;
 import org.ngsutils.fasta.FASTAReader;
 
+import com.lexicalscope.jewel.cli.ArgumentValidationException;
 import com.lexicalscope.jewel.cli.CommandLineInterface;
 import com.lexicalscope.jewel.cli.Unparsed;
 
@@ -24,7 +25,7 @@ public class FASTACli extends AbstractOutputCommand {
     @Unparsed(name = "FILE chrom:start-end")
     public void setArgs(List<String> args) {
         if (args.size() != 2) {
-            throw new RuntimeException("Missing/Invalid arguments!");
+            throw new ArgumentValidationException("Missing/Invalid arguments!");
         }
         filename = args.get(0);
         region = GenomeRegion.parse(args.get(1));
@@ -32,6 +33,9 @@ public class FASTACli extends AbstractOutputCommand {
 
     @Override
     public void exec() throws NGSUtilsException, IOException {
+        if (filename == null) {
+            throw new ArgumentValidationException("Missing/Invalid arguments!");
+        }
         FASTAReader fasta = new IndexedFASTAFile(filename);
         System.out.println(">"+region);
         String seq = fasta.fetch(region.ref, region.start-1, region.end);

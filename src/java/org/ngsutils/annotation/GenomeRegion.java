@@ -1,10 +1,18 @@
 package org.ngsutils.annotation;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import net.sf.samtools.AlignmentBlock;
+import net.sf.samtools.SAMRecord;
+
+import org.ngsutils.bam.Orientation;
 import org.ngsutils.bam.Strand;
+import org.ngsutils.bam.support.ReadUtils;
 
 public class GenomeRegion implements Comparable<GenomeRegion> {
     final public String ref;
-    final public int start;
+    final public int start; // genome regions are 0-based
     final public int end;
     final public Strand strand;
     
@@ -16,6 +24,14 @@ public class GenomeRegion implements Comparable<GenomeRegion> {
         this.strand = strand;
     }
 
+    public GenomeRegion(String ref, int start, int end){
+        super();
+        this.ref = ref;
+        this.start = start;
+        this.end = end;
+        this.strand = Strand.NONE;
+    }
+
     public GenomeRegion(String ref, int start, Strand strand){
         super();
         this.ref = ref;
@@ -24,7 +40,30 @@ public class GenomeRegion implements Comparable<GenomeRegion> {
         this.strand = strand;
     }
     
+    public GenomeRegion(String ref, int start){
+        super();
+        this.ref = ref;
+        this.start = start;
+        this.end = start;
+        this.strand = Strand.NONE;
+    }
+    
+    public static List<GenomeRegion> getReadAlignmentRegions(SAMRecord read, Orientation orient) {
+        List<GenomeRegion> out = new ArrayList<GenomeRegion>();
+        for (AlignmentBlock block:read.getAlignmentBlocks()) {
+            if (orient == Orientation.UNSTRANDED) {
+                out.add(new GenomeRegion(read.getReferenceName(), block.getReferenceStart()-1,  block.getReferenceStart()-1+block.getLength(), Strand.NONE));
+            } else {
+                out.add(new GenomeRegion(read.getReferenceName(), block.getReferenceStart()-1,  block.getReferenceStart()-1+block.getLength(), ReadUtils.getFragmentEffectiveStrand(read, orient)));
+            }
+        }
+        return out;
+    }
+    
+    // Strings are chrom:start-end, where start is the 1-based start position.
     public static GenomeRegion parse(String str) {
+        
+        
         if (str.indexOf(':') <= 0) {
             return null;
         }
@@ -38,25 +77,29 @@ public class GenomeRegion implements Comparable<GenomeRegion> {
             int pos = Integer.parseInt(startend);
             return new GenomeRegion(ref, pos, Strand.NONE);
         } else {
-            int start = Integer.parseInt(startend.substring(0, startend.indexOf('-')));
+            int start = Integer.parseInt(startend.substring(0, startend.indexOf('-')))-1;
             int end = Integer.parseInt(startend.substring(startend.indexOf('-')+1));
             return new GenomeRegion(ref, start, end, Strand.NONE);
         }
     }
     
-    public boolean contains(GenomeRegion coord, boolean onlyWithin) {
-        return contains(coord.ref, coord.start, coord.end, coord.strand, onlyWithin);
+    public boolean contains(GenomeRegion coord) {
+        return contains(coord.ref, coord.start, coord.end, coord.strand, true);
     }
 
-    public boolean contains(GenomeRegion coord) {
-        return contains(coord, true);
+    public boolean overlaps(GenomeRegion coord) {
+        return contains(coord.ref, coord.start, coord.end, coord.strand, false);
     }
 
     public boolean contains(String qref, int qstart, int qend, Strand qstrand) { 
         return contains(qref, qstart, qend, qstrand, true);
     }
     
-    public boolean contains(String qref, int qstart, int qend, Strand qstrand, boolean onlyWithin){
+    public boolean overlaps(String qref, int qstart, int qend, Strand qstrand) { 
+        return contains(qref, qstart, qend, qstrand, false);
+    }
+    
+    protected boolean contains(String qref, int qstart, int qend, Strand qstrand, boolean onlyWithin){
         if (!ref.equals(qref)) {
             return false;
         }
@@ -64,15 +107,29 @@ public class GenomeRegion implements Comparable<GenomeRegion> {
             return false;            
         }
         
+        boolean startWithin = false;
+        boolean endWithin = false;
+        
         if (start <= qstart && qstart < end) {
-            return true;
+            startWithin = true;
         }
         if (start < qend && qend <= end) {
-            return true;
+            endWithin = true;
+        }
+        
+        if (onlyWithin) {
+            if (startWithin && endWithin) {
+                return true;
+            }
+            return false;
         }
         
         if (!onlyWithin) {
+            if (startWithin || endWithin) {
+                return true;
+            }
             if (qstart <= start && start <= qend &&  qstart <= end && end <=qend) {
+                // query region spans the entirety of the this region
                 return true;
             }
         }

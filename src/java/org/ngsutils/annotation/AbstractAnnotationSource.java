@@ -8,8 +8,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.ngsutils.bam.Strand;
-
 abstract public class AbstractAnnotationSource<T> implements AnnotationSource<T> {
     public static class RefBin {
         final private String ref;
@@ -73,28 +71,31 @@ abstract public class AbstractAnnotationSource<T> implements AnnotationSource<T>
     protected final Set<GenomeAnnotation<T>> annotations = new HashSet<GenomeAnnotation<T>>();
     protected final static int BINSIZE=100_000;
     
-    @Override
-    public List<T> findAnnotation(String ref, int start) {
-        return findAnnotation(new GenomeRegion(ref, start, Strand.NONE));
-    }
-
-    @Override
-    public List<T> findAnnotation(String ref, int start, int end) {
-        return findAnnotation(new GenomeRegion(ref, start, end, Strand.NONE));
-    }
-
-    @Override
-    public List<T> findAnnotation(String ref, int start, Strand strand) {
-        return findAnnotation(new GenomeRegion(ref, start, strand));
-    }
-
-    @Override
-    public List<T> findAnnotation(String ref, int start, int end, Strand strand) {
-        return findAnnotation(new GenomeRegion(ref, start, end, strand));
-    }
+//    @Override
+//    public List<T> findAnnotation(String ref, int start) {
+//        return findAnnotation(new GenomeRegion(ref, start, Strand.NONE));
+//    }
+//
+//    @Override
+//    public List<T> findAnnotation(String ref, int start, int end) {
+//        return findAnnotation(new GenomeRegion(ref, start, end, Strand.NONE));
+//    }
+//
+//    @Override
+//    public List<T> findAnnotation(String ref, int start, Strand strand) {
+//        return findAnnotation(new GenomeRegion(ref, start, strand));
+//    }
+//
+//    @Override
+//    public List<T> findAnnotation(String ref, int start, int end, Strand strand) {
+//        return findAnnotation(new GenomeRegion(ref, start, end, strand));
+//    }
 
     @Override
     public List<T> findAnnotation(final GenomeRegion coord) {
+        return findAnnotation(coord, false);
+    }
+    public List<T> findAnnotation(final GenomeRegion coord, boolean onlyWithin) {
         final Set<T> outs = new HashSet<T>();
        
         for (RefBin bin: RefBin.getBins(coord)) {
@@ -103,7 +104,11 @@ abstract public class AbstractAnnotationSource<T> implements AnnotationSource<T>
                     if (ga.getCoordinates().start > coord.end) {
                         break;
                     }
-                    if (ga.getCoordinates().contains(coord, false)) {
+                    if (onlyWithin) {
+                        if (ga.getCoordinates().contains(coord)) {
+                            outs.add(ga.getValue());
+                        }
+                    } else if (ga.getCoordinates().overlaps(coord)) {
                         outs.add(ga.getValue());
                     }
                 }                
@@ -112,6 +117,52 @@ abstract public class AbstractAnnotationSource<T> implements AnnotationSource<T>
         
         return new ArrayList<T>(outs);
     }
+
+//    @Override
+//    public boolean hasAnnotation(String ref, int start) {
+//        return hasAnnotation(new GenomeRegion(ref, start, Strand.NONE));
+//    }
+//
+//    @Override
+//    public boolean hasAnnotation(String ref, int start, int end) {
+//        return hasAnnotation(new GenomeRegion(ref, start, end, Strand.NONE));
+//    }
+//
+//    @Override
+//    public boolean hasAnnotation(String ref, int start, Strand strand) {
+//        return hasAnnotation(new GenomeRegion(ref, start, strand));
+//    }
+//
+//    @Override
+//    public boolean hasAnnotation(String ref, int start, int end, Strand strand) {
+//        return hasAnnotation(new GenomeRegion(ref, start, end, strand));
+//    }
+
+    @Override
+    public boolean hasAnnotation(final GenomeRegion coord) {
+        return hasAnnotation(coord, false);
+    }
+    @Override
+    public boolean hasAnnotation(final GenomeRegion coord, boolean onlyWithin) {
+        for (RefBin bin: RefBin.getBins(coord)) {
+            if (annotationBins.containsKey(bin)) {
+                for (GenomeAnnotation<T> ga: annotationBins.get(bin)) {
+                    if (ga.getCoordinates().start > coord.end) {
+                        break;
+                    }
+                    if (onlyWithin) {
+                        if (ga.getCoordinates().contains(coord)) {
+                            return true;
+                        }
+                    } else if (ga.getCoordinates().overlaps(coord)) {
+                        return true;
+                    }
+                }                
+            }
+        }
+        return false;
+    }
+    
     
     protected void addAnnotation(GenomeRegion coord, T value) {
         GenomeAnnotation<T> ga = new GenomeAnnotation<T>(coord, value);

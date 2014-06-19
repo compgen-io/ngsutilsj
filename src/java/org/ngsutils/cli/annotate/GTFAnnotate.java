@@ -9,6 +9,7 @@ import org.ngsutils.NGSUtilsException;
 import org.ngsutils.annotation.AnnotationSource;
 import org.ngsutils.annotation.GTFAnnotationSource;
 import org.ngsutils.annotation.GTFAnnotationSource.GTFGene;
+import org.ngsutils.annotation.GenomeRegion;
 import org.ngsutils.bam.Strand;
 import org.ngsutils.cli.AbstractOutputCommand;
 import org.ngsutils.cli.Command;
@@ -263,7 +264,7 @@ public class GTFAnnotate extends AbstractOutputCommand {
                     strand = Strand.parse(cols[strandCol]);
                 }
                 
-                List<GTFGene> annVals = ann.findAnnotation(ref, start, end, strand);
+                List<GTFGene> annVals = ann.findAnnotation(new GenomeRegion(ref, start, end, strand));
 //                if (ref.equals("chr17") && start >= 7_560_000 && end <= 8_000_000) {
 //                    System.err.println("q: "+ref+":"+start+"-"+end);
 //                    for (int i=0; i < annVals.size(); i++) {

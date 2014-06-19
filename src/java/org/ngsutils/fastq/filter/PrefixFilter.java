@@ -1,4 +1,4 @@
-package org.ngsutils.cli.fastq.filter;
+package org.ngsutils.fastq.filter;
 
 import org.ngsutils.NGSUtilsException;
 import org.ngsutils.fastq.FastqRead;

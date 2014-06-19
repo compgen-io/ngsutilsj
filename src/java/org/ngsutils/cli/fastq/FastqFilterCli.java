@@ -7,17 +7,17 @@ import java.util.List;
 import org.ngsutils.NGSUtilsException;
 import org.ngsutils.cli.AbstractOutputCommand;
 import org.ngsutils.cli.Command;
-import org.ngsutils.cli.fastq.filter.BlacklistFilter;
-import org.ngsutils.cli.fastq.filter.FilterIterable;
-import org.ngsutils.cli.fastq.filter.PairedFilter;
-import org.ngsutils.cli.fastq.filter.PrefixFilter;
-import org.ngsutils.cli.fastq.filter.SeqTrimFilter;
-import org.ngsutils.cli.fastq.filter.SizeFilter;
-import org.ngsutils.cli.fastq.filter.SuffixQualFilter;
-import org.ngsutils.cli.fastq.filter.WhitelistFilter;
-import org.ngsutils.cli.fastq.filter.WildcardFilter;
 import org.ngsutils.fastq.FastqRead;
 import org.ngsutils.fastq.FastqReader;
+import org.ngsutils.fastq.filter.BlacklistFilter;
+import org.ngsutils.fastq.filter.FastqFilter;
+import org.ngsutils.fastq.filter.PairedFilter;
+import org.ngsutils.fastq.filter.PrefixFilter;
+import org.ngsutils.fastq.filter.SeqTrimFilter;
+import org.ngsutils.fastq.filter.SizeFilter;
+import org.ngsutils.fastq.filter.SuffixQualFilter;
+import org.ngsutils.fastq.filter.WhitelistFilter;
+import org.ngsutils.fastq.filter.WildcardFilter;
 
 import com.lexicalscope.jewel.cli.CommandLineInterface;
 import com.lexicalscope.jewel.cli.Option;
@@ -25,7 +25,7 @@ import com.lexicalscope.jewel.cli.Unparsed;
 
 @CommandLineInterface(application = "ngsutilsj fastq-filter")
 @Command(name = "fastq-filter", desc = "Filters reads from a FASTQ file.", cat = "fastq")
-public class FastqFilter extends AbstractOutputCommand {
+public class FastqFilterCli extends AbstractOutputCommand {
     private FastqReader reader;
 
     private boolean paired = false;
@@ -41,7 +41,7 @@ public class FastqFilter extends AbstractOutputCommand {
     private String whitelist = null;
     private String blacklist = null;
 
-    public FastqFilter() {
+    public FastqFilterCli() {
     }
 
     @Unparsed(name = "FILE")
@@ -109,51 +109,47 @@ public class FastqFilter extends AbstractOutputCommand {
             System.err.println("Filtering file:" + reader.getFilename());
         }
 
-        final List<FilterIterable> iters = new ArrayList<FilterIterable>();
+        final List<FastqFilter> filters = new ArrayList<FastqFilter>();
         Iterable<FastqRead> parent = reader;
 
         if (maxWildcard > 0) {
-            parent = new FilterIterable(new WildcardFilter(parent, verbose, maxWildcard));
-            iters.add((FilterIterable) parent);
+            parent = new WildcardFilter(parent, verbose, maxWildcard);
+            filters.add((FastqFilter) parent);
         }
         
         if (prefixTrimLength > 0) {
-            parent = new FilterIterable(new PrefixFilter(parent, verbose,
-                    prefixTrimLength));
-            iters.add((FilterIterable) parent);
+            parent = new PrefixFilter(parent, verbose, prefixTrimLength);
+            filters.add((FastqFilter) parent);
         }
 
         if (suffixQuality != null) {
-            parent = new FilterIterable(new SuffixQualFilter(parent, verbose,
-                    suffixQuality.charAt(0)));
-            iters.add((FilterIterable) parent);
+            parent = new SuffixQualFilter(parent, verbose, suffixQuality.charAt(0));
+            filters.add((FastqFilter) parent);
         }
 
         if (trimSeq != null) {
-            parent = new FilterIterable(new SeqTrimFilter(parent, verbose,
-                    trimSeq, trimMinOverlap, trimMinPctMatch));
-            iters.add((FilterIterable) parent);            
+            parent = new SeqTrimFilter(parent, verbose, trimSeq, trimMinOverlap, trimMinPctMatch);
+            filters.add((FastqFilter) parent);            
         }
         
         if (minimumSize > 0) {
-            parent = new FilterIterable(new SizeFilter(parent, verbose,
-                    minimumSize));
-            iters.add((FilterIterable) parent);
+            parent = new SizeFilter(parent, verbose, minimumSize);
+            filters.add((FastqFilter) parent);
         }
 
         if (paired) {
-            parent = new FilterIterable(new PairedFilter(parent, verbose));
-            iters.add((FilterIterable) parent);
+            parent = new PairedFilter(parent, verbose);
+            filters.add((FastqFilter) parent);
         }
 
         if (whitelist!=null) {
-            parent = new FilterIterable(new WhitelistFilter(parent, verbose, whitelist));
-            iters.add((FilterIterable) parent);
+            parent = new WhitelistFilter(parent, verbose, whitelist);
+            filters.add((FastqFilter) parent);
         }
 
         if (blacklist!=null) {
-            parent = new FilterIterable(new BlacklistFilter(parent, verbose, blacklist));
-            iters.add((FilterIterable) parent);
+            parent = new BlacklistFilter(parent, verbose, blacklist);
+            filters.add((FastqFilter) parent);
         }
 
         int i = 0;
@@ -172,8 +168,8 @@ public class FastqFilter extends AbstractOutputCommand {
 
         if (verbose) {
             System.err.println("Filter\tTotal\tAltered\tRemoved");
-            for (final FilterIterable iter : iters) {
-                System.err.println(iter.getName() + "\t" + iter.getTotal()
+            for (final FastqFilter iter : filters) {
+                System.err.println(iter.getClass().getSimpleName() + "\t" + iter.getTotal()
                         + "\t" + iter.getAltered() + "\t" + iter.getRemoved());
             }
         }

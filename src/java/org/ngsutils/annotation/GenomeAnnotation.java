@@ -21,5 +21,10 @@ public class GenomeAnnotation<T> implements Comparable<GenomeAnnotation<T>>{
     public int compareTo(GenomeAnnotation<T> o) {
         return coordinates.compareTo(o.coordinates);
     }
-    
+
+    public String toString() {
+        return coordinates + " => "+value;
+    }
+
+
 }

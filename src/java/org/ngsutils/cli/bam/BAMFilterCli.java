@@ -1,0 +1,262 @@
+package org.ngsutils.cli.bam;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
+
+import net.sf.samtools.SAMFileReader;
+import net.sf.samtools.SAMFileReader.ValidationStringency;
+import net.sf.samtools.SAMFileWriter;
+import net.sf.samtools.SAMFileWriterFactory;
+import net.sf.samtools.SAMRecord;
+
+import org.ngsutils.NGSUtilsException;
+import org.ngsutils.bam.Orientation;
+import org.ngsutils.bam.filter.BAMFilter;
+import org.ngsutils.bam.filter.BEDExclude;
+import org.ngsutils.bam.filter.BEDInclude;
+import org.ngsutils.bam.filter.FilterFlags;
+import org.ngsutils.bam.filter.NullFilter;
+import org.ngsutils.bam.filter.PairedFilter;
+import org.ngsutils.bam.filter.RequiredFlags;
+import org.ngsutils.bam.support.ReadUtils;
+import org.ngsutils.cli.AbstractCommand;
+import org.ngsutils.cli.Command;
+
+import com.lexicalscope.jewel.cli.ArgumentValidationException;
+import com.lexicalscope.jewel.cli.CommandLineInterface;
+import com.lexicalscope.jewel.cli.Option;
+import com.lexicalscope.jewel.cli.Unparsed;
+
+@CommandLineInterface(application="ngsutilsj bam-filter")
+@Command(name="bam-filter", desc="Filters out reads based upon various criteria", cat="bam")
+public class BAMFilterCli extends AbstractCommand {
+    
+    private List<String> filenames=null;
+    
+    private String tmpDir = null;
+    
+    private String bedExclude = null;
+    private boolean bedExcludeRequireOne = false;
+    private boolean bedExcludeRequireBoth = false;
+    private boolean bedExcludeOnlyWithin = false;
+    
+    private String bedInclude = null;
+    private boolean bedIncludeRequireOne = false;
+    private boolean bedIncludeRequireBoth = false;
+    private boolean bedIncludeOnlyWithin = false;
+
+    private boolean paired = false;
+    
+    private boolean lenient = false;
+    private boolean silent = false;
+
+    private int filterFlags = 0;
+    private int requiredFlags = 0;
+    
+    private Orientation orient = Orientation.UNSTRANDED;
+    
+    @Unparsed(name = "INFILE OUTFILE")
+    public void setFilename(List<String> filenames) {
+        this.filenames = filenames;
+    }
+
+    @Option(description = "Write temporary files here", longName="tmpdir", defaultToNull=true)
+    public void setTmpDir(String tmpDir) {
+        this.tmpDir = tmpDir;
+    }
+
+    @Option(description = "Force checking read pairing (simple - same chromosome, reversed orientation)", longName="paired")
+    public void setPaired(boolean val) {
+        this.paired = val;
+    }
+
+    @Option(description = "Exclude reads within BED regions", longName="bed-exclude", defaultToNull=true)
+    public void setBedExcludeFile(String bedExclude) {
+        this.bedExclude = bedExclude;
+    }
+
+    @Option(description = "BED Exclude option: only-within", longName="bed-excl-only-within")
+    public void setBEDExcludeWithin(boolean val) {
+        this.bedExcludeOnlyWithin = val;
+    }
+
+    @Option(description = "BED Exclude option: require-one", longName="bed-excl-require-one")
+    public void setBEDExcludeRequireOne(boolean val) {
+        this.bedExcludeRequireOne = val;
+    }
+
+    @Option(description = "BED Exclude option: require-both", longName="bed-excl-require-both")
+    public void setBEDExcludeRequireBoth(boolean val) {
+        this.bedExcludeRequireBoth = val;
+    }
+    @Option(description = "Include reads within BED regions", longName="bed-include", defaultToNull=true)
+    public void setBedIncludeFile(String bedInclude) {
+        this.bedInclude = bedInclude;
+    }
+
+    @Option(description = "BED Include option: only-within", longName="bed-incl-only-within")
+    public void setBEDIncludeWithin(boolean val) {
+        this.bedIncludeOnlyWithin = val;
+    }
+
+    @Option(description = "BED Include option: require-one", longName="bed-incl-require-one")
+    public void setBEDIncludeKeep(boolean val) {
+        this.bedIncludeRequireOne = val;
+    }
+
+    @Option(description = "BED Include option: require-both", longName="bed-incl-require-both")
+    public void setBEDIncludeRemove(boolean val) {
+        this.bedIncludeRequireBoth = val;
+    }
+
+    @Option(description = "Use lenient validation strategy", longName="lenient")
+    public void setLenient(boolean lenient) {
+        this.lenient = lenient;
+    }
+
+    @Option(description = "Use silent validation strategy", longName="silent")
+    public void setSilent(boolean silent) {
+        this.silent = silent;
+    }
+    
+    @Option(description = "Library is in FR orientation", longName="library-fr")
+    public void setLibraryFR(boolean val) {
+        if (val) {
+            orient = Orientation.FR;
+        }
+    }
+
+    @Option(description = "Library is in RF orientation", longName="library-rf")
+    public void setLibraryRF(boolean val) {
+        if (val) {
+            orient = Orientation.RF;
+        }
+    }
+
+    @Option(description = "Library is in unstranded orientation (default)", longName="library-unstranded")
+    public void setLibraryUnstranded(boolean val) {
+        if (val) {
+            orient = Orientation.UNSTRANDED;
+        }
+    }
+
+    @Option(description = "Only keep properly paired reads", longName="proper-pairs")
+    public void setProperPairs(boolean val) {
+        requiredFlags |= ReadUtils.PROPER_PAIR_FLAG; 
+    }
+
+    @Option(description = "Only keep mapped reads (both reads if paired)", longName="mapped")
+    public void setMapped(boolean val) {
+        filterFlags |= ReadUtils.READ_UNMAPPED_FLAG | ReadUtils.MATE_UNMAPPED_FLAG; 
+    }
+
+    @Option(description = "Only keep unmapped reads", longName="unmapped")
+    public void setUnmapped(boolean val) {
+        requiredFlags |= ReadUtils.READ_UNMAPPED_FLAG; 
+    }
+
+    @Option(description = "Filtering flags", longName="filter-flags", defaultValue="0")
+    public void setFilterFlags(int flag) {
+        filterFlags |= flag; 
+    }
+
+    @Option(description = "Required flags", longName="required-flags", defaultValue="0")
+    public void setRequiredFlags(int flag) {
+        requiredFlags |= flag; 
+    }
+
+    @Override
+    public void exec() throws NGSUtilsException, IOException {
+        if (filenames == null || filenames.size()!=2) {
+            throw new ArgumentValidationException("You must specify an input BAM filename and an output BAM filename!");
+        }
+        
+        SAMFileReader reader = new SAMFileReader(new File(filenames.get(0)));
+        if (lenient) {
+            reader.setValidationStringency(ValidationStringency.LENIENT);
+        } else if (silent) {
+            reader.setValidationStringency(ValidationStringency.SILENT);
+        }
+
+        BAMFilter parent = new NullFilter(reader);
+        
+        if (filterFlags > 0) {
+            parent = new FilterFlags(parent, false, filterFlags);
+            if (verbose) {
+                System.err.println("FilterFlags: "+filterFlags);
+            }
+
+        }
+        if (requiredFlags > 0) {
+            parent = new RequiredFlags(parent, false, requiredFlags);
+            if (verbose) {
+                System.err.println("RequiredFlags: "+requiredFlags);
+            }
+        }
+        if (paired) {
+            parent = new PairedFilter(parent, false);
+            if (verbose) {
+                System.err.println("Paired");
+            }
+        }
+        if (bedInclude!=null) {
+            parent = new BEDInclude(parent, false, bedInclude, orient);
+            ((BEDInclude)parent).setOnlyWithin(bedIncludeOnlyWithin);
+            ((BEDInclude)parent).setRequireOnePair(bedIncludeRequireOne);
+            ((BEDInclude)parent).setRequireBothPairs(bedIncludeRequireBoth);
+            if (verbose) {
+                System.err.println("BEDInclude: "+bedInclude);
+            }
+        }
+        if (bedExclude!=null) {
+            parent = new BEDExclude(parent, false, bedExclude, orient);
+            ((BEDExclude)parent).setOnlyWithin(bedExcludeOnlyWithin);
+            ((BEDExclude)parent).setRequireOnePair(bedExcludeRequireOne);
+            ((BEDExclude)parent).setRequireBothPairs(bedExcludeRequireBoth);
+            if (verbose) {
+                System.err.println("BEDExclude: "+bedExclude);
+            }
+        }
+        
+        File outfile =  new File(filenames.get(1));
+        SAMFileWriterFactory factory = new SAMFileWriterFactory();
+        if (tmpDir != null) {
+            factory.setTempDirectory(new File(tmpDir));
+        } else if (outfile.getParent() == null) {
+            factory.setTempDirectory(new File(".").getCanonicalFile());
+        } else {
+            factory.setTempDirectory(outfile.getParentFile());
+        }
+
+        SAMFileWriter out = factory.makeBAMWriter(reader.getFileHeader(), false, outfile);
+        long i = 0;
+        for (SAMRecord read: parent) {
+            if (verbose) {
+                i++;
+                if (i % 100000 == 0) {
+                    System.err.println("Read: " + i);
+                }
+                
+            }
+            if (read != null) {
+                out.addAlignment(read);
+            }
+        }
+        if (verbose) {
+            dumpStats(parent);
+        }
+
+        reader.close();
+        out.close();
+    }
+    
+    private void dumpStats(BAMFilter filter) {
+        if (filter.getParent()!=null) {
+            dumpStats(filter.getParent());
+        }
+        System.err.println(filter.getClass().getSimpleName());
+        System.err.println("    total: "+filter.getTotal());
+        System.err.println("  removed: "+filter.getRemoved());
+    }
+}
