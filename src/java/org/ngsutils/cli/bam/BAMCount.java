@@ -114,7 +114,7 @@ public class BAMCount extends AbstractOutputCommand {
         inverted = val;
     }
 
-    @Option(description = "Only count the starting mapped position (strand specific)", longName="startonly")
+    @Option(description = "Only count the starting mapped position (strand specific, for pairs - only counts the first pair)", longName="startonly")
     public void setStartOnly(boolean val) {
         startOnly = val;
     }
@@ -160,6 +160,10 @@ public class BAMCount extends AbstractOutputCommand {
         }
         if (inverted) {
             writer.write_line("## counts: number of inverted (FF, RR) reads ");
+        }
+
+        if (startOnly) {
+            writer.write_line("## counts: starting positions only ");
         }
 
         // write header cols
