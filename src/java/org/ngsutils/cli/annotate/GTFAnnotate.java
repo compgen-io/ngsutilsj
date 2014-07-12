@@ -6,7 +6,6 @@ import java.util.List;
 
 import org.ngsutils.NGSUtils;
 import org.ngsutils.NGSUtilsException;
-import org.ngsutils.annotation.AnnotationSource;
 import org.ngsutils.annotation.GTFAnnotationSource;
 import org.ngsutils.annotation.GTFAnnotationSource.GTFGene;
 import org.ngsutils.annotation.GenomeRegion;
@@ -32,6 +31,9 @@ public class GTFAnnotate extends AbstractOutputCommand {
     private int startCol = -1;
     private int endCol = -1;
     private int strandCol = -1;
+    private int regionCol = -1;
+    private int junctionCol = -1;
+    
     private int within = 0;
     
     private boolean hasHeader = true;
@@ -52,7 +54,7 @@ public class GTFAnnotate extends AbstractOutputCommand {
     }
 
 
-    @Option(description = "Column of chromosome (Default: 1)", longName="col-chrom", defaultValue="1")
+    @Option(description = "Column of chromosome (Default: 1)", longName="col-chrom", defaultValue="-1")
     public void setChromCol(int val) {
         if (val > 0) {
             // stored as 0-based, given as 1-based
@@ -62,7 +64,7 @@ public class GTFAnnotate extends AbstractOutputCommand {
         }
     }
 
-    @Option(description = "Column of start-position (1-based position) (Default: 2)", longName="col-start", defaultValue="2")
+    @Option(description = "Column of start-position (1-based position) (Default: 2)", longName="col-start", defaultValue="-1")
     public void setStartCol(int val) {
         if (val > 0) {
             // stored as 0-based, given as 1-based
@@ -89,6 +91,26 @@ public class GTFAnnotate extends AbstractOutputCommand {
             this.strandCol = val - 1;
         } else { 
             this.strandCol = -1;
+        }
+    }
+
+    @Option(description = "Column of a region (Default: -1, not used)", longName="col-region", defaultValue="-1")
+    public void setRegionCol(int val) {
+        if (val > 0) {
+            // stored as 0-based, given as 1-based
+            this.regionCol = val - 1;
+        } else { 
+            this.regionCol = -1;
+        }
+    }
+
+    @Option(description = "Column of a junction (Default: -1, not used)", longName="col-junction", defaultValue="-1")
+    public void setJunctionCol(int val) {
+        if (val > 0) {
+            // stored as 0-based, given as 1-based
+            this.junctionCol = val - 1;
+        } else { 
+            this.junctionCol = -1;
         }
     }
 
@@ -159,10 +181,12 @@ public class GTFAnnotate extends AbstractOutputCommand {
             throw new NGSUtilsException("You must specify an input file! (- for stdin)");
         }
         
-        if (refCol == -1 || startCol == -1) {
-            throw new NGSUtilsException("You must specify at least a chrom-column and start-column!");
+        if (refCol == -1 && startCol == -1 && regionCol == -1 && junctionCol == -1) {
+            // set the defaults if nothing is specified
+            refCol = 0;
+            startCol = 1;
         }
-
+        
 
         TabWriter writer = new TabWriter();
         writer.write_line("## program: " + NGSUtils.getVersion());
@@ -173,7 +197,7 @@ public class GTFAnnotate extends AbstractOutputCommand {
             System.err.print("Reading GTF annotation file: "+gtfFilename);
         }
 
-        AnnotationSource<GTFGene> ann = new GTFAnnotationSource(gtfFilename);
+        GTFAnnotationSource ann = new GTFAnnotationSource(gtfFilename);
         if (verbose) {
             System.err.println(" [done]");
         }
@@ -247,30 +271,33 @@ public class GTFAnnotate extends AbstractOutputCommand {
                     writer.write("");
                 }
                 
-                String ref = cols[refCol];
-                int start = Integer.parseInt(cols[startCol])-within;
-                int end = start+within;
-                Strand strand = Strand.NONE;
-                
-                if (!zeroBased && start > 0) {
-                    start = start - 1;
+                List<GTFGene> annVals;
+                if (regionCol > -1) {
+                    String region = cols[regionCol];
+                    annVals = ann.findAnnotation(GenomeRegion.parse(region));
+                } else if (junctionCol > -1) {
+                    String junction = cols[junctionCol];
+                    annVals = ann.findJunction(junction);
+                } else {
+                    String ref = cols[refCol];
+                    int start = Integer.parseInt(cols[startCol])-within;
+                    int end = start+within;
+                    Strand strand = Strand.NONE;
+                    
+                    if (!zeroBased && start > 0) {
+                        start = start - 1;
+                    }
+                    
+                    if (endCol>-1) { 
+                        end = Integer.parseInt(cols[endCol])+within;
+                    }
+                    
+                    if (strandCol>-1) {
+                        strand = Strand.parse(cols[strandCol]);
+                    }
+                    annVals = ann.findAnnotation(new GenomeRegion(ref, start, end, strand));
                 }
-                
-                if (endCol>-1) { 
-                    end = Integer.parseInt(cols[endCol])+within;
-                }
-                
-                if (strandCol>-1) {
-                    strand = Strand.parse(cols[strandCol]);
-                }
-                
-                List<GTFGene> annVals = ann.findAnnotation(new GenomeRegion(ref, start, end, strand));
-//                if (ref.equals("chr17") && start >= 7_560_000 && end <= 8_000_000) {
-//                    System.err.println("q: "+ref+":"+start+"-"+end);
-//                    for (int i=0; i < annVals.size(); i++) {
-//                        System.err.println(" "+annVals.get(i));
-//                    }
-//                }
+
                 String[] geneIds = new String[annVals.size()];
                 String[] geneNames = new String[annVals.size()];
                 String[] bioTypes = new String[annVals.size()];

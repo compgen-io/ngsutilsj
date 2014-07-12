@@ -19,6 +19,7 @@ import org.ngsutils.cli.bam.BAMCount;
 import org.ngsutils.cli.bam.BAMFilterCli;
 import org.ngsutils.cli.bam.PileupCli;
 import org.ngsutils.cli.fasta.FASTACli;
+import org.ngsutils.cli.fasta.FASTAJunctions;
 import org.ngsutils.cli.fastq.FastqFilterCli;
 import org.ngsutils.cli.fastq.FastqMerge;
 import org.ngsutils.cli.fastq.FastqSeparate;
@@ -47,6 +48,7 @@ public class NGSUtils {
         loadExec(GTFAnnotate.class);
         loadExec(GTFExport.class);
         loadExec(GermlineVarCall.class);
+        loadExec(FASTAJunctions.class);
 	}
 
 	@SuppressWarnings("unchecked")

@@ -5,7 +5,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.SortedMap;
 import java.util.SortedSet;
+import java.util.TreeMap;
 import java.util.TreeSet;
 
 import org.ngsutils.annotation.GTFAnnotationSource.GTFGene;
@@ -231,19 +233,26 @@ public class GTFAnnotationSource extends AbstractAnnotationSource<GTFGene> {
             return new ArrayList<GTFTranscript>(transcripts.values());
         }
 
-        public List<GenomeRegion> getExons() {
-            SortedSet<GenomeRegion> exons = new TreeSet<GenomeRegion>();
-//            System.err.println("Getting exons for gene: "+geneName);
-//            System.err.println("  txpts: "+transcripts.size() + " " + StringUtils.join(",",transcripts.keySet()));
+        public List<GTFExon> getExons() {
+            SortedMap<GenomeRegion, GTFExon> exons = new TreeMap<GenomeRegion, GTFExon>();
             for (GTFTranscript t:transcripts.values()){
-//                System.err.println("  txpt: "+t.transcriptId);
                 for (GTFExon ex: t.getExons()) {
-//                    System.err.println("    exon: "+ex.toString());
+                    exons.put(ex.toRegion(), ex);
+                }
+            }
+            return new ArrayList<GTFExon>(exons.values());
+        }
+
+        public List<GenomeRegion> getExonRegions() {
+            SortedSet<GenomeRegion> exons = new TreeSet<GenomeRegion>();
+            for (GTFTranscript t:transcripts.values()){
+                for (GTFExon ex: t.getExons()) {
                     exons.add(ex.toRegion());
                 }
             }
             return new ArrayList<GenomeRegion>(exons);
         }
+
         
         @Override
         public String[] toStringArray() {
@@ -339,6 +348,50 @@ public class GTFAnnotationSource extends AbstractAnnotationSource<GTFGene> {
         } else {
             return new String[] { "gene_id", "gene_name", "start", "end", "strand" };
         }
+    }
+
+    /**
+     * Find the gene associate with a particular splice-junction.
+     * 
+     * Junctions are specified like this:
+     *      ref:start-end
+     *      
+     * Where start and end are 0-based coordinates of the start and end of the intron. 
+     * (Or the end of the first exon and the start of the second one since we are zero-based)
+     *
+     * @param junction
+     * @return
+     */
+    public List<GTFGene> findJunction(String junction) {
+        String ref = junction.substring(0,junction.indexOf(':'));
+        String startend = junction.substring(junction.indexOf(':')+1);
+        
+        int start = Integer.parseInt(startend.substring(0,startend.indexOf('-')));
+        int end = Integer.parseInt(startend.substring(startend.indexOf('-')+1));
+        
+        List<GTFGene>  retval = new ArrayList<GTFGene>();
+        
+        for (GTFGene gene :findAnnotation(new GenomeRegion(ref, start))) {
+            boolean matchStart = false;
+            boolean matchEnd = false;
+            for (GTFExon exon: gene.getExons()) {
+                if (exon.end == start) {
+                    matchStart = true;
+                }
+                
+                if (exon.start == end) {
+                    matchEnd = true;
+                }
+            }
+            
+            if (matchStart && matchEnd) {
+                retval.add(gene);
+            } else if (start == end && (matchStart || matchEnd)) {
+                retval.add(gene);
+            }
+        }
+        
+        return retval;
     }
 
 }

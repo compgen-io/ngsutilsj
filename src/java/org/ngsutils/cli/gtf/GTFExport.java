@@ -147,7 +147,7 @@ public class GTFExport extends AbstractOutputCommand {
             if (exportExon) {
                 if (!combine) {
                     int i=1;
-                    for (GenomeRegion exon:gene.getExons()) {
+                    for (GenomeRegion exon:gene.getExonRegions()) {
                         writer.write(exon.ref);
                         writer.write(exon.start);
                         writer.write(exon.end);
@@ -159,7 +159,7 @@ public class GTFExport extends AbstractOutputCommand {
                     }
                 } else {
                     // combine overlapping exons
-                    List<GenomeRegion> exons = gene.getExons();
+                    List<GenomeRegion> exons = gene.getExonRegions();
                     
                     boolean found = true;
                     while (found) {
@@ -231,7 +231,7 @@ public class GTFExport extends AbstractOutputCommand {
                     boolean found = true;
                     while (found) {
                         found = false;
-                        for (GenomeRegion exon:gene.getExons()) {
+                        for (GenomeRegion exon:gene.getExonRegions()) {
                             GenomeRegion match = null;
                             for (GenomeRegion gr:geneRegions) {
                                 if (gr.overlaps(exon)) {
