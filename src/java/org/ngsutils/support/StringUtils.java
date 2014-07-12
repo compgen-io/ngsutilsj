@@ -15,8 +15,7 @@ public class StringUtils {
     }
     
     public static String strip(String str, String rem) {
-        Pattern pattern = Pattern.compile("^"+ rem +"(.*)"+ rem +"$");
-        
+        Pattern pattern = Pattern.compile("^"+ rem +"(.*?)"+ rem +"$");
         Matcher m = pattern.matcher(str);
         m.find();
         return m.group(1);
@@ -26,16 +25,14 @@ public class StringUtils {
     }
     
     public static String rstrip(String str) {
-        Pattern pattern = Pattern.compile("^(.*)\\s*$");
-        
+        Pattern pattern = Pattern.compile("^(.*?)\\s*$");        
         Matcher m = pattern.matcher(str);
         m.find();
         return m.group(1);
     }
     
     public static String lstrip(String str) {
-        Pattern pattern = Pattern.compile("^\\s*(.*)$");
-        
+        Pattern pattern = Pattern.compile("^\\s*(.*?)$");
         Matcher m = pattern.matcher(str);
         m.find();
         return m.group(1);
@@ -44,7 +41,6 @@ public class StringUtils {
     public static int matchCount(String one, String two) {
         int matches = 0;
         for (int i=0; i < one.length()  && i < two.length(); i++) {
-//            System.err.println("testing: ["+ i +"] "+one.charAt(i) + " = " + two.charAt(i));
             if (one.charAt(i) == two.charAt(i)) {
                 matches++;
             }
