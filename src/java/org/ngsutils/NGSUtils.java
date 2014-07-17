@@ -17,6 +17,7 @@ import org.ngsutils.cli.annotate.GTFAnnotate;
 import org.ngsutils.cli.annotate.RepeatAnnotate;
 import org.ngsutils.cli.bam.BAMCount;
 import org.ngsutils.cli.bam.BAMFilterCli;
+import org.ngsutils.cli.bam.JunctionCount;
 import org.ngsutils.cli.bam.PileupCli;
 import org.ngsutils.cli.fasta.FASTACli;
 import org.ngsutils.cli.fasta.FASTAJunctions;
@@ -42,6 +43,7 @@ public class NGSUtils {
         loadExec(FastqFilterCli.class);
         loadExec(BAMCount.class);
         loadExec(BAMFilterCli.class);
+        loadExec(JunctionCount.class);
         loadExec(FASTACli.class);
         loadExec(PileupCli.class);
         loadExec(RepeatAnnotate.class);

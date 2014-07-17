@@ -1,7 +1,12 @@
 package org.ngsutils.bam.support;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import net.sf.samtools.CigarElement;
 import net.sf.samtools.SAMRecord;
 
+import org.ngsutils.annotation.GenomeRegion;
 import org.ngsutils.bam.Orientation;
 import org.ngsutils.bam.Strand;
 
@@ -63,5 +68,52 @@ public class ReadUtils {
                 }
             }
         }
+    }
+    
+    public static List<GenomeRegion> getJunctionFlankingRegions(SAMRecord read, Orientation orient) {
+        List<GenomeRegion> out = new ArrayList<GenomeRegion>();
+        Strand strand = getFragmentEffectiveStrand(read, orient);
+        
+        int refpos = read.getAlignmentStart() - 1; // alignment-start is 1-based
+//        int readpos = 0;
+        
+        int flankStart = refpos;
+//        System.err.println("Read: " + read.getReadName() + " " + read.getCigarString());
+
+        
+        for (CigarElement el: read.getCigar().getCigarElements()) {
+//            System.err.print("  refpos: " + refpos + " cigar: " + el.getLength() + el.getOperator() + " = ");
+            switch (el.getOperator()) {
+            case M:
+            case EQ:
+            case X:
+                refpos += el.getLength();
+//                readpos += el.getLength();
+                break;
+            case I:
+                refpos += el.getLength();
+                break;
+//            case D:
+//            case S:
+//                readpos += el.getLength();
+//                break;
+            case N:
+                out.add(new GenomeRegion(read.getReferenceName(), flankStart, refpos, strand));
+                refpos += el.getLength();
+                flankStart = refpos;
+                break;
+            case H:
+            default:
+                break;
+                
+            }
+//            System.err.println("refpos: " + refpos);
+            
+        }
+        
+        if (out.size() > 0) {
+            out.add(new GenomeRegion(read.getReferenceName(), flankStart, refpos, strand));
+        }
+        return out;
     }
 }
