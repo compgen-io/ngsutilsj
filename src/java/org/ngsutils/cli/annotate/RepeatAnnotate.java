@@ -145,7 +145,7 @@ public class RepeatAnnotate extends AbstractOutputCommand {
         }
 
 
-        TabWriter writer = new TabWriter();
+        TabWriter writer = new TabWriter(out);
         writer.write_line("## program: " + NGSUtils.getVersion());
         writer.write_line("## cmd: " + NGSUtils.getArgs());
         writer.write_line("## repeat-annotations: " + repeatFilename);

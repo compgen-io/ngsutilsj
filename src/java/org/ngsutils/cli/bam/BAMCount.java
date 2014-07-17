@@ -132,7 +132,7 @@ public class BAMCount extends AbstractOutputCommand {
             reader.setValidationStringency(ValidationStringency.SILENT);
         }
 
-        TabWriter writer = new TabWriter();
+        TabWriter writer = new TabWriter(out);
         writer.write_line("## program: " + NGSUtils.getVersion());
         writer.write_line("## cmd: " + NGSUtils.getArgs());
         writer.write_line("## input: " + samFilename);
@@ -145,7 +145,7 @@ public class BAMCount extends AbstractOutputCommand {
         } else if (bedFilename != null) {
             writer.write_line("## source: bed " + bedFilename);
             spanSource = new BEDSpans(bedFilename);
-        } else {
+        } else { // TODO: add a GTF span source 
             reader.close();
             writer.close();
             throw new NGSUtilsException("You must specify either a bin-size or a BED file!");

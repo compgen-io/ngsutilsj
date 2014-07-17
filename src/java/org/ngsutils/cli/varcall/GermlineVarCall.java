@@ -58,7 +58,7 @@ public class GermlineVarCall extends AbstractOutputCommand {
 
     @Override
     public void exec() throws NGSUtilsException, IOException {
-        TabWriter writer = new TabWriter();
+        TabWriter writer = new TabWriter(out);
         writer.write_line("## program: " + NGSUtils.getVersion());
         writer.write_line("## cmd: " + NGSUtils.getArgs());
         writer.write_line("## input: " + pileupFilename);

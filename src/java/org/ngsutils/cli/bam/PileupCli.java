@@ -92,7 +92,7 @@ public class PileupCli extends AbstractOutputCommand {
         pileup.setFlagFilter(filterFlags);
         pileup.setFlagRequired(requiredFlags);
         
-        TabWriter writer = new TabWriter();
+        TabWriter writer = new TabWriter(out);
         writer.write_line("## program: " + NGSUtils.getVersion());
         writer.write_line("## cmd: " + NGSUtils.getArgs());
         writer.write_line("## input: " + samFilename);

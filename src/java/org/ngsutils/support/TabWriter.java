@@ -1,6 +1,8 @@
 package org.ngsutils.support;
 
 import java.io.BufferedOutputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
@@ -16,6 +18,12 @@ public class TabWriter {
         this.out = System.out;
         this.charset = Charset.forName("ASCII");
     }
+
+    public TabWriter(String filename) throws FileNotFoundException {
+        this.out = new BufferedOutputStream(new FileOutputStream(filename));
+        this.charset = Charset.forName("ASCII");
+    }
+
     public TabWriter(OutputStream out) {
         this.out = new BufferedOutputStream(out);
         this.charset = Charset.forName("ASCII");

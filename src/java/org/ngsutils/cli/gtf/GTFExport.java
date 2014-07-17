@@ -93,7 +93,7 @@ public class GTFExport extends AbstractOutputCommand {
             System.err.println("Combining overlapping regions");
         }
 
-        TabWriter writer = new TabWriter();
+        TabWriter writer = new TabWriter(out);
 
         Set<String> whitelistSet = null;
         if (whitelist!=null) {
