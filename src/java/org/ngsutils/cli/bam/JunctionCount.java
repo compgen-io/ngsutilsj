@@ -87,7 +87,7 @@ public class JunctionCount extends AbstractOutputCommand {
         this.retainedIntrons = val;
     }
 
-    @Option(description = "Separate reads by read number (R1/R2) (default: false)", longName="split-reads")
+    @Option(description = "Separate counts by read number (R1/R2) (default: false)", longName="split-reads")
     public void setSplitReads(boolean val) {
         this.splitReads = val;
     }
