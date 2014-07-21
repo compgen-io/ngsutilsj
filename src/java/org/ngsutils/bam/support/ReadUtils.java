@@ -78,11 +78,8 @@ public class ReadUtils {
 //        int readpos = 0;
         
         int flankStart = refpos;
-//        System.err.println("Read: " + read.getReadName() + " " + read.getCigarString());
-
         
         for (CigarElement el: read.getCigar().getCigarElements()) {
-//            System.err.print("  refpos: " + refpos + " cigar: " + el.getLength() + el.getOperator() + " = ");
             switch (el.getOperator()) {
             case M:
             case EQ:
@@ -107,8 +104,6 @@ public class ReadUtils {
                 break;
                 
             }
-//            System.err.println("refpos: " + refpos);
-            
         }
         
         if (out.size() > 0) {

@@ -2,6 +2,8 @@ package org.ngsutils.cli.bam;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
@@ -29,8 +31,88 @@ import com.lexicalscope.jewel.cli.Unparsed;
 @Command(name="junction-count", desc="Counts the number of reads that map to splice junctions", cat="bam")
 public class JunctionCount extends AbstractOutputCommand {
     
+    protected class JunctionCounter {
+        private Set<String> readsR1=new HashSet<String>();
+        private Set<String> readsR2=null;
+        
+        private boolean splitReads = false;
+        private String nmTagName = null;
+        
+        private int editAccR1=0;
+        private int editAccR2=0;
+        private int editCountR1=0;
+        private int editCountR2=0;
+        
+        public JunctionCounter() {
+        }
+
+        public JunctionCounter(boolean splitReads) {
+            if (splitReads) {
+                readsR2=new HashSet<String>();
+                this.splitReads = splitReads;
+            }
+        }
+        public JunctionCounter(String nmTagName) {
+            this.nmTagName = nmTagName;
+        }
+
+        public JunctionCounter(String nmTagName, boolean splitReads) {
+            if (splitReads) {
+                readsR2=new HashSet<String>();
+                this.splitReads = splitReads;
+            }
+            this.nmTagName = nmTagName;
+        }
+
+        public void addRead(SAMRecord read) {
+            if (!splitReads || read.getFirstOfPairFlag()) {
+                readsR1.add(read.getReadName());
+                if (nmTagName != null) {
+                    editAccR1 += getEditDistance(read);
+                    editCountR1 += 1;
+                }
+            } else if (splitReads && !read.getFirstOfPairFlag()) {
+                readsR2.add(read.getReadName());
+                if (nmTagName != null) {
+                    editAccR2 += getEditDistance(read);
+                    editCountR2 += 1;
+                }
+            }
+        }
+        
+        public int getEditDistance(SAMRecord read) {
+            Integer nm = read.getIntegerAttribute(nmTagName);
+            if (nm!=null) {
+                return nm;
+            }
+            return -1;
+        }
+
+        public int getCountR1() {
+            return readsR1.size();
+        }
+        
+        public int getCountR2() {
+            return readsR2.size();
+        }
+        
+        public double getEditDistanceR1() {
+            if (editCountR1 > 0) {
+                return (double) editAccR1 / editCountR1;
+            }
+            return 0;
+        }
+        
+        public double getEditDistanceR2() {
+            if (editCountR2 > 0) {
+                return (double) editAccR2 / editCountR2;
+            }
+            return 0;
+        }
+        
+    }
+    
     private String samFilename = null;
-//    private String gtfFilename = null;
     
     private boolean lenient = false;
     private boolean silent = false;
@@ -45,11 +127,6 @@ public class JunctionCount extends AbstractOutputCommand {
     public void setFilename(String filename) {
         samFilename = filename;
     }
-//
-//    @Option(description = "GTF annotation file", longName="gtf")
-//    public void setGTFFilename(String gtfFilename) {
-//        this.gtfFilename = gtfFilename;
-//    }
 
     @Option(description = "Use lenient validation strategy", longName="lenient")
     public void setLenient(boolean lenient) {
@@ -143,17 +220,28 @@ public class JunctionCount extends AbstractOutputCommand {
             }
             
             SAMRecordIterator it = reader.query(refRecord.getSequenceName(), 0, refRecord.getSequenceLength(), true);
-            
-            SortedMap<GenomeRegion, Integer> junctionCountsR1 = new TreeMap<GenomeRegion, Integer>();
-            SortedMap<GenomeRegion, Integer> junctionCountsR2 = new TreeMap<GenomeRegion, Integer>();
-            SortedMap<GenomeRegion, Integer> junctionEditAccR1 = new TreeMap<GenomeRegion, Integer>();
-            SortedMap<GenomeRegion, Integer> junctionEditAccR2 = new TreeMap<GenomeRegion, Integer>();
+            SortedMap<GenomeRegion, JunctionCounter> counters = new TreeMap<GenomeRegion, JunctionCounter>();
             
             while (it.hasNext()) {
                 SAMRecord read = it.next();
                 if (read.isSecondaryOrSupplementary() || read.getDuplicateReadFlag() || read.getNotPrimaryAlignmentFlag() || read.getReadUnmappedFlag()) {
                     // skip all secondary / duplicate / unmapped reads
                     continue;
+                }
+                if (editDistance && nmTagName == null) {
+                    Integer nm = read.getIntegerAttribute(SAMTag.NM.name());
+                    if (nm != null) {
+                        nmTagName = SAMTag.NM.name();
+                    } else {
+                        nm = read.getIntegerAttribute("nM");
+                        if (nm != null) {
+                            nmTagName = "nM";
+                        } else {
+                            it.close();
+                            reader.close();
+                            throw new RuntimeException("Your BAM file must have the 'NM' tag present to track edit-distance!");
+                        }
+                    }
                 }
                 
                 if (read.getAlignmentBlocks().size() > 1) {
@@ -162,52 +250,11 @@ public class JunctionCount extends AbstractOutputCommand {
                         if (last_end != -1) {
                             GenomeRegion junction = new GenomeRegion(read.getReferenceName(), last_end, flank.start, flank.strand);
                             
-                            if (!junctionCountsR1.containsKey(junction)) {
-                                if (editDistance) {
-                                    junctionEditAccR1.put(junction, 0);
-                                }
-                                junctionCountsR1.put(junction,  0);
-                                if (splitReads) {
-                                    junctionCountsR2.put(junction,  0);
-                                    if (editDistance) {
-                                        junctionEditAccR2.put(junction, 0);
-                                    }                                    
-                                }
+                            if (!counters.containsKey(junction)) {
+                                counters.put(junction, new JunctionCounter(nmTagName, splitReads));
                             }
-
-                            if (editDistance) {
-                                if (nmTagName == null) {
-                                    Integer nm = read.getIntegerAttribute(SAMTag.NM.name());
-                                    if (nm != null) {
-                                        nmTagName = SAMTag.NM.name();
-                                    } else {
-                                        nm = read.getIntegerAttribute("nM");
-                                        if (nm != null) {
-                                            nmTagName = "nM";
-                                        } else {
-                                            it.close();
-                                            reader.close();
-                                            throw new RuntimeException("Your BAM file must have the 'NM' tag present to track edit-distance!");
-                                        }
-                                    }
-                                }
-
-                                Integer nm = read.getIntegerAttribute(nmTagName);
-
-                                if (nm!=null) {
-                                    if (!splitReads || read.getFirstOfPairFlag()) {
-                                        junctionEditAccR1.put(junction,  junctionEditAccR1.get(junction)+nm);
-                                    } else {
-                                        junctionEditAccR2.put(junction,  junctionEditAccR2.get(junction)+nm);
-                                    }
-                                }
-                            }
-
-                            if (!splitReads || read.getFirstOfPairFlag()) {
-                                junctionCountsR1.put(junction,  junctionCountsR1.get(junction)+1);
-                            } else {
-                                junctionCountsR2.put(junction,  junctionCountsR2.get(junction)+1);
-                            }
+                            
+                            counters.get(junction).addRead(read);
                         }
                         last_end = flank.end;
                     }
@@ -216,23 +263,18 @@ public class JunctionCount extends AbstractOutputCommand {
             it.close();
 
             if (verbose) {
-                System.err.println("                found: " + junctionCountsR1.size());
+                System.err.println("                found: " + counters.size());
             }
             
-            for (GenomeRegion junc: junctionCountsR1.keySet()) {
+            for (GenomeRegion junc: counters.keySet()) {
                 writer.write(junc.ref+":"+junc.start+"-"+junc.end);
                 writer.write(""+junc.strand);
                 if (splitReads) {
                     writer.write("R1");
                 }
-                Integer count = junctionCountsR1.get(junc);
-                writer.write(count);
+                writer.write(counters.get(junc).getCountR1());
                 if (editDistance) {
-                    if (count > 0) {
-                        writer.write((double)junctionEditAccR1.get(junc) / count);
-                    } else {
-                        writer.write("0");
-                    }
+                    writer.write(counters.get(junc).getEditDistanceR1());
                 }
                 writer.eol();
                 
@@ -242,22 +284,19 @@ public class JunctionCount extends AbstractOutputCommand {
                     if (splitReads) {
                         writer.write("R2");
                     }
-                    count = junctionCountsR2.get(junc);
-                    writer.write(count);
+                    writer.write(counters.get(junc).getCountR1());
                     if (editDistance) {
-                        if (count > 0) {
-                            writer.write((double)junctionEditAccR2.get(junc) / count);
-                        } else {
-                            writer.write("0");
-                        }
+                        writer.write(counters.get(junc).getEditDistanceR1());
                     }
                     writer.eol();
                 }
             }
-            junctionCountsR1.clear();
-            junctionCountsR2.clear();
-            junctionEditAccR1.clear();
-            junctionEditAccR2.clear();
+            
+//            if (retainedIntrons) {
+//                for (GenomeRegion junc: counters.keySet()) {
+//                    
+//                }
+//            }
         }
 
         writer.close();
