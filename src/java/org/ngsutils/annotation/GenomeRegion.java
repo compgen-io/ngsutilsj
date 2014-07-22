@@ -139,7 +139,10 @@ public class GenomeRegion implements Comparable<GenomeRegion> {
     @Override                                                                                                                                                                                                                                                     
     public String toString() {
         if (start == end) {
-            return ref+":"+Integer.toString(start);
+            if (strand==Strand.NONE) {
+                return ref+":"+Integer.toString(start);
+            }
+            return ref+strand+":"+Integer.toString(start);
         }
         if (strand==Strand.NONE) {
             return ref+":"+Integer.toString(start)+"-"+Integer.toString(end);
@@ -209,5 +212,9 @@ public class GenomeRegion implements Comparable<GenomeRegion> {
                 return 1;
             }
         }
+    }
+
+    public int length() {
+        return end - start;
     }
 }
