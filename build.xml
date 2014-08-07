@@ -12,13 +12,13 @@
 
 	<path id="classpath">
         <fileset dir="${lib.dir}" includes="**/*.jar"/>
+        <path location="${lib.dir}/jewelcli-0.8.9.jar"/>
+        <path location="${lib.dir}/sam-1.111.jar"/>
     </path>
 
 	<target name="compile">
         <mkdir dir="${build.dir}/classes"/>
         <javac srcdir="${src.dir}/java" destdir="${build.dir}/classes" classpathref="classpath" debug="true" debuglevel="lines,vars,source"/>
-        <path location="${lib.dir}/jewelcli-0.8.9.jar"/>
-        <path location="${lib.dir}/sam-1.111.jar"/>
     </target>
 
 	<target name="jar" depends="compile, git.revision">
@@ -28,7 +28,8 @@
 		<mkdir dir="${dist.dir}"/>
 	    <taskdef name="jarjar" classname="com.tonicsystems.jarjar.JarJarTask"
 	        classpath="${lib.dir}/jarjar-1.4.jar"/>
-	    <jarjar jarfile="${dist.dir}/ngsutilsj.jar">
+        <jar destfile="${dist.dir}/ngsutilsj-${version}-${repository.version}.jar" basedir="${build.dir}/classes"/>
+	    <jarjar jarfile="${dist.dir}/ngsutilsj.jar.tmp">
             <manifest>
                 <attribute name="Main-Class" value="org.ngsutils.NGSUtils"/>
             </manifest>
@@ -41,8 +42,9 @@
         <delete file="${dist.dir}/ngsutilsj"/>
  		<concat destfile="${dist.dir}/ngsutilsj" binary="true">
  		     <fileset file="${src.dir}/scripts/stub.sh" />
- 		     <fileset file="${dist.dir}/ngsutilsj.jar" />
+ 		     <fileset file="${dist.dir}/ngsutilsj.jar.tmp" />
  		</concat>
+        <delete file="${dist.dir}/ngsutilsj.jar.tmp"/>
 		<chmod file="${dist.dir}/ngsutilsj" perm="755"/>
 	</target>
 

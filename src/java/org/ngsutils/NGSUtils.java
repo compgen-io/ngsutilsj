@@ -12,12 +12,13 @@ import java.util.List;
 import java.util.Map;
 
 import org.ngsutils.cli.Command;
-import org.ngsutils.cli.NGSExec;
+import org.ngsutils.cli.Exec;
 import org.ngsutils.cli.annotate.GTFAnnotate;
 import org.ngsutils.cli.annotate.RepeatAnnotate;
 import org.ngsutils.cli.bam.BAMCount;
 import org.ngsutils.cli.bam.BAMFilterCli;
 import org.ngsutils.cli.bam.JunctionCount;
+import org.ngsutils.cli.bam.JunctionDiffCli;
 import org.ngsutils.cli.bam.PileupCli;
 import org.ngsutils.cli.fasta.FASTACli;
 import org.ngsutils.cli.fasta.FASTAJunctions;
@@ -34,7 +35,7 @@ import com.lexicalscope.jewel.cli.CliFactory;
 import com.lexicalscope.jewel.cli.HelpRequestedException;
 
 public class NGSUtils {
-	static private Map<String, Class<NGSExec>> execs = new HashMap<String, Class<NGSExec>>();
+	static private Map<String, Class<Exec>> execs = new HashMap<String, Class<Exec>>();
 	static {
 		loadExec(FastqSort.class);
 		loadExec(FastqMerge.class);
@@ -44,6 +45,7 @@ public class NGSUtils {
         loadExec(BAMCount.class);
         loadExec(BAMFilterCli.class);
         loadExec(JunctionCount.class);
+        loadExec(JunctionDiffCli.class);
         loadExec(FASTACli.class);
         loadExec(PileupCli.class);
         loadExec(RepeatAnnotate.class);
@@ -60,7 +62,7 @@ public class NGSUtils {
 		if (cmd != null) {
 			name = cmd.name();
 		}
-		execs.put(name, (Class<NGSExec>) cls);
+		execs.put(name, (Class<Exec>) cls);
 	}
 
 	public static void usage() {
@@ -178,7 +180,7 @@ public class NGSUtils {
 		} else if (execs.containsKey(args[0])) {
 			List<String> l = Arrays.asList(args).subList(1, args.length);
 			try {
-				NGSExec exec = CliFactory.parseArgumentsUsingInstance(execs
+				Exec exec = CliFactory.parseArgumentsUsingInstance(execs
 						.get(args[0]).newInstance(), (String[]) l
 						.toArray(new String[l.size()]));
 				exec.exec();
@@ -195,7 +197,7 @@ public class NGSUtils {
 		}
 	}
 
-	private static void showHelp(Class<NGSExec> clazz) throws Exception {
+	private static void showHelp(Class<Exec> clazz) throws Exception {
 		Command cmd = clazz.getAnnotation(Command.class);
 		if (cmd != null) {
 			if (cmd.desc().equals("")) {

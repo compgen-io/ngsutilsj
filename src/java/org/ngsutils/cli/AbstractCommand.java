@@ -2,7 +2,7 @@ package org.ngsutils.cli;
 
 import com.lexicalscope.jewel.cli.Option;
 
-public abstract class AbstractCommand implements NGSExec {
+public abstract class AbstractCommand implements Exec {
     protected boolean verbose = false;
 
     @Option(helpRequest = true, description = "Display help", shortName = "h")

@@ -62,6 +62,10 @@ public class GenomeRegion implements Comparable<GenomeRegion> {
     
     // Strings are chrom:start-end, where start is the 1-based start position.
     public static GenomeRegion parse(String str) {
+        return parse(str, Strand.NONE);
+    }
+    
+    public static GenomeRegion parse(String str, Strand strand) {
         
         
         if (str.indexOf(':') <= 0) {
@@ -75,11 +79,11 @@ public class GenomeRegion implements Comparable<GenomeRegion> {
             return null;
         } else if (startend.indexOf('-') == -1) {
             int pos = Integer.parseInt(startend);
-            return new GenomeRegion(ref, pos, Strand.NONE);
+            return new GenomeRegion(ref, pos, strand);
         } else {
             int start = Integer.parseInt(startend.substring(0, startend.indexOf('-')))-1;
             int end = Integer.parseInt(startend.substring(startend.indexOf('-')+1));
-            return new GenomeRegion(ref, start, end, Strand.NONE);
+            return new GenomeRegion(ref, start, end, strand);
         }
     }
     

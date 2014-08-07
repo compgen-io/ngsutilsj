@@ -8,6 +8,7 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 
 import net.sf.samtools.CigarElement;
+import net.sf.samtools.CigarOperator;
 import net.sf.samtools.SAMFileReader;
 import net.sf.samtools.SAMRecord;
 import net.sf.samtools.SAMRecord.SAMTagAndValue;
@@ -117,12 +118,8 @@ public class ReadUtils {
                 return (double) tagAccR2 / tagCountR2;
             }
             return 0;
-        }
-        
+        }        
     }
-
-    
-    
     
     
     /**
@@ -177,12 +174,14 @@ public class ReadUtils {
      * specified, then the read must have more than minOverlap bases on each side of the junction. If there is more
      * than one junction, then only the first and last flanking sequences need to be longer than minOverlap.
      * 
+     * If there is no junction, then this function will return the entire read region.
+     * 
      * @param read 
      * @param orient - the orientation for the sequencing library (FR, RF, etc).
      * @param minOverlap - the minimum amount of flanking sequence there needs to be (default: 4bp).
      * @return
      */
-    public static List<GenomeRegion> getJunctionFlankingRegions(SAMRecord read, Orientation orient, int minOverlap) {
+    public static List<GenomeRegion> getFlankingRegions(SAMRecord read, Orientation orient, int minOverlap) {
         List<GenomeRegion> out = new ArrayList<GenomeRegion>();
         Strand strand = getFragmentEffectiveStrand(read, orient);
         
@@ -218,11 +217,7 @@ public class ReadUtils {
             }
         }
         
-        // If we added a front flank, add the last one
-        // - Don't add one otherwise, because this would just be the entire read
-        if (out.size() > 0) {
-            out.add(new GenomeRegion(read.getReferenceName(), flankStart, refpos, strand));
-        }
+        out.add(new GenomeRegion(read.getReferenceName(), flankStart, refpos, strand));
 
         // check the first and last flanks... if they are too short, then don't return anything.
         if (out.size() > 1) {
@@ -239,7 +234,7 @@ public class ReadUtils {
         return out;
     }
     public static List<GenomeRegion> getJunctionFlankingRegions(SAMRecord read, Orientation orient) {
-        return getJunctionFlankingRegions(read, orient, 4);
+        return getFlankingRegions(read, orient, 4);
     }
 
     
@@ -259,8 +254,11 @@ public class ReadUtils {
         return size;
     }
 
-
     public static List<SAMRecord> findOverlappingReads(SAMFileReader reader, GenomeRegion pos, Orientation orient, int readLength, int minOverlap) {
+        return findOverlappingReads(reader, pos, orient, readLength, minOverlap, false);
+    }
+
+    public static List<SAMRecord> findOverlappingReads(SAMFileReader reader, GenomeRegion pos, Orientation orient, int readLength, int minOverlap, boolean allowGaps) {
     	List<SAMRecord> out = new ArrayList<SAMRecord>();
 
     	SAMRecordIterator it = reader.query(pos.ref, pos.start - readLength + minOverlap, pos.start + readLength - minOverlap, true);
@@ -270,41 +268,22 @@ public class ReadUtils {
                 // skip all secondary / duplicate / unmapped reads
                 continue;
             }
+            
+            if (!allowGaps) {
+                // skip all reads with gaps
+                for (CigarElement el: read.getCigar().getCigarElements()) {
+                    if (el.getOperator() == CigarOperator.N) {
+                        continue;
+                    }
+                }
+            }
+            
             if (ReadUtils.getFragmentEffectiveStrand(read, orient) != pos.strand) {
             	continue;
             }
             
-            int refpos = read.getAlignmentStart() - 1; // alignment-start is 1-based
-          
-            List<GenomeRegion> regions = new ArrayList<GenomeRegion>();
-            int flankStart = refpos;
-          
-            for (CigarElement el: read.getCigar().getCigarElements()) {
-                switch (el.getOperator()) {
-                case M:
-                case EQ:
-                case X:
-                    refpos += el.getLength();
-                    break;
-                case I:
-                    refpos += el.getLength();
-                    break;
-                case N:
-                    regions.add(new GenomeRegion(read.getReferenceName(), flankStart, refpos, pos.strand));
-                    refpos += el.getLength();
-                    flankStart = refpos;
-                    break;
-                case H:
-                default:
-                    break;
-                    
-                }
-            }
-
-            regions.add(new GenomeRegion(read.getReferenceName(), flankStart, refpos, pos.strand));
-
-            for (GenomeRegion region: regions) {
-            	if (region.start <= pos.start - minOverlap && region.end >= pos.start + minOverlap) {
+            for (GenomeRegion region: ReadUtils.getFlankingRegions(read, orient, minOverlap)) {
+            	if (region.start <= (pos.start - minOverlap) && region.end >= (pos.start + minOverlap)) {
             		out.add(read);
             		break;
             	}
@@ -330,7 +309,7 @@ public class ReadUtils {
            
             if (read.getAlignmentBlocks().size() > 1) {
                 int last_end = -1;
-                for (GenomeRegion flank: ReadUtils.getJunctionFlankingRegions(read, orient, minOverlap)) {
+                for (GenomeRegion flank: ReadUtils.getFlankingRegions(read, orient, minOverlap)) {
                     if (last_end != -1) {
                         GenomeRegion junction = new GenomeRegion(read.getReferenceName(), last_end, flank.start, flank.strand);
                         

@@ -191,12 +191,12 @@ public class JunctionCount extends AbstractOutputCommand {
                 }
 
                 for (GenomeRegion spliceSite: intronCache) {
-                    if (verbose) {
-                        System.err.println(spliceSite);
-                    }
                     MappedReadCounter counter = new MappedReadCounter(editDistance ? "NM": null, splitReads);
                     for (SAMRecord read: ReadUtils.findOverlappingReads(reader, spliceSite, orient, readLength, minOverlap)) {
                         counter.addRead(read);
+                    }
+                    if (verbose) {
+                        System.err.println(spliceSite+" ("+counter.getCountR1()+")");
                     }
 
                     writer.write(spliceSite.ref+":"+spliceSite.start+"-"+spliceSite.start);
