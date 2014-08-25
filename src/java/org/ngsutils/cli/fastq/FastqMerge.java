@@ -12,13 +12,14 @@ import org.ngsutils.fastq.FastqReader;
 import org.ngsutils.support.Counter;
 import org.ngsutils.support.IterUtils;
 
+import com.lexicalscope.jewel.cli.ArgumentValidationException;
 import com.lexicalscope.jewel.cli.CommandLineInterface;
 import com.lexicalscope.jewel.cli.Unparsed;
 
 @CommandLineInterface(application="ngsutilsj fastq-merge")
 @Command(name="fastq-merge", desc="Merges two FASTQ files (R1/R2) into one interlaced file.", cat="fastq")
 public class FastqMerge extends AbstractOutputCommand {
-	private FastqReader[] readers;
+	private FastqReader[] readers=null;
 
 	public FastqMerge(){
 	}
@@ -37,6 +38,10 @@ public class FastqMerge extends AbstractOutputCommand {
 
    @Override
    public void exec() throws IOException {
+        if (readers == null) {
+            throw new ArgumentValidationException("You must supply two FASTQ files to merge.");
+        }
+       
 		if (verbose) {
 			System.err.println("Merging files:");
 			System.err.println("    "+readers[0].getFilename());
