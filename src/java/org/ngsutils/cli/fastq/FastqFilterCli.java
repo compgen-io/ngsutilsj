@@ -166,6 +166,8 @@ public class FastqFilterCli extends AbstractOutputCommand {
             }
         }
 
+        reader.close();
+        
         if (verbose) {
             System.err.println("Filter\tTotal\tAltered\tRemoved");
             for (final FastqFilter iter : filters) {

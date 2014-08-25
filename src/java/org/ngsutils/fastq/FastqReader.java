@@ -68,4 +68,8 @@ public class FastqReader implements Iterable<FastqRead> {
 	public String getFilename() {
 		return filename;
 	}
+
+    public void close() throws IOException {
+        in.close();
+    }
 }

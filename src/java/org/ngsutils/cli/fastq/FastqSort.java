@@ -99,6 +99,7 @@ public class FastqSort extends AbstractOutputCommand {
 				}
 			}
 		}
+		reader.close();
 		writeTemp(buffer);
 		buffer.clear();
 		if (verbose) {
@@ -106,10 +107,13 @@ public class FastqSort extends AbstractOutputCommand {
 			System.err.println("Total number of subfiles: "+tempFiles.size());
 			System.err.println("Merging subfiles...");
 		}
-		ArrayList<Iterator<FastqRead>> iterators = new ArrayList<Iterator<FastqRead>>();
+        ArrayList<Iterator<FastqRead>> iterators = new ArrayList<Iterator<FastqRead>>();
+        ArrayList<FastqReader> readers = new ArrayList<FastqReader>();
 		boolean addedRead = true;
 		for (String tmpname : tempFiles) {
-			iterators.add(new FastqReader(tmpname).iterator());
+		    FastqReader reader = new FastqReader(tmpname);
+		    readers.add(reader);
+			iterators.add(reader.iterator());
 			buffer.add(null);
 		}
 
@@ -164,6 +168,9 @@ public class FastqSort extends AbstractOutputCommand {
 			j++;
 		}
 		close();
+		for (FastqReader reader: readers) {
+		    reader.close();		    
+		}
 	}
 
 	private void writeTemp(ArrayList<FastqRead> buffer) throws IOException {

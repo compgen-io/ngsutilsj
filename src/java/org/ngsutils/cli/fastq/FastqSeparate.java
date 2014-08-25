@@ -66,6 +66,7 @@ public class FastqSeparate extends AbstractOutputCommand {
 		if (verbose) {
 			System.err.println("Total reads: " + counter.getValue());
 		}
+		reader.close();
 		close();
 	}
 

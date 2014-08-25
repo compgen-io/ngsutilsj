@@ -91,6 +91,7 @@ public class FastqSplit extends AbstractCommand {
 				lastName = read.getName();
 			}
 		}
+		reader.close();
 		for (OutputStream out: outs) {
 		    out.close();
 		}
