@@ -1,4 +1,4 @@
-package org.ngsutils.cli.junction;
+package org.ngsutils.cli.splicing;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -26,7 +26,7 @@ import com.lexicalscope.jewel.cli.Option;
 import com.lexicalscope.jewel.cli.Unparsed;
 
 @CommandLineInterface(application="ngsutilsj find-events")
-@Command(name="find-events", desc="Counts the number of reads that map to splice junctions", cat="bam")
+@Command(name="find-events", desc="Merges differentially spliced junction counts (junction-diff) into events of related junctions", cat="splicing")
 public class FindEvents extends AbstractOutputCommand {
     public class JunctionEventStats {
         public final double pvalue;
