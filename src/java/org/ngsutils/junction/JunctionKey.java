@@ -14,6 +14,23 @@ public class JunctionKey implements Comparable<JunctionKey> {
     public final JunctionDonorAcceptor donor;
     public final JunctionDonorAcceptor acceptor;
 
+    public JunctionKey(String name, Strand strand) {
+        this.name = name;
+        this.strand = strand;
+        this.read1 = false;
+
+        String[] chrom_se = name.split(":");
+        String[] se = chrom_se[1].split("-");
+        
+        if (strand == Strand.PLUS) {
+            this.donor = new JunctionDonorAcceptor(chrom_se[0]+":"+se[0], strand, false);
+            this.acceptor = new JunctionDonorAcceptor(chrom_se[0]+":"+se[1], strand, false);
+        } else {
+            this.donor = new JunctionDonorAcceptor(chrom_se[0]+":"+se[1], strand, false);
+            this.acceptor = new JunctionDonorAcceptor(chrom_se[0]+":"+se[0], strand, false);
+        }
+    }
+
     public JunctionKey(String name, Strand strand, boolean isRead1) {
         this.name = name;
         this.strand = strand;
@@ -45,7 +62,8 @@ public class JunctionKey implements Comparable<JunctionKey> {
 
     @Override
     public String toString() {
-        return name + ", strand=" + strand + ", read=" + (read1?"R1": "R2");
+        return name;
+        //+ ", strand=" + strand + ", read=" + (read1?"R1": "R2");
     }
 
     @Override

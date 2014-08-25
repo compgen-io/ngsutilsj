@@ -1,15 +1,21 @@
 package org.ngsutils.cli.bam;
 
+import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.List;
 
+import net.sf.samtools.SAMFileHeader;
 import net.sf.samtools.SAMFileReader;
 import net.sf.samtools.SAMFileReader.ValidationStringency;
 import net.sf.samtools.SAMFileWriter;
 import net.sf.samtools.SAMFileWriterFactory;
+import net.sf.samtools.SAMProgramRecord;
 import net.sf.samtools.SAMRecord;
 
+import org.ngsutils.NGSUtils;
 import org.ngsutils.NGSUtilsException;
 import org.ngsutils.bam.Orientation;
 import org.ngsutils.bam.filter.BAMFilter;
@@ -219,17 +225,40 @@ public class BAMFilterCli extends AbstractCommand {
             }
         }
         
-        File outfile =  new File(filenames.get(1));
+        
+
         SAMFileWriterFactory factory = new SAMFileWriterFactory();
+
+        String outFilename = filenames.get(1);
+        File outfile = null;
+        OutputStream outStream = null;
+        
+        if (outFilename.equals("-")) {
+            outStream = new BufferedOutputStream(System.out);
+        } else {
+            outfile = new File(outFilename);
+        }
+
         if (tmpDir != null) {
             factory.setTempDirectory(new File(tmpDir));
-        } else if (outfile.getParent() == null) {
+        } else if (outfile == null || outfile.getParent() == null) {
             factory.setTempDirectory(new File(".").getCanonicalFile());
-        } else {
+        } else if (outfile!=null) {
             factory.setTempDirectory(outfile.getParentFile());
         }
 
-        SAMFileWriter out = factory.makeBAMWriter(reader.getFileHeader(), false, outfile);
+        SAMFileHeader header = reader.getFileHeader().clone();
+        SAMProgramRecord pg = NGSUtils.buildSAMProgramRecord("bam-filter", header);
+        List<SAMProgramRecord> pgRecords = new ArrayList<SAMProgramRecord>(header.getProgramRecords());
+        pgRecords.add(0, pg);
+        header.setProgramRecords(pgRecords);
+
+        SAMFileWriter out;
+        if (outfile != null) {
+            out = factory.makeBAMWriter(header, false, outfile);
+        } else {
+            out = factory.makeSAMWriter(header,  false,  outStream);
+        }
         long i = 0;
         for (SAMRecord read: parent) {
             if (verbose) {
@@ -246,7 +275,6 @@ public class BAMFilterCli extends AbstractCommand {
         if (verbose) {
             dumpStats(parent);
         }
-
         reader.close();
         out.close();
     }

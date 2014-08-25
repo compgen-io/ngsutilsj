@@ -25,6 +25,10 @@ public abstract class AbstractLineReader<T> implements Iterable<T> {
         this.reader = new InputStreamReader(is);
     }
     
+    public void close() throws IOException {
+        this.reader.close();
+    }
+    
     protected abstract T convertLine(String line);
     
     @Override
@@ -62,9 +66,12 @@ public abstract class AbstractLineReader<T> implements Iterable<T> {
 
             @Override
             public T next() {
-                String cur = next;
-                next = readnext();               
-                return convertLine(cur);
+                T out = null;
+                while (out == null) {
+                    out = convertLine(next);
+                    next = readnext();     
+                }
+                return out;
             }
 
             @Override

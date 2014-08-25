@@ -13,7 +13,7 @@
 	<path id="classpath">
         <fileset dir="${lib.dir}" includes="**/*.jar"/>
         <path location="${lib.dir}/jewelcli-0.8.9.jar"/>
-        <path location="${lib.dir}/sam-1.111.jar"/>
+        <path location="${lib.dir}/sam-1.113.jar"/>
     </path>
 
 	<target name="compile">
@@ -35,7 +35,7 @@
             </manifest>
 	        <zipfileset src="${lib.dir}/objenesis-2.1.jar"/>
             <zipfileset src="${lib.dir}/jewelcli-0.8.9.jar"/>
-            <zipfileset src="${lib.dir}/sam-1.111.jar"/>
+            <zipfileset src="${lib.dir}/sam-1.113.jar"/>
             <zipfileset src="${lib.dir}/commons-math3-3.3.jar"/>
 	        <fileset dir="${build.dir}/classes"/>
 	    </jarjar>

@@ -11,14 +11,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import net.sf.samtools.SAMFileHeader;
+import net.sf.samtools.SAMProgramRecord;
+
 import org.ngsutils.cli.Command;
 import org.ngsutils.cli.Exec;
 import org.ngsutils.cli.annotate.GTFAnnotate;
 import org.ngsutils.cli.annotate.RepeatAnnotate;
 import org.ngsutils.cli.bam.BAMCount;
 import org.ngsutils.cli.bam.BAMFilterCli;
-import org.ngsutils.cli.bam.JunctionCount;
-import org.ngsutils.cli.bam.JunctionDiffCli;
 import org.ngsutils.cli.bam.PileupCli;
 import org.ngsutils.cli.fasta.FASTACli;
 import org.ngsutils.cli.fasta.FASTAJunctions;
@@ -28,6 +29,9 @@ import org.ngsutils.cli.fastq.FastqSeparate;
 import org.ngsutils.cli.fastq.FastqSort;
 import org.ngsutils.cli.fastq.FastqSplit;
 import org.ngsutils.cli.gtf.GTFExport;
+import org.ngsutils.cli.junction.FindEvents;
+import org.ngsutils.cli.junction.JunctionCount;
+import org.ngsutils.cli.junction.JunctionDiffCli;
 import org.ngsutils.cli.varcall.GermlineVarCall;
 
 import com.lexicalscope.jewel.cli.ArgumentValidationException;
@@ -45,6 +49,7 @@ public class NGSUtils {
         loadExec(BAMCount.class);
         loadExec(BAMFilterCli.class);
         loadExec(JunctionCount.class);
+        loadExec(FindEvents.class);
         loadExec(JunctionDiffCli.class);
         loadExec(FASTACli.class);
         loadExec(PileupCli.class);
@@ -222,4 +227,38 @@ public class NGSUtils {
 		System.err.println("");
 		System.err.println(getVersion());
 	}
+
+    public static SAMProgramRecord buildSAMProgramRecord(String prog) {
+        return buildSAMProgramRecord(prog, null);
+    }
+    public static SAMProgramRecord buildSAMProgramRecord(String prog, SAMFileHeader header) {
+        String pgTemplate = "ngsutilsj:" + prog + "-";
+        String pgID = pgTemplate;
+        boolean found = true;
+        int i = 1;
+        
+        SAMProgramRecord mostRecent = null;
+        
+        while (found) {
+            found = false;
+            pgID = pgTemplate + i;
+            if (header!=null) {
+                for (SAMProgramRecord record: header.getProgramRecords()) {
+                    if (mostRecent == null) {
+                        mostRecent = record;
+                    }
+                    if (record.getId().equals(pgID)) {
+                        found = true;
+                    }
+                }
+            }
+        }
+        
+        SAMProgramRecord programRecord = new SAMProgramRecord(pgID);
+        programRecord.setProgramName("ngsutilsj:bam-filter");
+        programRecord.setProgramVersion(NGSUtils.getVersion());
+        programRecord.setCommandLine("ngsutilsj " + NGSUtils.getArgs());
+        programRecord.setPreviousProgramGroupId(mostRecent.getId());
+        return programRecord;
+    }
 }

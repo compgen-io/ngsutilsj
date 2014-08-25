@@ -318,7 +318,12 @@ public class GTFAnnotate extends AbstractOutputCommand {
                             writer.write(StringUtils.join(",", geneIds));
                             break;
                         case "gene_name":
-                            writer.write(StringUtils.join(",", geneNames));
+                            if (geneNames.length > 0) {
+                                writer.write(StringUtils.join(",", geneNames));
+                            } else {
+                                // output *something* if the gene name isn't known.
+                                writer.write(StringUtils.join(",", geneIds));
+                            }
                             break;
                         case "biotype":
                             writer.write(StringUtils.join(",", bioTypes));

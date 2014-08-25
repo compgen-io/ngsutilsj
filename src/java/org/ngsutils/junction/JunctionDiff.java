@@ -14,6 +14,7 @@ import org.ngsutils.NGSUtilsException;
 import org.ngsutils.bam.Strand;
 import org.ngsutils.support.StringLineReader;
 import org.ngsutils.support.StringUtils;
+import org.ngsutils.support.stats.PermutedNullDistribution;
 
 public class JunctionDiff {
     
@@ -27,15 +28,10 @@ public class JunctionDiff {
     private SortedMap<JunctionDonorAcceptor, List<JunctionKey>> donors = new TreeMap<JunctionDonorAcceptor, List<JunctionKey>> ();
     private SortedMap<JunctionDonorAcceptor, List<JunctionKey>> acceptors = new TreeMap<JunctionDonorAcceptor, List<JunctionKey>> ();
 
-    private double[] permutedDonorR1 = null;
-    private double[] permutedDonorR2 = null;
-    private double[] permutedAcceptorR1 = null;
-    private double[] permutedAcceptorR2 = null;
-
-//    private double[] trueDonorR1 = null;
-//    private double[] trueDonorR2 = null;
-//    private double[] trueAcceptorR1 = null;
-//    private double[] trueAcceptorR2 = null;
+    private PermutedNullDistribution permutedDonorR1 = null;
+    private PermutedNullDistribution permutedDonorR2 = null;
+    private PermutedNullDistribution permutedAcceptorR1 = null;
+    private PermutedNullDistribution permutedAcceptorR2 = null;
 
     private int permutedGroupCount = 0;
     
@@ -48,38 +44,38 @@ public class JunctionDiff {
         this.maxEditDistance = maxEditDistance;
     }
     
-    public void findJunctions(List<String> filenames, Integer[] groups) throws IOException, NGSUtilsException {
+    public JunctionDiffStats findJunctions(List<String> filenames, Integer[] groups) throws IOException, NGSUtilsException {
         sampleCount = filenames.size();
         System.err.println("Number of samples: "+ sampleCount);
         sampleNames = StringUtils.getUniqueNames(filenames);
         
-        for (int i=0; i< sampleCount; i++) {
-            System.err.println("  - " + sampleNames.get(i) + " ("+groups[i]+")");
-        }
+        JunctionDiffStats stats = new JunctionDiffStats();
         
-        for (int i=0; i<sampleCount; i++) {
-            System.err.println("Loading: " + filenames.get(i));
+        for (int i=0; i< sampleCount; i++) {
+            stats.addSample(filenames.get(i), sampleNames.get(i), groups[i]);
             readFile(filenames.get(i), sampleCount, i);
         }
-
-        System.err.println("Total number of junctions: " + junctions.size());
+        
+        stats.setTotalJunctions(junctions.size());
+        
         
         if (minTotalCount > -1 || maxEditDistance > -1) {
             filterJunctions();
-            System.err.println("Junctions passing total/edit-distance filters: " + junctions.size());
+            stats.setFilteredJunctions(junctions.size());
         }
         
         populateDonorAcceptors();
         
         List<JunctionDonorAcceptor> validDonors = calculateDonors();
-        System.err.println("Valid donors: " + validDonors.size());
+        stats.setValidDonors(validDonors.size());
         List<JunctionDonorAcceptor> validAcceptors = calculateAcceptors();
-        System.err.println("Valid acceptors: " + validAcceptors.size());
+        stats.setValidAcceptors(validAcceptors.size());
 
         filterValidDonorAcceptorJunctions(validDonors, validAcceptors);
-        System.err.println("Junctions passing donor/acceptor filter: " + junctions.size());
-        System.err.println("Calculating permutations for p-values...");
+        stats.setDonorAcceptorFilteredJunctions(junctions.size());
+
         calcPermutations(groups);
+        return stats;
     }
 
     private void filterValidDonorAcceptorJunctions(List<JunctionDonorAcceptor> validDonors, List<JunctionDonorAcceptor> validAcceptors) {
@@ -185,8 +181,10 @@ public class JunctionDiff {
         int countIdx = -1;
         int editIdx = -1;
         
+        StringLineReader reader = new StringLineReader(filename);
+        
         boolean fileSplitReads = false;
-        for (String line: new StringLineReader(filename)) {
+        for (String line: reader) {
             if (line != null && line.charAt(0) != '#') {
                 String[] cols = StringUtils.strip(line).split("\t");
                 if (header == null) {
@@ -226,7 +224,7 @@ public class JunctionDiff {
                     // this is a junction line... find the key, if it is new, add a count object, 
                     // and add the counts for this sample.
 
-                    boolean read1 = false;
+                    boolean read1 = true;
                     
                     if (readIdx > -1) {
                         read1 = !cols[readIdx].equals("R2"); 
@@ -246,6 +244,7 @@ public class JunctionDiff {
                 }
             }
         }       
+        reader.close();
     }
 
     public boolean isSplitReads() {
@@ -292,52 +291,47 @@ public class JunctionDiff {
     
     
     public double calcPvalue(double testScore, boolean isRead1, boolean isDonor) {
-        double[] permutedScores;
+        PermutedNullDistribution nullDist;
 
         if (isRead1) {
             if (isDonor) {
-                permutedScores = permutedDonorR1;
+                nullDist = permutedDonorR1;
             } else {
-                permutedScores = permutedAcceptorR1;
+                nullDist = permutedAcceptorR1;
             }
         } else {
             if (isDonor) {
-                permutedScores = permutedDonorR2;
+                nullDist = permutedDonorR2;
             } else {
-                permutedScores = permutedAcceptorR2;
+                nullDist = permutedAcceptorR2;
             }
         }
         
-        testScore = Math.abs(testScore);
-        
-        int i;
-        for (i=0; i<permutedScores.length && testScore <= permutedScores[i]; i++) {}
-
-        return (double) (i + 1) / permutedScores.length;
+        return nullDist.pvalue(testScore);
+//        
+//        testScore = Math.abs(testScore);
+//        
+//        int i;
+//        for (i=0; i<permutedScores.length && testScore <= permutedScores[i]; i++) {}
+//
+//        return (double) (i + 1) / permutedScores.length;
     }
-    private double[] calcPermutations(List<Integer[]> permutedGroups, boolean isRead1, boolean isDonor) {
-        List<Double> tscores = new ArrayList<Double>();
+    private PermutedNullDistribution calcPermutations(List<Integer[]> permutedGroups, boolean isRead1, boolean isDonor) {
+        PermutedNullDistribution nullDist = new PermutedNullDistribution();
+        nullDist.setName((isDonor ? "Donor": "Acceptor")+"-"+(isRead1 ? "R1": "R2"));
         
         for (JunctionKey junc: junctions.keySet()) {
             if ((isDonor && junctions.get(junc).isValidDonor()) || (!isDonor && junctions.get(junc).isValidAcceptor())) {
                 if (junc.read1 == isRead1) {
                     for (Integer[] group: permutedGroups) {
                         JunctionStats stats = junctions.get(junc).calcStats(group, isDonor);
-                        tscores.add(Math.abs(stats.tScore));
+                        nullDist.add(stats.tScore);
                     }
                 }
             }
         }
 
-        // Sort the scores in descending order -> the higher the better.
-        Collections.sort(tscores, Collections.reverseOrder());
-        
-        double[] out = new double[tscores.size()];
-        for (int i=0; i<tscores.size(); i++) {
-            out[i] = tscores.get(i);
-        }
-        
-        return out;        
+        return nullDist;        
     }
 
     public static List<Integer[]> permuteGroups(Integer[] trueGroups) {

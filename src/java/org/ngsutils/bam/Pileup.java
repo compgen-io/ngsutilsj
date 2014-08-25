@@ -22,6 +22,11 @@ import org.ngsutils.fasta.IndexedFASTAFile;
 import org.ngsutils.fasta.FASTAReader;
 import org.ngsutils.fasta.NullFASTA;
 
+/**
+ * Calculates a pileup from a BAM file
+ * @author mbreese
+ *
+ */
 public class Pileup {
     public class RefPos implements Comparable<RefPos> {
         public final int refIndex;

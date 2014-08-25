@@ -3,6 +3,7 @@ package org.ngsutils.support.stats;
 import static org.apache.commons.math3.util.CombinatoricsUtils.factorialDouble;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -10,6 +11,9 @@ import org.apache.commons.math3.distribution.PoissonDistribution;
 import org.ngsutils.support.Pair;
 
 public class StatUtils {
+    
+    public static final double log2Factor = Math.log(2);
+
     /**
      * Based on a 2x2 contingency table:
      * 
@@ -271,4 +275,70 @@ public class StatUtils {
         return true;
     }
     
+    public static double median(int[] vals) {
+        int[] copy = Arrays.copyOf(vals, vals.length);
+        Arrays.sort(copy);
+        
+        if (copy.length % 2 == 0) {
+            int acc = copy[copy.length / 2];
+            acc += copy[(copy.length / 2)-1];
+            return acc / 2.0;
+        } else {
+            return copy[copy.length / 2];
+        }
+    }
+
+    public static double median(double[] vals) {
+        double[] copy = Arrays.copyOf(vals, vals.length);
+        Arrays.sort(copy);
+        
+        if (copy.length % 2 == 0) {
+            double acc = copy[copy.length / 2];
+            acc += copy[(copy.length / 2)-1];
+            return acc / 2.0;
+        } else {
+            return copy[copy.length / 2];
+        }
+
+    }
+
+    public static double log2(int val) {
+        return Math.log(val) / log2Factor;
+    }
+    
+    public static double[] log2(int[] vals) {
+        double[] out = new double[vals.length];
+        for (int i=0; i<vals.length; i++) {
+            out[i] = log2(vals[i]);
+        }
+        return out;
+    }
+
+
+    public static double medianInteger(List<Integer> vals) {
+        List<Integer> copy = new ArrayList<Integer>(vals);
+        Collections.sort(copy);
+        
+        if (copy.size() % 2 == 0) {
+            int acc = copy.get(copy.size() / 2);
+            acc +=  copy.get((copy.size() / 2) - 1);
+            return acc / 2.0;
+        } else {
+            return copy.get(copy.size() / 2);
+        }
+    }
+
+    public static double medianDouble(List<Double> vals) {
+        List<Double> copy = new ArrayList<Double>(vals);
+        Collections.sort(copy);
+        
+        if (copy.size() % 2 == 0) {
+            Double acc = copy.get(copy.size() / 2);
+            acc +=  copy.get((copy.size() / 2) - 1);
+            return acc / 2.0;
+        } else {
+            return copy.get(copy.size() / 2);
+        }
+    }
+
 }

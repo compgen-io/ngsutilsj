@@ -1,14 +1,19 @@
-package org.ngsutils.cli.bam;
+package org.ngsutils.cli.junction;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.ngsutils.NGSUtils;
 import org.ngsutils.NGSUtilsException;
 import org.ngsutils.cli.AbstractOutputCommand;
 import org.ngsutils.cli.Command;
+import org.ngsutils.junction.JunctionCounts;
 import org.ngsutils.junction.JunctionDiff;
+import org.ngsutils.junction.JunctionDiffStats;
+import org.ngsutils.junction.JunctionDiffStats.JunctionDiffSample;
 import org.ngsutils.junction.JunctionKey;
 import org.ngsutils.junction.JunctionStats;
 import org.ngsutils.support.StringUtils;
@@ -27,7 +32,6 @@ public class JunctionDiffCli extends AbstractOutputCommand {
     
     private double maxEditDistance = -1;
     private int minTotalCount = -1;
-    private boolean calcFDR = false; 
     
     @Unparsed(name = "FILEs")
     public void setFilename(List<String> filenames) {
@@ -44,12 +48,7 @@ public class JunctionDiffCli extends AbstractOutputCommand {
         this.minTotalCount = minTotalCount;
     }
 
-    @Option(description = "Calculate an empirical FDR value for each junction", longName="fdr")
-    public void setCalcFDR(boolean calcFDR) {
-        this.calcFDR = calcFDR;
-    }
-
-    @Option(description = "Comma-delimited list of groups in the same order as the files are given (1=control, 2=experimental, Example: --groups=1,1,1,2,2,2)", longName="groups")
+    @Option(description = "Comma-delimited list of groups in the same order as the files are given (1=control, 2=experimental, Example: --groups 1,1,1,2,2,2)", longName="groups")
     public void setGroups(String value) {
         List<Integer> tmp = new ArrayList<Integer>();
         for (String s:value.split(",")) {
@@ -66,38 +65,50 @@ public class JunctionDiffCli extends AbstractOutputCommand {
         JunctionDiff juncDiff = new JunctionDiff();
         juncDiff.setMinTotalCount(minTotalCount);
         juncDiff.setMaxEditDistance(maxEditDistance);
-        juncDiff.findJunctions(filenames, groups);
+        JunctionDiffStats jdStats = juncDiff.findJunctions(filenames, groups);
+        
+        if (verbose) {
+            System.err.println("Samples:\n");
+            for (JunctionDiffSample sample: jdStats.getSamples()) {
+                System.err.println("  " + sample.sampleName + " [" + sample.group + "] - " + sample.filename + "\n");
+            }
+            System.err.println("Junctions       : "+jdStats.getTotalJunctions()+"\n");
+            System.err.println("Filtered        : "+jdStats.getFilteredJunctions()+"\n");
+            System.err.println("Valid donors    : "+jdStats.getValidDonors()+"\n");
+            System.err.println("Valid acceptors : "+jdStats.getValidAcceptors()+"\n");
+            System.err.println("Final junctions : "+jdStats.getDonorAcceptorFilteredJunctions()+"\n");
+        }
         
         List<Double> fdrDonorR1 = new ArrayList<Double>();
         List<Double> fdrAcceptorR1 = new ArrayList<Double>();
         List<Double> fdrDonorR2 = new ArrayList<Double>();
         List<Double> fdrAcceptorR2 = new ArrayList<Double>();
 
-        if (calcFDR) {
+        if (verbose) {
             System.err.println("Calculating FDR...");
-            List<Double> pvalueDonorR1 = new ArrayList<Double>();
-            List<Double> pvalueAcceptorR1 = new ArrayList<Double>();
-            List<Double> pvalueDonorR2 = new ArrayList<Double>();
-            List<Double> pvalueAcceptorR2 = new ArrayList<Double>();
+        }
+        List<Double> pvalueDonorR1 = new ArrayList<Double>();
+        List<Double> pvalueAcceptorR1 = new ArrayList<Double>();
+        List<Double> pvalueDonorR2 = new ArrayList<Double>();
+        List<Double> pvalueAcceptorR2 = new ArrayList<Double>();
 
-            for (JunctionKey key: juncDiff.getJunctions().keySet()) {
-                if (juncDiff.getJunctions().get(key).isValidDonor()) {
-                    JunctionStats stats = juncDiff.getJunctions().get(key).calcStats(groups, true);
-                    double pvalue = juncDiff.calcPvalue(stats.tScore, key.read1,true);
-                    if (!juncDiff.isSplitReads() || key.read1) {
-                        pvalueDonorR1.add(pvalue);
-                    } else {
-                        pvalueDonorR2.add(pvalue);
-                    }
+        for (JunctionKey key: juncDiff.getJunctions().keySet()) {
+            if (juncDiff.getJunctions().get(key).isValidDonor()) {
+                JunctionStats stats = juncDiff.getJunctions().get(key).calcStats(groups, true);
+                double pvalue = juncDiff.calcPvalue(stats.tScore, key.read1,true);
+                if (!juncDiff.isSplitReads() || key.read1) {
+                    pvalueDonorR1.add(pvalue);
+                } else {
+                    pvalueDonorR2.add(pvalue);
                 }
-                if (juncDiff.getJunctions().get(key).isValidAcceptor()) {
-                    JunctionStats stats = juncDiff.getJunctions().get(key).calcStats(groups, false);
-                    double pvalue = juncDiff.calcPvalue(stats.tScore, key.read1,false);
-                    if (!juncDiff.isSplitReads() || key.read1) {
-                        pvalueAcceptorR1.add(pvalue);
-                    } else {
-                        pvalueAcceptorR2.add(pvalue);
-                    }
+            }
+            if (juncDiff.getJunctions().get(key).isValidAcceptor()) {
+                JunctionStats stats = juncDiff.getJunctions().get(key).calcStats(groups, false);
+                double pvalue = juncDiff.calcPvalue(stats.tScore, key.read1,false);
+                if (!juncDiff.isSplitReads() || key.read1) {
+                    pvalueAcceptorR1.add(pvalue);
+                } else {
+                    pvalueAcceptorR2.add(pvalue);
                 }
             }
             
@@ -140,6 +151,15 @@ public class JunctionDiffCli extends AbstractOutputCommand {
             }
         }
         
+        Set<String> uniqueJunctions = new HashSet<String>();
+        for (JunctionKey key: juncDiff.getJunctions().keySet()) {
+            JunctionCounts j = juncDiff.getJunctions().get(key);
+            if (j.isValidDonor() || j.isValidAcceptor()) {
+                uniqueJunctions.add(key.name);
+            }
+        }
+
+        
         TabWriter writer = new TabWriter(out);
         writer.write_line("## program: " + NGSUtils.getVersion());
         writer.write_line("## cmd: " + NGSUtils.getArgs());
@@ -153,7 +173,22 @@ public class JunctionDiffCli extends AbstractOutputCommand {
         if (maxEditDistance > 0) { 
             writer.write_line("## max-edit-distance: " + maxEditDistance);
         }
-        writer.eol();
+
+        if (juncDiff.isSplitReads()) {
+            writer.write_line("## split-reads (summary counts are for R1 and R2)");
+        }
+        
+        for (JunctionDiffSample sample: jdStats.getSamples()) {
+            writer.write_line("## sample: " + sample.sampleName + ";" + sample.group + ";" + sample.filename);
+        }
+
+        writer.write_line("## total-junctions: "+jdStats.getTotalJunctions());
+        writer.write_line("## filtered-junctions: "+jdStats.getFilteredJunctions());
+        writer.write_line("## valid-donors: "+jdStats.getValidDonors());
+        writer.write_line("## valid-acceptors: "+jdStats.getValidAcceptors());
+        writer.write_line("## final-junctions: "+jdStats.getDonorAcceptorFilteredJunctions());
+        writer.write_line("## unique-junctions: "+uniqueJunctions.size());
+        uniqueJunctions.clear();
 
         writer.write("junction", "strand");
         if (juncDiff.isSplitReads()) {
@@ -176,9 +211,7 @@ public class JunctionDiffCli extends AbstractOutputCommand {
         
         writer.write("control-pct", "exp-pct", "pct_diff", "tscore");
         writer.write("pvalue");
-        if (calcFDR) {
-            writer.write("FDR (B-H)");
-        }
+        writer.write("FDR (B-H)");
         writer.eol();
 
         for (JunctionKey key: juncDiff.getJunctions().keySet()) {
@@ -204,12 +237,10 @@ public class JunctionDiffCli extends AbstractOutputCommand {
                 writer.write(stats.tScore);
                 writer.write(juncDiff.calcPvalue(stats.tScore, key.read1,true));
                         
-                if (calcFDR) {
-                    if (!juncDiff.isSplitReads() || key.read1) {
-                        writer.write(fdrDonorR1.remove(0));
-                    } else {
-                        writer.write(fdrDonorR2.remove(0));
-                    }
+                if (!juncDiff.isSplitReads() || key.read1) {
+                    writer.write(fdrDonorR1.remove(0));
+                } else {
+                    writer.write(fdrDonorR2.remove(0));
                 }
                 
                 writer.eol();
@@ -235,12 +266,10 @@ public class JunctionDiffCli extends AbstractOutputCommand {
                 writer.write(stats.pctDiff);
                 writer.write(stats.tScore);
                 writer.write(juncDiff.calcPvalue(stats.tScore, key.read1,false));
-                if (calcFDR) {
-                    if (!juncDiff.isSplitReads() || key.read1) {
-                        writer.write(fdrAcceptorR1.remove(0));
-                    } else {
-                        writer.write(fdrAcceptorR2.remove(0));
-                    }
+                if (!juncDiff.isSplitReads() || key.read1) {
+                    writer.write(fdrAcceptorR1.remove(0));
+                } else {
+                    writer.write(fdrAcceptorR2.remove(0));
                 }
                 
                 writer.eol();

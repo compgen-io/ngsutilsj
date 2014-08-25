@@ -1,4 +1,4 @@
-package org.ngsutils.cli.bam;
+package org.ngsutils.cli.junction;
 
 import java.io.File;
 import java.io.IOException;
@@ -28,8 +28,6 @@ import com.lexicalscope.jewel.cli.Unparsed;
 @CommandLineInterface(application="ngsutilsj junction-count")
 @Command(name="junction-count", desc="Counts the number of reads that map to splice junctions", cat="bam")
 public class JunctionCount extends AbstractOutputCommand {
-    
-    
     private String samFilename = null;
     
     private boolean lenient = false;
