@@ -32,7 +32,8 @@ public class FastqToBam extends AbstractCommand {
 	private String outputFilename = null;
 	private String tmpDir = null;
 	private boolean calcMD5 = false;
-	private boolean force = false; 
+	private boolean force = false;
+	private boolean comments = false;
 
 	public FastqToBam() {
 	}
@@ -68,6 +69,11 @@ public class FastqToBam extends AbstractCommand {
         this.force = val;
     }
     
+    @Option(description = "Include comments field from FASTQ file", longName = "comments")
+    public void setComments(boolean val) {
+        this.comments = val;
+    }
+    
     @Option(description = "Write temporary files here", longName="tmpdir", defaultToNull=true)
     public void setTmpDir(String tmpDir) {
         this.tmpDir = tmpDir;
@@ -78,13 +84,7 @@ public class FastqToBam extends AbstractCommand {
 	    if (readers == null) {
             throw new ArgumentValidationException("You must supply two FASTQ files to merge.");
 	    }
-	    
-	    if (verbose) {
-	        for (FastqReader reader: readers) {
-	            System.err.println("Input: "+reader.getFilename());
-	        }
-	    }
-	    
+	   	    
         SAMFileWriterFactory factory = new SAMFileWriterFactory();
 
         File outfile = null;
@@ -100,6 +100,15 @@ public class FastqToBam extends AbstractCommand {
             }
             if (calcMD5) {
                 factory.setCreateMd5File(true);
+            }
+        }
+
+        if (verbose) {
+            for (FastqReader reader: readers) {
+                System.err.println("Input: "+reader.getFilename());
+            }
+            if (comments) {
+                System.err.println("Including comments");
             }
         }
 
@@ -146,6 +155,11 @@ public class FastqToBam extends AbstractCommand {
 	            record.setReadName(read.getName());
 	            record.setReadString(read.getSeq());
 	            record.setBaseQualityString(read.getQual());
+	            
+	            if (comments && read.getComment() != null) {
+	                record.setAttribute("CO", read.getComment());
+	            }
+	            
                 out.addAlignment(record);
 	        }
         } else {
@@ -161,6 +175,9 @@ public class FastqToBam extends AbstractCommand {
                         record.setReadName(one.getName());
                         record.setReadString(one.getSeq());
                         record.setBaseQualityString(one.getQual());
+                        if (comments && one.getComment() != null) {
+                            record.setAttribute("CO", one.getComment());
+                        }
                         out.addAlignment(record);
                         
                         record = new SAMRecord(header);
@@ -172,6 +189,9 @@ public class FastqToBam extends AbstractCommand {
                         record.setReadName(two.getName());
                         record.setReadString(two.getSeq());
                         record.setBaseQualityString(two.getQual());
+                        if (comments && two.getComment() != null) {
+                            record.setAttribute("CO", two.getComment());
+                        }
                         out.addAlignment(record);
 
                     } else {

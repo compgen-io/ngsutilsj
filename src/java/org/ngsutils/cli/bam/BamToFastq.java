@@ -33,6 +33,7 @@ public class BamToFastq extends AbstractCommand {
     private boolean split = false;
     private boolean compress = false;
     private boolean force = false;
+    private boolean comments = false;
     
     private boolean lenient = false;
     private boolean silent = false;
@@ -71,7 +72,12 @@ public class BamToFastq extends AbstractCommand {
     public void setSilent(boolean silent) {
         this.silent = silent;
     }
-    
+   
+    @Option(description = "Include comments tag from BAM file", longName = "comments")
+    public void setComments(boolean val) {
+        this.comments = val;
+    }
+
     @Override
     public void exec() throws NGSUtilsException, IOException {        
         if (filename == null) {
@@ -168,7 +174,12 @@ public class BamToFastq extends AbstractCommand {
                     qual = read.getBaseQualityString();
                 }
                 
-                FastqRead fqRead = new FastqRead(name, seq, qual); 
+                String comment = null;
+                if (comments) {
+                    comment = read.getStringAttribute("CO");
+                }
+                
+                FastqRead fqRead = new FastqRead(name, seq, qual, comment); 
                 
                 if (split && !read.getFirstOfPairFlag()) {
                     fqRead.write(outs[1]);
