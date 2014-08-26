@@ -34,6 +34,7 @@ public class FastqToBam extends AbstractCommand {
 	private boolean calcMD5 = false;
 	private boolean force = false;
 	private boolean comments = false;
+	private int compressionLevel = 6; // sam.jar default is 5, but 6 is the standard default
 
 	public FastqToBam() {
 	}
@@ -50,7 +51,6 @@ public class FastqToBam extends AbstractCommand {
         } else {
             System.err.println("You must supply one or two FASTQ files to convert!");
             System.exit(1);
-
         }
     }
 
@@ -69,6 +69,20 @@ public class FastqToBam extends AbstractCommand {
         this.force = val;
     }
     
+    @Option(description = "Compression-level: fast (1)", longName = "fast")
+    public void setFast(boolean val) {
+        if (val) {
+            compressionLevel = 1;
+        }
+    }
+
+    @Option(description = "Compression-level: best (9)", longName = "best")
+    public void setBest(boolean val) {
+        if (val) {
+            compressionLevel = 6;
+        }
+    }
+
     @Option(description = "Include comments field from FASTQ file", longName = "comments")
     public void setComments(boolean val) {
         this.comments = val;
@@ -110,6 +124,12 @@ public class FastqToBam extends AbstractCommand {
             if (comments) {
                 System.err.println("Including comments");
             }
+            if (compressionLevel == 1) {
+                System.err.println("Compression: fast");
+            }
+            if (compressionLevel == 9) {
+                System.err.println("Compression: best");
+            }
         }
 
         if (tmpDir != null) {
@@ -130,7 +150,7 @@ public class FastqToBam extends AbstractCommand {
             if (verbose) {
                 System.err.println("Output: "+outfile);
             }
-            out = factory.makeBAMWriter(header, true, outfile);
+            out = factory.makeBAMWriter(header, true, outfile, compressionLevel);
         } else {
             if (verbose) {
                 System.err.println("Output: stdout");
