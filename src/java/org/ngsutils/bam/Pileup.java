@@ -18,9 +18,9 @@ import net.sf.samtools.SAMRecord;
 import net.sf.samtools.SAMRecordIterator;
 
 import org.ngsutils.annotation.GenomeRegion;
-import org.ngsutils.fasta.IndexedFASTAFile;
-import org.ngsutils.fasta.FASTAReader;
-import org.ngsutils.fasta.NullFASTA;
+import org.ngsutils.fasta.FastaReader;
+import org.ngsutils.fasta.IndexedFastaFile;
+import org.ngsutils.fasta.NullFasta;
 
 /**
  * Calculates a pileup from a BAM file
@@ -229,7 +229,7 @@ public class Pileup {
 
     private SAMFileReader reader;
     private SAMRecordIterator samIterator = null;
-    private FASTAReader fastaRef = new NullFASTA();
+    private FastaReader fastaRef = new NullFasta();
     
     private int minMappingQual = 0;
     private int minBaseQual = 0;
@@ -242,7 +242,7 @@ public class Pileup {
     }
     
     public void setFASTARef(String filename) throws IOException {
-        fastaRef = new IndexedFASTAFile(filename);
+        fastaRef = new IndexedFastaFile(filename);
     }
     
     public void setMinMappingQual(int minMappingQual) {
@@ -281,6 +281,9 @@ public class Pileup {
     }        
 
     public Iterable<PileupPos> pileup(GenomeRegion region) {
+        if (region == null) {
+            return pileup(null, -1, -1);
+        }
         return pileup(region.ref, region.start, region.end);
     }
     public Iterable<PileupPos> pileup(String ref, int start, int end) {
@@ -306,10 +309,8 @@ public class Pileup {
                             if (read.getMappingQuality() < minMappingQual) {
                                 continue;
                             }
+
                             if (read.getReadUnmappedFlag()) {
-                                continue;
-                            }
-                            if (read.getReadPairedFlag() && !read.getProperPairFlag()) {
                                 continue;
                             }
                             

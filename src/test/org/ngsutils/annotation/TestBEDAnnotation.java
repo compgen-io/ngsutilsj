@@ -6,16 +6,16 @@ import static org.junit.Assert.assertTrue;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.ngsutils.annotation.BEDAnnotationSource.BEDAnnotation;
+import org.ngsutils.annotation.BedAnnotationSource.BEDAnnotation;
 import org.ngsutils.bam.Strand;
 import org.ngsutils.support.StringUtils;
 
 public class TestBEDAnnotation {
-    BEDAnnotationSource bed;
+    BedAnnotationSource bed;
     
     @Before
     public void setUp() throws Exception {
-        bed = new BEDAnnotationSource(getClass().getClassLoader().getResourceAsStream("org/ngsutils/annotation/test.bed"));
+        bed = new BedAnnotationSource(getClass().getClassLoader().getResourceAsStream("org/ngsutils/annotation/test.bed"));
     }
 
     @Test

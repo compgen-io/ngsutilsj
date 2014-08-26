@@ -26,7 +26,7 @@ import com.lexicalscope.jewel.cli.Option;
 import com.lexicalscope.jewel.cli.Unparsed;
 
 @CommandLineInterface(application="ngsutilsj find-events")
-@Command(name="find-events", desc="Merges differentially spliced junction counts (junction-diff) into events of related junctions", cat="splicing")
+@Command(name="find-events", desc="Merges differentially spliced junction counts (junction-diff) into events of related junctions", cat="splicing", experimental=true)
 public class FindEvents extends AbstractOutputCommand {
     public class JunctionEventStats {
         public final double pvalue;

@@ -6,7 +6,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 
-import org.ngsutils.annotation.BEDAnnotationSource.BEDAnnotation;
+import org.ngsutils.annotation.BedAnnotationSource.BEDAnnotation;
 import org.ngsutils.bam.Strand;
 import org.ngsutils.support.StringLineReader;
 import org.ngsutils.support.StringUtils;
@@ -18,7 +18,7 @@ import org.ngsutils.support.StringUtils;
  * 
  */
 
-public class BEDAnnotationSource extends AbstractAnnotationSource<BEDAnnotation> {
+public class BedAnnotationSource extends AbstractAnnotationSource<BEDAnnotation> {
     public class BEDAnnotation implements Annotation {
         final private String name;
         final private double score;
@@ -39,10 +39,10 @@ public class BEDAnnotationSource extends AbstractAnnotationSource<BEDAnnotation>
         }
     }
 
-    public BEDAnnotationSource(String filename) throws FileNotFoundException, IOException {
+    public BedAnnotationSource(String filename) throws FileNotFoundException, IOException {
         loadFile(new FileInputStream(new File(filename)));
     }
-    public BEDAnnotationSource(InputStream is) throws FileNotFoundException, IOException {
+    public BedAnnotationSource(InputStream is) throws FileNotFoundException, IOException {
         loadFile(is);
     }
 

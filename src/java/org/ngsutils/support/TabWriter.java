@@ -16,17 +16,17 @@ public class TabWriter {
     
     public TabWriter() {
         this.out = System.out;
-        this.charset = Charset.forName("ASCII");
+        this.charset = Charset.defaultCharset();
     }
 
     public TabWriter(String filename) throws FileNotFoundException {
         this.out = new BufferedOutputStream(new FileOutputStream(filename));
-        this.charset = Charset.forName("ASCII");
+        this.charset = Charset.defaultCharset();
     }
 
     public TabWriter(OutputStream out) {
         this.out = new BufferedOutputStream(out);
-        this.charset = Charset.forName("ASCII");
+        this.charset = Charset.defaultCharset();
     }
 
     public TabWriter(Charset charset) {

@@ -7,8 +7,8 @@ import net.sf.samtools.SAMRecord;
 
 import org.ngsutils.bam.Orientation;
 
-public class BEDInclude extends BEDExclude {
-    public BEDInclude(BAMFilter parent, boolean verbose, String filename, Orientation orient) throws FileNotFoundException, IOException {
+public class BedInclude extends BedExclude {
+    public BedInclude(BamFilter parent, boolean verbose, String filename, Orientation orient) throws FileNotFoundException, IOException {
         super(parent, verbose, filename, orient);
     }
     @Override

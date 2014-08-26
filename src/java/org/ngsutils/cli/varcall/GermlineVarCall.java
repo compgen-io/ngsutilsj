@@ -18,7 +18,7 @@ import com.lexicalscope.jewel.cli.Option;
 import com.lexicalscope.jewel.cli.Unparsed;
 
 @CommandLineInterface(application="ngsutilsj varcall-germline")
-@Command(name="varcall-germline", desc="Call germline variants", cat="variants")
+@Command(name="varcall-germline", desc="Call germline variants", cat="variants", experimental=true)
 public class GermlineVarCall extends AbstractOutputCommand {
     
     private String pileupFilename=null;

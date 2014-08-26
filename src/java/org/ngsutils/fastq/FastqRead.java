@@ -3,7 +3,6 @@ package org.ngsutils.fastq;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.nio.charset.Charset;
 
 public class FastqRead {
 	private String name;
@@ -75,6 +74,6 @@ public void write(OutputStream out) throws IOException {
 		} else {
 			rec = "@"+name+"\n"+seq+"\n+\n"+qual+"\n";
 		}
-		out.write(rec.getBytes(Charset.forName("ASCII")));
+		out.write(rec.getBytes());
 	}
 }

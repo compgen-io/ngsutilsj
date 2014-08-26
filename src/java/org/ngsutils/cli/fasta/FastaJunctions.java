@@ -7,8 +7,8 @@ import org.ngsutils.NGSUtilsException;
 import org.ngsutils.annotation.GenomeRegion;
 import org.ngsutils.cli.AbstractOutputCommand;
 import org.ngsutils.cli.Command;
-import org.ngsutils.fasta.IndexedFASTAFile;
-import org.ngsutils.fasta.FASTAReader;
+import org.ngsutils.fasta.IndexedFastaFile;
+import org.ngsutils.fasta.FastaReader;
 import org.ngsutils.support.StringLineReader;
 import org.ngsutils.support.StringUtils;
 
@@ -19,7 +19,7 @@ import com.lexicalscope.jewel.cli.Unparsed;
 
 @CommandLineInterface(application="ngsutilsj fasta-junctions")
 @Command(name="fasta-junctions", desc="Extract sequences flanking a junction.", cat="fasta", doc="Junctions should be specified as ref:start-end, where start and end are the 0-based coordinates that mark the *intronic* parts of the junction. Junctions can also be semi-colon delimited to include more that one event per line.")
-public class FASTAJunctions extends AbstractOutputCommand {
+public class FastaJunctions extends AbstractOutputCommand {
     
     private String fastaName = null;
     private String juncName = null;
@@ -69,7 +69,7 @@ public class FASTAJunctions extends AbstractOutputCommand {
             throw new ArgumentValidationException("Missing/Invalid arguments!");
         }
         
-        FASTAReader fasta = new IndexedFASTAFile(fastaName);
+        FastaReader fasta = new IndexedFastaFile(fastaName);
         
         if (junction != null) {
             processRegion(fasta, junction);
@@ -98,10 +98,10 @@ public class FASTAJunctions extends AbstractOutputCommand {
         fasta.close();        
     }
     
-    protected void processRegion(FASTAReader fasta, GenomeRegion region) throws IOException {
+    protected void processRegion(FastaReader fasta, GenomeRegion region) throws IOException {
         processRegion(fasta, region, null);
     }
-    protected void processRegion(FASTAReader fasta, GenomeRegion region, String name) throws IOException {
+    protected void processRegion(FastaReader fasta, GenomeRegion region, String name) throws IOException {
         int up_start = region.start - size;
         int down_end = region.end + size;
 

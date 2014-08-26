@@ -10,8 +10,8 @@ import java.util.Set;
 
 import net.sf.samtools.SAMRecord;
 
-public abstract class AbstractBAMFilter implements BAMFilter, Iterable<SAMRecord> {
-    protected BAMFilter parent;
+public abstract class AbstractBamFilter implements BamFilter, Iterable<SAMRecord> {
+    protected BamFilter parent;
     protected boolean verbose; 
     
     protected boolean requireOnePair = false; // if one member of a pair is kept, keep the other one too.
@@ -21,7 +21,7 @@ public abstract class AbstractBAMFilter implements BAMFilter, Iterable<SAMRecord
     protected long total = 0;
     protected long removed = 0;
     
-    protected AbstractBAMFilter(BAMFilter parent, boolean verbose) {
+    protected AbstractBamFilter(BamFilter parent, boolean verbose) {
         this.parent = parent;
         this.verbose = verbose;
     }
@@ -33,7 +33,7 @@ public abstract class AbstractBAMFilter implements BAMFilter, Iterable<SAMRecord
     protected Set<String> keptpairs = new HashSet<String>();
     protected Deque<SAMRecord> goodBuffer = new ArrayDeque<SAMRecord>();
     
-    public BAMFilter getParent() {
+    public BamFilter getParent() {
         return parent;
     }
     

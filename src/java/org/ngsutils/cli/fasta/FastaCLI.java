@@ -7,8 +7,8 @@ import org.ngsutils.NGSUtilsException;
 import org.ngsutils.annotation.GenomeRegion;
 import org.ngsutils.cli.AbstractOutputCommand;
 import org.ngsutils.cli.Command;
-import org.ngsutils.fasta.IndexedFASTAFile;
-import org.ngsutils.fasta.FASTAReader;
+import org.ngsutils.fasta.IndexedFastaFile;
+import org.ngsutils.fasta.FastaReader;
 
 import com.lexicalscope.jewel.cli.ArgumentValidationException;
 import com.lexicalscope.jewel.cli.CommandLineInterface;
@@ -16,7 +16,7 @@ import com.lexicalscope.jewel.cli.Unparsed;
 
 @CommandLineInterface(application="ngsutilsj faidx")
 @Command(name="faidx", desc="Extract subsequences from an indexed FASTA file", cat="fasta")
-public class FASTACli extends AbstractOutputCommand {
+public class FastaCLI extends AbstractOutputCommand {
     
     private String filename = null;
     private GenomeRegion region = null;
@@ -36,7 +36,7 @@ public class FASTACli extends AbstractOutputCommand {
         if (filename == null) {
             throw new ArgumentValidationException("Missing/Invalid arguments!");
         }
-        FASTAReader fasta = new IndexedFASTAFile(filename);
+        FastaReader fasta = new IndexedFastaFile(filename);
         System.out.println(">"+region);
         String seq = fasta.fetch(region.ref, region.start-1, region.end);
         while (seq.length() > wrap) {

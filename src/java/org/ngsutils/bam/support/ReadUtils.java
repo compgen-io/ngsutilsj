@@ -345,4 +345,43 @@ public class ReadUtils {
 
     }
     
+    public static String revcomp(String seq) {
+        String out = "";
+        for (int i=seq.length(); i > 0; i--) {
+            char c = seq.charAt(i-1);
+            switch (c) {
+            case 'A':
+                out += 'T';
+                break;
+            case 'T':
+                out += 'A';
+                break;
+            case 'C':
+                out += 'G';
+                break;
+            case 'G':
+                out += 'C';
+                break;
+            case 'N':
+                out += 'N';
+                break;
+            case 'a':
+                out += 't';
+                break;
+            case 't':
+                out += 'a';
+                break;
+            case 'c':
+                out += 'g';
+                break;
+            case 'g':
+                out += 'c';
+                break;
+            case 'n':
+                out += 'n';
+                break;
+            }   
+        }
+        return out;
+    }
 }

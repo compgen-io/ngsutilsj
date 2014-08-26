@@ -2,7 +2,7 @@ package org.ngsutils.fasta;
 
 import java.io.IOException;
 
-public interface FASTAReader {
+public interface FastaReader {
 
     /*
      * start is zero-based

@@ -17,7 +17,7 @@ import org.ngsutils.bam.Strand;
 import org.ngsutils.bam.support.ReadUtils;
 import org.ngsutils.cli.AbstractOutputCommand;
 import org.ngsutils.cli.Command;
-import org.ngsutils.cli.bam.count.BEDSpans;
+import org.ngsutils.cli.bam.count.BedSpans;
 import org.ngsutils.cli.bam.count.BinSpans;
 import org.ngsutils.cli.bam.count.Span;
 import org.ngsutils.cli.bam.count.SpanSource;
@@ -29,7 +29,7 @@ import com.lexicalscope.jewel.cli.Unparsed;
 
 @CommandLineInterface(application="ngsutilsj bam-count")
 @Command(name="bam-count", desc="Counts the number of reads within a BED region or by bins (--bed or --bins required)", cat="bam")
-public class BAMCount extends AbstractOutputCommand {
+public class BamCount extends AbstractOutputCommand {
     
     private String samFilename=null;
     
@@ -144,7 +144,7 @@ public class BAMCount extends AbstractOutputCommand {
             spanSource = new BinSpans(reader.getFileHeader().getSequenceDictionary(), binSize, orient);
         } else if (bedFilename != null) {
             writer.write_line("## source: bed " + bedFilename);
-            spanSource = new BEDSpans(bedFilename);
+            spanSource = new BedSpans(bedFilename);
         } else { // TODO: add a GTF span source 
             reader.close();
             writer.close();

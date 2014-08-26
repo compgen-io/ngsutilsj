@@ -6,8 +6,8 @@ import java.util.List;
 
 import org.ngsutils.NGSUtils;
 import org.ngsutils.NGSUtilsException;
-import org.ngsutils.annotation.GTFAnnotationSource;
-import org.ngsutils.annotation.GTFAnnotationSource.GTFGene;
+import org.ngsutils.annotation.GtfAnnotationSource;
+import org.ngsutils.annotation.GtfAnnotationSource.GTFGene;
 import org.ngsutils.annotation.GenomeRegion;
 import org.ngsutils.bam.Strand;
 import org.ngsutils.cli.AbstractOutputCommand;
@@ -197,7 +197,7 @@ public class GTFAnnotate extends AbstractOutputCommand {
             System.err.print("Reading GTF annotation file: "+gtfFilename);
         }
 
-        GTFAnnotationSource ann = new GTFAnnotationSource(gtfFilename);
+        GtfAnnotationSource ann = new GtfAnnotationSource(gtfFilename);
         if (verbose) {
             System.err.println(" [done]");
         }

@@ -25,7 +25,7 @@ import com.lexicalscope.jewel.cli.Option;
 import com.lexicalscope.jewel.cli.Unparsed;
 
 @CommandLineInterface(application="ngsutilsj junction-diff")
-@Command(name="junction-diff", desc="Given counts files, find differentially spliced junctions", cat="splicing")
+@Command(name="junction-diff", desc="Given counts files, find differentially spliced junctions", cat="splicing", experimental=true)
 public class JunctionDiffCli extends AbstractOutputCommand {
     private List<String> filenames;
     private Integer[] groups;

@@ -6,10 +6,10 @@ import net.sf.samtools.SAMRecord;
 /**
  * Makes sure reads are in reversed orientations and on the same chromosome. 
  */
-public class PairedFilter extends AbstractBAMFilter {
+public class PairedFilter extends AbstractBamFilter {
     protected int flags = 0;
     
-    public PairedFilter(BAMFilter parent, boolean verbose) {
+    public PairedFilter(BamFilter parent, boolean verbose) {
         super(parent, verbose);
     }
     

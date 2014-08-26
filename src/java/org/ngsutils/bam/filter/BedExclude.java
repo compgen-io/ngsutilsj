@@ -5,18 +5,18 @@ import java.io.IOException;
 
 import net.sf.samtools.SAMRecord;
 
-import org.ngsutils.annotation.BEDAnnotationSource;
+import org.ngsutils.annotation.BedAnnotationSource;
 import org.ngsutils.annotation.GenomeRegion;
 import org.ngsutils.bam.Orientation;
 
-public class BEDExclude extends AbstractBAMFilter {
-    final protected BEDAnnotationSource bed;
+public class BedExclude extends AbstractBamFilter {
+    final protected BedAnnotationSource bed;
     final protected Orientation orient;
     protected boolean onlyWithin = false;
     
-    public BEDExclude(BAMFilter parent, boolean verbose, String filename, Orientation orient) throws FileNotFoundException, IOException {
+    public BedExclude(BamFilter parent, boolean verbose, String filename, Orientation orient) throws FileNotFoundException, IOException {
         super(parent, verbose);
-        this.bed = new BEDAnnotationSource(filename);
+        this.bed = new BedAnnotationSource(filename);
         this.orient = orient;
     }
     

@@ -18,9 +18,9 @@ import net.sf.samtools.SAMRecord;
 import org.ngsutils.NGSUtils;
 import org.ngsutils.NGSUtilsException;
 import org.ngsutils.bam.Orientation;
-import org.ngsutils.bam.filter.BAMFilter;
-import org.ngsutils.bam.filter.BEDExclude;
-import org.ngsutils.bam.filter.BEDInclude;
+import org.ngsutils.bam.filter.BamFilter;
+import org.ngsutils.bam.filter.BedExclude;
+import org.ngsutils.bam.filter.BedInclude;
 import org.ngsutils.bam.filter.FilterFlags;
 import org.ngsutils.bam.filter.NullFilter;
 import org.ngsutils.bam.filter.PairedFilter;
@@ -36,7 +36,7 @@ import com.lexicalscope.jewel.cli.Unparsed;
 
 @CommandLineInterface(application="ngsutilsj bam-filter")
 @Command(name="bam-filter", desc="Filters out reads based upon various criteria", cat="bam")
-public class BAMFilterCli extends AbstractCommand {
+public class BamFilterCli extends AbstractCommand {
     
     private List<String> filenames=null;
     
@@ -178,14 +178,19 @@ public class BAMFilterCli extends AbstractCommand {
             throw new ArgumentValidationException("You must specify an input BAM filename and an output BAM filename!");
         }
         
-        SAMFileReader reader = new SAMFileReader(new File(filenames.get(0)));
+        SAMFileReader reader;
+        if (filenames.get(0).equals("-")) {
+            reader = new SAMFileReader(System.in);
+        } else {
+            reader = new SAMFileReader(new File(filenames.get(0)));
+        }
         if (lenient) {
             reader.setValidationStringency(ValidationStringency.LENIENT);
         } else if (silent) {
             reader.setValidationStringency(ValidationStringency.SILENT);
         }
 
-        BAMFilter parent = new NullFilter(reader);
+        BamFilter parent = new NullFilter(reader);
         
         if (filterFlags > 0) {
             parent = new FilterFlags(parent, false, filterFlags);
@@ -207,19 +212,19 @@ public class BAMFilterCli extends AbstractCommand {
             }
         }
         if (bedInclude!=null) {
-            parent = new BEDInclude(parent, false, bedInclude, orient);
-            ((BEDInclude)parent).setOnlyWithin(bedIncludeOnlyWithin);
-            ((BEDInclude)parent).setRequireOnePair(bedIncludeRequireOne);
-            ((BEDInclude)parent).setRequireBothPairs(bedIncludeRequireBoth);
+            parent = new BedInclude(parent, false, bedInclude, orient);
+            ((BedInclude)parent).setOnlyWithin(bedIncludeOnlyWithin);
+            ((BedInclude)parent).setRequireOnePair(bedIncludeRequireOne);
+            ((BedInclude)parent).setRequireBothPairs(bedIncludeRequireBoth);
             if (verbose) {
                 System.err.println("BEDInclude: "+bedInclude);
             }
         }
         if (bedExclude!=null) {
-            parent = new BEDExclude(parent, false, bedExclude, orient);
-            ((BEDExclude)parent).setOnlyWithin(bedExcludeOnlyWithin);
-            ((BEDExclude)parent).setRequireOnePair(bedExcludeRequireOne);
-            ((BEDExclude)parent).setRequireBothPairs(bedExcludeRequireBoth);
+            parent = new BedExclude(parent, false, bedExclude, orient);
+            ((BedExclude)parent).setOnlyWithin(bedExcludeOnlyWithin);
+            ((BedExclude)parent).setRequireOnePair(bedExcludeRequireOne);
+            ((BedExclude)parent).setRequireBothPairs(bedExcludeRequireBoth);
             if (verbose) {
                 System.err.println("BEDExclude: "+bedExclude);
             }
@@ -259,6 +264,7 @@ public class BAMFilterCli extends AbstractCommand {
         } else {
             out = factory.makeSAMWriter(header,  false,  outStream);
         }
+
         long i = 0;
         for (SAMRecord read: parent) {
             if (verbose) {
@@ -279,7 +285,7 @@ public class BAMFilterCli extends AbstractCommand {
         out.close();
     }
     
-    private void dumpStats(BAMFilter filter) {
+    private void dumpStats(BamFilter filter) {
         if (filter.getParent()!=null) {
             dumpStats(filter.getParent());
         }

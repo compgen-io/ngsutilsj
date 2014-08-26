@@ -26,7 +26,7 @@ import com.lexicalscope.jewel.cli.Option;
 import com.lexicalscope.jewel.cli.Unparsed;
 
 @CommandLineInterface(application="ngsutilsj junction-count")
-@Command(name="junction-count", desc="Counts the number of reads that map to splice junctions", cat="splicing")
+@Command(name="junction-count", desc="Counts the number of reads that map to splice junctions", cat="splicing", experimental=true)
 public class JunctionCount extends AbstractOutputCommand {
     private String samFilename = null;
     

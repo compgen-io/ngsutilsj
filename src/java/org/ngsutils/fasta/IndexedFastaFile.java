@@ -9,7 +9,7 @@ import java.util.Map;
 import org.ngsutils.support.StringLineReader;
 import org.ngsutils.support.StringUtils;
 
-public class IndexedFASTAFile implements FASTAReader {
+public class IndexedFastaFile implements FastaReader {
     public class IndexRecord {
         public final String name;
         public final long length;
@@ -31,7 +31,7 @@ public class IndexedFASTAFile implements FASTAReader {
 
     private Map<String, IndexRecord> indexMap = new HashMap<String, IndexRecord>();
     
-    public IndexedFASTAFile(String filename) throws IOException {
+    public IndexedFastaFile(String filename) throws IOException {
         
         if (!new File(filename+".fai").exists()) {
             throw new IOException("Missing FAI index file!");

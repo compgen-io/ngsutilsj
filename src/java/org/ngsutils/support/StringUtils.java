@@ -172,6 +172,12 @@ public class StringUtils {
         }
         return join(delim, out);
     }
-    
+    public static String reverse(String str) {
+        String out = "";
+        for (int i=str.length(); i > 0; i--) {
+            out += str.charAt(i-1);
+        }
+        return out;
+    }
 }
     

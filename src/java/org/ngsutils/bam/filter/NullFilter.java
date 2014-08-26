@@ -4,7 +4,7 @@ import java.util.Iterator;
 
 import net.sf.samtools.SAMRecord;
 
-public class NullFilter implements BAMFilter {
+public class NullFilter implements BamFilter {
     private Iterator<SAMRecord> iterator;
     private long total = 0;
     private long removed = 0;
@@ -48,7 +48,7 @@ public class NullFilter implements BAMFilter {
     }
 
     @Override
-    public BAMFilter getParent() {
+    public BamFilter getParent() {
         return null;
     }
 

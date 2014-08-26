@@ -11,5 +11,6 @@ public @interface Command {
 	String name() default "";
 	String desc() default "";
 	String cat() default "";
-	String doc() default "";
+    String doc() default "";
+    boolean experimental() default false;
 }

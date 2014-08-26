@@ -18,20 +18,23 @@ import org.ngsutils.cli.Command;
 import org.ngsutils.cli.Exec;
 import org.ngsutils.cli.annotate.GTFAnnotate;
 import org.ngsutils.cli.annotate.RepeatAnnotate;
-import org.ngsutils.cli.bam.BAMCount;
-import org.ngsutils.cli.bam.BAMFilterCli;
+import org.ngsutils.cli.bam.BamCount;
+import org.ngsutils.cli.bam.BamCoverage;
+import org.ngsutils.cli.bam.BamFilterCli;
+import org.ngsutils.cli.bam.BamToFastq;
 import org.ngsutils.cli.bam.PileupCli;
-import org.ngsutils.cli.fasta.FASTACli;
-import org.ngsutils.cli.fasta.FASTAJunctions;
+import org.ngsutils.cli.fasta.FastaCLI;
+import org.ngsutils.cli.fasta.FastaJunctions;
 import org.ngsutils.cli.fastq.FastqFilterCli;
 import org.ngsutils.cli.fastq.FastqMerge;
 import org.ngsutils.cli.fastq.FastqSeparate;
 import org.ngsutils.cli.fastq.FastqSort;
 import org.ngsutils.cli.fastq.FastqSplit;
-import org.ngsutils.cli.gtf.GTFExport;
-import org.ngsutils.cli.junction.FindEvents;
-import org.ngsutils.cli.junction.JunctionCount;
-import org.ngsutils.cli.junction.JunctionDiffCli;
+import org.ngsutils.cli.fastq.FastqToBam;
+import org.ngsutils.cli.gtf.GtfExport;
+import org.ngsutils.cli.splicing.FindEvents;
+import org.ngsutils.cli.splicing.JunctionCount;
+import org.ngsutils.cli.splicing.JunctionDiffCli;
 import org.ngsutils.cli.varcall.GermlineVarCall;
 
 import com.lexicalscope.jewel.cli.ArgumentValidationException;
@@ -41,23 +44,26 @@ import com.lexicalscope.jewel.cli.HelpRequestedException;
 public class NGSUtils {
 	static private Map<String, Class<Exec>> execs = new HashMap<String, Class<Exec>>();
 	static {
+        loadExec(FastqToBam.class);
 		loadExec(FastqSort.class);
 		loadExec(FastqMerge.class);
 		loadExec(FastqSeparate.class);
-		loadExec(FastqSplit.class);
+        loadExec(FastqSplit.class);
         loadExec(FastqFilterCli.class);
-        loadExec(BAMCount.class);
-        loadExec(BAMFilterCli.class);
+        loadExec(BamCount.class);
+        loadExec(BamCoverage.class);
+        loadExec(BamToFastq.class);
+        loadExec(BamFilterCli.class);
         loadExec(JunctionCount.class);
         loadExec(FindEvents.class);
         loadExec(JunctionDiffCli.class);
-        loadExec(FASTACli.class);
+        loadExec(FastaCLI.class);
         loadExec(PileupCli.class);
         loadExec(RepeatAnnotate.class);
         loadExec(GTFAnnotate.class);
-        loadExec(GTFExport.class);
+        loadExec(GtfExport.class);
         loadExec(GermlineVarCall.class);
-        loadExec(FASTAJunctions.class);
+        loadExec(FastaJunctions.class);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -89,6 +95,10 @@ public class NGSUtils {
 		for (String cmd : execs.keySet()) {
 			if (cmd.length() > minsize) {
 				minsize = cmd.length();
+	            Command c = execs.get(cmd).getAnnotation(Command.class);
+	            if (c.experimental()) {
+	                minsize += 1;
+	            }
 			}
 		}
 		Map<String, List<String>> progs = new HashMap<String, List<String>>();
@@ -102,13 +112,21 @@ public class NGSUtils {
 
 				if (!c.desc().equals("")) {
 					spacer = "";
-					for (int i = cmd.length(); i < minsize; i++) {
+					for (int i = c.experimental() ? cmd.length()+1: cmd.length(); i < minsize; i++) {
 						spacer += " ";
 					}
 					spacer += " - ";
-					progs.get(c.cat()).add("  " + cmd + spacer + c.desc());
+					if (c.experimental()) { 
+                        progs.get(c.cat()).add("  " + cmd + "*" + spacer + c.desc());
+                    } else {
+					    progs.get(c.cat()).add("  " + cmd + spacer + c.desc());
+				    }   
 				} else {
-					progs.get(c.cat()).add("  " + cmd);
+                    if (c.experimental()) { 
+                        progs.get(c.cat()).add("  " + cmd + "*");
+                    } else {
+                        progs.get(c.cat()).add("  " + cmd);
+                    }   
 				}
 			} else {
 				if (!progs.containsKey("General")) {
@@ -140,7 +158,9 @@ public class NGSUtils {
 		System.err.println("  help command" + spacer
 				+ "Help message for the given command");
 		
-		System.err.println("");
+        System.err.println("");
+        System.err.println("* = experimental command");
+        System.err.println("");
 		System.err.println(getVersion());
 	}
 	
@@ -214,6 +234,7 @@ public class NGSUtils {
 
 			if (!cmd.doc().equals("")) {
 				System.err.println(cmd.doc());
+				System.err.println("");
 			}
 		} else {
 			System.err.println(clazz.getName().toLowerCase());
@@ -255,10 +276,12 @@ public class NGSUtils {
         }
         
         SAMProgramRecord programRecord = new SAMProgramRecord(pgID);
-        programRecord.setProgramName("ngsutilsj:bam-filter");
+        programRecord.setProgramName("ngsutilsj:"+prog);
         programRecord.setProgramVersion(NGSUtils.getVersion());
         programRecord.setCommandLine("ngsutilsj " + NGSUtils.getArgs());
-        programRecord.setPreviousProgramGroupId(mostRecent.getId());
+        if (mostRecent!=null) {
+            programRecord.setPreviousProgramGroupId(mostRecent.getId());
+        }
         return programRecord;
     }
 }

@@ -2,7 +2,7 @@ package org.ngsutils.fasta;
 
 import java.io.IOException;
 
-public class NullFASTA implements FASTAReader {
+public class NullFasta implements FastaReader {
 
     @Override
     public String fetch(String ref, int start, int end) throws IOException {

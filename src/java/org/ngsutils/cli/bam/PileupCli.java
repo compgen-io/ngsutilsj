@@ -10,6 +10,7 @@ import org.ngsutils.NGSUtilsException;
 import org.ngsutils.bam.Pileup;
 import org.ngsutils.bam.Pileup.PileupPos;
 import org.ngsutils.bam.Pileup.PileupRead;
+import org.ngsutils.bam.support.ReadUtils;
 import org.ngsutils.cli.AbstractOutputCommand;
 import org.ngsutils.cli.Command;
 import org.ngsutils.support.TabWriter;
@@ -19,7 +20,7 @@ import com.lexicalscope.jewel.cli.Option;
 import com.lexicalscope.jewel.cli.Unparsed;
 
 @CommandLineInterface(application="ngsutilsj pileup")
-@Command(name="pileup", desc="Produces a pileup-like output", cat="bam")
+@Command(name="pileup", desc="Produces a pileup-like output", cat="bam", doc="This command aims to produce an output that is similar to the samtools mpileup. However, due to some undocumented behavior in the output format, some small variation is likely.", experimental=true)
 public class PileupCli extends AbstractOutputCommand {
     
     private String samFilename=null;
@@ -34,6 +35,8 @@ public class PileupCli extends AbstractOutputCommand {
     private boolean lenient = false;
     private boolean silent = false;
     
+    private boolean paired = false;
+    
     @Unparsed(name = "FILE")
     public void setFilename(String filename) {
         samFilename = filename;
@@ -42,6 +45,11 @@ public class PileupCli extends AbstractOutputCommand {
     @Option(description = "Reference FASTA file (indexed)", longName="ref", defaultToNull=true)
     public void setRefFilename(String filename) {
         this.refFilename = filename;
+    }
+
+    @Option(description = "Only count properly paired reads", longName="paired")
+    public void setPaired(boolean val) {
+        this.paired = val;
     }
 
     @Option(description = "Use lenient validation strategy", longName="lenient")
@@ -85,6 +93,10 @@ public class PileupCli extends AbstractOutputCommand {
 
         if (refFilename != null) {
             pileup.setFASTARef(refFilename);
+        }
+        if (paired) {
+            requiredFlags |= ReadUtils.PROPER_PAIR_FLAG | ReadUtils.READ_PAIRED_FLAG;
+            filterFlags |= ReadUtils.READ_UNMAPPED_FLAG | ReadUtils.MATE_UNMAPPED_FLAG; 
         }
 
         pileup.setMinMappingQual(minMappingQual);

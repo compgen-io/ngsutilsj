@@ -2,10 +2,10 @@ package org.ngsutils.bam.filter;
 
 import net.sf.samtools.SAMRecord;
 
-public class FilterFlags extends AbstractBAMFilter {
+public class FilterFlags extends AbstractBamFilter {
     protected int flags = 0;
     
-    public FilterFlags(BAMFilter parent, boolean verbose, int flags) {
+    public FilterFlags(BamFilter parent, boolean verbose, int flags) {
         super(parent, verbose);
     }
 

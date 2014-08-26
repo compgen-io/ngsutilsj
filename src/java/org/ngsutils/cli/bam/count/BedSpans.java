@@ -9,10 +9,10 @@ import java.util.List;
 import org.ngsutils.bam.Strand;
 import org.ngsutils.support.AbstractLineReader;
 
-public class BEDSpans extends AbstractLineReader<Span> implements SpanSource {
+public class BedSpans extends AbstractLineReader<Span> implements SpanSource {
     private int numCols;
     
-    public BEDSpans(String filename) throws IOException {
+    public BedSpans(String filename) throws IOException {
         super(filename);
 
         BufferedReader br = new BufferedReader(new FileReader(filename));
