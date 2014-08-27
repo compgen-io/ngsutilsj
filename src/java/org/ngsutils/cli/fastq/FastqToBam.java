@@ -34,6 +34,7 @@ public class FastqToBam extends AbstractCommand {
 	private boolean calcMD5 = false;
 	private boolean force = false;
 	private boolean comments = false;
+	private boolean serial = false;
 	private int compressionLevel = 6; // sam.jar default is 5, but 6 is the standard default
 
 	public FastqToBam() {
@@ -64,6 +65,11 @@ public class FastqToBam extends AbstractCommand {
         this.calcMD5 = val;
     }
 
+    @Option(description = "Add paired FASTQ files serially, rather than interleaved", longName = "serial")
+    public void setSerial(boolean val) {
+        this.serial = val;
+    }
+    
     @Option(description = "Force overwriting output file", longName = "force")
     public void setForce(boolean val) {
         this.force = val;
@@ -182,9 +188,66 @@ public class FastqToBam extends AbstractCommand {
 	            
                 out.addAlignment(record);
 	        }
+        } else if (serial) {
+            for (FastqRead read : readers[0]) {
+                if (verbose) {
+                    i++;
+                    if (i % 100000 == 0) {
+                        System.err.println("Read: " + i);
+                    }
+                    
+                }
+                SAMRecord record = new SAMRecord(header);
+                record.setReadPairedFlag(true);
+                record.setMateUnmappedFlag(true);
+                record.setReadUnmappedFlag(true);
+                record.setFirstOfPairFlag(true);
+                record.setSecondOfPairFlag(false);
+                record.setReadName(read.getName());
+                record.setReadString(read.getSeq());
+                record.setBaseQualityString(read.getQual());
+
+                if (comments && read.getComment() != null) {
+                    record.setAttribute("CO", read.getComment());
+                }
+                
+                out.addAlignment(record);
+            }
+            i = 0;
+            for (FastqRead read : readers[1]) {
+                if (verbose) {
+                    i++;
+                    if (i % 100000 == 0) {
+                        System.err.println("Read: " + i);
+                    }
+                    
+                }
+                SAMRecord record = new SAMRecord(header);
+                record.setReadPairedFlag(true);
+                record.setMateUnmappedFlag(true);
+                record.setReadUnmappedFlag(true);
+                record.setFirstOfPairFlag(false);
+                record.setSecondOfPairFlag(true);
+                record.setReadName(read.getName());
+                record.setReadString(read.getSeq());
+                record.setBaseQualityString(read.getQual());
+
+                if (comments && read.getComment() != null) {
+                    record.setAttribute("CO", read.getComment());
+                }
+                
+                out.addAlignment(record);
+            }
         } else {
             IterUtils.zip(readers[0], readers[1], new IterUtils.Each<FastqRead, FastqRead>() {
+                long i = 0;
                 public void each(FastqRead one, FastqRead two) {
+                    if (verbose) {
+                        i++;
+                        if (i % 100000 == 0) {
+                            System.err.println("Read: " + i);
+                        }
+                    }
                     if (one.getName().equals(two.getName())) {
                         SAMRecord record = new SAMRecord(header);
                         record.setReadPairedFlag(true);
