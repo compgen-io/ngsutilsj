@@ -11,7 +11,7 @@ import com.lexicalscope.jewel.cli.Option;
 public abstract class AbstractOutputCommand extends AbstractCommand {
     protected OutputStream out = System.out;
 
-    @Option(description="Output filename (default: stdout)", shortName="o", defaultValue="-", longName="output")
+    @Option(description="Output filename (optionally gzip compressed) (default: stdout)", shortName="o", defaultValue="-", longName="output")
     public void setOutputName(String outputName) throws IOException {
         if (outputName.equals("-")) {
             out = System.out;
