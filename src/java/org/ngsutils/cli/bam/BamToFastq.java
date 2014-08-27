@@ -35,6 +35,9 @@ public class BamToFastq extends AbstractCommand {
     private boolean force = false;
     private boolean comments = false;
     
+    private boolean first = false;
+    private boolean second = false;
+    
     private boolean lenient = false;
     private boolean silent = false;
 
@@ -63,6 +66,16 @@ public class BamToFastq extends AbstractCommand {
         this.split = val;
     }
 
+    @Option(description = "Ouput only first reads (default: output both)", longName="first")
+    public void setFirst(boolean val) {
+        this.first = val;
+    }
+
+    @Option(description = "Ouput only second reads (default: output both)", longName="second")
+    public void setSecond(boolean val) {
+        this.second = val;
+    }
+
     @Option(description = "Use lenient validation strategy", longName="lenient")
     public void setLenient(boolean lenient) {
         this.lenient = lenient;
@@ -86,6 +99,14 @@ public class BamToFastq extends AbstractCommand {
         if (split && (outTemplate == null || outTemplate.equals("-"))) {
             throw new ArgumentValidationException("You cannot have split output to stdout!");
         }
+
+        if (first && second) {
+            throw new ArgumentValidationException("You can not use --first and --second at the same time!");
+        }
+
+        if (split && (first || second)) {
+            throw new ArgumentValidationException("You can not use --split and --first or --second at the same time!");
+        }
         
         SAMFileReader reader;
         if (filename.equals("-")) {
@@ -99,6 +120,33 @@ public class BamToFastq extends AbstractCommand {
             outs = new OutputStream[] { new BufferedOutputStream(System.out) };
             if (verbose) {
                 System.err.println("Output: stdout");
+            }
+        } else if (outTemplate != null && (first || second)) {
+            String outFilename;
+            if (compress) {
+                if (first) { 
+                    outFilename = outTemplate+"_R1.fastq.gz";
+                } else {
+                    outFilename = outTemplate+"_R2.fastq.gz";
+                }
+            } else {
+                if (first) { 
+                    outFilename = outTemplate+"_R1.fastq";
+                } else {
+                    outFilename = outTemplate+"_R2.fastq";
+                }
+            }
+            if (new File(outFilename).exists() && !force) {
+                reader.close();
+                throw new ArgumentValidationException("Output file: "+ outFilename+" exists! Use --force to overwrite!");
+            }
+            if (verbose) {
+                System.err.println("Output: " + outFilename);
+            }
+            if (compress) {
+                outs = new OutputStream[] { new GZIPOutputStream(new FileOutputStream(outFilename)) };
+            } else {
+                outs = new OutputStream[] { new BufferedOutputStream(new FileOutputStream(outFilename)) };
             }
         } else if (outTemplate != null && split) {
             String[] outFilenames;
@@ -184,7 +232,13 @@ public class BamToFastq extends AbstractCommand {
                 if (split && !read.getFirstOfPairFlag()) {
                     fqRead.write(outs[1]);
                 } else {
-                    fqRead.write(outs[0]);
+                    if (
+                            (first && read.getFirstOfPairFlag()) || 
+                            (second && read.getSecondOfPairFlag()) || 
+                            (!first && !second)
+                        ) {
+                        fqRead.write(outs[0]);
+                    }
                 }
             }
         }

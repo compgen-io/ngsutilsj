@@ -79,7 +79,7 @@ public class FastqToBam extends AbstractCommand {
     @Option(description = "Compression-level: best (9)", longName = "best")
     public void setBest(boolean val) {
         if (val) {
-            compressionLevel = 6;
+            compressionLevel = 9;
         }
     }
 
