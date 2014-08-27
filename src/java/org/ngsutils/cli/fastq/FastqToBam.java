@@ -102,7 +102,7 @@ public class FastqToBam extends AbstractCommand {
 	@Override
 	public void exec() throws IOException {
 	    if (readers == null) {
-            throw new ArgumentValidationException("You must supply two FASTQ files to merge.");
+            throw new ArgumentValidationException("You must supply one or two FASTQ files to convert.");
 	    }
 	   	    
         SAMFileWriterFactory factory = new SAMFileWriterFactory();
