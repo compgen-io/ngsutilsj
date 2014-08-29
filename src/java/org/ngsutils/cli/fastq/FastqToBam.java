@@ -60,7 +60,7 @@ public class FastqToBam extends AbstractCommand {
         this.outputFilename = outFilename;
     }
 
-    @Option(description = "Automatically write an MD5 file", defaultToNull=true, longName = "md5")
+    @Option(description = "Automatically write an MD5 file", longName = "md5")
     public void setCalcMD5(boolean val) {
         this.calcMD5 = val;
     }

@@ -158,6 +158,13 @@ public class StringUtils {
         return out;
         
     }
+    public static String join(String delim, byte[] buf) {
+        String[] out = new String[buf.length];
+        for (int i=0; i<buf.length; i++) {
+            out[i] = String.format("%02X", buf[i]);
+        }
+        return join(delim, out);
+    }
     public static String join(String delim, Object[] vals) {
         if (vals == null || vals.length == 0) {
             return "";

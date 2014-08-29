@@ -35,6 +35,9 @@ import org.ngsutils.cli.gtf.GtfExport;
 import org.ngsutils.cli.splicing.FindEvents;
 import org.ngsutils.cli.splicing.JunctionCount;
 import org.ngsutils.cli.splicing.JunctionDiffCli;
+import org.ngsutils.cli.sqz.FastqToSqz;
+import org.ngsutils.cli.sqz.SqzToFastq;
+import org.ngsutils.cli.sqz.SqzVerify;
 import org.ngsutils.cli.varcall.GermlineVarCall;
 
 import com.lexicalscope.jewel.cli.ArgumentValidationException;
@@ -44,6 +47,9 @@ import com.lexicalscope.jewel.cli.HelpRequestedException;
 public class NGSUtils {
 	static private Map<String, Class<Exec>> execs = new HashMap<String, Class<Exec>>();
 	static {
+        loadExec(FastqToSqz.class);
+        loadExec(SqzToFastq.class);
+        loadExec(SqzVerify.class);
         loadExec(FastqToBam.class);
 		loadExec(FastqSort.class);
 		loadExec(FastqMerge.class);
