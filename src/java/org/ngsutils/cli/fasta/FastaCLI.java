@@ -7,8 +7,8 @@ import org.ngsutils.NGSUtilsException;
 import org.ngsutils.annotation.GenomeRegion;
 import org.ngsutils.cli.AbstractOutputCommand;
 import org.ngsutils.cli.Command;
-import org.ngsutils.fasta.IndexedFastaFile;
 import org.ngsutils.fasta.FastaReader;
+import org.ngsutils.fasta.IndexedFastaFile;
 
 import com.lexicalscope.jewel.cli.ArgumentValidationException;
 import com.lexicalscope.jewel.cli.CommandLineInterface;

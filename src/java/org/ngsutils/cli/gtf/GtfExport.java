@@ -10,12 +10,12 @@ import java.util.Set;
 
 import org.ngsutils.NGSUtilsException;
 import org.ngsutils.annotation.AnnotationSource;
+import org.ngsutils.annotation.GenomeAnnotation;
+import org.ngsutils.annotation.GenomeRegion;
 import org.ngsutils.annotation.GtfAnnotationSource;
 import org.ngsutils.annotation.GtfAnnotationSource.GTFExon;
 import org.ngsutils.annotation.GtfAnnotationSource.GTFGene;
 import org.ngsutils.annotation.GtfAnnotationSource.GTFTranscript;
-import org.ngsutils.annotation.GenomeAnnotation;
-import org.ngsutils.annotation.GenomeRegion;
 import org.ngsutils.cli.AbstractOutputCommand;
 import org.ngsutils.cli.Command;
 import org.ngsutils.support.StringLineReader;
