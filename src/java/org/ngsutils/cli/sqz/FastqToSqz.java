@@ -3,6 +3,8 @@ package org.ngsutils.cli.sqz;
 import java.io.File;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.ngsutils.cli.AbstractCommand;
@@ -12,6 +14,7 @@ import org.ngsutils.fastq.FastqReader;
 import org.ngsutils.sqz.SQZ;
 import org.ngsutils.sqz.SQZWriter;
 import org.ngsutils.support.IterUtils;
+import org.ngsutils.support.StringUtils;
 
 import com.lexicalscope.jewel.cli.ArgumentValidationException;
 import com.lexicalscope.jewel.cli.CommandLineInterface;
@@ -31,13 +34,11 @@ public class FastqToSqz extends AbstractCommand {
 	
     @Unparsed(name="FILE1 FILE2")
     public void setFilenames(List<File> files) throws IOException {
-        if (files.size() == 2) {
-            this.readers = new FastqReader[2];
-            this.readers[0] = new FastqReader(files.get(0));
-            this.readers[1] = new FastqReader(files.get(1));
-        } else if (files.size() == 1) {
-            this.readers = new FastqReader[1];
-            this.readers[0] = new FastqReader(files.get(0));
+        if (files.size() > 0) {
+            this.readers = new FastqReader[files.size()];
+            for (int i=0; i<files.size(); i++) {
+                this.readers[i] = new FastqReader(files.get(i));
+            }
         } else {
             System.err.println("You must supply one or two FASTQ files to convert!");
             System.exit(1);
@@ -73,6 +74,9 @@ public class FastqToSqz extends AbstractCommand {
 	    if (readers == null) {
             throw new ArgumentValidationException("You must supply one or two FASTQ files to convert.");
 	    }
+        if (interleaved && readers.length > 1) {
+            throw new ArgumentValidationException("You may not supply more than one FASTQ file in interleaved mode.");
+        }
 	   	    
         if (verbose) {
             for (FastqReader reader: readers) {
@@ -81,23 +85,97 @@ public class FastqToSqz extends AbstractCommand {
             if (comments) {
                 System.err.println("Including comments");
             }
-            if (readers.length == 2) {
-                System.err.println("Paired inputs");
+            if (readers.length > 1) {
+                System.err.println("Paired inputs ("+readers.length+")");
             } else if (interleaved) {
                 System.err.println("Interleaved input file");
             }
         }
 
-        final SQZWriter out;
         int flags = 0;
         if (comments) {
             flags |= SQZ.HAS_COMMENTS;
         }
-        if (readers.length==2 || interleaved) {
-            flags |= SQZ.PAIRED;
+
+        long count = 0;
+        if (interleaved) {
+            SQZWriter out = null;
+            List<FastqRead> buffer = new ArrayList<FastqRead>();
+            for (FastqRead read : readers[0]) {
+                if (verbose) {
+                    count++;
+                    if (count % 100000 == 0) {
+                        System.err.println("Read: " + count);
+                    }
+                }
+                
+                if (buffer.size() == 0) {
+                    buffer.add(read);
+                    continue;
+                }
+
+                boolean match = true;
+                for (FastqRead test: buffer) {
+                    if (!read.getName().equals(test.getName())) {
+                        match = false;
+                        break;
+                    }
+                }
+                
+                if (!match) {
+                    if (out == null) {
+                        out = buildSQZ(flags, buffer.size());
+                    }
+                    out.writeReads(buffer);
+                    buffer.clear();
+                }
+                buffer.add(read);
+            }
+            if (buffer.size() > 0) {
+                if (out == null) {
+                    out = buildSQZ(flags, buffer.size());
+                }
+                out.writeReads(buffer);
+                buffer.clear();
+            }
+            out.close();
+            if (verbose) {
+                System.err.println("SHA1: "+StringUtils.digestToString(out.getDigest()));
+            }
+        } else {
+            final SQZWriter out = buildSQZ(flags, readers.length);
+            IterUtils.zipArray(readers, new IterUtils.EachList<FastqRead>() {
+                long i = 0;
+                public void each(List<FastqRead> reads) {
+                    if (verbose) {
+                        i++;
+                        if (i % 100000 == 0) {
+                            System.err.println("Read: " + i);
+                        }
+                    }
+                    try {
+                        out.writeReads(reads);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        return;
+                    }
+                }
+            });
+            out.close();
+            if (verbose) {
+                System.err.println("SHA1: "+StringUtils.digestToString(out.getDigest()));
+            }
         }
+        for (FastqReader reader: readers) {
+            reader.close();
+        }
+        
+	}
+
+	private SQZWriter buildSQZ(int flags, int readCount) throws NoSuchAlgorithmException, IOException {
+	    SQZWriter out=null;
         if (outputFilename.equals("-")) {
-            out = new SQZWriter(System.out, flags);
+            out = new SQZWriter(System.out, flags, readCount);
             if (verbose) {
                 System.err.println("Output: stdout (uncompressed)");
             }
@@ -108,63 +186,14 @@ public class FastqToSqz extends AbstractCommand {
             if (!noCompress) {
                 flags |= SQZ.DEFLATE_COMPRESSED;
             }
-            out = new SQZWriter(outputFilename, flags);
+            out = new SQZWriter(outputFilename, flags, readCount);
             if (verbose) {
                 System.err.println("Output: "+outputFilename);
                 System.err.println("Compress: " + (noCompress ? "no": "yes"));
             }
         }
+        return out;
 
-        long i = 0;
-        if (readers.length == 1 && !interleaved) {
-            for (FastqRead read : readers[0]) {
-                if (verbose) {
-                    i++;
-                    if (i % 100000 == 0) {
-                        System.err.println("Read: " + i);
-                    }
-                }
-                out.write(read);
-            }
-        } else if (readers.length == 1 && interleaved) {
-            FastqRead buf = null;
-            for (FastqRead read : readers[0]) {
-                if (verbose) {
-                    i++;
-                    if (i % 100000 == 0) {
-                        System.err.println("Read: " + i);
-                    }
-                }
-                if (buf != null) {
-                    out.writePair(buf, read);
-                    buf = null;
-                } else {
-                    buf = read;
-                }
-            }
-        } else {
-            IterUtils.zip(readers[0], readers[1], new IterUtils.Each<FastqRead, FastqRead>() {
-                long i = 0;
-                public void each(FastqRead one, FastqRead two) {
-                    if (verbose) {
-                        i++;
-                        if (i % 100000 == 0) {
-                            System.err.println("Read: " + i);
-                        }
-                    }
-                    try {
-                        out.writePair(one, two);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                        return;
-                    }
-                }
-            });
-        }
-        for (FastqReader reader: readers) {
-            reader.close();
-        }
-        out.close();
 	}
 }
 

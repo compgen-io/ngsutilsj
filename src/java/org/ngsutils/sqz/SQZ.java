@@ -7,10 +7,9 @@ public class SQZ {
     final public static byte T = 3; 
 
     public static final int DEFLATE_COMPRESSED  = 0x1;
-    public static final int PAIRED              = 0x2;
-    public static final int HAS_COMMENTS        = 0x4;
-    public static final int COLORSPACE          = 0x8;
-    public static final int COLORSPACE_PREFIX   = 0x10;
+    public static final int HAS_COMMENTS        = 0x2;
+    public static final int COLORSPACE          = 0x4;
+    public static final int COLORSPACE_PREFIX   = 0x8;
     
     public static final byte[] MAGIC = new byte[] { 'S', 'Q', 'Z', '1' };
 

@@ -1,6 +1,7 @@
 package org.ngsutils.cli.sqz;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Iterator;
 
 import org.ngsutils.NGSUtilsException;
@@ -8,6 +9,7 @@ import org.ngsutils.cli.AbstractCommand;
 import org.ngsutils.cli.Command;
 import org.ngsutils.fastq.FastqRead;
 import org.ngsutils.sqz.SQZReader;
+import org.ngsutils.support.StringUtils;
 
 import com.lexicalscope.jewel.cli.ArgumentValidationException;
 import com.lexicalscope.jewel.cli.CommandLineInterface;
@@ -50,12 +52,12 @@ public class SqzVerify extends AbstractCommand {
                 System.err.println("SQZ version: "+reader.getHeader().major+"."+reader.getHeader().minor);
                 System.err.println("Compressed: "+(reader.getHeader().deflate ? "deflate" : "none"));
                 System.err.println("Encrypted: "+(reader.getHeader().encryption == null ? "no" : reader.getHeader().encryption));
-                System.err.println("Paired: "+(reader.getHeader().paired ? "yes" : "no"));
                 System.err.println("Includes comments: "+(reader.getHeader().hasComments ? "yes" : "no"));
                 System.err.println("Colorspace: "+(reader.getHeader().colorspace ? "yes" : "no"));
                 if (reader.getHeader().colorspace) {
                     System.err.println("Colorspace includes prefix: "+(reader.getHeader().colorspacePrefix ? "yes" : "no"));
                 }
+                System.err.println("Reads per fragment: " + reader.getHeader().seqCount);
             }
             
             long i=0;
@@ -71,15 +73,26 @@ public class SqzVerify extends AbstractCommand {
                 }
                 it.next();
             }
-            reader.close();
+
+            reader.close(); // this throws an IOException if the SHA1 hashes don't match
+
             if (verbose) {
-                System.err.println("Reads (first and second): "+i);
+                System.err.println("Fragments: "+i);
+                System.err.println("Calculated SHA1: "+ StringUtils.digestToString(reader.getCalcDigest()));
+                System.err.println("Expected   SHA1: "+ StringUtils.digestToString(reader.getExpectedDigest()));
             }
 
+            if (!Arrays.equals(reader.getCalcDigest(), reader.getExpectedDigest())) {
+                System.err.println((filename.equals("-") ? "stdin": filename) + " is not valid");
+                System.exit(1);
+            }
+            
         } catch (IOException e) {
-            System.err.println((filename.equals("-") ? "stdin": filename) + " is not a valid SQZ file!");
+            e.printStackTrace();
+            System.err.println((filename.equals("-") ? "stdin": filename) + " is not valid");
             System.exit(1);
         }
-        System.err.println((filename.equals("-") ? "stdin": filename) + " is valid.");
+
+        System.err.println((filename.equals("-") ? "stdin": filename) + " is valid");
     }    
 }

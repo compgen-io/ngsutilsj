@@ -1,5 +1,6 @@
 package org.ngsutils.support;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -186,5 +187,14 @@ public class StringUtils {
         }
         return out;
     }
+    
+    public static String digestToString(byte[] digest) {
+        String calc = new BigInteger(1, digest).toString(16);
+        while (calc.length() < (digest.length*2)) {
+            calc = "0"+calc;
+        }
+        return calc;
+    }
+    
 }
     

@@ -9,23 +9,23 @@ import java.util.Iterator;
 import java.util.zip.InflaterInputStream;
 
 import org.ngsutils.fastq.FastqRead;
-import org.ngsutils.support.io.DataInput;
-import org.ngsutils.support.io.SHA1InputStream;
+import org.ngsutils.support.io.DataIO;
 
 public abstract class SQZReader implements Iterable<FastqRead>{
-    public abstract FastqRead nextRead() throws IOException;
-    public abstract FastqRead[] nextPair() throws IOException;
+    public abstract FastqRead[] nextRead() throws IOException;
 
     protected boolean ignoreComments;
     protected SQZHeader header;
-    protected DataInput in;
+    protected DataIO in;
     protected boolean closed = false;
+    protected SQZInputStream inputStream;
+    protected InputStream dataInputStream;
 
     public static SQZReader open(InputStream is, boolean ignoreComments, String password) throws IOException {
-        InputStream wrapped = new SHA1InputStream(is);
-        SQZHeader header = SQZHeader.readHeader(wrapped);
+        SQZInputStream inputStream = new SQZInputStream(is);
+        SQZHeader header = SQZHeader.readHeader(inputStream);
         if (header.major == 1 && header.minor == 1) {
-            return new SQZReader_1_1(wrapped, header, ignoreComments, password);
+            return new SQZReader_1_1(inputStream, header, ignoreComments, password);
         }
         throw new IOException("Invalid major/minor SQZ version! (got: "+header.major+","+header.minor+")");
     }
@@ -39,46 +39,38 @@ public abstract class SQZReader implements Iterable<FastqRead>{
         return open(is, ignoreComments, null);
     }
     
-    public SQZReader(InputStream is, SQZHeader header, boolean ignoreComments, String password) throws IOException {
+    protected SQZReader(SQZInputStream inputStream, SQZHeader header, boolean ignoreComments, String password) throws IOException {
+        this.inputStream = inputStream;
         this.header = header;
         this.ignoreComments = ignoreComments;
 
         if (header.deflate) {
-            this.in = new DataInput(new InflaterInputStream(is));
+            dataInputStream = new InflaterInputStream(inputStream);
         } else {
-            this.in = new DataInput(new BufferedInputStream(is));
+            dataInputStream = new BufferedInputStream(inputStream);
         }
     }
 
     public void close() throws IOException {
-        closed = true;
-        this.in.close();
+        if (!closed) {
+            closed = true;
+            dataInputStream.close();
+        }
     }
 
     public Iterator<FastqRead> iterator() {
         return new Iterator<FastqRead>() {
-            private FastqRead one = null;
-            private FastqRead two = null;
+            private FastqRead[] buf = null;
+            private int pos = 0;
             private boolean first = true;
             
             private void loadData() {
                 try {
-                    if (header.paired) {
-                        FastqRead[] pair = nextPair();
-                        if (pair == null) {
-                            one = null;
-                            two = null;
-                        } else {
-                            one = pair[0];
-                            two = pair[1];
-                        }
-                    } else {
-                        one = nextRead();
-                    }
+                    buf = nextRead();
+                    pos = 0;
                 } catch (IOException e) {
-                    one = null;
-                    two = null;
                     e.printStackTrace();
+                    buf = null;
                 }
             }
             
@@ -88,24 +80,15 @@ public abstract class SQZReader implements Iterable<FastqRead>{
                     loadData();
                     first = false;
                 }
-                return (one != null || two != null);
+                return (buf != null);
             }
 
             @Override
             public FastqRead next() {
-                FastqRead out = null;
-                if (one != null) {
-                    out = one;
-                    one = null;
-                } else if (two != null) {
-                    out = two;
-                    two = null;
-                }
-                
-                if (one == null && two == null) {
+                FastqRead out = buf[pos++];
+                if (pos >= buf.length) {
                     loadData();
                 }
-                
                 return out;
             }
 
@@ -116,4 +99,13 @@ public abstract class SQZReader implements Iterable<FastqRead>{
     public SQZHeader getHeader() {
         return header;
     }
+    
+    public byte[] getCalcDigest() throws IOException {
+        return inputStream.getCalcDigest();
+    }
+    
+    public byte[] getExpectedDigest() throws IOException {
+        return inputStream.getExpectedDigest();
+    }
+    
 }

@@ -5,103 +5,89 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.security.NoSuchAlgorithmException;
+import java.util.List;
 import java.util.zip.DeflaterOutputStream;
 
 import org.ngsutils.fastq.FastqRead;
-import org.ngsutils.support.io.DataOutput;
-import org.ngsutils.support.io.SHA1OutputStream;
+import org.ngsutils.support.io.DataIO;
 
 public class SQZWriter {
     public static final int MAJOR = 1;
     public static final int MINOR = 1;
 
-    protected DataOutput out;
+    protected SQZOutputStream sqzos;
+    protected OutputStream wrappedOutputStream;
     protected boolean closed = false;
     
     public final int flags;
     public final SQZHeader header;
     
-    public SQZWriter(OutputStream os, int flags, String encryption, String password) throws IOException, NoSuchAlgorithmException {
-        OutputStream wrapped = new SHA1OutputStream(os);
+    public SQZWriter(OutputStream os, int flags, int seqCount, String encryption, String password) throws IOException, NoSuchAlgorithmException {
+        sqzos = new SQZOutputStream(os);
         
         this.flags = flags;
-        header = new SQZHeader(MAJOR, MINOR, flags, encryption);
-        header.writeHeader(wrapped);
+        header = new SQZHeader(MAJOR, MINOR, flags, seqCount, encryption);
+        header.writeHeader(sqzos);
 
         if (header.deflate) {
-            wrapped = new DeflaterOutputStream(wrapped);
+            wrappedOutputStream = new DeflaterOutputStream(sqzos);
         } else {
-            wrapped = new BufferedOutputStream(wrapped);
+            wrappedOutputStream = new BufferedOutputStream(sqzos);
         }
-        
-        this.out = new DataOutput(wrapped);
     }
 
-    public SQZWriter(OutputStream out, int flags) throws IOException, NoSuchAlgorithmException {
-        this(out, flags, null, null);
+    public SQZWriter(OutputStream out, int flags, int seqCount) throws IOException, NoSuchAlgorithmException {
+        this(out, flags, seqCount, null, null);
     }
 
-    public SQZWriter(String filename, int flags, String encryptionAlgorithm, String password) throws IOException, NoSuchAlgorithmException {
-        this(new FileOutputStream(filename), flags, encryptionAlgorithm, password);
+    public SQZWriter(String filename, int flags, int seqCount, String encryptionAlgorithm, String password) throws IOException, NoSuchAlgorithmException {
+        this(new FileOutputStream(filename), flags, seqCount, encryptionAlgorithm, password);
     }
 
-    public SQZWriter(String filename, int flags) throws IOException, NoSuchAlgorithmException {
-        this(new FileOutputStream(filename), flags);
+    public SQZWriter(String filename, int flags, int seqCount) throws IOException, NoSuchAlgorithmException {
+        this(new FileOutputStream(filename), flags, seqCount);
     }
     
     public void close() throws IOException {
-        closed = true;
-        this.out.close();
+        if (!closed) {
+            wrappedOutputStream.close();
+            closed = true;
+        }
     }
     
-    public void write(FastqRead read) throws IOException {
+    public void writeReads(List<FastqRead> reads) throws IOException {
         if (closed) {
             throw new IOException("Tried to write to closed file!");
         }
-        if (header.paired) {
-            throw new IOException("Tried to write one read in paired mode!");
+        
+        if (reads.size() != header.seqCount) {
+            throw new IOException("Each record must have " + header.seqCount + " reads!");            
         }
-
-        out.writeString(read.getName());
-
-        if (header.hasComments) {
-            if (read.getComment() == null) {
-                out.writeString("");
-            } else {
-                out.writeString(read.getComment());
+        
+        for (int i=1; i<reads.size(); i++) {
+            if (!reads.get(i).getName().equals(reads.get(0).getName())) {
+                throw new IOException("Reads must have the same name!");
             }
         }
 
-        out.writeByteArray(SQZ.combineSeqQual(read.getSeq(), read.getQual()));
+        DataIO.writeString(wrappedOutputStream, reads.get(0).getName());
+
+        if (header.hasComments) {
+            for (FastqRead read: reads) {
+                if (read.getComment() == null) {
+                    DataIO.writeString(wrappedOutputStream, "");
+                } else {
+                    DataIO.writeString(wrappedOutputStream, read.getComment());
+                }
+            }
+        }
+
+        for (FastqRead read: reads) {
+            DataIO.writeByteArray(wrappedOutputStream, SQZ.combineSeqQual(read.getSeq(), read.getQual()));
+        }
     }
-
-    public void writePair(FastqRead one, FastqRead two) throws IOException {
-        if (closed) {
-            throw new IOException("Tried to write to closed file!");
-        }
-        if (!header.paired) {
-            throw new IOException("Tried to write two reads in single mode!");
-        }
-        if (!one.getName().equals(two.getName())) {
-            throw new IOException("Reads must have the same name!");
-        }
-
-        out.writeString(one.getName());
-
-        if (header.hasComments) {
-            if (one.getComment() == null) {
-                out.writeString("");
-            } else {
-                out.writeString(one.getComment());
-            }
-            if (two.getComment() == null) {
-                out.writeString("");
-            } else {
-                out.writeString(two.getComment());
-            }
-        }
-
-        out.writeByteArray(SQZ.combineSeqQual(one.getSeq(), one.getQual()));
-        out.writeByteArray(SQZ.combineSeqQual(two.getSeq(), two.getQual()));
+    
+    public byte[] getDigest() throws IOException {
+        return sqzos.getDigest();
     }
 }
