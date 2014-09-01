@@ -10,8 +10,11 @@ public class SQZ {
     public static final int HAS_COMMENTS        = 0x2;
     public static final int COLORSPACE          = 0x4;
     public static final int COLORSPACE_PREFIX   = 0x8;
-    
+
+    // used to mark a valid SQZ file
     public static final byte[] MAGIC = new byte[] { 'S', 'Q', 'Z', '1' };
+    // used to mark the start of the SQZ data block - if it is encrypted
+    // then this will be the indicator of if we have the right password
     public static final byte[] DATA_MAGIC = new byte[] { 'S', 'Q', 'Z', 'B' };
 
     
