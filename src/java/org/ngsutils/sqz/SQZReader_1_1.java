@@ -1,12 +1,13 @@
 package org.ngsutils.sqz;
 
 import java.io.IOException;
+import java.security.GeneralSecurityException;
 
 import org.ngsutils.fastq.FastqRead;
 import org.ngsutils.support.io.DataIO;
 
 public class SQZReader_1_1 extends SQZReader{
-    protected SQZReader_1_1(SQZInputStream inputStream, SQZHeader header, boolean includeComments, String password) throws IOException {
+    protected SQZReader_1_1(SQZInputStream inputStream, SQZHeader header, boolean includeComments, String password) throws IOException, GeneralSecurityException {
         super(inputStream, header, includeComments, password);
     }
 

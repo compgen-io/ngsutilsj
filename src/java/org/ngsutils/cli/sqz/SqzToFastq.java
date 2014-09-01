@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.security.GeneralSecurityException;
 import java.util.zip.GZIPOutputStream;
 
 import org.ngsutils.NGSUtilsException;
@@ -24,7 +25,8 @@ public class SqzToFastq extends AbstractCommand {
     
     private String filename=null;
     private String outTemplate=null;
-
+    private String password = null;
+    
     private boolean split = false;
     private boolean compress = false;
     private boolean force = false;
@@ -43,6 +45,11 @@ public class SqzToFastq extends AbstractCommand {
         this.outTemplate = outTemplate;
     }
 
+    @Option(description = "Decryption password", longName = "pass", defaultToNull=true)
+    public void setPassword(String password) {
+        this.password = password;
+    }
+    
     @Option(description = "Force overwriting output", longName="force")
     public void setForce(boolean val) {
         this.force = val;
@@ -74,7 +81,7 @@ public class SqzToFastq extends AbstractCommand {
     }
 
     @Override
-    public void exec() throws NGSUtilsException, IOException {        
+    public void exec() throws NGSUtilsException, IOException, GeneralSecurityException {        
         if (filename == null) {
             throw new ArgumentValidationException("You must specify an input FQA file!");
         }
@@ -92,12 +99,12 @@ public class SqzToFastq extends AbstractCommand {
         
         SQZReader reader;
         if (filename.equals("-")) {
-            reader = SQZReader.open(System.in, ignoreComments);
+            reader = SQZReader.open(System.in, ignoreComments, password);
             if (verbose) {
                 System.err.println("Input: stdin");
             }
         } else {
-            reader = SQZReader.open(filename, ignoreComments);
+            reader = SQZReader.open(filename, ignoreComments, password);
             if (verbose) {
                 System.err.println("Input: " + filename);
             }

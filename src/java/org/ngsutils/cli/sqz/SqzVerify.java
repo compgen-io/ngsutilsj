@@ -1,6 +1,7 @@
 package org.ngsutils.cli.sqz;
 
 import java.io.IOException;
+import java.security.GeneralSecurityException;
 import java.util.Arrays;
 import java.util.Iterator;
 
@@ -13,6 +14,7 @@ import org.ngsutils.support.StringUtils;
 
 import com.lexicalscope.jewel.cli.ArgumentValidationException;
 import com.lexicalscope.jewel.cli.CommandLineInterface;
+import com.lexicalscope.jewel.cli.Option;
 import com.lexicalscope.jewel.cli.Unparsed;
 
 @CommandLineInterface(application="ngsutilsj sqz-verify")
@@ -20,15 +22,22 @@ import com.lexicalscope.jewel.cli.Unparsed;
 public class SqzVerify extends AbstractCommand {
     
     private String filename=null;
+    private String password = null;
 
     @Unparsed(name = "INFILE")
     public void setFilename(String filename) {
         this.filename = filename;
     }
 
+    @Option(description = "Decryption password", longName = "pass", defaultToNull=true)
+    public void setPassword(String password) {
+        this.password = password;
+    }
+    
+
 
     @Override
-    public void exec() throws NGSUtilsException, IOException {        
+    public void exec() throws NGSUtilsException, IOException, GeneralSecurityException {        
         if (filename == null) {
             throw new ArgumentValidationException("You must specify an input FQA file!");
         }
@@ -36,17 +45,16 @@ public class SqzVerify extends AbstractCommand {
         try {
             SQZReader reader;
             if (filename.equals("-")) {
-                reader = SQZReader.open(System.in, false);
+                reader = SQZReader.open(System.in, false, password);
                 if (verbose) {
                     System.err.println("Input: stdin");
                 }
             } else {
-                reader = SQZReader.open(filename, false);
+                reader = SQZReader.open(filename, false, password);
                 if (verbose) {
                     System.err.println("Input: " + filename);
                 }
             }
-            
             
             if (verbose) {
                 System.err.println("SQZ version: "+reader.getHeader().major+"."+reader.getHeader().minor);
@@ -83,12 +91,13 @@ public class SqzVerify extends AbstractCommand {
             }
 
             if (!Arrays.equals(reader.getCalcDigest(), reader.getExpectedDigest())) {
-                System.err.println((filename.equals("-") ? "stdin": filename) + " is not valid");
-                System.exit(1);
+                throw new IOException("SHA1 hash mismatch!");
             }
             
         } catch (IOException e) {
-            e.printStackTrace();
+            if (verbose) {
+                System.err.println(e.getMessage());
+            }
             System.err.println((filename.equals("-") ? "stdin": filename) + " is not valid");
             System.exit(1);
         }

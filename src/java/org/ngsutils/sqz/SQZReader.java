@@ -1,12 +1,22 @@
 package org.ngsutils.sqz;
 
-import java.io.BufferedInputStream;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.security.GeneralSecurityException;
+import java.security.spec.KeySpec;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.zip.InflaterInputStream;
+
+import javax.crypto.Cipher;
+import javax.crypto.CipherInputStream;
+import javax.crypto.SecretKey;
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.PBEKeySpec;
+import javax.crypto.spec.SecretKeySpec;
 
 import org.ngsutils.fastq.FastqRead;
 import org.ngsutils.support.io.DataIO;
@@ -18,36 +28,70 @@ public abstract class SQZReader implements Iterable<FastqRead>{
     protected SQZHeader header;
     protected DataIO in;
     protected boolean closed = false;
-    protected SQZInputStream inputStream;
+    protected SQZInputStream sqzis;
     protected InputStream dataInputStream;
 
-    public static SQZReader open(InputStream is, boolean ignoreComments, String password) throws IOException {
-        SQZInputStream inputStream = new SQZInputStream(is);
-        SQZHeader header = SQZHeader.readHeader(inputStream);
+    public static SQZReader open(InputStream is, boolean ignoreComments, String password) throws IOException, GeneralSecurityException {
+        SQZInputStream sqzis = new SQZInputStream(is);
+        
+        SQZHeader header = SQZHeader.readHeader(sqzis);
         if (header.major == 1 && header.minor == 1) {
-            return new SQZReader_1_1(inputStream, header, ignoreComments, password);
+            return new SQZReader_1_1(sqzis, header, ignoreComments, password);
         }
         throw new IOException("Invalid major/minor SQZ version! (got: "+header.major+","+header.minor+")");
     }
-    public static SQZReader open(String filename, boolean ignoreComments, String password) throws FileNotFoundException, IOException {
+    public static SQZReader open(String filename, boolean ignoreComments, String password) throws FileNotFoundException, IOException, GeneralSecurityException {
         return open(new FileInputStream(filename), ignoreComments, password);
     }
-    public static SQZReader open(String filename, boolean ignoreComments) throws FileNotFoundException, IOException {
+    public static SQZReader open(String filename, boolean ignoreComments) throws FileNotFoundException, IOException, GeneralSecurityException {
         return open(filename, ignoreComments, null);
     }
-    public static SQZReader open(InputStream is, boolean ignoreComments) throws IOException {
+    public static SQZReader open(InputStream is, boolean ignoreComments) throws IOException, GeneralSecurityException {
         return open(is, ignoreComments, null);
     }
     
-    protected SQZReader(SQZInputStream inputStream, SQZHeader header, boolean ignoreComments, String password) throws IOException {
-        this.inputStream = inputStream;
+    protected SQZReader(SQZInputStream sqzis, SQZHeader header, boolean ignoreComments, String password) throws IOException, GeneralSecurityException {
+        this.sqzis = sqzis;
+        dataInputStream = sqzis;
         this.header = header;
         this.ignoreComments = ignoreComments;
 
+        if (header.encryption != null && password == null) {
+            throw new IOException("Missing password for encrypted file!");
+        } else if (header.encryption == null && password != null) {
+            throw new IOException("Given a password for an unencrypted file!");
+        } else if (header.encryption != null && header.encryption.equals("AES128")) { 
+            byte[] salt = new byte[32];
+            byte[] iv = new byte[16];
+            
+            dataInputStream.read(salt);
+            dataInputStream.read(iv);
+
+            SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
+
+            KeySpec spec = new PBEKeySpec(password.toCharArray(), salt, 65536, 128);
+            SecretKey tmp = factory.generateSecret(spec);
+            SecretKeySpec secret = new SecretKeySpec(tmp.getEncoded(), "AES");
+
+            Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+            cipher.init(Cipher.DECRYPT_MODE, secret, new IvParameterSpec(iv));
+
+            dataInputStream = new CipherInputStream(dataInputStream, cipher);
+        } else if (header.encryption != null) {
+            throw new IOException("Unknown encryption type!");
+        }
+
+        byte[] magic = DataIO.readRawBytes(dataInputStream, 4);
+        if (!Arrays.equals(magic, SQZ.DATA_MAGIC)) {
+            try {
+                close();
+            } catch (IOException e) {
+            }
+            throw new IOException("Invalid encryption password!");
+        }
+
         if (header.deflate) {
-            dataInputStream = new InflaterInputStream(inputStream);
-        } else {
-            dataInputStream = new BufferedInputStream(inputStream);
+            dataInputStream = new InflaterInputStream(dataInputStream);
         }
     }
 
@@ -101,11 +145,11 @@ public abstract class SQZReader implements Iterable<FastqRead>{
     }
     
     public byte[] getCalcDigest() throws IOException {
-        return inputStream.getCalcDigest();
+        return sqzis.getCalcDigest();
     }
     
     public byte[] getExpectedDigest() throws IOException {
-        return inputStream.getExpectedDigest();
+        return sqzis.getExpectedDigest();
     }
     
 }

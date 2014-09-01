@@ -103,17 +103,12 @@ public class SuffixInputStream extends InputStream {
         return buffer[pos++] & 0xff;
     }
 
-    public void finish() throws IOException {
+    public void close() throws IOException {
         if (closed) {
             return;
         }
-        
-        closed = true;
-    }
-
-    public void close() throws IOException {
-        finish();
         parent.close();
+        closed = true;
     }
     
     public byte[] getSuffix() throws IOException {

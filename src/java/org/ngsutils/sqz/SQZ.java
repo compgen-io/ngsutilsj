@@ -12,6 +12,7 @@ public class SQZ {
     public static final int COLORSPACE_PREFIX   = 0x8;
     
     public static final byte[] MAGIC = new byte[] { 'S', 'Q', 'Z', '1' };
+    public static final byte[] DATA_MAGIC = new byte[] { 'S', 'Q', 'Z', 'B' };
 
     
     public static byte[] combineSeqQual(String seq, String qual) {

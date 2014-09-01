@@ -1,12 +1,20 @@
 package org.ngsutils.sqz;
 
-import java.io.BufferedOutputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.security.NoSuchAlgorithmException;
+import java.security.GeneralSecurityException;
+import java.security.SecureRandom;
+import java.security.spec.KeySpec;
 import java.util.List;
 import java.util.zip.DeflaterOutputStream;
+
+import javax.crypto.Cipher;
+import javax.crypto.CipherOutputStream;
+import javax.crypto.SecretKey;
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.PBEKeySpec;
+import javax.crypto.spec.SecretKeySpec;
 
 import org.ngsutils.fastq.FastqRead;
 import org.ngsutils.support.io.DataIO;
@@ -16,41 +24,64 @@ public class SQZWriter {
     public static final int MINOR = 1;
 
     protected SQZOutputStream sqzos;
-    protected OutputStream wrappedOutputStream;
+    protected OutputStream dataOutputStream;
     protected boolean closed = false;
     
     public final int flags;
     public final SQZHeader header;
     
-    public SQZWriter(OutputStream os, int flags, int seqCount, String encryption, String password) throws IOException, NoSuchAlgorithmException {
+    public SQZWriter(OutputStream os, int flags, int seqCount, String encryption, String password) throws IOException, GeneralSecurityException {
         sqzos = new SQZOutputStream(os);
+        dataOutputStream = sqzos;
         
         this.flags = flags;
         header = new SQZHeader(MAJOR, MINOR, flags, seqCount, encryption);
-        header.writeHeader(sqzos);
+        header.writeHeader(dataOutputStream);
+
+        if (encryption != null && encryption.equals("AES128")) {
+            SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
+
+            SecureRandom random = new SecureRandom();
+            byte[] salt = random.generateSeed(32);
+            
+            KeySpec spec = new PBEKeySpec(password.toCharArray(), salt, 65536, 128);
+            SecretKey tmp = factory.generateSecret(spec);
+            SecretKeySpec secret = new SecretKeySpec(tmp.getEncoded(), "AES");
+
+            Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+            cipher.init(Cipher.ENCRYPT_MODE, secret);
+
+            dataOutputStream.write(salt);
+            dataOutputStream.write(cipher.getIV());
+            
+            dataOutputStream = new CipherOutputStream(dataOutputStream, cipher);
+        } else if (encryption != null) {
+            throw new IOException("Unknown encryption type!");
+        }
+        
+        dataOutputStream.write(SQZ.DATA_MAGIC);
 
         if (header.deflate) {
-            wrappedOutputStream = new DeflaterOutputStream(sqzos);
-        } else {
-            wrappedOutputStream = new BufferedOutputStream(sqzos);
+            dataOutputStream = new DeflaterOutputStream(dataOutputStream);
         }
+
     }
 
-    public SQZWriter(OutputStream out, int flags, int seqCount) throws IOException, NoSuchAlgorithmException {
+    public SQZWriter(OutputStream out, int flags, int seqCount) throws IOException, GeneralSecurityException {
         this(out, flags, seqCount, null, null);
     }
 
-    public SQZWriter(String filename, int flags, int seqCount, String encryptionAlgorithm, String password) throws IOException, NoSuchAlgorithmException {
+    public SQZWriter(String filename, int flags, int seqCount, String encryptionAlgorithm, String password) throws IOException, GeneralSecurityException {
         this(new FileOutputStream(filename), flags, seqCount, encryptionAlgorithm, password);
     }
 
-    public SQZWriter(String filename, int flags, int seqCount) throws IOException, NoSuchAlgorithmException {
+    public SQZWriter(String filename, int flags, int seqCount) throws IOException, GeneralSecurityException {
         this(new FileOutputStream(filename), flags, seqCount);
     }
     
     public void close() throws IOException {
         if (!closed) {
-            wrappedOutputStream.close();
+            dataOutputStream.close();
             closed = true;
         }
     }
@@ -70,20 +101,20 @@ public class SQZWriter {
             }
         }
 
-        DataIO.writeString(wrappedOutputStream, reads.get(0).getName());
+        DataIO.writeString(dataOutputStream, reads.get(0).getName());
 
         if (header.hasComments) {
             for (FastqRead read: reads) {
                 if (read.getComment() == null) {
-                    DataIO.writeString(wrappedOutputStream, "");
+                    DataIO.writeString(dataOutputStream, "");
                 } else {
-                    DataIO.writeString(wrappedOutputStream, read.getComment());
+                    DataIO.writeString(dataOutputStream, read.getComment());
                 }
             }
         }
 
         for (FastqRead read: reads) {
-            DataIO.writeByteArray(wrappedOutputStream, SQZ.combineSeqQual(read.getSeq(), read.getQual()));
+            DataIO.writeByteArray(dataOutputStream, SQZ.combineSeqQual(read.getSeq(), read.getQual()));
         }
     }
     

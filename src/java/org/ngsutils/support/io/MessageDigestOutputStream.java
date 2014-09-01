@@ -59,11 +59,12 @@ public class MessageDigestOutputStream extends OutputStream {
     }
     
     public void close() throws IOException {
-        if (!closed) {
-            finish();
-            parent.close();
-            closed = true;
+        if (closed) {
+            return;
         }
+        finish();
+        parent.close();
+        closed = true;
     }
 
     

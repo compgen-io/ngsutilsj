@@ -3,7 +3,6 @@ package org.ngsutils.cli.sqz;
 import java.io.File;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,6 +25,8 @@ import com.lexicalscope.jewel.cli.Unparsed;
 public class FastqToSqz extends AbstractCommand {
     private FastqReader[] readers = null;
 	private String outputFilename = null;
+	private String password = null;
+	
 	private boolean force = false;
 	private boolean comments = false;
 
@@ -49,6 +50,12 @@ public class FastqToSqz extends AbstractCommand {
     public void setOutputFilename(String outFilename) {
         this.outputFilename = outFilename;
     }
+
+    @Option(description = "Encryption password", longName = "pass", defaultToNull=true)
+    public void setPassword(String password) {
+        this.password = password;
+    }
+    
     @Option(description = "Force overwriting output file", longName = "force")
     public void setForce(boolean val) {
         this.force = val;
@@ -172,12 +179,13 @@ public class FastqToSqz extends AbstractCommand {
         
 	}
 
-	private SQZWriter buildSQZ(int flags, int readCount) throws NoSuchAlgorithmException, IOException {
+	private SQZWriter buildSQZ(int flags, int readCount) throws IOException, GeneralSecurityException {
 	    SQZWriter out=null;
         if (outputFilename.equals("-")) {
-            out = new SQZWriter(System.out, flags, readCount);
+            out = new SQZWriter(System.out, flags, readCount, password == null ? null: "AES128", password);
             if (verbose) {
                 System.err.println("Output: stdout (uncompressed)");
+                System.err.println("Encryption: " + (password == null ? "no": "AES128"));
             }
         } else {
             if (new File(outputFilename).exists() && !force) {
@@ -186,10 +194,12 @@ public class FastqToSqz extends AbstractCommand {
             if (!noCompress) {
                 flags |= SQZ.DEFLATE_COMPRESSED;
             }
-            out = new SQZWriter(outputFilename, flags, readCount);
+            out = new SQZWriter(outputFilename, flags, readCount, password == null ? null: "AES128", password);
+
             if (verbose) {
                 System.err.println("Output: "+outputFilename);
                 System.err.println("Compress: " + (noCompress ? "no": "yes"));
+                System.err.println("Encryption: " + (password == null ? "no": "AES128"));
             }
         }
         return out;

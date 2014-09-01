@@ -77,7 +77,7 @@ public class DataIO {
     }
     public static String readString(InputStream in, String encoding) throws IOException {
         int size = (int) readVarInt(in);
-        if (size == -1) {
+        if (size == -1 || size == 0) {
             return null;
         }
         byte[] b = readRawBytes(in, size);
@@ -98,6 +98,7 @@ public class DataIO {
     }
 
     public static byte[] readRawBytes(InputStream in, int size) throws IOException {
+//        System.err.println("readRawBytes(in, "+size+")");
         byte[] buf = new byte[size];
         int t = 0;
         int total = 0;
