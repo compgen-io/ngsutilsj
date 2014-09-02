@@ -1,8 +1,10 @@
 package org.ngsutils.cli.sqz;
 
 import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.security.GeneralSecurityException;
@@ -13,6 +15,7 @@ import org.ngsutils.cli.AbstractCommand;
 import org.ngsutils.cli.Command;
 import org.ngsutils.fastq.FastqRead;
 import org.ngsutils.sqz.SQZReader;
+import org.ngsutils.support.StringUtils;
 
 import com.lexicalscope.jewel.cli.ArgumentValidationException;
 import com.lexicalscope.jewel.cli.CommandLineInterface;
@@ -26,7 +29,8 @@ public class SqzToFastq extends AbstractCommand {
     private String filename=null;
     private String outTemplate=null;
     private String password = null;
-    
+    private String passwordFile = null;
+
     private boolean split = false;
     private boolean compress = false;
     private boolean force = false;
@@ -48,6 +52,11 @@ public class SqzToFastq extends AbstractCommand {
     @Option(description = "Decryption password", longName = "pass", defaultToNull=true)
     public void setPassword(String password) {
         this.password = password;
+    }
+    
+    @Option(description = "File containing decryption password", longName = "pass-file", defaultToNull=true)
+    public void setPasswordFile(String passwordFile) {
+        this.passwordFile = passwordFile;
     }
     
     @Option(description = "Force overwriting output", longName="force")
@@ -95,6 +104,9 @@ public class SqzToFastq extends AbstractCommand {
 
         if (split && (first || second)) {
             throw new ArgumentValidationException("You can not use --split and --first or --second at the same time!");
+        }
+        if (password == null && passwordFile != null) {
+            password = StringUtils.strip(new BufferedReader(new FileReader(passwordFile)).readLine());
         }
         
         SQZReader reader;

@@ -1,5 +1,7 @@
 package org.ngsutils.cli.sqz;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.Arrays;
@@ -21,8 +23,9 @@ import com.lexicalscope.jewel.cli.Unparsed;
 @Command(name="sqz-verify", desc="Verify that the SQZ file is valid.", cat="sqz", experimental=true)
 public class SqzVerify extends AbstractCommand {
     
-    private String filename=null;
+    private String filename = null;
     private String password = null;
+    private String passwordFile = null;
 
     @Unparsed(name = "INFILE")
     public void setFilename(String filename) {
@@ -34,12 +37,20 @@ public class SqzVerify extends AbstractCommand {
         this.password = password;
     }
     
+    @Option(description = "File containing decryption password", longName = "pass-file", defaultToNull=true)
+    public void setPasswordFile(String passwordFile) {
+        this.passwordFile = passwordFile;
+    }
+    
 
 
     @Override
     public void exec() throws NGSUtilsException, IOException, GeneralSecurityException {        
         if (filename == null) {
             throw new ArgumentValidationException("You must specify an input FQA file!");
+        }
+        if (password == null && passwordFile != null) {
+            password = StringUtils.strip(new BufferedReader(new FileReader(passwordFile)).readLine());
         }
 
         try {

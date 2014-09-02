@@ -1,6 +1,8 @@
 package org.ngsutils.cli.sqz;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
@@ -25,7 +27,8 @@ import com.lexicalscope.jewel.cli.Unparsed;
 public class FastqToSqz extends AbstractCommand {
     private FastqReader[] readers = null;
 	private String outputFilename = null;
-	private String password = null;
+    private String password = null;
+    private String passwordFile = null;
 	
 	private boolean force = false;
 	private boolean comments = false;
@@ -56,6 +59,11 @@ public class FastqToSqz extends AbstractCommand {
         this.password = password;
     }
     
+    @Option(description = "File containing encryption password", longName = "pass-file", defaultToNull=true)
+    public void setPasswordFile(String passwordFile) {
+        this.passwordFile = passwordFile;
+    }
+    
     @Option(description = "Force overwriting output file", longName = "force")
     public void setForce(boolean val) {
         this.force = val;
@@ -84,7 +92,11 @@ public class FastqToSqz extends AbstractCommand {
         if (interleaved && readers.length > 1) {
             throw new ArgumentValidationException("You may not supply more than one FASTQ file in interleaved mode.");
         }
-	   	    
+
+        if (password == null && passwordFile != null) {
+            password = StringUtils.strip(new BufferedReader(new FileReader(passwordFile)).readLine());
+        }
+        
         if (verbose) {
             for (FastqReader reader: readers) {
                 System.err.println("Input: "+reader.getFilename());
