@@ -13,7 +13,7 @@ import com.lexicalscope.jewel.cli.Option;
 import com.lexicalscope.jewel.cli.Unparsed;
 
 @CommandLineInterface(application = "ngsutilsj fastq-separate")
-@Command(name = "fastq-separate", desc = "Splits an interlaced FASTQ file by read number.", cat="fastq")
+@Command(name = "fastq-separate", desc = "Splits an interleaved FASTQ file by read number.", cat="fastq")
 public class FastqSeparate extends AbstractOutputCommand {
 	private FastqReader reader;
 
