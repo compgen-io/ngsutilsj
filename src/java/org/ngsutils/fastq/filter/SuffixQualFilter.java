@@ -19,7 +19,7 @@ public class SuffixQualFilter extends AbstractSingleReadFilter {
 		String comment = read.getComment();
 		
 		int removed = 0;
-		while (qual.charAt(qual.length()-1) == qualval) {
+		while (qual.length() > 0 && qual.charAt(qual.length()-1) == qualval) {
 			qual = qual.substring(0, qual.length() - 1);
 			removed++;
 		}
