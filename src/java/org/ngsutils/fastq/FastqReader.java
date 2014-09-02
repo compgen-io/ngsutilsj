@@ -10,7 +10,8 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.zip.GZIPInputStream;
 
-import org.itadaki.bzip2.BZip2InputStream;
+import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
+
 
 public class FastqReader implements Iterable<FastqRead> {
 	final private String filename;
@@ -23,7 +24,7 @@ public class FastqReader implements Iterable<FastqRead> {
             in = new BufferedReader(new InputStreamReader(new GZIPInputStream(
                     new FileInputStream(filename))));
         } else if (filename.endsWith(".bz") || filename.endsWith(".bz2")) {
-                in = new BufferedReader(new InputStreamReader(new BZip2InputStream(
+                in = new BufferedReader(new InputStreamReader(new BZip2CompressorInputStream(
                         new FileInputStream(filename), false)));
 		} else if (filename.equals("-")) {
 			in = new BufferedReader(new InputStreamReader(

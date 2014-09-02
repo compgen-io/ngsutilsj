@@ -37,7 +37,7 @@ public class FastqToSqz extends AbstractCommand {
 	private boolean interleaved = false;
 	
     @Unparsed(name="FILE1 FILE2")
-    public void setFilenames(List<File> files) throws IOException {
+    public void setFilenames(List<String> files) throws IOException {
         if (files.size() > 0) {
             this.readers = new FastqReader[files.size()];
             for (int i=0; i<files.size(); i++) {

@@ -6,7 +6,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.zip.GZIPOutputStream;
 
-import org.itadaki.bzip2.BZip2OutputStream;
+import org.apache.commons.compress.compressors.bzip2.BZip2CompressorOutputStream;
 
 import com.lexicalscope.jewel.cli.Option;
 
@@ -20,7 +20,7 @@ public abstract class AbstractOutputCommand extends AbstractCommand {
         } else if (outputName.endsWith(".gz")) {
             out = new GZIPOutputStream(new FileOutputStream(outputName));
         } else if (outputName.endsWith(".bz") || outputName.endsWith(".bz2")) {
-            out = new BZip2OutputStream(new FileOutputStream(outputName));
+            out = new BZip2CompressorOutputStream(new FileOutputStream(outputName));
         } else {
             out = new BufferedOutputStream(new FileOutputStream(outputName));
         }
