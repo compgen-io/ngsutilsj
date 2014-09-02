@@ -60,7 +60,7 @@ public abstract class SQZReader implements Iterable<FastqRead>{
             throw new IOException("Missing password for encrypted file!");
         } else if (header.encryption == null && password != null) {
             throw new IOException("Given a password for an unencrypted file!");
-        } else if (header.encryption != null && header.encryption.equals("AES128")) { 
+        } else if (header.encryption != null && header.encryption.equals("AES-128")) { 
             byte[] salt = new byte[32];
             byte[] iv = new byte[16];
             

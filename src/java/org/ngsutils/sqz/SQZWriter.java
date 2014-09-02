@@ -38,7 +38,7 @@ public class SQZWriter {
         header = new SQZHeader(MAJOR, MINOR, flags, seqCount, encryption);
         header.writeHeader(dataOutputStream);
 
-        if (encryption != null && encryption.equals("AES128")) {
+        if (encryption != null && encryption.equals("AES-128")) {
             SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
 
             SecureRandom random = new SecureRandom();
@@ -55,6 +55,7 @@ public class SQZWriter {
             dataOutputStream.write(cipher.getIV());
             
             dataOutputStream = new CipherOutputStream(dataOutputStream, cipher);
+
         } else if (encryption != null) {
             throw new IOException("Unknown encryption type!");
         }

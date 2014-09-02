@@ -194,10 +194,10 @@ public class FastqToSqz extends AbstractCommand {
 	private SQZWriter buildSQZ(int flags, int readCount) throws IOException, GeneralSecurityException {
 	    SQZWriter out=null;
         if (outputFilename.equals("-")) {
-            out = new SQZWriter(System.out, flags, readCount, password == null ? null: "AES128", password);
+            out = new SQZWriter(System.out, flags, readCount, password == null ? null: "AES-128", password);
             if (verbose) {
                 System.err.println("Output: stdout (uncompressed)");
-                System.err.println("Encryption: " + (password == null ? "no": "AES128"));
+                System.err.println("Encryption: " + (password == null ? "no": "AES-128"));
             }
         } else {
             if (new File(outputFilename).exists() && !force) {
@@ -206,12 +206,12 @@ public class FastqToSqz extends AbstractCommand {
             if (!noCompress) {
                 flags |= SQZ.DEFLATE_COMPRESSED;
             }
-            out = new SQZWriter(outputFilename, flags, readCount, password == null ? null: "AES128", password);
+            out = new SQZWriter(outputFilename, flags, readCount, password == null ? null: "AES-128", password);
 
             if (verbose) {
                 System.err.println("Output: "+outputFilename);
                 System.err.println("Compress: " + (noCompress ? "no": "yes"));
-                System.err.println("Encryption: " + (password == null ? "no": "AES128"));
+                System.err.println("Encryption: " + (password == null ? "no": "AES-128"));
             }
         }
         return out;

@@ -41,8 +41,6 @@ public class SqzVerify extends AbstractCommand {
     public void setPasswordFile(String passwordFile) {
         this.passwordFile = passwordFile;
     }
-    
-
 
     @Override
     public void exec() throws NGSUtilsException, IOException, GeneralSecurityException {        
