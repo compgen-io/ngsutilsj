@@ -183,5 +183,12 @@ public class DataIO {
     public static void writeRawBytes(OutputStream out, byte[] bytes) throws IOException {
         out.write(bytes);
     }
+    public static void writeRawBytes(OutputStream out, byte[] b, int off, int len) throws IOException {
+        out.write(b, off, len);
+    }
+    public static void writeByteArray(OutputStream out, byte[] buf, int off, int len) throws IOException {
+        writeVarInt(out, len-off);
+        writeRawBytes(out, buf, off, len);
+    }
 
 }
