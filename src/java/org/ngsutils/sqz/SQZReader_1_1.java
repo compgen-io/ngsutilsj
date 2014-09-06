@@ -8,8 +8,8 @@ import org.ngsutils.fastq.FastqRead;
 import org.ngsutils.support.io.DataIO;
 
 public class SQZReader_1_1 extends SQZReader{
-    protected SQZReader_1_1(InputStream inputStream, SQZHeader header, boolean includeComments, String password) throws IOException, GeneralSecurityException {
-        super(inputStream, header, includeComments, password);
+    protected SQZReader_1_1(InputStream inputStream, SQZHeader header, boolean includeComments, String password, boolean verbose) throws IOException, GeneralSecurityException {
+        super(inputStream, header, includeComments, password, verbose);
     }
 
     

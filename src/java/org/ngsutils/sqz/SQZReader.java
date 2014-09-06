@@ -25,25 +25,27 @@ public abstract class SQZReader implements Iterable<FastqRead>{
     
     protected boolean ignoreComments;
     protected boolean closed = false;
+    
+    protected boolean verbose = false;
 
-    public static SQZReader open(InputStream is, boolean ignoreComments, String password) throws IOException, GeneralSecurityException {
+    public static SQZReader open(InputStream is, boolean ignoreComments, String password, boolean verbose) throws IOException, GeneralSecurityException {
         SQZHeader header = SQZHeader.readHeader(is);
         if (header.major == 1 && header.minor == 1) {
-            return new SQZReader_1_1(is, header, ignoreComments, password);
+            return new SQZReader_1_1(is, header, ignoreComments, password, verbose);
         }
         throw new IOException("Invalid major/minor SQZ version! (got: "+header.major+","+header.minor+")");
     }
-    public static SQZReader open(String filename, boolean ignoreComments, String password) throws FileNotFoundException, IOException, GeneralSecurityException {
-        return open(new FileInputStream(filename), ignoreComments, password);
+    public static SQZReader open(String filename, boolean ignoreComments, String password, boolean verbose) throws FileNotFoundException, IOException, GeneralSecurityException {
+        return open(new FileInputStream(filename), ignoreComments, password, verbose);
     }
     public static SQZReader open(String filename, boolean ignoreComments) throws FileNotFoundException, IOException, GeneralSecurityException {
-        return open(filename, ignoreComments, null);
+        return open(filename, ignoreComments, null, false);
     }
     public static SQZReader open(InputStream is, boolean ignoreComments) throws IOException, GeneralSecurityException {
-        return open(is, ignoreComments, null);
+        return open(is, ignoreComments, null, false);
     }
     
-    protected SQZReader(InputStream is, SQZHeader header, boolean ignoreComments, String password) throws IOException, GeneralSecurityException {
+    protected SQZReader(InputStream is, SQZHeader header, boolean ignoreComments, String password, boolean verbose) throws IOException, GeneralSecurityException {
         this.header = header;
         this.ignoreComments = ignoreComments;
 
@@ -69,7 +71,7 @@ public abstract class SQZReader implements Iterable<FastqRead>{
             throw new IOException("Unknown encryption type!");
         }
 
-        dcis = new SQZChunkInputStream(is, header.compressionType, cipher, secret, ivLen);
+        dcis = new SQZChunkInputStream(is, header.compressionType, cipher, secret, ivLen, verbose);
     }
 
     public void close() throws IOException {

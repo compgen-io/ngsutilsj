@@ -52,12 +52,12 @@ public class SqzVerify extends AbstractCommand {
 
         SQZReader reader;
         if (filename.equals("-")) {
-            reader = SQZReader.open(System.in, false, password);
+            reader = SQZReader.open(System.in, false, password, verbose);
             if (verbose) {
                 System.err.println("Input: stdin");
             }
         } else {
-            reader = SQZReader.open(filename, false, password);
+            reader = SQZReader.open(filename, false, password, verbose);
             if (verbose) {
                 System.err.println("Input: " + filename);
             }

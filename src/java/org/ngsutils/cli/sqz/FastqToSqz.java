@@ -37,6 +37,8 @@ public class FastqToSqz extends AbstractCommand {
     private boolean compressBzip2 = false;
 	private boolean interleaved = false;
 	
+	private int chunkSize = 10000;
+	
     @Unparsed(name="FILE1 FILE2")
     public void setFilenames(List<String> files) throws IOException {
         if (files.size() > 0) {
@@ -65,6 +67,11 @@ public class FastqToSqz extends AbstractCommand {
         this.passwordFile = passwordFile;
     }
     
+    @Option(description = "Number of reads be compression/encryption block (default: 10000)", longName = "block-reads", defaultValue="10000")
+    public void setChunkSize(int val) {
+        this.chunkSize = val;
+    }
+
     @Option(description = "Force overwriting output file", longName = "force")
     public void setForce(boolean val) {
         this.force = val;
@@ -130,7 +137,6 @@ public class FastqToSqz extends AbstractCommand {
             flags |= SQZ.HAS_COMMENTS;
         }
 
-        long count = 0;
         if (interleaved) {
             SQZWriter out = null;
             List<FastqRead> buffer = new ArrayList<FastqRead>();
@@ -154,12 +160,6 @@ public class FastqToSqz extends AbstractCommand {
                     }
                     out.writeReads(buffer, verbose);
                     buffer.clear();
-                    if (verbose) {
-                        count++;
-                        if (count % 100000 == 0) {
-                            System.err.println("Read: " + count);
-                        }
-                    }
                 }
                 buffer.add(read);
             }
@@ -169,14 +169,8 @@ public class FastqToSqz extends AbstractCommand {
                 }
                 out.writeReads(buffer, verbose);
                 buffer.clear();
-                if (verbose) {
-                    count++;
-                    if (count % 100000 == 0) {
-                        System.err.println("Read: " + count);
-                    }
-                }
             }
-            out.close();
+            out.close(verbose);
             if (verbose) {
                 System.err.println("Data chunks: "+out.getChunkCount());
             }
@@ -199,9 +193,9 @@ public class FastqToSqz extends AbstractCommand {
                     }
                 }
             });
-            out.close();
+            out.close(verbose);
             if (verbose) {
-                System.err.println("Data chunks: "+out.getChunkCount());
+                System.err.println("Data blocks: "+out.getChunkCount());
             }
         }
         for (FastqReader reader: readers) {
@@ -239,6 +233,13 @@ public class FastqToSqz extends AbstractCommand {
                 System.err.println("Compression: " +compressionType);
             }
         }
+        
+        out.setChunkSize(chunkSize);
+        
+        if (verbose) {
+            System.err.println("Reads per block: "+chunkSize);
+        }
+        
         return out;
 
 	}

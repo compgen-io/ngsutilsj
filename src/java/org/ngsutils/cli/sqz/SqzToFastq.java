@@ -111,12 +111,12 @@ public class SqzToFastq extends AbstractCommand {
         
         SQZReader reader;
         if (filename.equals("-")) {
-            reader = SQZReader.open(System.in, ignoreComments, password);
+            reader = SQZReader.open(System.in, ignoreComments, password, verbose);
             if (verbose) {
                 System.err.println("Input: stdin");
             }
         } else {
-            reader = SQZReader.open(filename, ignoreComments, password);
+            reader = SQZReader.open(filename, ignoreComments, password, verbose);
             if (verbose) {
                 System.err.println("Input: " + filename);
             }

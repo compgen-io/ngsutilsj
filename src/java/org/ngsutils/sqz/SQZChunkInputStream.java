@@ -27,7 +27,8 @@ public class SQZChunkInputStream extends InputStream {
     private final int compressionType;
     private final int ivLen;
     private final MessageDigest md;
-
+    private boolean verbose = false;
+    
     private InputStream wrapped = null;;
 
     private byte[] buffer = new byte[8192];
@@ -37,15 +38,15 @@ public class SQZChunkInputStream extends InputStream {
     private boolean closed = false;
     private int chunkCount = 0;
     
-    public SQZChunkInputStream(InputStream parent, int compressionType, Cipher cipher, SecretKeySpec secret, int ivLen) throws NoSuchAlgorithmException, IOException {
+    public SQZChunkInputStream(InputStream parent, int compressionType, Cipher cipher, SecretKeySpec secret, int ivLen, boolean verbose) throws NoSuchAlgorithmException, IOException {
         this.parent = parent;
         this.cipher = cipher;
         this.secret = secret;
         this.ivLen = ivLen;
         this.compressionType = compressionType;
         this.md = MessageDigest.getInstance("SHA-1");
+        this.verbose = verbose;
     }
-
 
     @Override
     public int read() throws IOException {
@@ -57,6 +58,9 @@ public class SQZChunkInputStream extends InputStream {
             if (wrapped == null || buflen < 1) {
                 if (chunkDigest != null) {
                     byte[] digest = md.digest();
+                    if (verbose) {
+                        System.err.println("Block: "+chunkCount+" SHA-1 Got: "+StringUtils.byteArrayToString(digest)+" Expected:"+StringUtils.byteArrayToString(chunkDigest));
+                    }
                     if (!Arrays.equals(chunkDigest, digest)) {
                         throw new IOException("Invalid SHA-1 signature for block "+chunkCount+" Got: "+StringUtils.byteArrayToString(digest)+" Expected:"+StringUtils.byteArrayToString(chunkDigest));
                     }

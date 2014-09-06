@@ -121,11 +121,14 @@ public class SQZChunkOutputStream extends OutputStream {
 
     @Override
     public void close() throws IOException {
+        close(false);
+    }
+    public void close(boolean verbose) throws IOException {
         if (closed) {
             return;
         }
         if (baos != null) {
-            flush();
+            flush(verbose);
         }
         parent.close();
         closed = true;

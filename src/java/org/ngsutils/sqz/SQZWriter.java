@@ -26,7 +26,7 @@ public class SQZWriter {
     protected boolean closed = false;
     
     protected int readCount = 0;
-    protected int chunkSize = 10;
+    protected int chunkSize = 10000;
     
     public final int flags;
     public final SQZHeader header;
@@ -74,10 +74,18 @@ public class SQZWriter {
     }
     
     public void close() throws IOException {
+        close(false);
+    }
+
+    public void close(boolean verbose) throws IOException {
         if (!closed) {
-            dcos.close();
+            dcos.close(verbose);
             closed = true;
         }
+    }
+    
+    public void setChunkSize(int chunkSize) {
+        this.chunkSize = chunkSize;
     }
     
     public void writeReads(List<FastqRead> reads) throws IOException {
