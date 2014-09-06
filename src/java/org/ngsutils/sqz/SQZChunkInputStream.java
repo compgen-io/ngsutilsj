@@ -3,6 +3,7 @@ package org.ngsutils.sqz;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.security.DigestInputStream;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.MessageDigest;
@@ -18,7 +19,6 @@ import javax.crypto.spec.SecretKeySpec;
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
 import org.ngsutils.support.StringUtils;
 import org.ngsutils.support.io.DataIO;
-import org.ngsutils.support.io.MessageDigestInputStream;
 
 public class SQZChunkInputStream extends InputStream {
     private final InputStream parent;
@@ -57,7 +57,6 @@ public class SQZChunkInputStream extends InputStream {
             if (wrapped == null || buflen < 1) {
                 if (chunkDigest != null) {
                     byte[] digest = md.digest();
-                    System.err.println("SHA-1 Got: "+StringUtils.byteArrayToString(digest)+" Expected:"+StringUtils.byteArrayToString(chunkDigest));
                     if (!Arrays.equals(chunkDigest, digest)) {
                         throw new IOException("Invalid SHA-1 signature for block "+chunkCount+" Got: "+StringUtils.byteArrayToString(digest)+" Expected:"+StringUtils.byteArrayToString(chunkDigest));
                     }
@@ -157,7 +156,7 @@ public class SQZChunkInputStream extends InputStream {
             wrapped = new BZip2CompressorInputStream(wrapped);
         }
 
-        wrapped = new MessageDigestInputStream(wrapped, md);
+        wrapped = new DigestInputStream(wrapped, md);
 
         return true;
     }

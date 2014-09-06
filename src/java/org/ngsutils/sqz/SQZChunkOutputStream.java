@@ -3,6 +3,7 @@ package org.ngsutils.sqz;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.security.DigestOutputStream;
 import java.security.InvalidKeyException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -15,7 +16,6 @@ import javax.crypto.spec.SecretKeySpec;
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorOutputStream;
 import org.ngsutils.support.StringUtils;
 import org.ngsutils.support.io.DataIO;
-import org.ngsutils.support.io.MessageDigestOutputStream;
 
 public class SQZChunkOutputStream extends OutputStream {
 
@@ -116,7 +116,7 @@ public class SQZChunkOutputStream extends OutputStream {
         } else if (compressionType == SQZ.COMPRESS_BZIP2) {
             os = new BZip2CompressorOutputStream(os);
         }
-        out = new MessageDigestOutputStream(os, md);
+        out = new DigestOutputStream(os, md);
     }
 
     @Override
