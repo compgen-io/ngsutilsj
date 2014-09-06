@@ -55,17 +55,15 @@ public class SQZChunkOutputStream extends OutputStream {
      * Flush the current buffer. Compresses the data using deflate/bzip2, and if available, uses the cipher
      * to encrypt the data. The stored SHA-1 is the SHA-1 for the uncompressed/unencrypted data
      * 
-     *                               |--compressed--|
-     * +-------+----------+----------+=======+======+
-     * | magic | raw-sha1 | comp_len | magic | data |
-     * +-------+----------+----------+=======+======+
+     * +-------+----------+----------+-------+=================+
+     * | magic | raw-sha1 | comp_len | magic | compressed data |
+     * +-------+----------+----------+-------+=================+
      * 
      * Encrypted version
-     *                                    |--encrypted---|       
-     *                                    |--compressed--|       
-     * +-------+----------+----+----------+=======+======+
-     * | magic | raw-sha1 | IV | comp_len | magic | data |
-     * +-------+----------+----+----------+=======+======+
+     *                                    |------- encrypted -------|       
+     * +-------+----------+----+----------+-------+=================+
+     * | magic | raw-sha1 | IV | comp_len | magic | compressed data |
+     * +-------+----------+----+----------+-------+=================+
      */
     
     public void flush() throws IOException {
