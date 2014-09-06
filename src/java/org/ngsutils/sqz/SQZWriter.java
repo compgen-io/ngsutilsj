@@ -7,10 +7,8 @@ import java.security.GeneralSecurityException;
 import java.security.SecureRandom;
 import java.security.spec.KeySpec;
 import java.util.List;
-import java.util.zip.DeflaterOutputStream;
 
 import javax.crypto.Cipher;
-import javax.crypto.CipherOutputStream;
 import javax.crypto.SecretKey;
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
@@ -23,21 +21,24 @@ public class SQZWriter {
     public static final int MAJOR = 1;
     public static final int MINOR = 1;
 
-    protected SQZOutputStream sqzos;
-    protected OutputStream dataOutputStream;
+//    protected SQZOutputStream sqzos;
+    protected SQZChunkOutputStream dcos=null;
     protected boolean closed = false;
+    
+    protected int readCount = 0;
+    protected int chunkSize = 10;
     
     public final int flags;
     public final SQZHeader header;
     
-    public SQZWriter(OutputStream os, int flags, int seqCount, String encryption, String password) throws IOException, GeneralSecurityException {
-        sqzos = new SQZOutputStream(os);
-        dataOutputStream = sqzos;
-        
+    public SQZWriter(OutputStream os, int flags, int seqCount, int compressionType, String encryption, String password) throws IOException, GeneralSecurityException {
         this.flags = flags;
-        header = new SQZHeader(MAJOR, MINOR, flags, seqCount, encryption);
-        header.writeHeader(dataOutputStream);
+        header = new SQZHeader(MAJOR, MINOR, flags, seqCount, compressionType, encryption);
+        header.writeHeader(os);
 
+        Cipher cipher = null;
+        SecretKeySpec secret = null;
+      
         if (encryption != null && encryption.equals("AES-128")) {
             SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
 
@@ -46,34 +47,26 @@ public class SQZWriter {
             
             KeySpec spec = new PBEKeySpec(password.toCharArray(), salt, 65536, 128);
             SecretKey tmp = factory.generateSecret(spec);
-            SecretKeySpec secret = new SecretKeySpec(tmp.getEncoded(), "AES");
+            secret = new SecretKeySpec(tmp.getEncoded(), "AES");
 
-            Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+            cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
             cipher.init(Cipher.ENCRYPT_MODE, secret);
 
-            dataOutputStream.write(salt);
-            dataOutputStream.write(cipher.getIV());
-            
-            dataOutputStream = new CipherOutputStream(dataOutputStream, cipher);
+            os.write(salt);
 
         } else if (encryption != null) {
             throw new IOException("Unknown encryption type!");
         }
         
-        dataOutputStream.write(SQZ.DATA_MAGIC);
-
-        if (header.deflate) {
-            dataOutputStream = new DeflaterOutputStream(dataOutputStream);
-        }
-
+        dcos = new SQZChunkOutputStream(os, compressionType, cipher, secret);
     }
 
     public SQZWriter(OutputStream out, int flags, int seqCount) throws IOException, GeneralSecurityException {
-        this(out, flags, seqCount, null, null);
+        this(out, flags, seqCount, SQZ.COMPRESS_DEFLATE, null, null);
     }
 
-    public SQZWriter(String filename, int flags, int seqCount, String encryptionAlgorithm, String password) throws IOException, GeneralSecurityException {
-        this(new FileOutputStream(filename), flags, seqCount, encryptionAlgorithm, password);
+    public SQZWriter(String filename, int flags, int seqCount, int compressionType, String encryptionAlgorithm, String password) throws IOException, GeneralSecurityException {
+        this(new FileOutputStream(filename), flags, seqCount, compressionType, encryptionAlgorithm, password);
     }
 
     public SQZWriter(String filename, int flags, int seqCount) throws IOException, GeneralSecurityException {
@@ -82,12 +75,15 @@ public class SQZWriter {
     
     public void close() throws IOException {
         if (!closed) {
-            dataOutputStream.close();
+            dcos.close();
             closed = true;
         }
     }
     
     public void writeReads(List<FastqRead> reads) throws IOException {
+        writeReads(reads, false);
+    }
+    public void writeReads(List<FastqRead> reads, boolean verbose) throws IOException {
         if (closed) {
             throw new IOException("Tried to write to closed file!");
         }
@@ -96,30 +92,38 @@ public class SQZWriter {
             throw new IOException("Each record must have " + header.seqCount + " reads!");            
         }
         
+        if (dcos != null) {
+            readCount ++;        
+            if (readCount > chunkSize ) {
+                dcos.flush(verbose);
+                readCount = 0;
+            }
+        }
+        
         for (int i=1; i<reads.size(); i++) {
             if (!reads.get(i).getName().equals(reads.get(0).getName())) {
                 throw new IOException("Reads must have the same name!");
             }
         }
 
-        DataIO.writeString(dataOutputStream, reads.get(0).getName());
+        DataIO.writeString(dcos, reads.get(0).getName());
 
         if (header.hasComments) {
             for (FastqRead read: reads) {
                 if (read.getComment() == null) {
-                    DataIO.writeString(dataOutputStream, "");
+                    DataIO.writeString(dcos, "");
                 } else {
-                    DataIO.writeString(dataOutputStream, read.getComment());
+                    DataIO.writeString(dcos, read.getComment());
                 }
             }
         }
 
         for (FastqRead read: reads) {
-            DataIO.writeByteArray(dataOutputStream, SQZ.combineSeqQual(read.getSeq(), read.getQual()));
+            DataIO.writeByteArray(dcos, SQZ.combineSeqQual(read.getSeq(), read.getQual()));
         }
     }
     
-    public byte[] getDigest() throws IOException {
-        return sqzos.getDigest();
+    public int getChunkCount() {
+        return dcos.getChunkCount();
     }
 }

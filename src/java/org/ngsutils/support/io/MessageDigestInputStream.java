@@ -26,7 +26,6 @@ public class MessageDigestInputStream extends InputStream {
     final private MessageDigest md;
     private boolean closed = false;
     private boolean finished = false;
-    private byte[] digest = null;
     private byte[] buffer = null;
     
     private int pos=0;
@@ -58,29 +57,16 @@ public class MessageDigestInputStream extends InputStream {
         }
         return buffer[pos++] & 0xff;
     }
-
-    public void finish() throws IOException {
-        if (finished) {
-            return;
-        }
-        digest = md.digest();
-        finished = true;
-    }
-
+    
     public void close() throws IOException {
         if (closed) {
             return;
         }
-        finish();
+        if (pos > 0) {
+            md.update(buffer, 0, pos);
+        }
         parent.close();
         closed = true;
-    }
-    
-    public byte[] getDigest() throws IOException {
-        if (finished) {
-            return digest;
-        }
-        throw new IOException("Stream hasn't been closed yet");
     }
 
     public static void main(String[] argv) throws IOException, NoSuchAlgorithmException {
@@ -92,6 +78,6 @@ public class MessageDigestInputStream extends InputStream {
         }
         mdis.close();
         System.err.println("Read "+ count+" bytes");
-        System.err.println(StringUtils.digestToString(mdis.getDigest()));
+        System.err.println(StringUtils.byteArrayToString(md.digest()));
     }
 }

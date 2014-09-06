@@ -33,7 +33,8 @@ public class FastqToSqz extends AbstractCommand {
 	private boolean force = false;
 	private boolean comments = false;
 
-	private boolean noCompress = false;
+    private boolean compressDeflate = true;
+    private boolean compressBzip2 = false;
 	private boolean interleaved = false;
 	
     @Unparsed(name="FILE1 FILE2")
@@ -69,9 +70,22 @@ public class FastqToSqz extends AbstractCommand {
         this.force = val;
     }
 
+    @Option(description = "Compress file using deflate algorithm (default)", longName = "deflate")
+    public void setCompressDeflate(boolean val) {
+        this.compressDeflate = val;
+        this.compressBzip2 = !val;
+    }
+    
+    @Option(description = "Compress file using bzip2 algorithm (smaller, slower)", longName = "bzip2")
+    public void setCompressBzip2(boolean val) {
+        this.compressBzip2 = val;
+        this.compressDeflate = !val;
+    }
+    
     @Option(description = "Don't compress the SQZ file", longName = "no-compress")
     public void setNoCompress(boolean val) {
-        this.noCompress = val;
+        this.compressDeflate = !val;
+        this.compressBzip2 = !val;
     }
     
     @Option(description = "Input FASTQ is interleaved", longName = "interleaved")
@@ -121,13 +135,6 @@ public class FastqToSqz extends AbstractCommand {
             SQZWriter out = null;
             List<FastqRead> buffer = new ArrayList<FastqRead>();
             for (FastqRead read : readers[0]) {
-                if (verbose) {
-                    count++;
-                    if (count % 100000 == 0) {
-                        System.err.println("Read: " + count);
-                    }
-                }
-                
                 if (buffer.size() == 0) {
                     buffer.add(read);
                     continue;
@@ -145,8 +152,14 @@ public class FastqToSqz extends AbstractCommand {
                     if (out == null) {
                         out = buildSQZ(flags, buffer.size());
                     }
-                    out.writeReads(buffer);
+                    out.writeReads(buffer, verbose);
                     buffer.clear();
+                    if (verbose) {
+                        count++;
+                        if (count % 100000 == 0) {
+                            System.err.println("Read: " + count);
+                        }
+                    }
                 }
                 buffer.add(read);
             }
@@ -154,12 +167,18 @@ public class FastqToSqz extends AbstractCommand {
                 if (out == null) {
                     out = buildSQZ(flags, buffer.size());
                 }
-                out.writeReads(buffer);
+                out.writeReads(buffer, verbose);
                 buffer.clear();
+                if (verbose) {
+                    count++;
+                    if (count % 100000 == 0) {
+                        System.err.println("Read: " + count);
+                    }
+                }
             }
             out.close();
             if (verbose) {
-                System.err.println("SHA1: "+StringUtils.digestToString(out.getDigest()));
+                System.err.println("Data chunks: "+out.getChunkCount());
             }
         } else {
             final SQZWriter out = buildSQZ(flags, readers.length);
@@ -173,7 +192,7 @@ public class FastqToSqz extends AbstractCommand {
                         }
                     }
                     try {
-                        out.writeReads(reads);
+                        out.writeReads(reads, verbose);
                     } catch (IOException e) {
                         e.printStackTrace();
                         return;
@@ -182,19 +201,19 @@ public class FastqToSqz extends AbstractCommand {
             });
             out.close();
             if (verbose) {
-                System.err.println("SHA1: "+StringUtils.digestToString(out.getDigest()));
+                System.err.println("Data chunks: "+out.getChunkCount());
             }
         }
         for (FastqReader reader: readers) {
             reader.close();
         }
-        
 	}
 
 	private SQZWriter buildSQZ(int flags, int readCount) throws IOException, GeneralSecurityException {
 	    SQZWriter out=null;
+	    
         if (outputFilename.equals("-")) {
-            out = new SQZWriter(System.out, flags, readCount, password == null ? null: "AES-128", password);
+            out = new SQZWriter(System.out, flags, readCount, SQZ.COMPRESS_NONE, password == null ? null: "AES-128", password);
             if (verbose) {
                 System.err.println("Output: stdout (uncompressed)");
                 System.err.println("Encryption: " + (password == null ? "no": "AES-128"));
@@ -203,15 +222,21 @@ public class FastqToSqz extends AbstractCommand {
             if (new File(outputFilename).exists() && !force) {
                 throw new ArgumentValidationException("The output file: "+outputFilename+" exists! Use --force to overwrite.");
             }
-            if (!noCompress) {
-                flags |= SQZ.DEFLATE_COMPRESSED;
+            int compressionType;
+            
+            if (compressDeflate) {
+                compressionType = SQZ.COMPRESS_DEFLATE;
+            } else if (compressBzip2) {
+                compressionType = SQZ.COMPRESS_BZIP2;
+            } else {
+                compressionType = SQZ.COMPRESS_NONE;
             }
-            out = new SQZWriter(outputFilename, flags, readCount, password == null ? null: "AES-128", password);
+            out = new SQZWriter(outputFilename, flags, readCount, compressionType, password == null ? null: "AES-128", password);
 
             if (verbose) {
                 System.err.println("Output: "+outputFilename);
-                System.err.println("Compress: " + (noCompress ? "no": "yes"));
                 System.err.println("Encryption: " + (password == null ? "no": "AES-128"));
+                System.err.println("Compression: " +compressionType);
             }
         }
         return out;

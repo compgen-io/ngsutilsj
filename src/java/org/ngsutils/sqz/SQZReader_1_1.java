@@ -1,13 +1,14 @@
 package org.ngsutils.sqz;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.security.GeneralSecurityException;
 
 import org.ngsutils.fastq.FastqRead;
 import org.ngsutils.support.io.DataIO;
 
 public class SQZReader_1_1 extends SQZReader{
-    protected SQZReader_1_1(SQZInputStream inputStream, SQZHeader header, boolean includeComments, String password) throws IOException, GeneralSecurityException {
+    protected SQZReader_1_1(InputStream inputStream, SQZHeader header, boolean includeComments, String password) throws IOException, GeneralSecurityException {
         super(inputStream, header, includeComments, password);
     }
 
@@ -19,7 +20,7 @@ public class SQZReader_1_1 extends SQZReader{
         
         FastqRead[] out = new FastqRead[header.seqCount]; 
         
-        String name = DataIO.readString(dataInputStream);
+        String name = DataIO.readString(dcis);
         if (name == null) {
             return null;
         }
@@ -31,15 +32,15 @@ public class SQZReader_1_1 extends SQZReader{
             for (int i=0; i<header.seqCount; i++) {
                 if (ignoreComments) {
                     comment[i] = null;
-                    DataIO.readString(dataInputStream);
+                    DataIO.readString(dcis);
                 } else {
-                    comment[i] = DataIO.readString(dataInputStream);
+                    comment[i] = DataIO.readString(dcis);
                 }
             }
         }
 
         for (int i=0; i<header.seqCount; i++) {
-            byte[] sqbuf = DataIO.readByteArray(dataInputStream);
+            byte[] sqbuf = DataIO.readByteArray(dcis);
             String[] sq = SQZ.splitSeqQual(sqbuf);
             out[i] = new FastqRead(name, sq[0], sq[1], (comment == null) ? null: comment[i]);
         }

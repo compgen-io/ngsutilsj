@@ -4,7 +4,6 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
-import java.util.Arrays;
 import java.util.Iterator;
 
 import org.ngsutils.NGSUtilsException;
@@ -43,7 +42,7 @@ public class SqzVerify extends AbstractCommand {
     }
 
     @Override
-    public void exec() throws NGSUtilsException, IOException, GeneralSecurityException {        
+    public void exec() throws NGSUtilsException, IOException, GeneralSecurityException  {        
         if (filename == null) {
             throw new ArgumentValidationException("You must specify an input FQA file!");
         }
@@ -51,66 +50,60 @@ public class SqzVerify extends AbstractCommand {
             password = StringUtils.strip(new BufferedReader(new FileReader(passwordFile)).readLine());
         }
 
-        try {
-            SQZReader reader;
-            if (filename.equals("-")) {
-                reader = SQZReader.open(System.in, false, password);
-                if (verbose) {
-                    System.err.println("Input: stdin");
-                }
-            } else {
-                reader = SQZReader.open(filename, false, password);
-                if (verbose) {
-                    System.err.println("Input: " + filename);
-                }
-            }
-            
+        SQZReader reader;
+        if (filename.equals("-")) {
+            reader = SQZReader.open(System.in, false, password);
             if (verbose) {
-                System.err.println("SQZ version: "+reader.getHeader().major+"."+reader.getHeader().minor);
-                System.err.println("Compressed: "+(reader.getHeader().deflate ? "deflate" : "none"));
-                System.err.println("Encrypted: "+(reader.getHeader().encryption == null ? "no" : reader.getHeader().encryption));
-                System.err.println("Includes comments: "+(reader.getHeader().hasComments ? "yes" : "no"));
-                System.err.println("Colorspace: "+(reader.getHeader().colorspace ? "yes" : "no"));
-                if (reader.getHeader().colorspace) {
-                    System.err.println("Colorspace includes prefix: "+(reader.getHeader().colorspacePrefix ? "yes" : "no"));
-                }
-                System.err.println("Reads per fragment: " + reader.getHeader().seqCount);
+                System.err.println("Input: stdin");
             }
-            
-            long i=0;
-    
-            Iterator<FastqRead>it = reader.iterator();
-            while (it.hasNext()) {
-                if (verbose) {
-                    i++;
-                    if (i % 100000 == 0) {
-                        System.err.println("Read: " + i);
-                    }
-                    
-                }
-                it.next();
-            }
-
-            reader.close(); // this throws an IOException if the SHA1 hashes don't match
-
+        } else {
+            reader = SQZReader.open(filename, false, password);
             if (verbose) {
-                System.err.println("Fragments: "+i);
-                System.err.println("Calculated SHA1: "+ StringUtils.digestToString(reader.getCalcDigest()));
-                System.err.println("Expected   SHA1: "+ StringUtils.digestToString(reader.getExpectedDigest()));
+                System.err.println("Input: " + filename);
             }
+        }
+        
+        if (verbose) {
+            System.err.println("SQZ version: "+reader.getHeader().major+"."+reader.getHeader().minor);
+            System.err.println("Encrypted: "+(reader.getHeader().encryption == null ? "no" : reader.getHeader().encryption));
+            System.err.println("Includes comments: "+(reader.getHeader().hasComments ? "yes" : "no"));
+            System.err.println("Colorspace: "+(reader.getHeader().colorspace ? "yes" : "no"));
+            System.err.println("Compression: "+reader.getHeader().compressionType);
 
-            if (!Arrays.equals(reader.getCalcDigest(), reader.getExpectedDigest())) {
-                throw new IOException("SHA1 hash mismatch!");
+            if (reader.getHeader().colorspace) {
+                System.err.println("Colorspace includes prefix: "+(reader.getHeader().colorspacePrefix ? "yes" : "no"));
             }
-            
-        } catch (IOException e) {
+            System.err.println("Reads per fragment: " + reader.getHeader().seqCount);
+        }
+        
+        long i=0;
+
+        Iterator<FastqRead>it = reader.iterator();
+        while (it.hasNext()) {
             if (verbose) {
-                System.err.println(e.getMessage());
+                i++;
+                if (i % 100000 == 0) {
+                    System.err.println("Read: " + i);
+                }
+                
             }
-            System.err.println((filename.equals("-") ? "stdin": filename) + " is not valid");
+            it.next();                
+        }
+
+        reader.close();
+        
+        if (reader.getException() != null) {
+            System.err.println(reader.getException().getMessage());
+            System.err.println((filename.equals("-") ? "stdin": filename) + " is not valid!");
             System.exit(1);
         }
 
+        if (verbose) {
+            System.err.println("Reads: "+i);
+            System.err.println("Data chunks: "+reader.getChunkCount());                
+        }
+            
+        // TODO: Actually check for validity... 
         System.err.println((filename.equals("-") ? "stdin": filename) + " is valid");
     }    
 }

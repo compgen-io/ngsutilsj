@@ -18,7 +18,6 @@ public class MessageDigestOutputStream extends OutputStream {
     private MessageDigest md;
     private boolean finished = false;
     private boolean closed = false;
-    private byte[] hash = null;
     
     private byte[] buffer;
     private int pos = 0;
@@ -44,37 +43,24 @@ public class MessageDigestOutputStream extends OutputStream {
         }
         buffer[pos++] = (byte) (b & 0xFF);
     }
-
-    public void finish() throws IOException {
-        if (finished) {
-            return;
-        }
+    
+    public void flush() throws IOException {
         if (pos > 0) {
             md.update(buffer, 0, pos);
             parent.write(buffer,0,pos);
+            pos = 0;
         }
-
-        hash = md.digest();
-        finished = true;
     }
     
     public void close() throws IOException {
         if (closed) {
             return;
         }
-        finish();
+        flush();
         parent.close();
         closed = true;
     }
 
-    
-    public byte[] getDigest() throws IOException {
-        if (!finished) {
-            throw new IOException("Stream not closed!");
-        }
-        return hash;
-    }
-    
     public static void main(String[] argv) throws IOException, NoSuchAlgorithmException {
         MessageDigest md = MessageDigest.getInstance("SHA-1");
         MessageDigestOutputStream mdos = new MessageDigestOutputStream(System.out, md);
@@ -83,8 +69,7 @@ public class MessageDigestOutputStream extends OutputStream {
             byte by = (byte) (b & 0xFF); 
             mdos.write(by);
         }
-        mdos.finish();
-        System.err.println(StringUtils.digestToString(mdos.getDigest()));
         mdos.close();
+        System.err.println(StringUtils.byteArrayToString(md.digest()));
     }
 }

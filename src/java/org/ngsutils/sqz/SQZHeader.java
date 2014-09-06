@@ -8,7 +8,6 @@ import java.util.Arrays;
 import org.ngsutils.support.io.DataIO;
 
 public class SQZHeader {
-    public final boolean deflate;
     public final boolean hasComments;
     public final boolean colorspace;
     public final boolean colorspacePrefix;
@@ -18,16 +17,18 @@ public class SQZHeader {
     public final int flags;
     public final int seqCount;
     
+    public final int compressionType;
+    
     public final String encryption;
 
-    public SQZHeader(int major, int minor, int flags, int seqCount, String encryption) {
+    public SQZHeader(int major, int minor, int flags, int seqCount, int compressionType, String encryption) {
         this.major = major;
         this.minor = minor;
         this.flags = flags;
         this.seqCount = seqCount;
+        this.compressionType = compressionType;
         this.encryption = encryption;
         
-        this.deflate = (flags & SQZ.DEFLATE_COMPRESSED) > 0;
         this.hasComments = (flags & SQZ.HAS_COMMENTS) > 0;
         this.colorspace = (flags & SQZ.COLORSPACE) > 0;
         this.colorspacePrefix = (flags & SQZ.COLORSPACE_PREFIX) > 0;
@@ -39,6 +40,7 @@ public class SQZHeader {
         DataIO.writeUInt16(os, minor);       // 2 bytes
         DataIO.writeUInt32(os, flags);       // 4 bytes
         DataIO.writeRawByte(os, (byte) (seqCount & 0xFF));  // 1 byte
+        DataIO.writeRawByte(os, (byte) (this.compressionType & 0xFF));
         
         DataIO.writeString(os, encryption); // encryption string (varint + string)
 
@@ -56,9 +58,10 @@ public class SQZHeader {
         int flags = (int) DataIO.readUint32(is);
         int seqCount = DataIO.readByte(is);
         
+        int compressionType = DataIO.readByte(is);
         String encryption = DataIO.readString(is);
         
-        return new SQZHeader(major, minor, flags, seqCount, encryption);
+        return new SQZHeader(major, minor, flags, seqCount, compressionType, encryption);
 
     }    
 }

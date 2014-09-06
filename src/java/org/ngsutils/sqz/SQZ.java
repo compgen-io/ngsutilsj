@@ -6,18 +6,23 @@ public class SQZ {
     final public static byte G = 2; 
     final public static byte T = 3; 
 
-    public static final int DEFLATE_COMPRESSED  = 0x1;
-    public static final int HAS_COMMENTS        = 0x2;
-    public static final int COLORSPACE          = 0x4;
-    public static final int COLORSPACE_PREFIX   = 0x8;
+    public static final int HAS_COMMENTS        = 0x1;
+    public static final int COLORSPACE          = 0x2;
+    public static final int COLORSPACE_PREFIX   = 0x3;
 
-    // used to mark a valid SQZ file
-    public static final byte[] MAGIC = new byte[] { 'S', 'Q', 'Z', '1' };
-    // used to mark the start of the SQZ data block - if it is encrypted
-    // then this will be the indicator of if we have the right password
-    public static final byte[] DATA_MAGIC = new byte[] { 'S', 'Q', 'Z', 'B' };
-
+    public static final int COMPRESS_NONE   = 0;
+    public static final int COMPRESS_DEFLATE   = 1;
+    public static final int COMPRESS_BZIP2     = 2;
     
+    // used to mark a valid SQZ file
+    public static final byte[] MAGIC = new byte[] { 'S', 'Q', 'Z', 0x1 };
+    
+    // used to mark the start of the SQZ data chunk
+    public static final byte[] MAGIC_CHUNK = new byte[] { 'J', 'R', 0x20, 0x08 };
+
+    // used to mark the start of the SQZ data validator - ensures the encryption password is good.
+    public static final byte[] MAGIC_CHUNK_DATA = new byte[] { 'L', 'M', 0x20, 0x10 };
+
     public static byte[] combineSeqQual(String seq, String qual) {
         byte[] out = new byte[seq.length()];
         

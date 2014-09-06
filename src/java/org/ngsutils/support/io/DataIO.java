@@ -92,6 +92,7 @@ public class DataIO {
 
     public static byte[] readByteArray(InputStream in) throws IOException {
         int size = (int) readVarInt(in);
+//        System.err.println("reading byte["+size+"]");
         byte[] buf = readRawBytes(in, size);
 //        System.err.println("byte["+size+"] "+StringUtils.join(" ", buf));
         return buf;

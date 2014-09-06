@@ -1,4 +1,4 @@
-package org.ngsutils.cli.fasta;
+package org.ngsutils.cli.splicing;
 
 import java.io.IOException;
 import java.util.List;

@@ -2,6 +2,7 @@ package org.ngsutils.support;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -188,12 +189,45 @@ public class StringUtils {
         return out;
     }
     
-    public static String digestToString(byte[] digest) {
-        String calc = new BigInteger(1, digest).toString(16);
-        while (calc.length() < (digest.length*2)) {
+    public static String byteArrayToString(byte[] buf) {
+        return byteArrayToString(buf, 0, buf.length, -1, null);
+    }
+    public static String byteArrayToString(byte[] buf, int off, int len) {
+        return byteArrayToString(buf, off, len, -1, null);
+    }
+    public static String byteArrayToString(byte[] buf, int wrap) {
+        return byteArrayToString(buf, 0, buf.length, wrap, null);
+    }
+    public static String byteArrayToString(byte[] buf, int off, int len, int wrap, String sep) {
+        byte[] b = buf;
+        if (off > 0 || len != buf.length) {
+            b = Arrays.copyOfRange(buf, off, len-off); 
+        }
+
+        String calc = new BigInteger(1, b).toString(16);
+        while (calc.length() < (b.length*2)) {
             calc = "0"+calc;
         }
-        return calc;
+        
+        if (wrap == -1) {
+            return calc;
+        }
+        
+        String out = "";
+        int j = 0;
+        for (int i=0; i<calc.length(); i=i+2) {
+            out += calc.charAt(i);
+            out += calc.charAt(i+1);
+            if (sep !=null) {
+                out += sep;
+            }
+            j++;
+            if (j >= wrap) {
+                out += "\n";
+                j = 0;
+            }
+        }
+        return out;
     }
     
 }
