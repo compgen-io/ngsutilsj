@@ -21,7 +21,6 @@ public class SQZWriter {
     public static final int MAJOR = 1;
     public static final int MINOR = 1;
 
-//    protected SQZOutputStream sqzos;
     protected SQZChunkOutputStream dcos=null;
     protected boolean closed = false;
     
@@ -126,8 +125,16 @@ public class SQZWriter {
             }
         }
 
-        for (FastqRead read: reads) {
-            DataIO.writeByteArray(dcos, SQZ.combineSeqQual(read.getSeq(), read.getQual()));
+        try {
+            for (FastqRead read: reads) {
+                if (header.colorspace) {
+                    DataIO.writeByteArray(dcos, SQZ.combineSeqQualColorspace(read.getSeq(), read.getQual()));
+                } else {
+                    DataIO.writeByteArray(dcos, SQZ.combineSeqQual(read.getSeq(), read.getQual()));
+                }
+            }
+        } catch (SQZException e) {
+            throw new IOException(e);
         }
     }
     

@@ -67,7 +67,7 @@ public class FastqRead {
 		}
 	}	
 	
-public void write(OutputStream out) throws IOException {
+	public void write(OutputStream out) throws IOException {
 		String rec;
 		if (comment != null) {
 			rec = "@"+name+" "+comment+"\n"+seq+"\n+\n"+qual+"\n";

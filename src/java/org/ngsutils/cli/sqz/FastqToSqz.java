@@ -31,7 +31,8 @@ public class FastqToSqz extends AbstractCommand {
     private String passwordFile = null;
 	
 	private boolean force = false;
-	private boolean comments = false;
+    private boolean comments = false;
+    private boolean colorspace = false;
 
     private boolean compressDeflate = true;
     private boolean compressBzip2 = false;
@@ -39,7 +40,7 @@ public class FastqToSqz extends AbstractCommand {
 	
 	private int chunkSize = 10000;
 	
-    @Unparsed(name="FILE1 FILE2")
+    @Unparsed(name="FILE1 {FILE2}")
     public void setFilenames(List<String> files) throws IOException {
         if (files.size() > 0) {
             this.readers = new FastqReader[files.size()];
@@ -67,9 +68,14 @@ public class FastqToSqz extends AbstractCommand {
         this.passwordFile = passwordFile;
     }
     
-    @Option(description = "Number of reads be compression/encryption block (default: 10000)", longName = "block-reads", defaultValue="10000")
+    @Option(description = "Number of reads per compression/encryption block (default: 10000)", longName = "block-reads", defaultValue="10000")
     public void setChunkSize(int val) {
         this.chunkSize = val;
+    }
+
+    @Option(description = "Input file is in colorspace", longName = "colorspace")
+    public void setColorspace(boolean val) {
+        this.colorspace = val;
     }
 
     @Option(description = "Force overwriting output file", longName = "force")
@@ -125,6 +131,9 @@ public class FastqToSqz extends AbstractCommand {
             if (comments) {
                 System.err.println("Including comments");
             }
+            if (colorspace) {
+                System.err.println("Input in colorspace");
+            }
             if (readers.length > 1) {
                 System.err.println("Paired inputs ("+readers.length+")");
             } else if (interleaved) {
@@ -135,6 +144,9 @@ public class FastqToSqz extends AbstractCommand {
         int flags = 0;
         if (comments) {
             flags |= SQZ.HAS_COMMENTS;
+        }
+        if (colorspace) {
+            flags |= SQZ.COLORSPACE;
         }
 
         if (interleaved) {

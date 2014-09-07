@@ -67,12 +67,8 @@ public class SqzVerify extends AbstractCommand {
             System.err.println("SQZ version: "+reader.getHeader().major+"."+reader.getHeader().minor);
             System.err.println("Encrypted: "+(reader.getHeader().encryption == null ? "no" : reader.getHeader().encryption));
             System.err.println("Includes comments: "+(reader.getHeader().hasComments ? "yes" : "no"));
-            System.err.println("Colorspace: "+(reader.getHeader().colorspace ? "yes" : "no"));
+            System.err.println("Space: "+(reader.getHeader().colorspace ? "color" : "base"));
             System.err.println("Compression: "+reader.getHeader().compressionType);
-
-            if (reader.getHeader().colorspace) {
-                System.err.println("Colorspace includes prefix: "+(reader.getHeader().colorspacePrefix ? "yes" : "no"));
-            }
             System.err.println("Reads per fragment: " + reader.getHeader().seqCount);
         }
         

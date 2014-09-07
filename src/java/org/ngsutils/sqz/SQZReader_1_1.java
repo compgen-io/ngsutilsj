@@ -41,7 +41,13 @@ public class SQZReader_1_1 extends SQZReader{
 
         for (int i=0; i<header.seqCount; i++) {
             byte[] sqbuf = DataIO.readByteArray(dcis);
-            String[] sq = SQZ.splitSeqQual(sqbuf);
+            
+            String[] sq;
+            if (header.colorspace) {
+                sq = SQZ.splitSeqQualColorspace(sqbuf);
+            } else {
+                sq = SQZ.splitSeqQual(sqbuf);
+            }
             out[i] = new FastqRead(name, sq[0], sq[1], (comment == null) ? null: comment[i]);
         }
         return out;

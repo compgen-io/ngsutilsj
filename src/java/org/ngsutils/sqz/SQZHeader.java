@@ -10,7 +10,6 @@ import org.ngsutils.support.io.DataIO;
 public class SQZHeader {
     public final boolean hasComments;
     public final boolean colorspace;
-    public final boolean colorspacePrefix;
     
     public final int major;
     public final int minor;
@@ -31,7 +30,6 @@ public class SQZHeader {
         
         this.hasComments = (flags & SQZ.HAS_COMMENTS) > 0;
         this.colorspace = (flags & SQZ.COLORSPACE) > 0;
-        this.colorspacePrefix = (flags & SQZ.COLORSPACE_PREFIX) > 0;
     }
     
     public void writeHeader(OutputStream os) throws IOException {
