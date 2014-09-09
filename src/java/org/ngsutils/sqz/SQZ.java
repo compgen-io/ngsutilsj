@@ -22,6 +22,10 @@ public class SQZ {
     // used to mark the start of the SQZ data validator - ensures the encryption password is good.
     public static final byte[] MAGIC_CHUNK_DATA = new byte[] { 'L', 'M', 0x20, 0x10 };
 
+    private static boolean qualErrorPrinted = false;
+    private static boolean wildcardQualErrorPrinted = false;
+
+    
     public static byte[] combineSeqQual(String seq, String qual) throws SQZException {
         if (seq.length() != qual.length()) {
             throw new SQZException("Seq and qual should be the same length!");
@@ -34,6 +38,11 @@ public class SQZ {
             int qualval = qualbase - 33;
             
             if (qualval > 62) {
+                if (!qualErrorPrinted) {
+                    System.err.println("WARNING: Quality values will be truncated to 62.");
+                    qualErrorPrinted = true;
+                }
+                
                 qualval = 62;
             }
             
@@ -62,12 +71,20 @@ public class SQZ {
                 // the base bits.
                 
                 buf = (byte) 0xFC;
+                
+                if (qualval > 3) {
+                    if (!wildcardQualErrorPrinted) {
+                        System.err.println("WARNING: Wildcard quality values will be set to 0.");
+                        wildcardQualErrorPrinted = true;
+                    }
+                    qualval = 0;
+                }
+
                 buf |= (qualval & 0x3);
 
                 break;
             default:
-                throw new SQZException("Sequence not valid colorspace.");
-
+                throw new SQZException("Sequence not valid! Expected: A,C,G,T or N. Got: " + base);
             }
 
             out[i] = buf;            
@@ -146,6 +163,10 @@ public class SQZ {
             int qualval = qualbase - 33;
             
             if (qualval > 62) {
+                if (!qualErrorPrinted) {
+                    System.err.println("Quality values will be truncated to 62.");
+                    qualErrorPrinted = true;
+                }
                 qualval = 62;
             }
             
@@ -185,6 +206,7 @@ public class SQZ {
         String seq = "";
         String qual = "";
 
+        // This is the base-space prefix. No qual is stored here.
         switch (seqquals[0]) {
         case A:
             seq += 'A';
@@ -201,13 +223,13 @@ public class SQZ {
         }
         
         for (int i=1; i<seqquals.length; i++) {
-            byte base = (byte) (seqquals[i] & 0x03);
-            byte qualval = (byte) (seqquals[i] >> 2 & 0x3F);
-            
-            if (qualval == 63) {
+            if (seqquals[i] == 0xFF) {
                 seq += '.';
                 qual += '!'; // Phred 0 (+33 in ASCII)
             } else {
+                byte base = (byte) (seqquals[i] & 0x03);
+                byte qualval = (byte) (seqquals[i] >> 2 & 0x3F);
+
                 switch (base) {
                 case 0:
                     seq += '0';
