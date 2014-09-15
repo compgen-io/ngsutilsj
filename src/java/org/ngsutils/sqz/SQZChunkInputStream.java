@@ -9,6 +9,10 @@ import java.security.InvalidKeyException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 import java.util.zip.InflaterInputStream;
 
 import javax.crypto.Cipher;
@@ -37,6 +41,7 @@ public class SQZChunkInputStream extends InputStream {
     private int buflen = 0;
     private boolean closed = false;
     private int chunkCount = 0;
+    private Map<String, String> text = new HashMap<String, String>();
     
     public SQZChunkInputStream(InputStream parent, int compressionType, Cipher cipher, SecretKeySpec secret, int ivLen, boolean verbose) throws NoSuchAlgorithmException, IOException {
         this.parent = parent;
@@ -80,7 +85,7 @@ public class SQZChunkInputStream extends InputStream {
 
         return buffer[pos++] & 0xFF;
     }
-    
+
     
     public void findNextChunk() throws IOException {
         byte one = (byte) (parent.read() & 0xFF);
@@ -99,6 +104,10 @@ public class SQZChunkInputStream extends InputStream {
         readChunk(true);
     }
     
+    public void readAllChunks() throws IOException {
+        while (readChunk()) {
+        }
+    }
     
     /**
      * Chunk format:                     
@@ -122,7 +131,15 @@ public class SQZChunkInputStream extends InputStream {
         if (magic == null) {
             return false;
         }
-        if (!Arrays.equals(magic, SQZ.MAGIC_CHUNK)) {
+
+        boolean chunkText = false;
+        chunkCount ++;
+        
+        if (Arrays.equals(magic, SQZ.MAGIC_CHUNK)) {
+            chunkText = false;
+        } else if (Arrays.equals(magic, SQZ.MAGIC_TEXT_CHUNK)) {
+            chunkText = true;
+        } else {
             throw new IOException("Invalid chunk! " + chunkCount + " Magic: " + StringUtils.byteArrayToString(magic));
         }
 
@@ -136,8 +153,6 @@ public class SQZChunkInputStream extends InputStream {
                 throw new IOException(e);
             }
         }
-
-        chunkCount ++;
 
         byte[] chunk = DataIO.readByteArray(parent);
         ByteArrayInputStream bais = new ByteArrayInputStream(chunk);
@@ -159,6 +174,22 @@ public class SQZChunkInputStream extends InputStream {
         }
 
         wrapped = new DigestInputStream(wrapped, md);
+        
+        if (chunkText) {
+            String name = DataIO.readString(wrapped);
+            String text = DataIO.readString(wrapped);
+            
+            this.text.put(name,  text);
+            
+            byte[] digest = md.digest();
+            if (verbose) {
+                System.err.println("Text block: "+chunkCount+" SHA-1 Got: "+StringUtils.byteArrayToString(digest)+" Expected:"+StringUtils.byteArrayToString(chunkDigest));
+            }
+            if (!Arrays.equals(chunkDigest, digest)) {
+                throw new IOException("Invalid SHA-1 signature for block "+chunkCount+" Got: "+StringUtils.byteArrayToString(digest)+" Expected:"+StringUtils.byteArrayToString(chunkDigest));
+            }
+            return readChunk();
+        }
 
         return true;
     }
@@ -172,6 +203,13 @@ public class SQZChunkInputStream extends InputStream {
         closed = true;
     }
 
+    public String getText(String name) {
+        return text.get(name);
+    }
+
+    public Set<String> getTextNames() {
+        return Collections.unmodifiableSet(text.keySet());
+    }
 
     public int getChunkCount() {
         return chunkCount;

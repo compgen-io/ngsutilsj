@@ -92,6 +92,12 @@ public class DataIO {
 
     public static byte[] readByteArray(InputStream in) throws IOException {
         int size = (int) readVarInt(in);
+        if (size < 0) {
+            return null;
+        }
+        if (size == 0) {
+            return new byte[0];
+        }
 //        System.err.println("reading byte["+size+"]");
         byte[] buf = readRawBytes(in, size);
 //        System.err.println("byte["+size+"] "+StringUtils.join(" ", buf));
@@ -114,7 +120,16 @@ public class DataIO {
         return null;
     }
 
+    /**
+     * This isn't quite a Uint64, but rather a Uint63 - we will only write positive numbers
+     * @param out
+     * @param val
+     * @throws IOException
+     */
     public static void writeUInt64(OutputStream out, long val) throws IOException {
+        if (val > 0x7FFFFFFFFFFFFFFFL) {
+            throw new IOException("value is too large!");
+        }
         long v = val & 0x7FFFFFFFFFFFFFFFL;
         byte[] b = new byte[8];
         
@@ -162,7 +177,6 @@ public class DataIO {
         byte[] b = s.getBytes(encoding);
         writeByteArray(out, b);
     }
-    
     public static void writeByteArray(OutputStream out, byte[] b) throws IOException {
         writeVarInt(out, b.length);
         writeRawBytes(out, b);
@@ -179,7 +193,7 @@ public class DataIO {
     }
 
     public static void writeRawByte(OutputStream out, byte b) throws IOException {
-        out.write(b);
+        out.write(b); 
     }
     public static void writeRawBytes(OutputStream out, byte[] bytes) throws IOException {
         out.write(bytes);

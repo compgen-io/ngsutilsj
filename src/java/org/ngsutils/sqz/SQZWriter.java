@@ -1,5 +1,6 @@
 package org.ngsutils.sqz;
 
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -73,12 +74,8 @@ public class SQZWriter {
     }
     
     public void close() throws IOException {
-        close(false);
-    }
-
-    public void close(boolean verbose) throws IOException {
         if (!closed) {
-            dcos.close(verbose);
+            dcos.close();
             closed = true;
         }
     }
@@ -102,7 +99,7 @@ public class SQZWriter {
         if (dcos != null) {
             readCount ++;        
             if (readCount > chunkSize ) {
-                dcos.flush(verbose);
+                dcos.flush();
                 readCount = 0;
             }
         }
@@ -138,7 +135,15 @@ public class SQZWriter {
         }
     }
     
+    public void writeText(String name, String s) throws IOException {
+        dcos.writeTextBlock(name, s);
+    }
+    
     public int getChunkCount() {
         return dcos.getChunkCount();
+    }
+
+    public void writeText(String name, FileInputStream fis) throws IOException {
+        dcos.writeTextBlock(name, fis);
     }
 }

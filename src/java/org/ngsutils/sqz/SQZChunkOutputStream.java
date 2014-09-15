@@ -2,11 +2,14 @@ package org.ngsutils.sqz;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.security.DigestOutputStream;
 import java.security.InvalidKeyException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.zip.DeflaterOutputStream;
 
 import javax.crypto.Cipher;
@@ -29,7 +32,12 @@ public class SQZChunkOutputStream extends OutputStream {
     private OutputStream out = null;
     private ByteArrayOutputStream baos = null;
     private boolean closed = false;
+    private boolean flushed = true;
     private int chunkCount = 0;
+    
+    private Set<String> textNames = new HashSet<String>();
+    
+    private boolean verbose = false;
     
     public SQZChunkOutputStream(OutputStream parent, int compressionType, Cipher cipher, SecretKeySpec secret, int bufferSize) throws NoSuchAlgorithmException, IOException {
         this.parent = parent;
@@ -48,13 +56,38 @@ public class SQZChunkOutputStream extends OutputStream {
         if (baos == null) {
             reset();
         }
+        flushed = false;
         out.write(b);
     }
     
+    public void writeTextBlock(String name, String str) throws IOException {
+        if (textNames.contains(name)) {
+            throw new IOException("A text block named: "+name+" has already been added!");
+        }
+        flush();
+        reset();
+        DataIO.writeString(out, name);
+        DataIO.writeString(out, str);
+        flushed = false;
+        flush(SQZ.MAGIC_TEXT_CHUNK);
+    }
+    
+    
+    public void writeTextBlock(String name, InputStream is) throws IOException {
+        ByteArrayOutputStream tmp = new ByteArrayOutputStream();
+        byte[] buf = new byte[8192];
+        int count;
+        while ((count = is.read(buf))> -1 ) {
+            tmp.write(buf, 0, count);
+        }
+        is.close();
+        tmp.close();
+        String str = tmp.toString(DataIO.DEFAULT_ENCODING);
+        writeTextBlock(name, str);
+    }
+    
+    
     /**
-     * Flush the current buffer. Compresses the data using deflate/bzip2, and if available, uses the cipher
-     * to encrypt the data. The stored SHA-1 is the SHA-1 for the uncompressed/unencrypted data
-     * 
      * +-------+----------+----------+-------+=================+
      * | magic | raw-sha1 | comp_len | magic | compressed data |
      * +-------+----------+----------+-------+=================+
@@ -64,17 +97,24 @@ public class SQZChunkOutputStream extends OutputStream {
      * +-------+----------+----+----------+-------+=================+
      * | magic | raw-sha1 | IV | comp_len | magic | compressed data |
      * +-------+----------+----+----------+-------+=================+
+     *
+     * Pulls compressed/encrypted data from backing bytearrayoutputstream and writes it
+     * to the parent output stream
+     * 
+     * @param verbose
+     * @throws IOException
      */
-    
     public void flush() throws IOException {
-        flush(false);
+        flush(SQZ.MAGIC_CHUNK);
     }
-
-    public void flush(boolean verbose) throws IOException {
+    public void flush(byte[] magic) throws IOException {
+        if (flushed) {
+            return;
+        }
         chunkCount ++;
         out.flush();
         out.close();
-        DataIO.writeRawBytes(parent, SQZ.MAGIC_CHUNK);
+        DataIO.writeRawBytes(parent, magic);
         byte[] digest = md.digest();
         DataIO.writeRawBytes(parent, digest);
 
@@ -92,8 +132,13 @@ public class SQZChunkOutputStream extends OutputStream {
         // reset the output buffer
         baos = null;
         out = null;
+        flushed = true;
     }
     
+    /**
+     *  Setup the output stream to compress and encrypt as needed.
+     * @throws IOException
+     */
     private void reset() throws IOException {
         this.baos = new ByteArrayOutputStream();
         OutputStream os = baos;
@@ -119,14 +164,11 @@ public class SQZChunkOutputStream extends OutputStream {
 
     @Override
     public void close() throws IOException {
-        close(false);
-    }
-    public void close(boolean verbose) throws IOException {
         if (closed) {
             return;
         }
         if (baos != null) {
-            flush(verbose);
+            flush();
         }
         parent.close();
         closed = true;

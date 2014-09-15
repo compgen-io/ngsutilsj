@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.util.Date;
 import java.util.Iterator;
 
 import org.ngsutils.NGSUtilsException;
@@ -67,9 +68,23 @@ public class SqzVerify extends AbstractCommand {
             System.err.println("SQZ version: "+reader.getHeader().major+"."+reader.getHeader().minor);
             System.err.println("Encrypted: "+(reader.getHeader().encryption == null ? "no" : reader.getHeader().encryption));
             System.err.println("Includes comments: "+(reader.getHeader().hasComments ? "yes" : "no"));
-            System.err.println("Space: "+(reader.getHeader().colorspace ? "color" : "base"));
-            System.err.println("Compression: "+reader.getHeader().compressionType);
+            System.err.println("Space: "+(reader.getHeader().colorspace ? "color" : "base")+"-space");
+            switch (reader.getHeader().compressionType) {
+            case 0:
+                System.err.println("Compression: none");
+                break;
+            case 1:
+                System.err.println("Compression: deflate");
+                break;
+            case 2:
+                System.err.println("Compression: bzip2");
+                break;
+            default:
+                System.err.println("Compression: unknown!");
+                break;
+            }
             System.err.println("Reads per fragment: " + reader.getHeader().seqCount);
+            System.err.println("Date created: " + new Date(reader.getHeader().timestamp*1000));
         }
         
         long i=0;
@@ -97,8 +112,15 @@ public class SqzVerify extends AbstractCommand {
         if (verbose) {
             System.err.println("Reads: "+i);
             System.err.println("Data chunks: "+reader.getChunkCount());                
+            if (reader.getTextNames().size() > 0) {
+                System.err.println("[Text data]");
+                for (String name: reader.getTextNames()) {
+                    System.err.println("["+name+"]");
+                    System.err.println(reader.getText(name));
+                }
+            }
         }
-            
+
         // TODO: Actually check for validity... 
         System.err.println((filename.equals("-") ? "stdin": filename) + " is valid");
     }    

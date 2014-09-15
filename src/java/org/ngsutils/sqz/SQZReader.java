@@ -7,6 +7,7 @@ import java.io.InputStream;
 import java.security.GeneralSecurityException;
 import java.security.spec.KeySpec;
 import java.util.Iterator;
+import java.util.Set;
 
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
@@ -127,8 +128,24 @@ public abstract class SQZReader implements Iterable<FastqRead>{
         return dcis.getChunkCount();   
     }
     
+    public String getText(String name) {
+        return dcis.getText(name);
+    }
+    
+    public Set<String> getTextNames() {
+        return dcis.getTextNames();
+    }
+    
     public Exception getException() {
         return exception;
+    }
+    
+    public void fetchText() {
+        try {
+            dcis.readAllChunks();
+        } catch (IOException e) {
+            this.exception = e;
+        }
     }
     
 }

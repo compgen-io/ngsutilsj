@@ -2,12 +2,14 @@ package org.ngsutils.cli.sqz;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.ngsutils.NGSUtils;
 import org.ngsutils.cli.AbstractCommand;
 import org.ngsutils.cli.Command;
 import org.ngsutils.fastq.FastqRead;
@@ -38,6 +40,9 @@ public class FastqToSqz extends AbstractCommand {
     private boolean compressBzip2 = false;
 	private boolean interleaved = false;
 	
+    private String text = null;
+    private File textFile = null;
+	
 	private int chunkSize = 10000;
 	
     @Unparsed(name="FILE1 {FILE2}")
@@ -56,6 +61,21 @@ public class FastqToSqz extends AbstractCommand {
     @Option(description = "Output filename (Default: stdout)", shortName = "o", defaultValue="-", longName = "output")
     public void setOutputFilename(String outFilename) {
         this.outputFilename = outFilename;
+    }
+
+    @Option(description = "Text annotation (default: none)", defaultToNull=true, longName = "text")
+    public void setText(String text) {
+        this.text = text;
+    }
+
+    @Option(description = "Text annotation filename", defaultToNull=true, longName = "text-file")
+    public void setTextFilename(String textFilename) {
+        if (textFilename != null) {
+            this.textFile = new File(textFilename);
+            if (!this.textFile.exists()) {
+                throw new ArgumentValidationException("The text annotation file: "+ textFilename+ " does not exist!");
+            }
+        }
     }
 
     @Option(description = "Encryption password", longName = "pass", defaultToNull=true)
@@ -118,6 +138,9 @@ public class FastqToSqz extends AbstractCommand {
 	    }
         if (interleaved && readers.length > 1) {
             throw new ArgumentValidationException("You may not supply more than one FASTQ file in interleaved mode.");
+        }
+        if (text!=null && textFile!=null) {
+            throw new ArgumentValidationException("You can not supply both --text and --text-file arguments!");
         }
 
         if (password == null && passwordFile != null) {
@@ -182,7 +205,20 @@ public class FastqToSqz extends AbstractCommand {
                 out.writeReads(buffer, verbose);
                 buffer.clear();
             }
-            out.close(verbose);
+            
+            if (text != null) {
+                out.writeText("user", text);
+                if (verbose) {
+                    System.err.println("Adding text annotation: "+text);
+                }
+            } else if (textFile != null) {
+                out.writeText("user", new FileInputStream(textFile));
+                if (verbose) {
+                    System.err.println("Adding text annotation: "+textFile.getName());
+                }
+            }
+            
+            out.close();
             if (verbose) {
                 System.err.println("Data chunks: "+out.getChunkCount());
             }
@@ -205,7 +241,18 @@ public class FastqToSqz extends AbstractCommand {
                     }
                 }
             });
-            out.close(verbose);
+            if (text != null) {
+                out.writeText("user", text);
+                if (verbose) {
+                    System.err.println("Adding text annotation: "+text);
+                }
+            } else if (textFile != null) {
+                out.writeText("user", new FileInputStream(textFile));
+                if (verbose) {
+                    System.err.println("Adding text annotation: "+textFile.getName());
+                }
+            }
+            out.close();
             if (verbose) {
                 System.err.println("Data blocks: "+out.getChunkCount());
             }
@@ -251,6 +298,8 @@ public class FastqToSqz extends AbstractCommand {
         if (verbose) {
             System.err.println("Reads per block: "+chunkSize);
         }
+
+        out.writeText("prog", "version: " + NGSUtils.getVersion()+ "\ncmdargs: " + NGSUtils.getArgs());
         
         return out;
 

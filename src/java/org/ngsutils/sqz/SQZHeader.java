@@ -14,13 +14,14 @@ public class SQZHeader {
     public final int major;
     public final int minor;
     public final int flags;
+    public final long timestamp;
     public final int seqCount;
     
     public final int compressionType;
     
     public final String encryption;
 
-    public SQZHeader(int major, int minor, int flags, int seqCount, int compressionType, String encryption) {
+    public SQZHeader(int major, int minor, int flags, int seqCount, int compressionType, String encryption, long timestamp) {
         this.major = major;
         this.minor = minor;
         this.flags = flags;
@@ -30,6 +31,12 @@ public class SQZHeader {
         
         this.hasComments = (flags & SQZ.HAS_COMMENTS) > 0;
         this.colorspace = (flags & SQZ.COLORSPACE) > 0;
+        
+        this.timestamp = timestamp;
+    }
+
+    public SQZHeader(int major, int minor, int flags, int seqCount, int compressionType, String encryption) {
+        this(major, minor, flags, seqCount, compressionType, encryption, System.currentTimeMillis() / 1000L);
     }
     
     public void writeHeader(OutputStream os) throws IOException {
@@ -37,6 +44,7 @@ public class SQZHeader {
         DataIO.writeUInt16(os, major);       // 2 bytes
         DataIO.writeUInt16(os, minor);       // 2 bytes
         DataIO.writeUInt32(os, flags);       // 4 bytes
+        DataIO.writeUInt64(os, timestamp);  // 8 bytes
         DataIO.writeRawByte(os, (byte) (seqCount & 0xFF));  // 1 byte
         DataIO.writeRawByte(os, (byte) (this.compressionType & 0xFF));
         
@@ -54,12 +62,13 @@ public class SQZHeader {
         int major = DataIO.readUint16(is);
         int minor = DataIO.readUint16(is);
         int flags = (int) DataIO.readUint32(is);
+        long timestamp = DataIO.readUint64(is);
         int seqCount = DataIO.readByte(is);
         
         int compressionType = DataIO.readByte(is);
         String encryption = DataIO.readString(is);
         
-        return new SQZHeader(major, minor, flags, seqCount, compressionType, encryption);
+        return new SQZHeader(major, minor, flags, seqCount, compressionType, encryption, timestamp);
 
     }    
 }

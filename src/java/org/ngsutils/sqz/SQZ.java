@@ -22,6 +22,9 @@ public class SQZ {
     // used to mark the start of the SQZ data validator - ensures the encryption password is good.
     public static final byte[] MAGIC_CHUNK_DATA = new byte[] { 'L', 'M', 0x20, 0x10 };
 
+    // used to mark the start of a SQZ text chunk (comments)
+    public static final byte[] MAGIC_TEXT_CHUNK = new byte[] { 'E', 'L', 'L', 0x1E };
+
     private static boolean qualErrorPrinted = false;
     private static boolean wildcardQualErrorPrinted = false;
 
