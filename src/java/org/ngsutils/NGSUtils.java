@@ -22,6 +22,7 @@ import org.ngsutils.cli.bam.BamCount;
 import org.ngsutils.cli.bam.BamCoverage;
 import org.ngsutils.cli.bam.BamFilterCli;
 import org.ngsutils.cli.bam.BamToFastq;
+import org.ngsutils.cli.bam.BinCount;
 import org.ngsutils.cli.bam.PileupCli;
 import org.ngsutils.cli.fasta.FastaCLI;
 import org.ngsutils.cli.fastq.FastqFilterCli;
@@ -36,6 +37,7 @@ import org.ngsutils.cli.splicing.FindEvents;
 import org.ngsutils.cli.splicing.JunctionCount;
 import org.ngsutils.cli.splicing.JunctionDiffCli;
 import org.ngsutils.cli.sqz.FastqToSqz;
+import org.ngsutils.cli.sqz.SqzText;
 import org.ngsutils.cli.sqz.SqzToFastq;
 import org.ngsutils.cli.sqz.SqzVerify;
 import org.ngsutils.cli.varcall.GermlineVarCall;
@@ -49,6 +51,7 @@ public class NGSUtils {
 	static {
         loadExec(FastqToSqz.class);
         loadExec(SqzToFastq.class);
+        loadExec(SqzText.class);
         loadExec(SqzVerify.class);
         loadExec(FastqToBam.class);
 		loadExec(FastqSort.class);
@@ -56,6 +59,7 @@ public class NGSUtils {
 		loadExec(FastqSeparate.class);
         loadExec(FastqSplit.class);
         loadExec(FastqFilterCli.class);
+        loadExec(BinCount.class);
         loadExec(BamCount.class);
         loadExec(BamCoverage.class);
         loadExec(BamToFastq.class);
