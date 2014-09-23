@@ -3,20 +3,17 @@ package org.ngsutils.support.io;
 import java.io.IOException;
 import java.io.InputStream;
 
-import org.ngsutils.support.StringUtils;
-
 /**
- * Will assume that there are suffixLen bytes of suffix at the end of the proper inputstream.
- * This class will pass everything read everything from the parent inputstream *except* 
- * the last suffixLen bytes of suffix.
- * 
- * This is useful for reading a variable length stream with a fixed length suffix block, such
- * as a stream with an MD5/SHA1 hash digest of a stream appended to the stream itself.
+ * This class wraps another inputstream. It will let you peek at [bufferSize]
+ * bytes from the stream without removing them from the stream. This lets one
+ * read from an arbitrary stream (file, stdin, network) and identify a file type
+ * based upon magic bytes. You can then pass this stream to an appropriate
+ * handler, but keep the magic bytes as part of the inputstream.
  * 
  * @author mbreese
  */
 public class PeekableInputStream extends InputStream {
-    public static final int DEFAULT_BUFFERSIZE = 32;
+    public static final int DEFAULT_BUFFERSIZE = 8*1024;
     protected final int bufferSize;
     protected final InputStream parent;
 
@@ -56,9 +53,7 @@ public class PeekableInputStream extends InputStream {
             }
             pos = 0;
         }
-        
-//        System.err.println("Current buffer: "+ StringUtils.byteArrayToString(buffer));
-        
+       
     }
     
     @Override
