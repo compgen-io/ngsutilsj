@@ -43,85 +43,95 @@ public class SqzVerify extends AbstractCommand {
     }
 
     @Override
-    public void exec() throws NGSUtilsException, IOException, GeneralSecurityException  {        
-        if (filename == null) {
-            throw new ArgumentValidationException("You must specify an input FQA file!");
-        }
-        if (password == null && passwordFile != null) {
-            password = StringUtils.strip(new BufferedReader(new FileReader(passwordFile)).readLine());
-        }
-
-        SQZReader reader;
-        if (filename.equals("-")) {
-            reader = SQZReader.open(System.in, false, password, verbose);
-            if (verbose) {
-                System.err.println("Input: stdin");
+    public void exec() throws NGSUtilsException {        
+        try {
+            if (filename == null) {
+                throw new ArgumentValidationException("You must specify an input FQA file!");
             }
-        } else {
-            reader = SQZReader.open(filename, false, password, verbose);
-            if (verbose) {
-                System.err.println("Input: " + filename);
+            if (password == null && passwordFile != null) {
+                    password = StringUtils.strip(new BufferedReader(new FileReader(passwordFile)).readLine());
             }
-        }
-        
-        if (verbose) {
-            System.err.println("SQZ version: "+reader.getHeader().major+"."+reader.getHeader().minor);
-            System.err.println("Encrypted: "+(reader.getHeader().encryption == null ? "no" : reader.getHeader().encryption));
-            System.err.println("Includes comments: "+(reader.getHeader().hasComments ? "yes" : "no"));
-            System.err.println("Space: "+(reader.getHeader().colorspace ? "color" : "base")+"-space");
-            switch (reader.getHeader().compressionType) {
-            case 0:
-                System.err.println("Compression: none");
-                break;
-            case 1:
-                System.err.println("Compression: deflate");
-                break;
-            case 2:
-                System.err.println("Compression: bzip2");
-                break;
-            default:
-                System.err.println("Compression: unknown!");
-                break;
-            }
-            System.err.println("Reads per fragment: " + reader.getHeader().seqCount);
-            System.err.println("Date created: " + new Date(reader.getHeader().timestamp*1000));
-        }
-        
-        long i=0;
-
-        Iterator<FastqRead>it = reader.iterator();
-        while (it.hasNext()) {
-            if (verbose) {
-                i++;
-                if (i % 100000 == 0) {
-                    System.err.println("Read: " + i);
+    
+            SQZReader reader;
+            if (filename.equals("-")) {
+                reader = SQZReader.open(System.in, false, password, verbose);
+                if (verbose) {
+                    System.err.println("Input: stdin");
                 }
+            } else {
+                reader = SQZReader.open(filename, false, password, verbose);
+                if (verbose) {
+                    System.err.println("Input: " + filename);
+                }
+            }
+            
+            if (verbose) {
+                System.err.println("SQZ version: "+reader.getHeader().major+"."+reader.getHeader().minor);
+                System.err.println("Encrypted: "+(reader.getHeader().encryption == null ? "no" : reader.getHeader().encryption));
+                System.err.println("Includes comments: "+(reader.getHeader().hasComments ? "yes" : "no"));
+                System.err.println("Space: "+(reader.getHeader().colorspace ? "color" : "base")+"-space");
+                switch (reader.getHeader().compressionType) {
+                case 0:
+                    System.err.println("Compression: none");
+                    break;
+                case 1:
+                    System.err.println("Compression: deflate");
+                    break;
+                case 2:
+                    System.err.println("Compression: bzip2");
+                    break;
+                default:
+                    System.err.println("Compression: unknown!");
+                    break;
+                }
+                System.err.println("Reads per fragment: " + reader.getHeader().seqCount);
+                System.err.println("Date created: " + new Date(reader.getHeader().timestamp*1000));
+            }
+            
+            long i=0;
+    
+            Iterator<FastqRead>it = reader.iterator();
+            while (it.hasNext()) {
+                if (verbose) {
+                    i++;
+                    if (i % 100000 == 0) {
+                        System.err.println("Read: " + i);
+                    }
+                    
+                }
+                it.next();                
+            }
+    
+            reader.close();
+            
+            if (reader.getException() != null) {
+                System.err.println(reader.getException().getMessage());
+                System.err.println((filename.equals("-") ? "stdin": filename) + " is not valid!");
+                System.exit(1);
+            }
+    
+            if (verbose) {
+                System.err.println("Reads: "+i);
+                System.err.println("Data chunks: "+reader.getChunkCount());                
+                if (reader.getTextNames().size() > 0) {
+                    System.err.println("[Text data]");
+                    for (String name: reader.getTextNames()) {
+                        System.err.println("["+name+"]");
+                        System.err.println(reader.getText(name));
+                    }
+                }
+                System.err.println("File SHA-1: "+StringUtils.byteArrayToString(reader.getDigest()));                
                 
             }
-            it.next();                
-        }
-
-        reader.close();
-        
-        if (reader.getException() != null) {
-            System.err.println(reader.getException().getMessage());
+            
+            // TODO: Actually check for validity... 
+            System.err.println((filename.equals("-") ? "stdin": filename) + " is valid");
+        } catch (IOException | GeneralSecurityException e) {
+            if (verbose) {
+                System.err.println("ERROR: " + e.getMessage());
+            }
             System.err.println((filename.equals("-") ? "stdin": filename) + " is not valid!");
             System.exit(1);
         }
-
-        if (verbose) {
-            System.err.println("Reads: "+i);
-            System.err.println("Data chunks: "+reader.getChunkCount());                
-            if (reader.getTextNames().size() > 0) {
-                System.err.println("[Text data]");
-                for (String name: reader.getTextNames()) {
-                    System.err.println("["+name+"]");
-                    System.err.println(reader.getText(name));
-                }
-            }
-        }
-
-        // TODO: Actually check for validity... 
-        System.err.println((filename.equals("-") ? "stdin": filename) + " is valid");
     }    
 }

@@ -5,6 +5,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.GeneralSecurityException;
+import java.security.MessageDigest;
 import java.security.spec.KeySpec;
 import java.util.Iterator;
 import java.util.Set;
@@ -20,19 +21,24 @@ import org.ngsutils.fastq.FastqRead;
 public abstract class SQZReader implements Iterable<FastqRead>{
     public abstract FastqRead[] nextRead() throws IOException;
     
+    protected SQZInputStream sis;
     protected SQZHeader header;
     protected SQZChunkInputStream dcis;
     protected Exception exception = null;
+    protected MessageDigest md;
     
     protected boolean ignoreComments;
     protected boolean closed = false;
     
     protected boolean verbose = false;
 
-    public static SQZReader open(InputStream is, boolean ignoreComments, String password, boolean verbose) throws IOException, GeneralSecurityException {
-        SQZHeader header = SQZHeader.readHeader(is);
+    public static SQZReader open(InputStream parent, boolean ignoreComments, String password, boolean verbose) throws IOException, GeneralSecurityException {
+
+        SQZInputStream sis = new SQZInputStream(parent);
+        
+        SQZHeader header = SQZHeader.readHeader(sis);
         if (header.major == 1 && header.minor == 1) {
-            return new SQZReader_1_1(is, header, ignoreComments, password, verbose);
+            return new SQZReader_1_1(sis, header, ignoreComments, password, verbose);
         }
         throw new IOException("Invalid major/minor SQZ version! (got: "+header.major+","+header.minor+")");
     }
@@ -46,7 +52,8 @@ public abstract class SQZReader implements Iterable<FastqRead>{
         return open(is, ignoreComments, null, false);
     }
     
-    protected SQZReader(InputStream is, SQZHeader header, boolean ignoreComments, String password, boolean verbose) throws IOException, GeneralSecurityException {
+    protected SQZReader(SQZInputStream sis, SQZHeader header, boolean ignoreComments, String password, boolean verbose) throws IOException, GeneralSecurityException {
+        this.sis = sis;
         this.header = header;
         this.ignoreComments = ignoreComments;
 
@@ -59,29 +66,43 @@ public abstract class SQZReader implements Iterable<FastqRead>{
             throw new IOException("Missing password for encrypted file!");
         } else if (header.encryption == null && password != null) {
             throw new IOException("Given a password for an unencrypted file!");
-        } else if (header.encryption != null && header.encryption.equals("AES-128")) { 
+        } else if (header.encryption != null && (header.encryption.equals("AES-128") || header.encryption.equals("AES-256"))) { 
             byte[] salt = new byte[32];
-            is.read(salt);
+            sis.read(salt);
             ivLen = 16;
             SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
-            KeySpec spec = new PBEKeySpec(password.toCharArray(), salt, 65536, 128);
+            int keysize;
+            if (header.encryption.equals("AES-128")) {
+                keysize = 128;
+            } else if (header.encryption.equals("AES-256")) {
+                keysize = 256;
+            } else {
+                throw new IOException("Unknown encryption type: "+header.encryption);
+
+            }
+            KeySpec spec = new PBEKeySpec(password.toCharArray(), salt, 65536, keysize);
             SecretKey tmp = factory.generateSecret(spec);
             secret = new SecretKeySpec(tmp.getEncoded(), "AES");
             cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
         } else if (header.encryption != null) {
-            throw new IOException("Unknown encryption type!");
+            throw new IOException("Unknown encryption type: "+ header.encryption);
         }
 
-        dcis = new SQZChunkInputStream(is, header.compressionType, cipher, secret, ivLen, verbose);
+        dcis = new SQZChunkInputStream(sis, header.compressionType, cipher, secret, ivLen, verbose);
     }
 
     public void close() throws IOException {
         if (!closed) {
-            closed = true;
             dcis.close();
+            sis.close();
+            closed = true;
         }
     }
 
+    public byte[] getDigest() throws IOException {
+        return sis.getDigest();
+    }
+    
     public Iterator<FastqRead> iterator() {
         return new Iterator<FastqRead>() {
             private FastqRead[] buf = null;

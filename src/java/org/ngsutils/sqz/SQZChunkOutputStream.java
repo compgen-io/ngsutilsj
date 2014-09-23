@@ -108,7 +108,7 @@ public class SQZChunkOutputStream extends OutputStream {
         flush(SQZ.MAGIC_CHUNK);
     }
     public void flush(byte[] magic) throws IOException {
-        if (flushed) {
+        if (flushed || baos == null) {
             return;
         }
         chunkCount ++;

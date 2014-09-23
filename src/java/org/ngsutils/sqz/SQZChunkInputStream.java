@@ -111,15 +111,20 @@ public class SQZChunkInputStream extends InputStream {
     
     /**
      * Chunk format:                     
-     * +-------+----------+----------+-------+=================+
-     * | magic | raw-sha1 | comp_len | magic | compressed data |
-     * +-------+----------+----------+-------+=================+
+     * +--------+----------+----------+--------+=================+
+     * | magic1 | raw-sha1 | comp_len | magic2 | compressed data |
+     * +--------+----------+----------+--------+=================+
      * 
      * Encrypted version
-     *                                    |------- encrypted -------|       
-     * +-------+----------+----+----------+-------+=================+
-     * | magic | raw-sha1 | IV | comp_len | magic | compressed data |
-     * +-------+----------+----+----------+-------+=================+
+     *                                     |-------- encrypted -------|       
+     * +--------+----------+----+----------+--------+=================+
+     * | magic1 | raw-sha1 | IV | comp_len | magic2 | compressed data |
+     * +--------+----------+----+----------+--------+=================+
+     * 
+     * [magic1] is the SQZ.MAGIC_CHUNK
+     * [magic2] is either SQZ.MAGIC_DATA_CHUNK or SQZ.MAGIC_TEXT_CHUNK
+     * [comp_len] is the compressed data length
+     * 
      */
     
     protected boolean readChunk() throws IOException {

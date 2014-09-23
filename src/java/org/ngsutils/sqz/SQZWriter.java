@@ -4,7 +4,10 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.security.DigestOutputStream;
 import java.security.GeneralSecurityException;
+import java.security.InvalidKeyException;
+import java.security.MessageDigest;
 import java.security.SecureRandom;
 import java.security.spec.KeySpec;
 import java.util.List;
@@ -22,6 +25,8 @@ public class SQZWriter {
     public static final int MAJOR = 1;
     public static final int MINOR = 1;
 
+    protected MessageDigest md;
+    protected OutputStream parent;
     protected SQZChunkOutputStream dcos=null;
     protected boolean closed = false;
     
@@ -31,31 +36,49 @@ public class SQZWriter {
     public final int flags;
     public final SQZHeader header;
     
-    public SQZWriter(OutputStream os, int flags, int seqCount, int compressionType, String encryption, String password) throws IOException, GeneralSecurityException {
+    public SQZWriter(OutputStream parent, int flags, int seqCount, int compressionType, String encryption, String password) throws IOException, GeneralSecurityException {
+        this.parent = parent;
         this.flags = flags;
+        
+        md = MessageDigest.getInstance("SHA-1");
+        OutputStream os = new DigestOutputStream(parent, md);
+        
         header = new SQZHeader(MAJOR, MINOR, flags, seqCount, compressionType, encryption);
         header.writeHeader(os);
 
         Cipher cipher = null;
         SecretKeySpec secret = null;
       
-        if (encryption != null && encryption.equals("AES-128")) {
+        if (encryption != null && (encryption.equals("AES-128") || encryption.equals("AES-256"))) {
             SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
 
             SecureRandom random = new SecureRandom();
             byte[] salt = random.generateSeed(32);
-            
-            KeySpec spec = new PBEKeySpec(password.toCharArray(), salt, 65536, 128);
+            int keysize;
+            if (encryption.equals("AES-128")) {
+                keysize = 128;
+            } else if (encryption.equals("AES-256")) {
+                keysize = 256;
+            } else {
+                throw new IOException("Unknown encryption type: "+encryption);
+
+            }
+            KeySpec spec = new PBEKeySpec(password.toCharArray(), salt, 65536, keysize);
             SecretKey tmp = factory.generateSecret(spec);
             secret = new SecretKeySpec(tmp.getEncoded(), "AES");
 
             cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+            try {
             cipher.init(Cipher.ENCRYPT_MODE, secret);
+            } catch (InvalidKeyException e) {
+                throw new IOException("Invalid key length! Did you try to use 256 bit encryption without installing the Unlimited JCE policy? ");
+                
+            }
 
             os.write(salt);
 
         } else if (encryption != null) {
-            throw new IOException("Unknown encryption type!");
+            throw new IOException("Unknown encryption type: "+encryption);
         }
         
         dcos = new SQZChunkOutputStream(os, compressionType, cipher, secret);
@@ -75,7 +98,12 @@ public class SQZWriter {
     
     public void close() throws IOException {
         if (!closed) {
-            dcos.close();
+            dcos.flush();
+            
+            byte[] digest = md.digest();
+            DataIO.writeRawBytes(parent, digest);
+            parent.close();
+            
             closed = true;
         }
     }

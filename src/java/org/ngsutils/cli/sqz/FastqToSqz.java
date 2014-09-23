@@ -27,11 +27,29 @@ import com.lexicalscope.jewel.cli.Unparsed;
 @CommandLineInterface(application = "ngsutilsj fastq-sqz")
 @Command(name = "fastq-sqz", desc = "Converts a FASTQ file (or two paired files) into a SQZ file", cat="sqz", experimental=true)
 public class FastqToSqz extends AbstractCommand {
+    public class AnnotationValue {
+        public final String name;
+        public final String val;
+        public final File file;
+        public AnnotationValue(String name, File f) {
+            this.name = name;
+            this.file = f;
+            this.val = null;
+        }
+
+        public AnnotationValue(String name, String val) {
+            this.name = name;
+            this.file = null;
+            this.val = val;
+        }
+    }
+
     private FastqReader[] readers = null;
 	private String outputFilename = null;
     private String password = null;
     private String passwordFile = null;
-	
+
+    private boolean useAES256 = false;
 	private boolean force = false;
     private boolean comments = false;
     private boolean colorspace = false;
@@ -40,9 +58,9 @@ public class FastqToSqz extends AbstractCommand {
     private boolean compressBzip2 = false;
 	private boolean interleaved = false;
 	
-    private String text = null;
-    private File textFile = null;
-	
+	private String curAnnName = null;
+    private List<AnnotationValue> annValues = new ArrayList<AnnotationValue>();
+
 	private int chunkSize = 10000;
 	
     @Unparsed(name="FILE1 {FILE2}")
@@ -63,18 +81,34 @@ public class FastqToSqz extends AbstractCommand {
         this.outputFilename = outFilename;
     }
 
-    @Option(description = "Text annotation (default: none)", defaultToNull=true, longName = "text")
-    public void setText(String text) {
-        this.text = text;
+    @Option(description = "Text annotation name (default: none)", defaultToNull=true, longName = "ann-name")
+    public void addAnnotationName(String text) {
+        curAnnName = text;
     }
 
-    @Option(description = "Text annotation filename", defaultToNull=true, longName = "text-file")
+    @Option(description = "Text annotation value (default: none)", defaultToNull=true, longName = "ann-val")
+    public void addAnnotationValue(String text) {
+        if (text != null) {
+            if (curAnnName == null) {
+                curAnnName = "user";
+            }
+            this.annValues.add(new AnnotationValue(curAnnName, text));
+            curAnnName = null;
+        }
+    }
+
+    @Option(description = "Text annotation filename (default:none)", defaultToNull=true, longName = "ann-file")
     public void setTextFilename(String textFilename) {
         if (textFilename != null) {
-            this.textFile = new File(textFilename);
-            if (!this.textFile.exists()) {
+            if (curAnnName == null) {
+                curAnnName = "user";
+            }
+            File f = new File(textFilename);
+            if (!f.exists()) {
                 throw new ArgumentValidationException("The text annotation file: "+ textFilename+ " does not exist!");
             }
+            this.annValues.add(new AnnotationValue(curAnnName, f));
+            curAnnName = null;
         }
     }
 
@@ -93,6 +127,13 @@ public class FastqToSqz extends AbstractCommand {
         this.chunkSize = val;
     }
 
+    @Option(description = "Encrypt with AES-256 bit (may require special Java security policy) (default: AES-128 bit)", longName = "aes-256")
+    public void setAES256(boolean val) {
+        this.useAES256 = val;
+    }
+
+
+    
     @Option(description = "Input file is in colorspace", longName = "colorspace")
     public void setColorspace(boolean val) {
         this.colorspace = val;
@@ -138,9 +179,6 @@ public class FastqToSqz extends AbstractCommand {
 	    }
         if (interleaved && readers.length > 1) {
             throw new ArgumentValidationException("You may not supply more than one FASTQ file in interleaved mode.");
-        }
-        if (text!=null && textFile!=null) {
-            throw new ArgumentValidationException("You can not supply both --text and --text-file arguments!");
         }
 
         if (password == null && passwordFile != null) {
@@ -206,15 +244,19 @@ public class FastqToSqz extends AbstractCommand {
                 buffer.clear();
             }
             
-            if (text != null) {
-                out.writeText("user", text);
-                if (verbose) {
-                    System.err.println("Adding text annotation: "+text);
-                }
-            } else if (textFile != null) {
-                out.writeText("user", new FileInputStream(textFile));
-                if (verbose) {
-                    System.err.println("Adding text annotation: "+textFile.getName());
+            if (annValues.size()>0) {
+                for (AnnotationValue ann: annValues) {
+                    if (ann.val!=null) {
+                        out.writeText(ann.name, ann.val);
+                        if (verbose) {
+                            System.err.println("Adding text annotation: [" + ann.name+"] " + ann.val);
+                        }
+                    } else if (ann.file!=null) {
+                        out.writeText(ann.name, new FileInputStream(ann.file));
+                        if (verbose) {
+                            System.err.println("Adding text annotation:  [" + ann.name+"] " + ann.file.getName());
+                        }
+                    }                        
                 }
             }
             
@@ -241,15 +283,19 @@ public class FastqToSqz extends AbstractCommand {
                     }
                 }
             });
-            if (text != null) {
-                out.writeText("user", text);
-                if (verbose) {
-                    System.err.println("Adding text annotation: "+text);
-                }
-            } else if (textFile != null) {
-                out.writeText("user", new FileInputStream(textFile));
-                if (verbose) {
-                    System.err.println("Adding text annotation: "+textFile.getName());
+            if (annValues.size()>0) {
+                for (AnnotationValue ann: annValues) {
+                    if (ann.val!=null) {
+                        out.writeText(ann.name, ann.val);
+                        if (verbose) {
+                            System.err.println("Adding text annotation: [" + ann.name+"] " + ann.val);
+                        }
+                    } else if (ann.file!=null) {
+                        out.writeText(ann.name, new FileInputStream(ann.file));
+                        if (verbose) {
+                            System.err.println("Adding text annotation:  [" + ann.name+"] " + ann.file.getName());
+                        }
+                    }                        
                 }
             }
             out.close();
@@ -266,10 +312,10 @@ public class FastqToSqz extends AbstractCommand {
 	    SQZWriter out=null;
 	    
         if (outputFilename.equals("-")) {
-            out = new SQZWriter(System.out, flags, readCount, SQZ.COMPRESS_NONE, password == null ? null: "AES-128", password);
+            out = new SQZWriter(System.out, flags, readCount, SQZ.COMPRESS_NONE, password == null ? null: (useAES256 ? "AES-256": "AES-128"), password);
             if (verbose) {
                 System.err.println("Output: stdout (uncompressed)");
-                System.err.println("Encryption: " + (password == null ? "no": "AES-128"));
+                System.err.println("Encryption: " + (password == null ? "no": (useAES256 ? "AES-256": "AES-128")));
             }
         } else {
             if (new File(outputFilename).exists() && !force) {
@@ -284,11 +330,11 @@ public class FastqToSqz extends AbstractCommand {
             } else {
                 compressionType = SQZ.COMPRESS_NONE;
             }
-            out = new SQZWriter(outputFilename, flags, readCount, compressionType, password == null ? null: "AES-128", password);
+            out = new SQZWriter(outputFilename, flags, readCount, compressionType, password == null ? null: (useAES256 ? "AES-256": "AES-128"), password);
 
             if (verbose) {
                 System.err.println("Output: "+outputFilename);
-                System.err.println("Encryption: " + (password == null ? "no": "AES-128"));
+                System.err.println("Encryption: " + (password == null ? "no": (useAES256 ? "AES-256": "AES-128")));
                 System.err.println("Compression: " +compressionType);
             }
         }
@@ -299,7 +345,7 @@ public class FastqToSqz extends AbstractCommand {
             System.err.println("Reads per block: "+chunkSize);
         }
 
-        out.writeText("prog", "version: " + NGSUtils.getVersion()+ "\ncmdargs: " + NGSUtils.getArgs());
+        out.writeText("SQZ", "{ \"version\": \"" + NGSUtils.getVersion()+ "\", \"cmdline\":\"" + NGSUtils.getArgs()+"\"}");
         
         return out;
 

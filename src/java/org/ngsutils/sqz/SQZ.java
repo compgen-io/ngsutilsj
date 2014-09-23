@@ -99,6 +99,9 @@ public class SQZ {
     public static String[] splitSeqQual(byte[] seqquals) {
         String seq = "";
         String qual = "";
+        if (seqquals == null) {
+            return new String[]{"",""};
+        }
         for (int i=0; i<seqquals.length; i++) {
             byte base = (byte) (seqquals[i] & 0x03);
             byte qualval = (byte) (seqquals[i] >> 2 & 0x3F);

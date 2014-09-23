@@ -41,15 +41,24 @@ public class SQZHeader {
     
     public void writeHeader(OutputStream os) throws IOException {
         DataIO.writeRawBytes(os, SQZ.MAGIC); // 4 bytes
+//
+//        MessageDigest md;
+//        try {
+//            md = MessageDigest.getInstance("SHA-1");
+//        } catch (NoSuchAlgorithmException e) {
+//            throw new IOException(e);
+//        }
+//        DigestOutputStream os = new DigestOutputStream(parent, md);
         DataIO.writeUInt16(os, major);       // 2 bytes
         DataIO.writeUInt16(os, minor);       // 2 bytes
         DataIO.writeUInt32(os, flags);       // 4 bytes
         DataIO.writeUInt64(os, timestamp);  // 8 bytes
         DataIO.writeRawByte(os, (byte) (seqCount & 0xFF));  // 1 byte
         DataIO.writeRawByte(os, (byte) (this.compressionType & 0xFF));
-        
         DataIO.writeString(os, encryption); // encryption string (varint + string)
-
+//        os.flush();
+//        DataIO.writeRawBytes(parent, md.digest());
+//        parent.flush();
     }
     
     public static SQZHeader readHeader(InputStream is) throws IOException {
@@ -58,7 +67,15 @@ public class SQZHeader {
         if (!Arrays.equals(SQZ.MAGIC, sigbuf)) {
             throw new IOException("Invalid SQZ file! Invalid magic bytes!");
         }
-
+        
+//        MessageDigest md;
+//        try {
+//            md = MessageDigest.getInstance("SHA-1");
+//        } catch (NoSuchAlgorithmException e) {
+//            throw new IOException(e);
+//        }
+//        
+//        DigestInputStream is = new DigestInputStream(parent, md);
         int major = DataIO.readUint16(is);
         int minor = DataIO.readUint16(is);
         int flags = (int) DataIO.readUint32(is);
@@ -68,7 +85,13 @@ public class SQZHeader {
         int compressionType = DataIO.readByte(is);
         String encryption = DataIO.readString(is);
         
+//        byte[] digest = md.digest();
+//        byte[] known = DataIO.readRawBytes(parent, digest.length);
+//
+//        if (!Arrays.equals(digest, known)) {
+//            throw new IOException("Invalid SQZ header! Header doesn't match SHA-1!");
+//        }
+//       
         return new SQZHeader(major, minor, flags, seqCount, compressionType, encryption, timestamp);
-
     }    
 }
