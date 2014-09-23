@@ -9,6 +9,7 @@ import java.util.zip.GZIPOutputStream;
 import org.ngsutils.NGSUtilsException;
 import org.ngsutils.cli.AbstractCommand;
 import org.ngsutils.cli.Command;
+import org.ngsutils.fastq.Fastq;
 import org.ngsutils.fastq.FastqRead;
 import org.ngsutils.fastq.FastqReader;
 
@@ -19,7 +20,7 @@ import com.lexicalscope.jewel.cli.Unparsed;
 @CommandLineInterface(application = "ngsutilsj fastq-split")
 @Command(name = "fastq-split", desc = "Splits an FASTQ file into smaller files", cat="fastq")
 public class FastqSplit extends AbstractCommand {
-	private FastqReader reader;
+	private String filename;
 
 	private String outputTemplate = null;
 	private boolean compressOuput = false;
@@ -30,7 +31,7 @@ public class FastqSplit extends AbstractCommand {
 
 	@Unparsed(name = "FILE")
 	public void setFilename(String filename) throws IOException {
-		this.reader = new FastqReader(filename);
+	    this.filename = filename;
 	}
 
 	@Option(description = "Number of subfiles to split into", shortName = "n", longName="num")
@@ -51,15 +52,15 @@ public class FastqSplit extends AbstractCommand {
 	@Override
 	public void exec() throws IOException, NGSUtilsException {
         if (outputTemplate == null) {
-            if (reader.getFilename().equals("-")) {
+            if (filename.equals("-")) {
                 throw new NGSUtilsException("You must specify an output template if reading from stdin");
             }
-            if (reader.getFilename().contains(".fastq")) {
-                outputTemplate = reader.getFilename().substring(0, reader.getFilename().indexOf(".fastq"));
-            } else if (reader.getFilename().contains(".fq")) {
-                outputTemplate = reader.getFilename().substring(0, reader.getFilename().indexOf(".fq"));
+            if (filename.contains(".fastq")) {
+                outputTemplate = filename.substring(0, filename.indexOf(".fastq"));
+            } else if (filename.contains(".fq")) {
+                outputTemplate = filename.substring(0, filename.indexOf(".fq"));
             } else {
-                outputTemplate = reader.getFilename();
+                outputTemplate = filename;
             }
         }
 		final OutputStream[] outs = new OutputStream[num];
@@ -73,10 +74,12 @@ public class FastqSplit extends AbstractCommand {
 		}
 
 		if (verbose) {
-			System.err.println("Spliting file:" + reader.getFilename());
+			System.err.println("Spliting file:" + filename);
 			System.err.println("Output template:" + outputTemplate);
 		}
 
+		FastqReader reader = Fastq.open(filename);
+		
 		int i = -1;
 		String lastName = null;
 		for (FastqRead read : reader) {

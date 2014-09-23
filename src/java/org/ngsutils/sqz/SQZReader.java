@@ -17,8 +17,9 @@ import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 
 import org.ngsutils.fastq.FastqRead;
+import org.ngsutils.fastq.FastqReader;
 
-public abstract class SQZReader implements Iterable<FastqRead>{
+public abstract class SQZReader implements FastqReader {
     public abstract FastqRead[] nextRead() throws IOException;
     
     protected SQZInputStream sis;
@@ -50,6 +51,9 @@ public abstract class SQZReader implements Iterable<FastqRead>{
     }
     public static SQZReader open(InputStream is, boolean ignoreComments) throws IOException, GeneralSecurityException {
         return open(is, ignoreComments, null, false);
+    }
+    public static SQZReader open(InputStream is, boolean ignoreComments, String password) throws IOException, GeneralSecurityException {
+        return open(is, ignoreComments, password, false);
     }
     
     protected SQZReader(SQZInputStream sis, SQZHeader header, boolean ignoreComments, String password, boolean verbose) throws IOException, GeneralSecurityException {

@@ -16,6 +16,7 @@ import net.sf.samtools.SAMRecord;
 import org.ngsutils.NGSUtils;
 import org.ngsutils.cli.AbstractCommand;
 import org.ngsutils.cli.Command;
+import org.ngsutils.fastq.Fastq;
 import org.ngsutils.fastq.FastqRead;
 import org.ngsutils.fastq.FastqReader;
 import org.ngsutils.support.IterUtils;
@@ -28,7 +29,7 @@ import com.lexicalscope.jewel.cli.Unparsed;
 @CommandLineInterface(application = "ngsutilsj fastq-bam")
 @Command(name = "fastq-bam", desc = "Converts a FASTQ file (or two paired files) into an unmapped BAM file", cat="fastq")
 public class FastqToBam extends AbstractCommand {
-    private FastqReader[] readers = null;
+    private String[] filenames = null;
 	private String outputFilename = null;
 	private String tmpDir = null;
 	private boolean calcMD5 = false;
@@ -41,14 +42,14 @@ public class FastqToBam extends AbstractCommand {
 	}
 
     @Unparsed(name="FILE1 FILE2")
-    public void setFilenames(List<File> files) throws IOException {
+    public void setFilenames(List<String> files) throws IOException {
         if (files.size() == 2) {
-            this.readers = new FastqReader[2];
-            this.readers[0] = new FastqReader(files.get(0));
-            this.readers[1] = new FastqReader(files.get(1));
+            this.filenames = new String[2];
+            this.filenames[0] = files.get(0);
+            this.filenames[1] = files.get(1);
         } else if (files.size() == 1) {
-            this.readers = new FastqReader[1];
-            this.readers[0] = new FastqReader(files.get(0));
+            this.filenames = new String[1];
+            this.filenames[0] = files.get(0);
         } else {
             System.err.println("You must supply one or two FASTQ files to convert!");
             System.exit(1);
@@ -101,7 +102,7 @@ public class FastqToBam extends AbstractCommand {
 
 	@Override
 	public void exec() throws IOException {
-	    if (readers == null) {
+	    if (filenames == null) {
             throw new ArgumentValidationException("You must supply one or two FASTQ files to convert.");
 	    }
 	   	    
@@ -123,9 +124,11 @@ public class FastqToBam extends AbstractCommand {
             }
         }
 
+        
+        
         if (verbose) {
-            for (FastqReader reader: readers) {
-                System.err.println("Input: "+reader.getFilename());
+            for (String filename: filenames) {
+                System.err.println("Input: "+filename);
             }
             if (comments) {
                 System.err.println("Including comments");
@@ -164,8 +167,12 @@ public class FastqToBam extends AbstractCommand {
             out = factory.makeSAMWriter(header,  true,  outStream);
         }
         
+        FastqReader[] readers = new FastqReader[filenames.length];
+        for (int i=0; i<filenames.length; i++) {
+            readers[i] = Fastq.open(filenames[i]);
+        }
+
         long i = 0;
-        
         if (readers.length == 1) {
 	        for (FastqRead read : readers[0]) {
 	            if (verbose) {

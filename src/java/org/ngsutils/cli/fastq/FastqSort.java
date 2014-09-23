@@ -14,6 +14,7 @@ import java.util.zip.GZIPOutputStream;
 
 import org.ngsutils.cli.AbstractOutputCommand;
 import org.ngsutils.cli.Command;
+import org.ngsutils.fastq.Fastq;
 import org.ngsutils.fastq.FastqRead;
 import org.ngsutils.fastq.FastqReader;
 import org.ngsutils.support.Pair;
@@ -25,7 +26,7 @@ import com.lexicalscope.jewel.cli.Unparsed;
 @CommandLineInterface(application="ngsutilsj fastq-sort")
 @Command(name="fastq-sort", desc="Sorts a FASTQ file", cat="fastq")
 public class FastqSort extends AbstractOutputCommand {
-	private FastqReader reader;
+	private String filename =  null;
 
 	private int bufferSize = 200000;
 	private boolean bySequence = false;
@@ -51,7 +52,7 @@ public class FastqSort extends AbstractOutputCommand {
 
 	@Unparsed(name="FILE")
 	public void setFilename(String filename) throws IOException {
-		this.reader = new FastqReader(filename);
+	    this.filename = filename;
 	}
 
     @Option(helpRequest=true, description="Display help", shortName="h")
@@ -75,6 +76,9 @@ public class FastqSort extends AbstractOutputCommand {
 		if (verbose) {
 			System.err.println("Splitting into subfiles...");
 		}
+		
+	    FastqReader reader = Fastq.open(filename);
+		
 		for (FastqRead read : reader) {
 			readCount++;
 			buffer.add(read);
@@ -111,9 +115,9 @@ public class FastqSort extends AbstractOutputCommand {
         ArrayList<FastqReader> readers = new ArrayList<FastqReader>();
 		boolean addedRead = true;
 		for (String tmpname : tempFiles) {
-		    FastqReader reader = new FastqReader(tmpname);
-		    readers.add(reader);
-			iterators.add(reader.iterator());
+		    FastqReader reader1 = Fastq.open(tmpname);
+		    readers.add(reader1);
+			iterators.add(reader1.iterator());
 			buffer.add(null);
 		}
 
@@ -168,8 +172,8 @@ public class FastqSort extends AbstractOutputCommand {
 			j++;
 		}
 		close();
-		for (FastqReader reader: readers) {
-		    reader.close();		    
+		for (FastqReader reader1: readers) {
+		    reader1.close();		    
 		}
 	}
 

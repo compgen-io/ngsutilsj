@@ -12,6 +12,7 @@ import java.util.List;
 import org.ngsutils.NGSUtils;
 import org.ngsutils.cli.AbstractCommand;
 import org.ngsutils.cli.Command;
+import org.ngsutils.fastq.Fastq;
 import org.ngsutils.fastq.FastqRead;
 import org.ngsutils.fastq.FastqReader;
 import org.ngsutils.sqz.SQZ;
@@ -58,6 +59,8 @@ public class FastqToSqz extends AbstractCommand {
     private boolean compressBzip2 = false;
 	private boolean interleaved = false;
 	
+	private List<String> inputFilenames = null;
+	
 	private String curAnnName = null;
     private List<AnnotationValue> annValues = new ArrayList<AnnotationValue>();
 
@@ -68,12 +71,13 @@ public class FastqToSqz extends AbstractCommand {
         if (files.size() > 0) {
             this.readers = new FastqReader[files.size()];
             for (int i=0; i<files.size(); i++) {
-                this.readers[i] = new FastqReader(files.get(i));
+                this.readers[i] = Fastq.open(files.get(i));
             }
         } else {
             System.err.println("You must supply one or two FASTQ files to convert!");
             System.exit(1);
         }
+        inputFilenames = files;
     }
 
     @Option(description = "Output filename (Default: stdout)", shortName = "o", defaultValue="-", longName = "output")
@@ -186,8 +190,8 @@ public class FastqToSqz extends AbstractCommand {
         }
         
         if (verbose) {
-            for (FastqReader reader: readers) {
-                System.err.println("Input: "+reader.getFilename());
+            for (String fname: inputFilenames) {
+                System.err.println("Input: "+fname);
             }
             if (comments) {
                 System.err.println("Including comments");

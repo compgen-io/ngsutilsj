@@ -1,12 +1,12 @@
 package org.ngsutils.cli.fastq;
 
 
-import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
 import org.ngsutils.cli.AbstractOutputCommand;
 import org.ngsutils.cli.Command;
+import org.ngsutils.fastq.Fastq;
 import org.ngsutils.fastq.FastqRead;
 import org.ngsutils.fastq.FastqReader;
 import org.ngsutils.support.Counter;
@@ -19,34 +19,42 @@ import com.lexicalscope.jewel.cli.Unparsed;
 @CommandLineInterface(application="ngsutilsj fastq-merge")
 @Command(name="fastq-merge", desc="Merges two FASTQ files (R1/R2) into one interleaved file.", cat="fastq")
 public class FastqMerge extends AbstractOutputCommand {
-	private FastqReader[] readers=null;
+	private String[] filenames=null;
 
 	public FastqMerge(){
 	}
 
 	@Unparsed(name="FILE1 FILE2")
-	public void setFilenames(List<File> files) throws IOException {
+	public void setFilenames(List<String> files) throws IOException {
 		if (files.size() != 2) {
 			System.err.println("You must supply two files to merge!");
 			System.exit(1);
 		}
 		
-		this.readers = new FastqReader[2];
-		this.readers[0] = new FastqReader(files.get(0));
-		this.readers[1] = new FastqReader(files.get(1));
+		filenames = new String[2];
+		filenames[0] = files.get(0);
+		filenames[1] = files.get(1);
+		
+//		this.readers = new FastqReader[2];
+//		this.readers[0] = new FastqReader(files.get(0));
+//		this.readers[1] = new FastqReader(files.get(1));
 	}
 
    @Override
    public void exec() throws IOException {
-        if (readers == null) {
+        if (filenames == null) {
             throw new ArgumentValidationException("You must supply two FASTQ files to merge.");
         }
        
 		if (verbose) {
 			System.err.println("Merging files:");
-			System.err.println("    "+readers[0].getFilename());
-			System.err.println("    "+readers[1].getFilename());
+			System.err.println("    "+filenames[0]);
+			System.err.println("    "+filenames[1]);
 		}
+		
+		FastqReader[] readers = new FastqReader[2];
+		readers[0] = Fastq.open(filenames[0]);
+		readers[1] = Fastq.open(filenames[1]);
 		
 		final Counter counter = new Counter();
 		

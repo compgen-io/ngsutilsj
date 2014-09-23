@@ -7,6 +7,7 @@ import java.util.List;
 import org.ngsutils.NGSUtilsException;
 import org.ngsutils.cli.AbstractOutputCommand;
 import org.ngsutils.cli.Command;
+import org.ngsutils.fastq.Fastq;
 import org.ngsutils.fastq.FastqRead;
 import org.ngsutils.fastq.FastqReader;
 import org.ngsutils.fastq.filter.BlacklistFilter;
@@ -26,8 +27,6 @@ import com.lexicalscope.jewel.cli.Unparsed;
 @CommandLineInterface(application = "ngsutilsj fastq-filter")
 @Command(name = "fastq-filter", desc = "Filters reads from a FASTQ file.", cat = "fastq")
 public class FastqFilterCli extends AbstractOutputCommand {
-    private FastqReader reader;
-
     private boolean paired = false;
     private String suffixQuality = null;
     private int prefixTrimLength = -1;
@@ -41,12 +40,14 @@ public class FastqFilterCli extends AbstractOutputCommand {
     private String whitelist = null;
     private String blacklist = null;
 
+    private String filename;
+    
     public FastqFilterCli() {
     }
 
     @Unparsed(name = "FILE")
     public void setFilename(String filename) throws IOException {
-        reader = new FastqReader(filename);
+        this.filename = filename;
     }
 
     @Option(description = "Sequence trim filter (adapters) (Default: not used)", longName = "trim-seq", defaultToNull=true)
@@ -105,8 +106,10 @@ public class FastqFilterCli extends AbstractOutputCommand {
             throw new NGSUtilsException("You can not specify both a whitelist and a blacklist!");
         }
         
+        FastqReader reader = Fastq.open(filename);
+
         if (verbose) {
-            System.err.println("Filtering file:" + reader.getFilename());
+            System.err.println("Filtering file:" + filename);
         }
 
         final List<FastqFilter> filters = new ArrayList<FastqFilter>();
