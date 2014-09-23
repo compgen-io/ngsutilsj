@@ -90,7 +90,7 @@ public class SqzToFastq extends AbstractCommand {
     }
 
     @Override
-    public void exec() throws NGSUtilsException, IOException, GeneralSecurityException {        
+    public void exec() throws NGSUtilsException {        
         if (filename == null) {
             throw new ArgumentValidationException("You must specify an input FQA file!");
         }
@@ -105,64 +105,45 @@ public class SqzToFastq extends AbstractCommand {
         if (split && (first || second)) {
             throw new ArgumentValidationException("You can not use --split and --first or --second at the same time!");
         }
-        if (password == null && passwordFile != null) {
-            password = StringUtils.strip(new BufferedReader(new FileReader(passwordFile)).readLine());
-        }
-        
-        SQZReader reader;
-        if (filename.equals("-")) {
-            reader = SQZReader.open(System.in, ignoreComments, password, verbose);
-            if (verbose) {
-                System.err.println("Input: stdin");
+        try{
+            if (password == null && passwordFile != null) {
+                    password = StringUtils.strip(new BufferedReader(new FileReader(passwordFile)).readLine());
             }
-        } else {
-            reader = SQZReader.open(filename, ignoreComments, password, verbose);
-            if (verbose) {
-                System.err.println("Input: " + filename);
-            }
-        }
-
-        OutputStream[] outs;
-        if (outTemplate==null || outTemplate.equals("-")) {
-            outs = new OutputStream[] { new BufferedOutputStream(System.out) };
-            if (verbose) {
-                System.err.println("Output: stdout");
-            }
-        } else if (outTemplate != null && (first || second)) {
-            String outFilename;
-            if (compress) {
-                if (first) { 
-                    outFilename = outTemplate+"_R1.fastq.gz";
-                } else {
-                    outFilename = outTemplate+"_R2.fastq.gz";
+            
+            SQZReader reader;
+            if (filename.equals("-")) {
+                reader = SQZReader.open(System.in, ignoreComments, password, verbose);
+                if (verbose) {
+                    System.err.println("Input: stdin");
                 }
             } else {
-                if (first) { 
-                    outFilename = outTemplate+"_R1.fastq";
-                } else {
-                    outFilename = outTemplate+"_R2.fastq";
+                reader = SQZReader.open(filename, ignoreComments, password, verbose);
+                if (verbose) {
+                    System.err.println("Input: " + filename);
                 }
             }
-            if (new File(outFilename).exists() && !force) {
-                reader.close();
-                throw new ArgumentValidationException("Output file: "+ outFilename+" exists! Use --force to overwrite!");
-            }
-            if (verbose) {
-                System.err.println("Output: " + outFilename);
-            }
-            if (compress) {
-                outs = new OutputStream[] { new GZIPOutputStream(new FileOutputStream(outFilename)) };
-            } else {
-                outs = new OutputStream[] { new BufferedOutputStream(new FileOutputStream(outFilename)) };
-            }
-        } else if (outTemplate != null && split) {
-            String[] outFilenames;
-            if (compress) {
-                outFilenames = new String[] { outTemplate+"_R1.fastq.gz", outTemplate+"_R2.fastq.gz" };
-            } else {
-                outFilenames = new String[] {outTemplate+"_R1.fastq", outTemplate+"_R2.fastq"};
-            }
-            for (String outFilename: outFilenames) {
+    
+            OutputStream[] outs;
+            if (outTemplate==null || outTemplate.equals("-")) {
+                outs = new OutputStream[] { new BufferedOutputStream(System.out) };
+                if (verbose) {
+                    System.err.println("Output: stdout");
+                }
+            } else if (outTemplate != null && (first || second)) {
+                String outFilename;
+                if (compress) {
+                    if (first) { 
+                        outFilename = outTemplate+"_R1.fastq.gz";
+                    } else {
+                        outFilename = outTemplate+"_R2.fastq.gz";
+                    }
+                } else {
+                    if (first) { 
+                        outFilename = outTemplate+"_R1.fastq";
+                    } else {
+                        outFilename = outTemplate+"_R2.fastq";
+                    }
+                }
                 if (new File(outFilename).exists() && !force) {
                     reader.close();
                     throw new ArgumentValidationException("Output file: "+ outFilename+" exists! Use --force to overwrite!");
@@ -170,63 +151,90 @@ public class SqzToFastq extends AbstractCommand {
                 if (verbose) {
                     System.err.println("Output: " + outFilename);
                 }
-            }
-
-            outs = new OutputStream[2];
-            if (compress) {
-                outs[0] = new GZIPOutputStream(new FileOutputStream(outFilenames[0]));
-                outs[1] = new GZIPOutputStream(new FileOutputStream(outFilenames[1]));                
+                if (compress) {
+                    outs = new OutputStream[] { new GZIPOutputStream(new FileOutputStream(outFilename)) };
+                } else {
+                    outs = new OutputStream[] { new BufferedOutputStream(new FileOutputStream(outFilename)) };
+                }
+            } else if (outTemplate != null && split) {
+                String[] outFilenames;
+                if (compress) {
+                    outFilenames = new String[] { outTemplate+"_R1.fastq.gz", outTemplate+"_R2.fastq.gz" };
+                } else {
+                    outFilenames = new String[] {outTemplate+"_R1.fastq", outTemplate+"_R2.fastq"};
+                }
+                for (String outFilename: outFilenames) {
+                    if (new File(outFilename).exists() && !force) {
+                        reader.close();
+                        throw new ArgumentValidationException("Output file: "+ outFilename+" exists! Use --force to overwrite!");
+                    }
+                    if (verbose) {
+                        System.err.println("Output: " + outFilename);
+                    }
+                }
+    
+                outs = new OutputStream[2];
+                if (compress) {
+                    outs[0] = new GZIPOutputStream(new FileOutputStream(outFilenames[0]));
+                    outs[1] = new GZIPOutputStream(new FileOutputStream(outFilenames[1]));                
+                } else {
+                    outs[0] = new BufferedOutputStream(new FileOutputStream(outFilenames[0]));
+                    outs[1] = new BufferedOutputStream(new FileOutputStream(outFilenames[1]));                
+                }
             } else {
-                outs[0] = new BufferedOutputStream(new FileOutputStream(outFilenames[0]));
-                outs[1] = new BufferedOutputStream(new FileOutputStream(outFilenames[1]));                
-            }
-        } else {
-            String outFilename;
-            if (compress) {
-                outFilename = outTemplate+".fastq.gz";
-            } else {
-                outFilename = outTemplate+".fastq";
-            }
-            if (new File(outFilename).exists() && !force) {
-                reader.close();
-                throw new ArgumentValidationException("Output file: "+ outFilename+" exists! Use --force to overwrite!");
-            }
-            if (verbose) {
-                System.err.println("Output: " + outFilename);
-            }
-            if (compress) {
-                outs = new OutputStream[] { new GZIPOutputStream(new FileOutputStream(outFilename)) };
-            } else {
-                outs = new OutputStream[] { new BufferedOutputStream(new FileOutputStream(outFilename)) };
-            }
-        }
-
-        long i=0;
-        String lastName = null;
-
-        for (FastqRead read: reader) {
-            if (verbose) {
-                i++;
-                if (i % 100000 == 0) {
-                    System.err.println("Read: " + i);
+                String outFilename;
+                if (compress) {
+                    outFilename = outTemplate+".fastq.gz";
+                } else {
+                    outFilename = outTemplate+".fastq";
+                }
+                if (new File(outFilename).exists() && !force) {
+                    reader.close();
+                    throw new ArgumentValidationException("Output file: "+ outFilename+" exists! Use --force to overwrite!");
+                }
+                if (verbose) {
+                    System.err.println("Output: " + outFilename);
+                }
+                if (compress) {
+                    outs = new OutputStream[] { new GZIPOutputStream(new FileOutputStream(outFilename)) };
+                } else {
+                    outs = new OutputStream[] { new BufferedOutputStream(new FileOutputStream(outFilename)) };
                 }
             }
-            if (split && read.getName().equals(lastName)) {
-                read.write(outs[1]);
-            } else {
-                if (
-                        (first && !read.getName().equals(lastName)) || 
-                        (second && read.getName().equals(lastName)) || 
-                        (!first && !second)
-                    ) {
-                    read.write(outs[0]);
+    
+            long i=0;
+            String lastName = null;
+    
+            for (FastqRead read: reader) {
+                if (verbose) {
+                    i++;
+                    if (i % 100000 == 0) {
+                        System.err.println("Read: " + i);
+                    }
                 }
+                if (split && read.getName().equals(lastName)) {
+                    read.write(outs[1]);
+                } else {
+                    if (
+                            (first && !read.getName().equals(lastName)) || 
+                            (second && read.getName().equals(lastName)) || 
+                            (!first && !second)
+                        ) {
+                        read.write(outs[0]);
+                    }
+                }
+                lastName = read.getName();
             }
-            lastName = read.getName();
+            for (OutputStream out: outs) {
+                out.close();
+            }
+            reader.close();
+        } catch (IOException | GeneralSecurityException | RuntimeException e) {
+            System.err.println("ERROR: " + e.getMessage());
+            if (verbose) {
+                e.printStackTrace(System.err);
+            }
+            System.exit(1);
         }
-        for (OutputStream out: outs) {
-            out.close();
-        }
-        reader.close();
     }    
 }

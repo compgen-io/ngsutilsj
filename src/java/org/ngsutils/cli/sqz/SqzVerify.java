@@ -126,9 +126,10 @@ public class SqzVerify extends AbstractCommand {
             
             // TODO: Actually check for validity... 
             System.err.println((filename.equals("-") ? "stdin": filename) + " is valid");
-        } catch (IOException | GeneralSecurityException e) {
+        } catch (IOException | GeneralSecurityException | RuntimeException e) {
+            System.err.println("ERROR: " + e.getMessage());
             if (verbose) {
-                System.err.println("ERROR: " + e.getMessage());
+                e.printStackTrace(System.err);
             }
             System.err.println((filename.equals("-") ? "stdin": filename) + " is not valid!");
             System.exit(1);
