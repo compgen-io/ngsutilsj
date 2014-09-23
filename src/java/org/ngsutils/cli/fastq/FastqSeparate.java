@@ -41,7 +41,7 @@ public class FastqSeparate extends AbstractOutputCommand {
 	}
 
     @Override
-	public void exec() throws IOException {
+	public void exec() throws IOException, NGSUtilsException {
         if ((!readOne && !readTwo) || (readOne && readTwo)) {
             throw new NGSUtilsException("You must specify at one (and only one) read to export (-1 or -2)");
         }
