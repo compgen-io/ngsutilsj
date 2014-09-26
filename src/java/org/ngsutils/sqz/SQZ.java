@@ -42,13 +42,20 @@ public class SQZ {
             
             if (qualval > 62) {
                 if (!qualErrorPrinted) {
-                    System.err.println("WARNING: Quality values will be truncated to 62.");
+                    System.err.println("WARNING: Quality values altered to be between 0-62.");
                     qualErrorPrinted = true;
                 }
                 
                 qualval = 62;
+            } else if (qualval < 0) {
+                if (!qualErrorPrinted) {
+                    System.err.println("WARNING: Quality values altered to be between 0-62.");
+                    qualErrorPrinted = true;
+                }
+                qualval = 0;
             }
             
+
             byte buf = (byte) (qualval << 2);
             
             switch (base) {
@@ -170,10 +177,17 @@ public class SQZ {
             
             if (qualval > 62) {
                 if (!qualErrorPrinted) {
-                    System.err.println("Quality values will be truncated to 62.");
+                    System.err.println("WARNING: Quality values altered to be between 0-62.");
                     qualErrorPrinted = true;
                 }
+                
                 qualval = 62;
+            } else if (qualval < 0) {
+                if (!qualErrorPrinted) {
+                    System.err.println("WARNING: Quality values altered to be between 0-62.");
+                    qualErrorPrinted = true;
+                }
+                qualval = 0;
             }
             
             byte buf = (byte) (qualval << 2);
