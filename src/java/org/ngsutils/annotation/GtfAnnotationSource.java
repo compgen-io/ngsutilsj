@@ -365,13 +365,21 @@ public class GtfAnnotationSource extends AbstractAnnotationSource<GTFGene> {
     public List<GTFGene> findJunction(String junction) {
         String ref = junction.substring(0,junction.indexOf(':'));
         String startend = junction.substring(junction.indexOf(':')+1);
+
+        int start;
+        int end;
         
-        int start = Integer.parseInt(startend.substring(0,startend.indexOf('-')));
-        int end = Integer.parseInt(startend.substring(startend.indexOf('-')+1));
+        if (startend.indexOf('-') > -1) {
+            start = Integer.parseInt(startend.substring(0,startend.indexOf('-')));
+            end = Integer.parseInt(startend.substring(startend.indexOf('-')+1));
+        } else {
+            start = Integer.parseInt(startend);
+            end = start;
+        }
         
         List<GTFGene>  retval = new ArrayList<GTFGene>();
         
-        for (GTFGene gene :findAnnotation(new GenomeRegion(ref, start))) {
+        for (GTFGene gene: findAnnotation(new GenomeRegion(ref, start))) {
             boolean matchStart = false;
             boolean matchEnd = false;
             for (GTFExon exon: gene.getExons()) {
