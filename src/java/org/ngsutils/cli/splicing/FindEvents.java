@@ -39,6 +39,7 @@ public class FindEvents extends AbstractOutputCommand {
     }
 
     private String filename = null;
+    private String failedFilename = null;
     
     private double pctThreshold = 0.1;
     private double fdrThreshold = 0.1;
@@ -64,6 +65,11 @@ public class FindEvents extends AbstractOutputCommand {
         this.fdrThreshold = val;
     }
 
+    @Option(description = "Output failed junctions here (BED)", longName="failed", defaultToNull=true)
+    public void setFailedFilename(String failedFilename) {
+        this.failedFilename = failedFilename;
+    }
+
     @Option(description = "Output BED file for all junctions passing filters", longName="bed", defaultToNull=true)
     public void setBedFilename(String filename) {
         this.bedFilename = filename;
@@ -87,7 +93,7 @@ public class FindEvents extends AbstractOutputCommand {
         int pvalueIdx = -1;
         int strandIdx = -1;
         
-        Set<String> allJunctions = new HashSet<String>();
+        Set<JunctionKey> allJunctions = new HashSet<JunctionKey>();
         
         StringLineReader reader = new StringLineReader(filename);
         for (String line: reader) {
@@ -132,13 +138,13 @@ public class FindEvents extends AbstractOutputCommand {
                     double pct = Double.parseDouble(cols[pctIdx]);
                     double pvalue = Double.parseDouble(cols[pvalueIdx]);
 
-                    allJunctions.add(cols[juncIdx]);
+                    JunctionKey junction = new JunctionKey(cols[juncIdx],Strand.parse(cols[strandIdx]));
+                    allJunctions.add(junction);
                     
                     if (fdr > fdrThreshold || Math.abs(pct) < pctThreshold) {
                         continue;
                     }
                     
-                    JunctionKey junction = new JunctionKey(cols[juncIdx],Strand.parse(cols[strandIdx]));
                     validJunctions.put(junction, new JunctionEventStats(pvalue, pct));
                     
                     boolean isDonor = cols[siteTypeIdx].equals("donor");
@@ -158,6 +164,18 @@ public class FindEvents extends AbstractOutputCommand {
         }               
         reader.close();
         
+        if (failedFilename !=null) {
+            TabWriter failed = new TabWriter(failedFilename);
+            for (JunctionKey junc: allJunctions) {
+                if (!validJunctions.containsKey(junc)) {
+                    GenomeRegion region = GenomeRegion.parse(junc.name, true);
+                    failed.write(region.ref, ""+region.start, ""+region.end, junc.name, "0", junc.strand.toString());
+                    failed.eol();
+                }
+            }
+            failed.close();
+        }
+                
         for (JunctionKey junction: validJunctions.keySet()) {
             startEvent(junction);
         }

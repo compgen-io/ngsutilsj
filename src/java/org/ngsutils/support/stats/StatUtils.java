@@ -162,6 +162,7 @@ public class StatUtils {
     public static int[] sortOrder(int[] values) {
         return sortOrder(values, false);
     }
+
     public static int[] sortOrder(int[] values, boolean decreasing) {
         List<Pair<Integer,Integer>> vals = new ArrayList<Pair<Integer, Integer>>();
         for (int i=0; i< values.length; i++) {

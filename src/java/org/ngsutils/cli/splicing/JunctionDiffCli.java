@@ -68,15 +68,15 @@ public class JunctionDiffCli extends AbstractOutputCommand {
         JunctionDiffStats jdStats = juncDiff.findJunctions(filenames, groups);
         
         if (verbose) {
-            System.err.println("Samples:\n");
+            System.err.println("Samples:");
             for (JunctionDiffSample sample: jdStats.getSamples()) {
-                System.err.println("  " + sample.sampleName + " [" + sample.group + "] - " + sample.filename + "\n");
+                System.err.println("  " + sample.sampleName + " [" + sample.group + "] - " + sample.filename);
             }
-            System.err.println("Junctions       : "+jdStats.getTotalJunctions()+"\n");
-            System.err.println("Filtered        : "+jdStats.getFilteredJunctions()+"\n");
-            System.err.println("Valid donors    : "+jdStats.getValidDonors()+"\n");
-            System.err.println("Valid acceptors : "+jdStats.getValidAcceptors()+"\n");
-            System.err.println("Final junctions : "+jdStats.getDonorAcceptorFilteredJunctions()+"\n");
+            System.err.println("Junctions       : "+jdStats.getTotalJunctions());
+            System.err.println("Filtered        : "+jdStats.getFilteredJunctions());
+            System.err.println("Valid donors    : "+jdStats.getValidDonors());
+            System.err.println("Valid acceptors : "+jdStats.getValidAcceptors());
+            System.err.println("Final junctions : "+jdStats.getDonorAcceptorFilteredJunctions());
         }
         
         List<Double> fdrDonorR1 = new ArrayList<Double>();
@@ -111,45 +111,46 @@ public class JunctionDiffCli extends AbstractOutputCommand {
                     pvalueAcceptorR2.add(pvalue);
                 }
             }
+        }
             
-            double[] pvals = new double[pvalueDonorR1.size()];
-            for (int i=0; i<pvals.length; i++) {
-                pvals[i] = pvalueDonorR1.get(i);
-            }
-            double[] fdr = StatUtils.benjaminiHochberg(pvals);
-            for (int i=0; i<fdr.length; i++) {
-                fdrDonorR1.add(fdr[i]);
-            }
+        double[] pvals = new double[pvalueDonorR1.size()];
+        for (int i=0; i<pvals.length; i++) {
+            pvals[i] = pvalueDonorR1.get(i);
+        }
+        double[] fdr = StatUtils.benjaminiHochberg(pvals);
+        for (int i=0; i<fdr.length; i++) {
+            fdrDonorR1.add(fdr[i]);
+        }
 
-            pvals = new double[pvalueAcceptorR1.size()];
+        pvals = new double[pvalueAcceptorR1.size()];
+        for (int i=0; i<pvals.length; i++) {
+            pvals[i] = pvalueAcceptorR1.get(i);
+        }
+        fdr = StatUtils.benjaminiHochberg(pvals);
+        for (int i=0; i<fdr.length; i++) {
+            fdrAcceptorR1.add(fdr[i]);
+        }
+
+        if (juncDiff.isSplitReads()) {
+            pvals = new double[pvalueDonorR2.size()];
             for (int i=0; i<pvals.length; i++) {
-                pvals[i] = pvalueAcceptorR1.get(i);
+                pvals[i] = pvalueDonorR2.get(i);
             }
             fdr = StatUtils.benjaminiHochberg(pvals);
             for (int i=0; i<fdr.length; i++) {
-                fdrAcceptorR1.add(fdr[i]);
+                fdrDonorR2.add(fdr[i]);
             }
 
-            if (juncDiff.isSplitReads()) {
-                pvals = new double[pvalueDonorR2.size()];
-                for (int i=0; i<pvals.length; i++) {
-                    pvals[i] = pvalueDonorR2.get(i);
-                }
-                fdr = StatUtils.benjaminiHochberg(pvals);
-                for (int i=0; i<fdr.length; i++) {
-                    fdrDonorR2.add(fdr[i]);
-                }
-
-                pvals = new double[pvalueAcceptorR2.size()];
-                for (int i=0; i<pvals.length; i++) {
-                    pvals[i] = pvalueAcceptorR2.get(i);
-                }
-                fdr = StatUtils.benjaminiHochberg(pvals);
-                for (int i=0; i<fdr.length; i++) {
-                    fdrAcceptorR2.add(fdr[i]);
-                }
+            pvals = new double[pvalueAcceptorR2.size()];
+            for (int i=0; i<pvals.length; i++) {
+                pvals[i] = pvalueAcceptorR2.get(i);
+            }
+            fdr = StatUtils.benjaminiHochberg(pvals);
+            for (int i=0; i<fdr.length; i++) {
+                fdrAcceptorR2.add(fdr[i]);
             }
         }
+
         
         Set<String> uniqueJunctions = new HashSet<String>();
         for (JunctionKey key: juncDiff.getJunctions().keySet()) {
