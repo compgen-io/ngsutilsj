@@ -20,8 +20,10 @@ public class PeekableInputStream extends InputStream {
     private boolean closed = false;
     private byte[] buffer = null;
 
-    private int pos=0;
-    private int buflen=0;
+    private int pos = 0;
+    private int buflen = 0;
+    
+    private int peekpos = 0;
     
     public PeekableInputStream(InputStream parent, int bufferSize) throws IOException {
         this.parent = parent;
@@ -32,10 +34,15 @@ public class PeekableInputStream extends InputStream {
         this(parent, DEFAULT_BUFFERSIZE);
     }
 
-    private void fillbuffer() throws IOException {
+    private void fillBuffer() throws IOException {
+        buflen = parent.read(buffer, 0, buffer.length);
+        pos = 0;
+        peekpos = 0;
+    }
+
+    private void resetBuffer() throws IOException {
         if (pos >= buflen) { 
-            buflen = parent.read(buffer, 0, buffer.length);
-            pos = 0;
+            fillBuffer();
         } else if (pos > 0) {
             byte[] tmp = new byte[buffer.length];
             for (int i=0; i<buflen - pos; i++) {
@@ -52,8 +59,8 @@ public class PeekableInputStream extends InputStream {
                 buflen = pos;
             }
             pos = 0;
+            peekpos = 0;
         }
-       
     }
     
     @Override
@@ -62,7 +69,7 @@ public class PeekableInputStream extends InputStream {
             throw new IOException("Attempted to read from closed stream!");
         }
         if (pos >= buflen) { 
-            fillbuffer();
+            fillBuffer();
         }
         
         if (buflen == -1) {
@@ -91,20 +98,26 @@ public class PeekableInputStream extends InputStream {
      * @return
      * @throws IOException
      */
-    public byte[] peak(int bytes) throws IOException {
+    public byte[] peek(int bytes) throws IOException {
         if (closed) {
             throw new IOException("Attempted to read from closed stream!");
         }
-        if (pos > 0 || pos >= buflen) {
-            fillbuffer();
+        if (pos > 0 || buflen == 0) {
+            resetBuffer();
         }
         
         byte[] out = new byte[bytes];
         
-        for (int i=0; i<bytes; i++) {
-            out[i] = buffer[i+pos];
+        for (int i=0; i<bytes && peekpos < buflen; i++) {
+            out[i] = peek();
         }
         
         return out;
+    }
+    public byte peek() throws IOException {
+        if (peekpos >= buflen) {
+            throw new IOException("Attempted to peek beyond buffer!");
+        }
+        return buffer[peekpos++];
     }
 }
