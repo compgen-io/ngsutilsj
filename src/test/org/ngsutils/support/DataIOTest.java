@@ -29,10 +29,33 @@ public class DataIOTest {
         }
     }
 
+    @Test
+    public void testEndianRead() {
+        ByteArrayInputStream bais = new ByteArrayInputStream(new byte[]{(byte) 0x0D, (byte) 0x0C, (byte) 0x0B, (byte) 0x0A});
+        try {
+            long val = DataIO.readUint32(bais);
+            assertEquals(0x0A0B0C0D, val);
+        } catch (IOException e) {
+            assertTrue(false);
+        }
+    }
+
+    @Test
+    public void testEndianWrite() {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream(4);
+        try {
+            DataIO.writeUInt32(baos, 0x0A0B0C0D);
+            baos.close();
+            assertTrue(Arrays.equals(baos.toByteArray(), new byte[]{(byte) 0x0D, (byte) 0x0C, (byte) 0x0B, (byte) 0x0A}));
+        } catch (IOException e) {
+            assertTrue(false);
+        }
+    }
+
 
     @Test
     public void testReadUint() {
-        ByteArrayInputStream bais = new ByteArrayInputStream(new byte[]{(byte) 0, (byte) 0, (byte)0, (byte)1, (byte) 0xAB, (byte) 0xAD, (byte)0xC0, (byte)0xDA});
+        ByteArrayInputStream bais = new ByteArrayInputStream(new byte[]{(byte) 1, (byte) 0, (byte)0, (byte)0, (byte) 0xDA, (byte) 0xC0, (byte)0xAD, (byte)0xAB});
         try {
             long i = DataIO.readUint32(bais);
             System.err.println(Long.toHexString(i));
@@ -78,8 +101,9 @@ public class DataIOTest {
                 
                 byte[] bytes = baos.toByteArray();
                 bais = new ByteArrayInputStream(bytes);
-                DataIO.readVarInt(bais);
-                assertEquals(i, DataIO.readVarInt(bais));
+                long j = DataIO.readVarInt(bais);
+//                System.err.println("["+i+"] => " + StringUtils.byteArrayToString(bytes) +" == "+j);
+                assertEquals(i, j);
                 bais.close();
             }            
             for (long i=Integer.MAX_VALUE; i > 0 && i<Long.MAX_VALUE; i*=10) {
@@ -122,13 +146,13 @@ public class DataIOTest {
             dumpByteArray(baos.toByteArray());
 
             assertEquals(4, baos.toByteArray().length);
-            assertTrue(Arrays.equals(baos.toByteArray(), new byte[]{(byte) 0, (byte) 0, (byte)0, (byte)1}));
+            assertTrue(Arrays.equals(baos.toByteArray(), new byte[]{(byte) 1, (byte) 0, (byte)0, (byte)0}));
 
             DataIO.writeUInt32(baos, 2880291034L);
             dumpByteArray(baos.toByteArray());
 
             assertEquals(8, baos.toByteArray().length);
-            assertTrue(Arrays.equals(baos.toByteArray(), new byte[]{(byte) 0, (byte) 0, (byte)0, (byte)1, (byte) 0xAB, (byte) 0xAD, (byte)0xC0, (byte)0xDA}));
+            assertTrue(Arrays.equals(baos.toByteArray(), new byte[]{(byte) 1, (byte) 0, (byte)0, (byte)0, (byte) 0xDA, (byte) 0xC0, (byte)0xAD, (byte)0xAB}));
 
         } catch (IOException e) {
             assertTrue(false);

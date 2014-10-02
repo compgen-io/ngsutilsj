@@ -14,33 +14,44 @@ public class DataIO {
 
     public static int readUint16(InputStream in) throws IOException {
         byte[] b = readRawBytes(in, 2);
-        return ((b[0] & 0xFF) << 8) |
-                (b[1] & 0xFF);
+        return bytesUint16(b);
     }
     public static long readUint32(InputStream in) throws IOException {
         byte[] b = readRawBytes(in, 4);
-        long val = 0;
-        val |= (b[0] & 0xFF); val = val << 8;
-        val |= (b[1] & 0xFF); val = val << 8;
-        val |= (b[2] & 0xFF); val = val << 8;
-        val |= (b[3] & 0xFF);
-        return val & 0xFFFFFFFF;
+        return bytesUint32(b);
     }
     public static long readUint64(InputStream in) throws IOException {
         byte[] b = readRawBytes(in, 8);
-        long val = 0;
-        val |= (b[0] & 0xFF); val = val << 8;
-        val |= (b[1] & 0xFF); val = val << 8;
-        val |= (b[2] & 0xFF); val = val << 8;
-        val |= (b[3] & 0xFF); val = val << 8;
-        val |= (b[4] & 0xFF); val = val << 8;
-        val |= (b[5] & 0xFF); val = val << 8;
-        val |= (b[6] & 0xFF); val = val << 8;
-        val |= (b[7] & 0xFF);
-        return val & 0x7FFFFFFFFFFFFFFFL;
-
+        return bytesUint64(b);
     }
 
+    public static long bytesUint32(byte[] b) {
+        long val = 0;
+        val |= (b[3] & 0xFF); val = val << 8;
+        val |= (b[2] & 0xFF); val = val << 8;
+        val |= (b[1] & 0xFF); val = val << 8;
+        val |= (b[0] & 0xFF);
+        return val & 0xFFFFFFFF;
+    }
+
+    public static int bytesUint16(byte[] b) {
+        return ((b[1] & 0xFF) << 8) |
+                (b[0] & 0xFF);
+    }
+
+    public static long bytesUint64(byte[] b) {
+        long val = 0;
+        val |= (b[7] & 0xFF); val = val << 8;
+        val |= (b[6] & 0xFF); val = val << 8;
+        val |= (b[5] & 0xFF); val = val << 8;
+        val |= (b[4] & 0xFF); val = val << 8;
+        val |= (b[3] & 0xFF); val = val << 8;
+        val |= (b[2] & 0xFF); val = val << 8;
+        val |= (b[1] & 0xFF); val = val << 8;
+        val |= (b[0] & 0xFF);
+        return val & 0x7FFFFFFFFFFFFFFFL;
+    }
+    
     public static long readVarInt(InputStream in) throws IOException {
         int shift = 0;
         long acc = 0;
@@ -56,7 +67,7 @@ public class DataIO {
             shift += 7;
         }
         
-        if (shift == 0 && acc == 0) {
+        if (tmp == -1) {
             return -1;
         }
 
@@ -133,14 +144,14 @@ public class DataIO {
         long v = val & 0x7FFFFFFFFFFFFFFFL;
         byte[] b = new byte[8];
         
-        b[7] = (byte) (v & 0xFF);
-        b[6] = (byte) ((v >> 8) & 0xFF);
-        b[5] = (byte) ((v >> 16) & 0xFF);
-        b[4] = (byte) ((v >> 24) & 0xFF);
-        b[3] = (byte) ((v >> 32) & 0xFF);
-        b[2] = (byte) ((v >> 40) & 0xFF);
-        b[1] = (byte) ((v >> 48) & 0xFF);
-        b[0] = (byte) ((v >> 56) & 0xFF);
+        b[0] = (byte) (v & 0xFF);
+        b[1] = (byte) ((v >> 8) & 0xFF);
+        b[2] = (byte) ((v >> 16) & 0xFF);
+        b[3] = (byte) ((v >> 24) & 0xFF);
+        b[4] = (byte) ((v >> 32) & 0xFF);
+        b[5] = (byte) ((v >> 40) & 0xFF);
+        b[6] = (byte) ((v >> 48) & 0xFF);
+        b[7] = (byte) ((v >> 56) & 0xFF);
         
         writeRawBytes(out, b);
     }
@@ -149,10 +160,10 @@ public class DataIO {
         long v = val & 0xFFFFFFFF;
         byte[] b = new byte[4];
         
-        b[3] = (byte) (v & 0xFF);
-        b[2] = (byte) (v >> 8 & 0xFF);
-        b[1] = (byte) (v >> 16 & 0xFF);
-        b[0] = (byte) (v >> 24 & 0xFF);
+        b[0] = (byte) (v & 0xFF);
+        b[1] = (byte) (v >> 8 & 0xFF);
+        b[2] = (byte) (v >> 16 & 0xFF);
+        b[3] = (byte) (v >> 24 & 0xFF);
         
         writeRawBytes(out, b);
     }
@@ -161,8 +172,8 @@ public class DataIO {
         int v = val & 0xFFFF;
         
         byte[] b = new byte[2];
-        b[1] = (byte) (v & 0xFF);
-        b[0] = (byte) (v >> 8 & 0xFF);
+        b[0] = (byte) (v & 0xFF);
+        b[1] = (byte) (v >> 8 & 0xFF);
         
         writeRawBytes(out, b);
     }
