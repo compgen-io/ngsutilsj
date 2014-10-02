@@ -7,16 +7,11 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.zip.GZIPOutputStream;
 
-import net.sf.samtools.SAMFileReader;
-import net.sf.samtools.SAMFileReader.ValidationStringency;
-import net.sf.samtools.SAMRecord;
-
 import org.ngsutils.NGSUtilsException;
-import org.ngsutils.bam.support.ReadUtils;
+import org.ngsutils.bam.BamFastqReader;
 import org.ngsutils.cli.AbstractCommand;
 import org.ngsutils.cli.Command;
 import org.ngsutils.fastq.FastqRead;
-import org.ngsutils.support.StringUtils;
 
 import com.lexicalscope.jewel.cli.ArgumentValidationException;
 import com.lexicalscope.jewel.cli.CommandLineInterface;
@@ -35,8 +30,9 @@ public class BamToFastq extends AbstractCommand {
     private boolean force = false;
     private boolean comments = false;
     
-    private boolean first = false;
-    private boolean second = false;
+    private boolean onlyFirst = false;
+    private boolean onlySecond = false;
+    private boolean includeMapped = false;
     
     private boolean lenient = false;
     private boolean silent = false;
@@ -68,12 +64,17 @@ public class BamToFastq extends AbstractCommand {
 
     @Option(description = "Ouput only first reads (default: output both)", longName="first")
     public void setFirst(boolean val) {
-        this.first = val;
+        this.onlyFirst = val;
     }
 
     @Option(description = "Ouput only second reads (default: output both)", longName="second")
     public void setSecond(boolean val) {
-        this.second = val;
+        this.onlySecond = val;
+    }
+
+    @Option(description = "Include mapped reads *may require more memory* (default: output only unmapped)", longName="mapped")
+    public void setIncludeMapped(boolean val) {
+        this.includeMapped = val;
     }
 
     @Option(description = "Use lenient validation strategy", longName="lenient")
@@ -100,44 +101,36 @@ public class BamToFastq extends AbstractCommand {
             throw new ArgumentValidationException("You cannot have split output to stdout!");
         }
 
-        if (first && second) {
+        if (onlyFirst && onlySecond) {
             throw new ArgumentValidationException("You can not use --first and --second at the same time!");
         }
 
-        if (split && (first || second)) {
+        if (split && (onlyFirst || onlySecond)) {
             throw new ArgumentValidationException("You can not use --split and --first or --second at the same time!");
         }
         
-        SAMFileReader reader;
-        if (filename.equals("-")) {
-            reader = new SAMFileReader(System.in);
-        } else {
-            reader = new SAMFileReader(new File(filename));
-        }
-
         OutputStream[] outs;
         if (outTemplate==null || outTemplate.equals("-")) {
             outs = new OutputStream[] { new BufferedOutputStream(System.out) };
             if (verbose) {
                 System.err.println("Output: stdout");
             }
-        } else if (outTemplate != null && (first || second)) {
+        } else if (outTemplate != null && (onlyFirst || onlySecond)) {
             String outFilename;
             if (compress) {
-                if (first) { 
+                if (onlyFirst) { 
                     outFilename = outTemplate+"_R1.fastq.gz";
                 } else {
                     outFilename = outTemplate+"_R2.fastq.gz";
                 }
             } else {
-                if (first) { 
+                if (onlyFirst) { 
                     outFilename = outTemplate+"_R1.fastq";
                 } else {
                     outFilename = outTemplate+"_R2.fastq";
                 }
             }
             if (new File(outFilename).exists() && !force) {
-                reader.close();
                 throw new ArgumentValidationException("Output file: "+ outFilename+" exists! Use --force to overwrite!");
             }
             if (verbose) {
@@ -157,7 +150,6 @@ public class BamToFastq extends AbstractCommand {
             }
             for (String outFilename: outFilenames) {
                 if (new File(outFilename).exists() && !force) {
-                    reader.close();
                     throw new ArgumentValidationException("Output file: "+ outFilename+" exists! Use --force to overwrite!");
                 }
                 if (verbose) {
@@ -181,7 +173,6 @@ public class BamToFastq extends AbstractCommand {
                 outFilename = outTemplate+".fastq";
             }
             if (new File(outFilename).exists() && !force) {
-                reader.close();
                 throw new ArgumentValidationException("Output file: "+ outFilename+" exists! Use --force to overwrite!");
             }
             if (verbose) {
@@ -193,56 +184,36 @@ public class BamToFastq extends AbstractCommand {
                 outs = new OutputStream[] { new BufferedOutputStream(new FileOutputStream(outFilename)) };
             }
         }
-        
-        if (lenient) {
-            reader.setValidationStringency(ValidationStringency.LENIENT);
-        } else if (silent) {
-            reader.setValidationStringency(ValidationStringency.SILENT);
-        }
 
+        BamFastqReader bfq = new BamFastqReader(filename);
+        bfq.setLenient(lenient);
+        bfq.setSilent(silent);
+        bfq.setFirst(!onlySecond);
+        bfq.setSecond(!onlyFirst);
+        bfq.setComments(comments);
+        bfq.setIncludeMapped(includeMapped);
+        bfq.setDeduplicate(includeMapped);
+        
+        String lastName = null;
         long i=0;
-        for (SAMRecord read: reader) {
+        for (FastqRead read: bfq) {
             if (verbose) {
                 i++;
                 if (i % 100000 == 0) {
                     System.err.println("Read: " + i);
                 }
-                
             }
             
-            if (read != null) {
-                String name = read.getReadName();
-                String seq;
-                String qual;
-                if (read.getReadNegativeStrandFlag()) {
-                    seq = ReadUtils.revcomp(read.getReadString());
-                    qual = StringUtils.reverse(read.getBaseQualityString());
-                } else {
-                    seq = read.getReadString();
-                    qual = read.getBaseQualityString();
-                }
-                
-                String comment = null;
-                if (comments) {
-                    comment = read.getStringAttribute("CO");
-                }
-                
-                FastqRead fqRead = new FastqRead(name, seq, qual, comment); 
-                
-                if (split && !read.getFirstOfPairFlag()) {
-                    fqRead.write(outs[1]);
-                } else {
-                    if (
-                            (first && read.getFirstOfPairFlag()) || 
-                            (second && read.getSecondOfPairFlag()) || 
-                            (!first && !second)
-                        ) {
-                        fqRead.write(outs[0]);
-                    }
-                }
+            if (split && read.getName().equals(lastName)) {
+                read.write(outs[1]);
+                lastName = null;
+            } else {
+                read.write(outs[0]);
+                lastName = read.getName();
             }
         }
-        reader.close();
+        bfq.close();
+        
         for (OutputStream out: outs) {
             out.close();
         }
