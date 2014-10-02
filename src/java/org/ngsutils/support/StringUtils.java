@@ -188,6 +188,10 @@ public class StringUtils {
         }
         return out;
     }
+
+    public static String byteToString(byte b) {
+        return byteArrayToString(new byte[] {b});
+    }
     
     public static String byteArrayToString(byte[] buf) {
         return byteArrayToString(buf, 0, buf.length, -1, null);
@@ -197,6 +201,9 @@ public class StringUtils {
     }
     public static String byteArrayToString(byte[] buf, int wrap) {
         return byteArrayToString(buf, 0, buf.length, wrap, null);
+    }
+    public static String byteArrayToString(byte[] buf, String sep) {
+        return byteArrayToString(buf, 0, buf.length, -1, sep);
     }
     public static String byteArrayToString(byte[] buf, int off, int len, int wrap, String sep) {
         byte[] b = buf;
@@ -209,20 +216,22 @@ public class StringUtils {
             calc = "0"+calc;
         }
         
-        if (wrap == -1) {
+        if (wrap == -1 && sep == null) {
             return calc;
         }
         
         String out = "";
         int j = 0;
+
         for (int i=0; i<calc.length(); i=i+2) {
             out += calc.charAt(i);
             out += calc.charAt(i+1);
+        
             if (sep !=null) {
                 out += sep;
             }
             j++;
-            if (j >= wrap) {
+            if (wrap > -1 && j >= wrap) {
                 out += "\n";
                 j = 0;
             }
