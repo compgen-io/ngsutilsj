@@ -27,11 +27,13 @@ public class SuffixQualFilter extends AbstractSingleReadFilter {
 		seq = seq.substring(0, seq.length() - removed);
 
 		if (qual.length() > 0) {
-			if (comment == null) {
-				comment = "#suffqual";
-			} else {
-				comment = comment + " #suffqual";
-			}
+		    if (removed > 0) {
+    			if (comment == null) {
+    				comment = "#suffqual";
+    			} else {
+    				comment = comment + " #suffqual";
+    			}
+		    }
 			
 			return new FastqRead(name, seq, qual, comment);
 		}
