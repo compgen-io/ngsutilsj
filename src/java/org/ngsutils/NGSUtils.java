@@ -18,6 +18,7 @@ import org.ngsutils.cli.Command;
 import org.ngsutils.cli.Exec;
 import org.ngsutils.cli.annotate.GTFAnnotate;
 import org.ngsutils.cli.annotate.RepeatAnnotate;
+import org.ngsutils.cli.bam.BamCheck;
 import org.ngsutils.cli.bam.BamCount;
 import org.ngsutils.cli.bam.BamCoverage;
 import org.ngsutils.cli.bam.BamFilterCli;
@@ -53,27 +54,34 @@ public class NGSUtils {
         loadExec(SqzToFastq.class);
         loadExec(SqzText.class);
         loadExec(SqzVerify.class);
+
         loadExec(FastqToBam.class);
 		loadExec(FastqSort.class);
 		loadExec(FastqMerge.class);
 		loadExec(FastqSeparate.class);
         loadExec(FastqSplit.class);
         loadExec(FastqFilterCli.class);
+        
         loadExec(BinCount.class);
+        loadExec(BamCheck.class);
         loadExec(BamCount.class);
         loadExec(BamCoverage.class);
         loadExec(BamToFastq.class);
         loadExec(BamFilterCli.class);
+        
         loadExec(JunctionCount.class);
         loadExec(FindEvents.class);
         loadExec(JunctionDiffCli.class);
+        loadExec(FastaJunctions.class);
+        
         loadExec(FastaCLI.class);
         loadExec(PileupCli.class);
         loadExec(RepeatAnnotate.class);
+        
         loadExec(GTFAnnotate.class);
         loadExec(GtfExport.class);
+        
         loadExec(GermlineVarCall.class);
-        loadExec(FastaJunctions.class);
 	}
 
 	@SuppressWarnings("unchecked")

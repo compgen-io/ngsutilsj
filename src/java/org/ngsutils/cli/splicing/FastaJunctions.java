@@ -17,8 +17,8 @@ import com.lexicalscope.jewel.cli.CommandLineInterface;
 import com.lexicalscope.jewel.cli.Option;
 import com.lexicalscope.jewel.cli.Unparsed;
 
-@CommandLineInterface(application="ngsutilsj fasta-junctions")
-@Command(name="fasta-junctions", desc="Extract sequences flanking a junction.", cat="fasta", doc="Junctions should be specified as ref:start-end, where start and end are the 0-based coordinates that mark the *intronic* parts of the junction. Junctions can also be semi-colon delimited to include more that one event per line.")
+@CommandLineInterface(application="ngsutilsj junction-flank")
+@Command(name="junction-flank", desc="Extract sequences flanking a junction.", cat="splicing", doc="Junctions should be specified as ref:start-end, where start and end are the 0-based coordinates that mark the *intronic* parts of the junction. Junctions can also be semi-colon delimited to include more that one event per line.")
 public class FastaJunctions extends AbstractOutputCommand {
     
     private String fastaName = null;
