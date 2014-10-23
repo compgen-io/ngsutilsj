@@ -1,6 +1,9 @@
 package org.ngsutils.cli.bam;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.channels.FileChannel;
 
 import net.sf.samtools.CigarOperator;
 import net.sf.samtools.SAMFileReader.ValidationStringency;
@@ -13,7 +16,11 @@ import org.ngsutils.bam.Pileup.PileupRead;
 import org.ngsutils.bam.support.ReadUtils;
 import org.ngsutils.cli.AbstractOutputCommand;
 import org.ngsutils.cli.Command;
+import org.ngsutils.support.IterUtils;
 import org.ngsutils.support.TabWriter;
+import org.ngsutils.support.progress.FileChannelStats;
+import org.ngsutils.support.progress.ProgressMessage;
+import org.ngsutils.support.progress.ProgressUtils;
 
 import com.lexicalscope.jewel.cli.CommandLineInterface;
 import com.lexicalscope.jewel.cli.Option;
@@ -84,7 +91,11 @@ public class PileupCli extends AbstractOutputCommand {
 
     @Override
     public void exec() throws NGSUtilsException, IOException {
-        Pileup pileup = new Pileup(samFilename);
+        File f = new File(samFilename);
+        FileInputStream fis = new FileInputStream(f);
+        FileChannel channel = fis.getChannel();
+        
+        final Pileup pileup = new Pileup(fis);
         if (lenient) {
             pileup.getReader().setValidationStringency(ValidationStringency.LENIENT);
         } else if (silent) {
@@ -109,7 +120,12 @@ public class PileupCli extends AbstractOutputCommand {
         writer.write_line("## cmd: " + NGSUtils.getArgs());
         writer.write_line("## input: " + samFilename);
         
-        for (PileupPos pileupPos: pileup.pileup()) {
+        for (PileupPos pileupPos: IterUtils.wrapIterator(ProgressUtils.getIterator(f.getName(), pileup.pileup(), new FileChannelStats(channel), new ProgressMessage<PileupPos>(){
+
+            @Override
+            public String msg(PileupPos current) {
+                return pileup.getReader().getFileHeader().getSequence(current.refIndex).getSequenceName()+":"+current.pos;
+            }}))) {
             writer.write(pileup.getReader().getFileHeader().getSequence(pileupPos.refIndex).getSequenceName());
             writer.write(pileupPos.pos);
             writer.write(pileupPos.refBase);

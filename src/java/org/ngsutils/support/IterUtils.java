@@ -39,7 +39,6 @@ public class IterUtils {
                 break;
             }
         }
-
         
         while (hasNext) {
             List<T> out = new ArrayList<T>();
@@ -59,5 +58,15 @@ public class IterUtils {
             }
 
         }
+    }
+    
+    public static <T> Iterable<T> wrapIterator(final Iterator<T> it) {
+        return new Iterable<T>() {
+
+            @Override
+            public Iterator<T> iterator() {
+                return it;
+            }};
+        
     }
 }

@@ -4,6 +4,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.channels.FileChannel;
 import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
 import java.security.spec.KeySpec;
@@ -18,48 +19,56 @@ import javax.crypto.spec.SecretKeySpec;
 
 import org.ngsutils.fastq.FastqRead;
 import org.ngsutils.fastq.FastqReader;
+import org.ngsutils.support.progress.FileChannelStats;
+import org.ngsutils.support.progress.ProgressMessage;
+import org.ngsutils.support.progress.ProgressUtils;
 
 public abstract class SQZReader implements FastqReader {
     public abstract FastqRead[] nextRead() throws IOException;
     
+    protected FileChannel channel;
     protected SQZInputStream sis;
     protected SQZHeader header;
     protected SQZChunkInputStream dcis;
     protected Exception exception = null;
     protected MessageDigest md;
     
+    protected String name = null;
+    
     protected boolean ignoreComments;
     protected boolean closed = false;
     
     protected boolean verbose = false;
 
-    public static SQZReader open(InputStream parent, boolean ignoreComments, String password, boolean verbose) throws IOException, GeneralSecurityException {
-
+    public static SQZReader open(InputStream parent, boolean ignoreComments, String password, boolean verbose, FileChannel channel, String name) throws IOException, GeneralSecurityException {
         SQZInputStream sis = new SQZInputStream(parent);
         
         SQZHeader header = SQZHeader.readHeader(sis);
         if (header.major == 1 && header.minor == 1) {
-            return new SQZReader_1_1(sis, header, ignoreComments, password, verbose);
+            return new SQZReader_1_1(sis, header, ignoreComments, password, verbose, channel, name);
         }
         throw new IOException("Invalid major/minor SQZ version! (got: "+header.major+","+header.minor+")");
     }
+    public static SQZReader open(InputStream parent, boolean ignoreComments, String password, boolean verbose) throws IOException, GeneralSecurityException {
+        return open(parent, ignoreComments, password, verbose, null, null);
+    }
     public static SQZReader open(String filename, boolean ignoreComments, String password, boolean verbose) throws FileNotFoundException, IOException, GeneralSecurityException {
-        return open(new FileInputStream(filename), ignoreComments, password, verbose);
+        FileInputStream fis = new FileInputStream(filename);
+        return open(fis, ignoreComments, password, verbose, fis.getChannel(), filename);
     }
     public static SQZReader open(String filename, boolean ignoreComments) throws FileNotFoundException, IOException, GeneralSecurityException {
         return open(filename, ignoreComments, null, false);
     }
     public static SQZReader open(InputStream is, boolean ignoreComments) throws IOException, GeneralSecurityException {
-        return open(is, ignoreComments, null, false);
+        return open(is, ignoreComments, null, false, null, null);
     }
-    public static SQZReader open(InputStream is, boolean ignoreComments, String password) throws IOException, GeneralSecurityException {
-        return open(is, ignoreComments, password, false);
-    }
-    
-    protected SQZReader(SQZInputStream sis, SQZHeader header, boolean ignoreComments, String password, boolean verbose) throws IOException, GeneralSecurityException {
+   
+    protected SQZReader(SQZInputStream sis, SQZHeader header, boolean ignoreComments, String password, boolean verbose, FileChannel channel, String name) throws IOException, GeneralSecurityException {
         this.sis = sis;
         this.header = header;
         this.ignoreComments = ignoreComments;
+        this.channel = channel;
+        this.name = name;
 
         Cipher cipher = null;
         SecretKeySpec secret = null;
@@ -108,7 +117,7 @@ public abstract class SQZReader implements FastqReader {
     }
     
     public Iterator<FastqRead> iterator() {
-        return new Iterator<FastqRead>() {
+        return ProgressUtils.getIterator((name == null) ? "SQZ": name, new Iterator<FastqRead>() {
             private FastqRead[] buf = null;
             private int pos = 0;
             private boolean first = true;
@@ -144,7 +153,11 @@ public abstract class SQZReader implements FastqReader {
 
             @Override
             public void remove() {
-            }};
+            }}, new FileChannelStats(channel), new ProgressMessage<FastqRead>() {
+                @Override
+                public String msg(FastqRead current) {
+                    return current.getName();
+                }});
     }
     public SQZHeader getHeader() {
         return header;
@@ -172,5 +185,4 @@ public abstract class SQZReader implements FastqReader {
             this.exception = e;
         }
     }
-    
 }

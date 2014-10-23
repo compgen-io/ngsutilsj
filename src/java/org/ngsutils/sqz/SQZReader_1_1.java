@@ -1,14 +1,15 @@
 package org.ngsutils.sqz;
 
 import java.io.IOException;
+import java.nio.channels.FileChannel;
 import java.security.GeneralSecurityException;
 
 import org.ngsutils.fastq.FastqRead;
 import org.ngsutils.support.io.DataIO;
 
-public class SQZReader_1_1 extends SQZReader{
-    protected SQZReader_1_1(SQZInputStream is, SQZHeader header, boolean includeComments, String password, boolean verbose) throws IOException, GeneralSecurityException {
-        super(is, header, includeComments, password, verbose);
+public class SQZReader_1_1 extends SQZReader {
+    protected SQZReader_1_1(SQZInputStream is, SQZHeader header, boolean includeComments, String password, boolean verbose, FileChannel channel, String name) throws IOException, GeneralSecurityException {
+        super(is, header, includeComments, password, verbose, channel, name);
     }
   
     public FastqRead[] nextRead() throws IOException {

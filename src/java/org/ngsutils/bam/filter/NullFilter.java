@@ -9,8 +9,8 @@ public class NullFilter implements BamFilter {
     private long total = 0;
     private long removed = 0;
 
-    public NullFilter(Iterable<SAMRecord> reader) {
-        this.iterator = reader.iterator();
+    public NullFilter(Iterator<SAMRecord> iterator) {
+        this.iterator = iterator;
     }
 
     @Override

@@ -1,8 +1,11 @@
 package org.ngsutils.bam;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.channels.FileChannel;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.HashMap;
@@ -20,10 +23,14 @@ import org.ngsutils.bam.support.ReadUtils;
 import org.ngsutils.fastq.FastqRead;
 import org.ngsutils.fastq.FastqReader;
 import org.ngsutils.support.StringUtils;
+import org.ngsutils.support.progress.FileChannelStats;
+import org.ngsutils.support.progress.ProgressMessage;
+import org.ngsutils.support.progress.ProgressUtils;
 
 public class BamFastqReader implements FastqReader {
     
     private final SAMFileReader reader;
+    private String name = null;
     private boolean comments = true;
     
     private boolean first = true;
@@ -40,17 +47,26 @@ public class BamFastqReader implements FastqReader {
     private boolean includeMapped = false;
     
     private SAMRecordIterator samIterator = null;
+    private FileChannel channel = null;
 
-    public BamFastqReader(String filename) {
+    public BamFastqReader(String filename) throws FileNotFoundException {
         if (filename.equals("-")) {
             reader = new SAMFileReader(System.in);
+            channel = null;
+            name = filename;
         } else {
-            reader = new SAMFileReader(new File(filename));
-        }
+            File f = new File(filename);
+            FileInputStream fis = new FileInputStream(f);
+            reader = new SAMFileReader(fis);
+            channel = fis.getChannel();
+            name = f.getName();            
+        }        
     }
 
-    public BamFastqReader(InputStream in) {
+    public BamFastqReader(InputStream in, FileChannel channel, String name) {
         reader = new SAMFileReader(in);
+        this.channel = channel;
+        this.name = name;
     }
 
     public void setDeduplicate(boolean val) {
@@ -105,7 +121,7 @@ public class BamFastqReader implements FastqReader {
 
         samIterator = reader.iterator();
         
-        return new Iterator<FastqRead>(){
+        return ProgressUtils.getIterator((name == null) ? "BAM": name, new Iterator<FastqRead>(){
             Deque<FastqRead> buf = null;
             Map<String, FastqRead> firstReads = new HashMap<String, FastqRead>();
             Map<String, FastqRead> secondReads = new HashMap<String, FastqRead>();
@@ -202,7 +218,11 @@ public class BamFastqReader implements FastqReader {
             @Override
             public void remove() {
                 next();
-            }};
+            }}, new FileChannelStats(channel), new ProgressMessage<FastqRead>() {
+                @Override
+                public String msg(FastqRead current) {
+                    return current.getName();
+                }});
     }
 
     @Override

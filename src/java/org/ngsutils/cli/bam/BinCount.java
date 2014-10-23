@@ -1,12 +1,13 @@
 package org.ngsutils.cli.bam;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.Iterator;
 
 import net.sf.samtools.SAMFileReader;
 import net.sf.samtools.SAMFileReader.ValidationStringency;
 import net.sf.samtools.SAMRecord;
-import net.sf.samtools.SAMRecordIterator;
 
 import org.ngsutils.NGSUtils;
 import org.ngsutils.NGSUtilsException;
@@ -17,6 +18,9 @@ import org.ngsutils.cli.Command;
 import org.ngsutils.cli.bam.count.BinCounter;
 import org.ngsutils.cli.bam.count.BinCounter.BinCounterExporter;
 import org.ngsutils.support.TabWriter;
+import org.ngsutils.support.progress.FileChannelStats;
+import org.ngsutils.support.progress.ProgressMessage;
+import org.ngsutils.support.progress.ProgressUtils;
 
 import com.lexicalscope.jewel.cli.CommandLineInterface;
 import com.lexicalscope.jewel.cli.Option;
@@ -91,7 +95,9 @@ public class BinCount extends AbstractOutputCommand {
 
     @Override
     public void exec() throws NGSUtilsException, IOException {
-        SAMFileReader reader = new SAMFileReader(new File(samFilename));
+        File file = new File(samFilename);
+        FileInputStream fis = new FileInputStream(file);
+        SAMFileReader reader = new SAMFileReader(fis);
         if (lenient) {
             reader.setValidationStringency(ValidationStringency.LENIENT);
         } else if (silent) {
@@ -116,7 +122,6 @@ public class BinCount extends AbstractOutputCommand {
         writer.write("count");
         
         writer.eol();
-        SAMRecordIterator it = reader.iterator();
 
         BinCounter counter = new BinCounter(orient, binSize, stranded, showAll, new BinCounterExporter() {
             @Override
@@ -129,6 +134,13 @@ public class BinCount extends AbstractOutputCommand {
                 }
             }});
         
+        Iterator<SAMRecord> it = ProgressUtils.getIterator(file.getName(), reader.iterator(), new FileChannelStats(fis.getChannel()), new ProgressMessage<SAMRecord>() {
+
+            @Override
+            public String msg(SAMRecord current) {
+                return current.getReadName();
+            }});
+        
         while (it.hasNext()) {
             SAMRecord read = it.next();
 
@@ -136,10 +148,10 @@ public class BinCount extends AbstractOutputCommand {
                 // skip all secondary / duplicate / unmapped reads
                 continue;
             }
-
+            
             counter.addRead(read);
         }
-        it.close();
+        
         counter.flush();
         writer.close();
         reader.close();

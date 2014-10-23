@@ -21,7 +21,10 @@ import org.ngsutils.cli.bam.count.BedSpans;
 import org.ngsutils.cli.bam.count.BinSpans;
 import org.ngsutils.cli.bam.count.Span;
 import org.ngsutils.cli.bam.count.SpanSource;
+import org.ngsutils.support.IterUtils;
 import org.ngsutils.support.TabWriter;
+import org.ngsutils.support.progress.IncrementingStats;
+import org.ngsutils.support.progress.ProgressUtils;
 
 import com.lexicalscope.jewel.cli.CommandLineInterface;
 import com.lexicalscope.jewel.cli.Option;
@@ -138,13 +141,16 @@ public class BamCount extends AbstractOutputCommand {
         writer.write_line("## input: " + samFilename);
         writer.write_line("## library-orientation: " + orient.toString());
         
+        String name;
         SpanSource spanSource = null;
         if (binSize > 0) {
             writer.write_line("## source: bins " + binSize);
             spanSource = new BinSpans(reader.getFileHeader().getSequenceDictionary(), binSize, orient);
+            name = "bins - "+ binSize;
         } else if (bedFilename != null) {
             writer.write_line("## source: bed " + bedFilename);
             spanSource = new BedSpans(bedFilename);
+            name = bedFilename;
         } else { // TODO: add a GTF span source 
             reader.close();
             writer.close();
@@ -187,7 +193,7 @@ public class BamCount extends AbstractOutputCommand {
         
         int spanCount = 0;
         
-        for (Span span: spanSource) {
+        for (Span span: IterUtils.wrapIterator(ProgressUtils.getIterator(name, spanSource.iterator(), new IncrementingStats(spanSource.size())))) {
             spanCount ++;
             if (verbose && spanCount % 1000 == 0) {
                 System.err.println("[" +spanCount + "]" + span.getRefName()+":"+span.getStarts()[0]);

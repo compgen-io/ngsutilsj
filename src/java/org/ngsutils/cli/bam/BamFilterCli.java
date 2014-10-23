@@ -2,8 +2,10 @@ package org.ngsutils.cli.bam;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,6 +30,9 @@ import org.ngsutils.bam.filter.RequiredFlags;
 import org.ngsutils.bam.support.ReadUtils;
 import org.ngsutils.cli.AbstractCommand;
 import org.ngsutils.cli.Command;
+import org.ngsutils.support.progress.FileChannelStats;
+import org.ngsutils.support.progress.ProgressMessage;
+import org.ngsutils.support.progress.ProgressUtils;
 
 import com.lexicalscope.jewel.cli.ArgumentValidationException;
 import com.lexicalscope.jewel.cli.CommandLineInterface;
@@ -179,10 +184,19 @@ public class BamFilterCli extends AbstractCommand {
         }
         
         SAMFileReader reader;
+        FileChannel channel = null;
+        String name = null;
         if (filenames.get(0).equals("-")) {
             reader = new SAMFileReader(System.in);
+            channel = null;
+            name = "<stdin>";
         } else {
-            reader = new SAMFileReader(new File(filenames.get(0)));
+            File f = new File(filenames.get(0));
+            name = f.getName();
+            FileInputStream fis = new FileInputStream(f);
+            channel = fis.getChannel();
+                    
+            reader = new SAMFileReader(fis);
         }
         if (lenient) {
             reader.setValidationStringency(ValidationStringency.LENIENT);
@@ -190,7 +204,11 @@ public class BamFilterCli extends AbstractCommand {
             reader.setValidationStringency(ValidationStringency.SILENT);
         }
 
-        BamFilter parent = new NullFilter(reader);
+        BamFilter parent = new NullFilter(ProgressUtils.getIterator(name, reader.iterator(), new FileChannelStats(channel), new ProgressMessage<SAMRecord>(){
+            @Override
+            public String msg(SAMRecord current) {
+                return current.getReadName();
+            }}));
         
         if (filterFlags > 0) {
             parent = new FilterFlags(parent, false, filterFlags);

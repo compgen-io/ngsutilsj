@@ -21,7 +21,27 @@ public class BedSpans extends AbstractLineReader<Span> implements SpanSource {
         numCols = cols.length;
         br.close();
     }
-
+    
+    public long position() {
+        if (channel!=null) {
+            try {
+                return channel.position();
+            } catch (IOException e) {
+            }
+        }
+        return -1;
+    }
+    
+    public long size() {
+        if (channel!=null) {
+            try {
+                return channel.size();
+            } catch (IOException e) {
+            }
+        }
+        return -1;
+    }
+    
     public Span convertLine(String line) {
         String[] cols = line.split("\\t", -1);
         Span span;

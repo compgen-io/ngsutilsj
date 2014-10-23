@@ -231,10 +231,16 @@ public class NGSUtils {
 				System.err.println(e.getMessage());
 				System.err.println("");
 				System.err.println(getVersion());
+                System.exit(1);
 			} catch (ArgumentValidationException e) {
 				System.err.println(e.getMessage());
 				showHelp(execs.get(args[0]));
+                System.exit(1);
+            } catch (Throwable t) {
+                t.printStackTrace();                        
+                System.exit(1);
 			}
+			
 		} else {
 			usage("Unknown command: " + args[0]);
 		}

@@ -1,6 +1,9 @@
 package org.ngsutils.cli.bam;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.channels.FileChannel;
 
 import net.sf.samtools.SAMFileReader.ValidationStringency;
 
@@ -11,7 +14,11 @@ import org.ngsutils.bam.Pileup.PileupPos;
 import org.ngsutils.bam.support.ReadUtils;
 import org.ngsutils.cli.AbstractOutputCommand;
 import org.ngsutils.cli.Command;
+import org.ngsutils.support.IterUtils;
 import org.ngsutils.support.TallyCounts;
+import org.ngsutils.support.progress.FileChannelStats;
+import org.ngsutils.support.progress.ProgressMessage;
+import org.ngsutils.support.progress.ProgressUtils;
 
 import com.lexicalscope.jewel.cli.ArgumentValidationException;
 import com.lexicalscope.jewel.cli.CommandLineInterface;
@@ -89,7 +96,11 @@ public class BamCoverage extends AbstractOutputCommand {
         
         TallyCounts tally = new TallyCounts(true);
 
-        Pileup pileup = new Pileup(filename);
+        File f = new File(filename);
+        FileInputStream fis = new FileInputStream(f);
+        FileChannel channel = fis.getChannel();
+        final Pileup pileup = new Pileup(fis);
+        
         if (lenient) {
             pileup.getReader().setValidationStringency(ValidationStringency.LENIENT);
         } else if (silent) {
@@ -112,7 +123,12 @@ public class BamCoverage extends AbstractOutputCommand {
             System.err.println("Region: "+region.toString());
         }
         
-        for (PileupPos pileupPos: pileup.pileup(region)) {
+        for (PileupPos pileupPos: IterUtils.wrapIterator(ProgressUtils.getIterator(f.getName(), pileup.pileup(region), new FileChannelStats(channel), new ProgressMessage<PileupPos>(){
+
+            @Override
+            public String msg(PileupPos current) {
+                return pileup.getReader().getFileHeader().getSequence(current.refIndex).getSequenceName()+":"+current.pos;
+            }}))) {
             if (verbose && pileupPos.refIndex != lastRef) {
                 System.err.println(pileup.getReader().getFileHeader().getSequence(pileupPos.refIndex).getSequenceName());
                 lastRef = pileupPos.refIndex;

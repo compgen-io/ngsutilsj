@@ -49,4 +49,10 @@ public interface AnnotationSource<T> {
      * @return
      */
     public boolean provides(String key);
+    
+    /**
+     * The total number of annotations in this source (-1) if not available
+     * @return
+     */
+    public int size();
 }

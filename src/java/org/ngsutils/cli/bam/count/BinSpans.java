@@ -3,6 +3,7 @@ package org.ngsutils.cli.bam.count;
 import java.util.Iterator;
 
 import net.sf.samtools.SAMSequenceDictionary;
+import net.sf.samtools.SAMSequenceRecord;
 
 import org.ngsutils.bam.Orientation;
 import org.ngsutils.bam.Strand;
@@ -11,6 +12,7 @@ public class BinSpans implements SpanSource {
     final private SAMSequenceDictionary seqdict;
     final private int binsize;
     final private Orientation orient;
+    private long pos = 0;
     
     public BinSpans(SAMSequenceDictionary seqdict, int binsize, Orientation orient) {
         this.seqdict = seqdict;
@@ -20,7 +22,7 @@ public class BinSpans implements SpanSource {
 
     @Override
     public Iterator<Span> iterator() {
-        
+        pos = 0;
         return new Iterator<Span>() {
             int currentSeq = 0;
             int currentPos = 0;
@@ -35,6 +37,7 @@ public class BinSpans implements SpanSource {
 
             @Override
             public Span next() {
+                pos ++;
                 if (next != null) {
                     Span tmp = next;
                     next = null;
@@ -67,8 +70,24 @@ public class BinSpans implements SpanSource {
         };
     }
 
+    
+    
+    public long size() {
+        int acc = 0;
+        for (SAMSequenceRecord seq: seqdict.getSequences()) { 
+            acc += (seq.getSequenceLength() / binsize) + 1;
+        }
+        
+        return acc;
+    }
+    
     @Override
     public String[] getHeader() {
         return new String[]{"chrom", "start", "end", "strand"};
+    }
+
+    @Override
+    public long position() {
+        return pos;
     }
 }

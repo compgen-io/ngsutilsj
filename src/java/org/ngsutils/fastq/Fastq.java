@@ -1,10 +1,10 @@
 package org.ngsutils.fastq;
 
-import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.channels.FileChannel;
 import java.security.GeneralSecurityException;
 import java.util.Arrays;
 import java.util.zip.GZIPInputStream;
@@ -20,30 +20,24 @@ public class Fastq {
     public static FastqReader open(String filename) throws IOException {
         return open(filename, null);
     }
-    public static FastqReader open(File file) throws IOException {
-        return open(file, null);
-    }
-    public static FastqReader open(InputStream is) throws IOException {
-        return open(is, null);
-    }
 
     public static FastqReader open(String filename, String password) throws IOException {
         if (filename.equals("-")) {
-            return open(System.in, password);
+            return open(System.in, password, null, "<stdin>");
         }
-        return open(new File(filename), password);
-    }
-    public static FastqReader open(File file, String password) throws IOException {
-        return open(new BufferedInputStream(new FileInputStream(file)), password);
+        File file = new File(filename);
+        FileInputStream fis = new FileInputStream(file);
+        return open(fis, password, fis.getChannel(), file.getName());
     }
 
-    public static FastqReader open(InputStream is, String password) throws IOException {
+    public static FastqReader open(InputStream is, String password, FileChannel channel, String name) throws IOException {
+        
         PeekableInputStream peek = new PeekableInputStream(is);
         byte[] magic = peek.peek(4);
         
         if (Arrays.equals(magic, SQZ.MAGIC)) {
             try {
-                return SQZReader.open(peek, false, password);
+                return SQZReader.open(peek, false, password, false, channel, name);
             } catch (GeneralSecurityException e) {
                 throw new IOException(e);
             }
@@ -69,19 +63,19 @@ public class Fastq {
 
                 if (si1 == 66 && si2 == 67 && slen == 2) {
                     // compressed BAM file
-                    return new BamFastqReader(peek);
+                    return new BamFastqReader(peek, channel, name);
                 }
             }
-            return new FastqTextReader(new GZIPInputStream(peek));
+            return new FastqTextReader(new GZIPInputStream(peek), channel, name);
         } else if (magic[0] == 0x42 && magic[1] == 0x5A && magic[2] == 0x68) {
             // BZip2 magic
-            return new FastqTextReader(new BZip2CompressorInputStream(peek));
+            return new FastqTextReader(new BZip2CompressorInputStream(peek), channel, name);
         } else if (Arrays.equals(magic, new byte[] {0x42, 0x41, 0x4d, 0x01})) {
             // Uncompressed BAM
-            return new BamFastqReader(peek);
+            return new BamFastqReader(peek, channel, name);
         } else if (magic[0] == 0x40) {
             // Starts with an '@', so should be FASTQ text
-            return new FastqTextReader(peek);
+            return new FastqTextReader(peek, channel, name);
         } else {
             // Unknown source...
             peek.close();

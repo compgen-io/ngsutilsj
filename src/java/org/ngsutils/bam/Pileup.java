@@ -1,7 +1,7 @@
 package org.ngsutils.bam;
 
-import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -237,8 +237,8 @@ public class Pileup {
     private int flagFilter = 1796; // by default the read must be mapped.
     private int flagRequired = 0;
     
-    public Pileup(String samFilename) {
-        this.reader = new SAMFileReader(new File(samFilename));
+    public Pileup(InputStream is) {
+        this.reader = new SAMFileReader(is);
     }
     
     public void setFASTARef(String filename) throws IOException {
@@ -276,26 +276,26 @@ public class Pileup {
     }
 
     
-    public Iterable<PileupPos> pileup() {
+    public Iterator<PileupPos> pileup() {
         return pileup(null, -1, -1);
     }        
 
-    public Iterable<PileupPos> pileup(GenomeRegion region) {
+    public Iterator<PileupPos> pileup(GenomeRegion region) {
         if (region == null) {
             return pileup(null, -1, -1);
         }
         return pileup(region.ref, region.start, region.end);
     }
-    public Iterable<PileupPos> pileup(String ref, int start, int end) {
+    public Iterator<PileupPos> pileup(String ref, int start, int end) {
         if (ref != null) {
             this.samIterator = reader.query(ref, start, end, false);
         } else {
             this.samIterator = reader.iterator();
         }
         
-        return new Iterable<PileupPos>() {
-            @Override
-            public Iterator<PileupPos> iterator() {
+//        return new Iterable<PileupPos>() {
+//            @Override
+//            public Iterator<PileupPos> iterator() {
                 return new Iterator<PileupPos>() {
                     private final SortedMap<RefPos, PileupPos> pileupPos = new TreeMap<RefPos, PileupPos>();
                     private boolean initializeme = true;
@@ -462,7 +462,7 @@ public class Pileup {
                     public void remove() {
                     }
                 };
-            }};
+//            }};
     }
 
 }

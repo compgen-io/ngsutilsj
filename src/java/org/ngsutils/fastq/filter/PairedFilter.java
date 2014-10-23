@@ -19,7 +19,7 @@ public class PairedFilter implements FastqFilter, Iterable<FastqRead> {
     
     
     private List<FastqRead> buffer = new ArrayList<FastqRead>();
-    FastqRead tmpRead = null;
+    private FastqRead tmpRead = null;
         
     public PairedFilter(Iterable<FastqRead> parent, boolean verbose) {
         this.parent = parent.iterator();
@@ -72,10 +72,8 @@ public class PairedFilter implements FastqFilter, Iterable<FastqRead> {
             System.err.println("["+this.getClass().getSimpleName()+"] tmpRead ? " + (tmpRead != null));
         }
         // Load up the straggler...
-        String curName = null;
         if (tmpRead != null) {
             buffer.add(tmpRead);
-            curName = tmpRead.getName();
             tmpRead = null;
         }
 
@@ -83,35 +81,43 @@ public class PairedFilter implements FastqFilter, Iterable<FastqRead> {
         if (verbose) {
             System.err.println("["+this.getClass().getSimpleName()+"] pulling from parent");
         }
-        done = true;
-        while (parent.hasNext()) {
-            FastqRead read = parent.next();
-            done = false;
-            total++;
-            if (verbose) {
-                System.err.println("["+this.getClass().getSimpleName()+"] checking read: " + read.getName());
+        done = false;
+        while (!done) {
+            done = true;
+            while (parent.hasNext()) {
+                FastqRead read = parent.next();
+                total++;
+                if (verbose) {
+                    System.err.println("["+this.getClass().getSimpleName()+"] checking read: " + read.getName());
+                }
+    
+                if (buffer.size() == 0 || buffer.get(0).getName().equals(read.getName())) {
+                    buffer.add(read);
+                } else {
+                    tmpRead = read;
+                    break;
+                }
             }
+        
+            if (buffer.size() > 0 && buffer.size() < PAIR_LEN) {
+                removed += buffer.size();
+                buffer.clear();
+                if (tmpRead != null) {
+                    buffer.add(tmpRead);
+                }
+                done = false;
+            }
+        }
 
-            if (curName == null) {
-                curName = read.getName();
+        if (buffer.size() > 0) {
+            done = false;
+            FastqRead readToReturn = buffer.remove(0);
+            if (verbose) {
+                System.err.println("["+this.getClass().getSimpleName()+"] pushing read: " + readToReturn.getName());
             }
-            
-            if (curName.equals(read.getName())) {
-                buffer.add(read);
-            } else {
-                tmpRead = read;
-                break;
-            }
+            return readToReturn;
         }
         
-        if (buffer.size() < PAIR_LEN) {
-            removed += buffer.size();
-            buffer.clear();
-        }
-        
-        if (!done) {
-            return next();
-        }
         return null;
     }
 

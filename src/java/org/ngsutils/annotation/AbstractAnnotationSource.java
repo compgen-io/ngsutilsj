@@ -191,4 +191,7 @@ abstract public class AbstractAnnotationSource<T> implements AnnotationSource<T>
         return false;
     }
 
+    public int size() {
+        return annotations.size();
+    }    
 }

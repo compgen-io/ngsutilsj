@@ -67,11 +67,16 @@ public class FastqToSqz extends AbstractCommand {
 	private int chunkSize = 10000;
 	
     @Unparsed(name="FILE1 {FILE2}")
-    public void setFilenames(List<String> files) throws IOException {
+    public void setFilenames(List<String> files) {
         if (files.size() > 0) {
-            this.readers = new FastqReader[files.size()];
-            for (int i=0; i<files.size(); i++) {
-                this.readers[i] = Fastq.open(files.get(i));
+            try {
+                this.readers = new FastqReader[files.size()];
+                for (int i=0; i<files.size(); i++) {
+                    this.readers[i] = Fastq.open(files.get(i));
+                }
+            } catch(IOException e) {
+                System.err.println(e.getMessage());
+                System.exit(1);
             }
         } else {
             System.err.println("You must supply one or two FASTQ files to convert!");
