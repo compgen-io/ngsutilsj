@@ -10,6 +10,19 @@ fi
 if [ -e $HOME/.ngsutilsjrc ]; then
     . $HOME/.ngsutilsjrc
 fi
+
+if [ ! -t 0 ]; then 
+    JAVA_OPTS="${JAVA_OPTS} -Dorg.ngsutils.support.tty.fd0=F"
+fi
+
+if [ ! -t 1 ]; then 
+    JAVA_OPTS="${JAVA_OPTS} -Dorg.ngsutils.support.tty.fd1=F"
+fi
+
+if [ ! -t 2 ]; then 
+    JAVA_OPTS="${JAVA_OPTS} -Dorg.ngsutils.support.tty.fd2=F"
+fi
+
 JAVABIN=`which java`
 if [ "${JAVA_HOME}" != "" ]; then
     JAVABIN="$JAVA_HOME/bin/java"

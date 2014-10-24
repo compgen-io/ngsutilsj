@@ -2,6 +2,8 @@ package org.ngsutils.support.progress;
 
 import java.util.Iterator;
 
+import org.ngsutils.support.TTY;
+
 import net.sf.samtools.util.CloseableIterator;
 
 public class ProgressUtils {
@@ -28,6 +30,11 @@ public class ProgressUtils {
             }
         }
 
+        // Rely on the shell stub to determine if we are in a tty.
+        if (!TTY.isattyStdErr()) {
+            return null;
+        }
+        
         // There is no good way to know if we are in a tty or not (thanks Java), so we need to look for either 
         // a system property or env variable to know if we need to suppress progress.
         String silent = System.getProperty(ProgressUtils.class.getPackage().getName()+".silent");
