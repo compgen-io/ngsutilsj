@@ -18,6 +18,8 @@ public class ProgressUtils {
             } catch (NumberFormatException e) {
                 p = new SocketProgress(socket);
             }
+            p.setName(name);
+            return p;
         }
 
         socket = System.getenv((ProgressUtils.class.getPackage().getName()+".socket").replaceAll("\\.", "_").toUpperCase());
@@ -28,6 +30,8 @@ public class ProgressUtils {
             } catch (NumberFormatException e) {
                 p = new SocketProgress(socket);
             }
+            p.setName(name);
+            return p;
         }
 
         // Rely on the shell stub to determine if we are in a tty.
@@ -47,10 +51,7 @@ public class ProgressUtils {
             return null;
         }
 
-        if (p == null) {
-            p = new StdErrProgress();
-        }
-        
+        p = new StdErrProgress();
         p.setName(name);
         return p;
     }
