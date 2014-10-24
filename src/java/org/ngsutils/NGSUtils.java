@@ -237,7 +237,7 @@ public class NGSUtils {
 				showHelp(execs.get(args[0]));
                 System.exit(1);
             } catch (Throwable t) {
-                t.printStackTrace();                        
+                t.printStackTrace(System.err);                        
                 System.exit(1);
 			}
 			
