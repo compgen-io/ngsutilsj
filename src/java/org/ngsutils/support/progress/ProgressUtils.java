@@ -48,7 +48,7 @@ public class ProgressUtils {
         }
 
         if (p == null) {
-            p = new TextProgress();
+            p = new StdErrProgress();
         }
         
         p.setName(name);

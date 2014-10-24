@@ -2,7 +2,7 @@ package org.ngsutils.support.progress;
 
 import java.io.PrintStream;
 
-public class TextProgress extends BaseProgress {
+public class StdErrProgress extends BaseProgress {
     public static final String[] spinner = new String[] {"|", "/", "-", "\\"};
     
     protected PrintStream out = System.err;
