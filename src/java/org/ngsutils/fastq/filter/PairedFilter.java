@@ -104,6 +104,7 @@ public class PairedFilter implements FastqFilter, Iterable<FastqRead> {
                 buffer.clear();
                 if (tmpRead != null) {
                     buffer.add(tmpRead);
+                    tmpRead = null;
                 }
                 done = false;
             }

@@ -78,11 +78,11 @@ public class BaseProgress implements Progress {
         long mins = 0;
         long hours = 0;
         
-        if (secs > 60) {
+        if (secs >= 60) {
             mins = secs / 60;
             secs = secs % 60;
             
-            if (mins > 60) {
+            if (mins >= 60) {
                 hours = mins / 60;
                 mins = mins % 60;
             }
