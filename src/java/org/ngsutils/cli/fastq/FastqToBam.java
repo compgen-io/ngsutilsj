@@ -2,8 +2,10 @@ package org.ngsutils.cli.fastq;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.channels.FileChannel;
 import java.util.List;
 
 import net.sf.samtools.SAMFileHeader;
@@ -169,7 +171,15 @@ public class FastqToBam extends AbstractCommand {
         
         FastqReader[] readers = new FastqReader[filenames.length];
         for (int i=0; i<filenames.length; i++) {
-            readers[i] = Fastq.open(filenames[i]);
+            if (i==0) {
+                File file1 = new File(filenames[i]);
+                FileInputStream fis1 = new FileInputStream(file1);
+                FileChannel channel1 = fis1.getChannel();
+
+                readers[i] = Fastq.open(fis1, null, channel1, filenames[i]);
+            } else {
+                readers[i] = Fastq.open(filenames[i]);
+            }
         }
 
         long i = 0;

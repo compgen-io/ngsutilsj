@@ -1,7 +1,10 @@
 package org.ngsutils.cli.fastq;
 
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.channels.FileChannel;
 import java.util.List;
 
 import org.ngsutils.cli.AbstractOutputCommand;
@@ -53,7 +56,11 @@ public class FastqMerge extends AbstractOutputCommand {
 		}
 		
 		FastqReader[] readers = new FastqReader[2];
-		readers[0] = Fastq.open(filenames[0]);
+		File file1 = new File(filenames[0]);
+		FileInputStream fis1 = new FileInputStream(file1);
+		FileChannel channel1 = fis1.getChannel();
+
+		readers[0] = Fastq.open(fis1, null, channel1, filenames[0]);
 		readers[1] = Fastq.open(filenames[1]);
 		
 		final Counter counter = new Counter();
