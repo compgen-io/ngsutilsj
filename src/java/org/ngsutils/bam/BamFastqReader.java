@@ -136,6 +136,16 @@ public class BamFastqReader implements FastqReader {
                 while (buf.size() == len && samIterator.hasNext()) {
                     SAMRecord read = samIterator.next();
                     
+                    if (read.getReadFailsVendorQualityCheckFlag()) {
+                        // Skip QC failed reads.
+                        continue;
+                    }
+                    
+                    if (read.getDuplicateReadFlag()) {
+                        // Skip flagged PCR duplicates
+                        continue;
+                    }
+                    
                     if (!includeMapped) {
                         if (!read.getReadUnmappedFlag()) {
                             // read is mapped - skip

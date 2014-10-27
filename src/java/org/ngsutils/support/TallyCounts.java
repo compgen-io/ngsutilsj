@@ -54,6 +54,28 @@ public class TallyCounts {
         return 0;
     }
 
+    public double getTotal() {
+        int count = 0;
+        for (int i=min; i<=max; i++) {
+            if (map.containsKey(i)) {
+                count += map.get(i);
+            }
+        }
+        return count;
+    }
+
+    public double getMean() {
+        int acc = 0;
+        int count = 0;
+        for (int i=min; i<=max; i++) {
+            if (map.containsKey(i)) {
+                acc += i * map.get(i);
+                count += map.get(i);
+            }
+        }
+        return (double) acc / count;
+    }
+    
     public void write(OutputStream out) throws IOException {
         for (int i=min; i<=max; i++) {
             String str = "";

@@ -22,6 +22,7 @@ import org.ngsutils.cli.bam.BamCheck;
 import org.ngsutils.cli.bam.BamCount;
 import org.ngsutils.cli.bam.BamCoverage;
 import org.ngsutils.cli.bam.BamFilterCli;
+import org.ngsutils.cli.bam.BamStats;
 import org.ngsutils.cli.bam.BamToFastq;
 import org.ngsutils.cli.bam.BinCount;
 import org.ngsutils.cli.bam.PileupCli;
@@ -68,6 +69,7 @@ public class NGSUtils {
         loadExec(BamCoverage.class);
         loadExec(BamToFastq.class);
         loadExec(BamFilterCli.class);
+        loadExec(BamStats.class);
         
         loadExec(JunctionCount.class);
         loadExec(FindEvents.class);

@@ -232,4 +232,11 @@ public class GenomeRegion implements Comparable<GenomeRegion> {
     public int length() {
         return end - start;
     }
+
+    public static GenomeRegion getReadStartPos(SAMRecord read) {
+        String ref = read.getReferenceName();
+        int pos = read.getAlignmentStart()-1;
+        Strand strand = ReadUtils.getFragmentEffectiveStrand(read, Orientation.UNSTRANDED);
+        return new GenomeRegion(ref, pos, strand);
+    }
 }
