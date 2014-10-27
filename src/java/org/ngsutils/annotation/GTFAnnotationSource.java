@@ -10,7 +10,7 @@ import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
-import org.ngsutils.annotation.GtfAnnotationSource.GTFGene;
+import org.ngsutils.annotation.GTFAnnotationSource.GTFGene;
 import org.ngsutils.bam.Strand;
 import org.ngsutils.support.StringLineReader;
 import org.ngsutils.support.StringUtils;
@@ -21,7 +21,7 @@ import org.ngsutils.support.StringUtils;
  * @author mbreese
  * 
  */
-public class GtfAnnotationSource extends AbstractAnnotationSource<GTFGene> {
+public class GTFAnnotationSource extends AbstractAnnotationSource<GTFGene> {
 
     public class GTFExon {
         final private GTFTranscript parent;
@@ -270,7 +270,7 @@ public class GtfAnnotationSource extends AbstractAnnotationSource<GTFGene> {
 
     final private boolean hasBioType;
 
-    public GtfAnnotationSource(String filename) throws NumberFormatException, IOException {
+    public GTFAnnotationSource(String filename) throws NumberFormatException, IOException {
         final Map<String, GTFGene> cache = new HashMap<String, GTFGene>();
         boolean hasBioType = false;
         for (final String line : new StringLineReader(filename)) {

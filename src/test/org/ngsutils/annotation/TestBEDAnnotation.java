@@ -6,21 +6,22 @@ import static org.junit.Assert.assertTrue;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.ngsutils.annotation.BedAnnotationSource.BEDAnnotation;
+import org.ngsutils.annotation.BEDAnnotationSource.BEDAnnotation;
 import org.ngsutils.bam.Strand;
+import org.ngsutils.support.IterUtils;
 import org.ngsutils.support.StringUtils;
 
 public class TestBEDAnnotation {
-    BedAnnotationSource bed;
+    BEDAnnotationSource bed;
     
     @Before
     public void setUp() throws Exception {
-        bed = new BedAnnotationSource(getClass().getClassLoader().getResourceAsStream("org/ngsutils/annotation/test.bed"));
+        bed = new BEDAnnotationSource(getClass().getClassLoader().getResourceAsStream("org/ngsutils/annotation/test.bed"));
     }
 
     @Test
     public void testHasAnnotation() {
-        for (GenomeAnnotation<BEDAnnotation> ann:bed.allAnnotations()) {
+        for (GenomeAnnotation<BEDAnnotation> ann:IterUtils.wrapIterator(bed.iterator())) {
             System.err.println(ann);
             
         }

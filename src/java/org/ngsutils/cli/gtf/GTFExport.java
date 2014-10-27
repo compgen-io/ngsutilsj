@@ -12,12 +12,13 @@ import org.ngsutils.NGSUtilsException;
 import org.ngsutils.annotation.AnnotationSource;
 import org.ngsutils.annotation.GenomeAnnotation;
 import org.ngsutils.annotation.GenomeRegion;
-import org.ngsutils.annotation.GtfAnnotationSource;
-import org.ngsutils.annotation.GtfAnnotationSource.GTFExon;
-import org.ngsutils.annotation.GtfAnnotationSource.GTFGene;
-import org.ngsutils.annotation.GtfAnnotationSource.GTFTranscript;
+import org.ngsutils.annotation.GTFAnnotationSource;
+import org.ngsutils.annotation.GTFAnnotationSource.GTFExon;
+import org.ngsutils.annotation.GTFAnnotationSource.GTFGene;
+import org.ngsutils.annotation.GTFAnnotationSource.GTFTranscript;
 import org.ngsutils.cli.AbstractOutputCommand;
 import org.ngsutils.cli.Command;
+import org.ngsutils.support.IterUtils;
 import org.ngsutils.support.StringLineReader;
 import org.ngsutils.support.StringUtils;
 import org.ngsutils.support.TabWriter;
@@ -28,7 +29,7 @@ import com.lexicalscope.jewel.cli.Unparsed;
 
 @CommandLineInterface(application="ngsutilsj gtf-export")
 @Command(name="gtf-export", desc="Export gene annotations from a GTF file as BED regions", cat="gtf")
-public class GtfExport extends AbstractOutputCommand {
+public class GTFExport extends AbstractOutputCommand {
     private String filename=null;
     private String whitelist = null;
     
@@ -121,13 +122,13 @@ public class GtfExport extends AbstractOutputCommand {
             System.err.print("Reading GTF annotation file: "+filename);
         }
 
-        AnnotationSource<GTFGene> ann = new GtfAnnotationSource(filename);
+        AnnotationSource<GTFGene> ann = new GTFAnnotationSource(filename);
         
         if (verbose) {
             System.err.println(" [done]");
         }
 
-        for (GenomeAnnotation<GTFGene> ga:ann.allAnnotations()) {
+        for (GenomeAnnotation<GTFGene> ga:IterUtils.wrapIterator(ann.iterator())) {
             GTFGene gene = ga.getValue();
             if (whitelistSet != null) {
                 if (!whitelistSet.contains(gene.getGeneName())) {

@@ -1,5 +1,6 @@
 package org.ngsutils.annotation;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -9,7 +10,7 @@ public interface AnnotationSource<T> {
      * @return
      */
     public String[] getAnnotationNames();
-    public Set<GenomeAnnotation<T>> allAnnotations();
+//    public Set<GenomeAnnotation<T>> allAnnotations();
 
     /**
      * Find all of of the Annotation values for these coordinates. There may be more than one for each coordinate.
@@ -55,4 +56,6 @@ public interface AnnotationSource<T> {
      * @return
      */
     public int size();
+    
+    public Iterator<GenomeAnnotation<T>> iterator();
 }

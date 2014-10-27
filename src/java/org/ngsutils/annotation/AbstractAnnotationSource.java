@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -175,11 +176,7 @@ abstract public class AbstractAnnotationSource<T> implements AnnotationSource<T>
         }
         annotations.add(ga);
     }
-    
-    public Set<GenomeAnnotation<T>> allAnnotations() {
-        return annotations;
-    }
-    
+   
     @Override
     public boolean provides(String key) {
         final String[] names = getAnnotationNames();
@@ -193,5 +190,9 @@ abstract public class AbstractAnnotationSource<T> implements AnnotationSource<T>
 
     public int size() {
         return annotations.size();
-    }    
+    }
+    
+    public Iterator<GenomeAnnotation<T>> iterator() {
+        return annotations.iterator();
+    }
 }

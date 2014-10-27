@@ -32,7 +32,7 @@ import org.ngsutils.cli.fastq.FastqSeparate;
 import org.ngsutils.cli.fastq.FastqSort;
 import org.ngsutils.cli.fastq.FastqSplit;
 import org.ngsutils.cli.fastq.FastqToBam;
-import org.ngsutils.cli.gtf.GtfExport;
+import org.ngsutils.cli.gtf.GTFExport;
 import org.ngsutils.cli.splicing.FastaJunctions;
 import org.ngsutils.cli.splicing.FindEvents;
 import org.ngsutils.cli.splicing.JunctionCount;
@@ -79,7 +79,7 @@ public class NGSUtils {
         loadExec(RepeatAnnotate.class);
         
         loadExec(GTFAnnotate.class);
-        loadExec(GtfExport.class);
+        loadExec(GTFExport.class);
         
         loadExec(GermlineVarCall.class);
 	}
