@@ -65,12 +65,13 @@ public class TallyCounts {
     }
 
     public double getMean() {
-        int acc = 0;
-        int count = 0;
+        long acc = 0;
+        long count = 0;
         for (int i=min; i<=max; i++) {
             if (map.containsKey(i)) {
-                acc += i * map.get(i);
-                count += map.get(i);
+                int tally = map.get(i);
+                acc += (i * tally);
+                count += tally;
             }
         }
         return (double) acc / count;

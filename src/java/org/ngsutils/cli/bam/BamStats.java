@@ -18,6 +18,8 @@ import org.ngsutils.NGSUtilsException;
 import org.ngsutils.annotation.AnnotatedRegionCounter;
 import org.ngsutils.cli.AbstractOutputCommand;
 import org.ngsutils.cli.Command;
+import org.ngsutils.support.NaturalSort;
+import org.ngsutils.support.TallyCounts;
 import org.ngsutils.support.progress.FileChannelStats;
 import org.ngsutils.support.progress.ProgressMessage;
 import org.ngsutils.support.progress.ProgressUtils;
@@ -123,6 +125,9 @@ public class BamStats extends AbstractOutputCommand {
             refCounts.put(ref.getSequenceName(), 0);
         }
         
+        TallyCounts insertSizeCounter = new TallyCounts();
+        boolean paired = false;
+        
         Iterator<SAMRecord> it = ProgressUtils.getIterator(name, reader.iterator(), (channel == null)? null : new FileChannelStats(channel), new ProgressMessage<SAMRecord>() {
             long i = 0;
             @Override
@@ -136,6 +141,7 @@ public class BamStats extends AbstractOutputCommand {
                 // We only profile the first read of a pair...
                 continue;
             }
+            
             total++;
 
             for (int flag: flags.keySet()) {
@@ -152,11 +158,25 @@ public class BamStats extends AbstractOutputCommand {
                 unmapped++;
                 continue;                
             }
+
+            if (read.getReadPairedFlag()) {
+                paired = true; 
+                if (read.getProperPairFlag() && read.getReferenceIndex().equals(read.getMateReferenceIndex())) {
+                    if (read.getInferredInsertSize() < 2000) {
+                        // limit to something reasonable - RNAseq can skew this horribly.
+                        insertSizeCounter.incr(Math.abs(read.getInferredInsertSize()));
+                    }
+                }
+            }
             
             refCounts.put(read.getReferenceName(), refCounts.get(read.getReferenceName())+1);
             
             if (counter != null) {
-                counter.addRead(read);
+                if (!read.getReadPairedFlag() || (!read.getSecondOfPairFlag() && read.getProperPairFlag() && !read.getDuplicateReadFlag() && !read.getReadFailsVendorQualityCheckFlag())) {
+                    // We only profile the first read of a pair... and only proper pairs
+                    counter.addRead(read);
+                    
+                }
             }
         }
         reader.close();
@@ -164,15 +184,22 @@ public class BamStats extends AbstractOutputCommand {
         System.out.println("Mapped:\t" + mapped);
         System.out.println("Unmapped:\t" + unmapped);
         System.out.println();
+        if (paired) {
+            System.out.println("Average insert size: "+String.format("%.2f", insertSizeCounter.getMean()));
+//            System.out.println("Max: " + insertSizeCounter.getMax());
+//            System.out.println("Min: " + insertSizeCounter.getMin());
+//            System.out.println("Mean: " + insertSizeCounter.getMean());
+            System.out.println();
+        }
         System.out.println("[Flags]");
         for (int flag:flags.keySet()) {
             if (flagCounts.get(flag) > 0) {
-                System.out.println("0x"+Integer.toHexString(flag)+" "+flags.get(flag)+":\t"+flagCounts.get(flag));
+                System.out.println(flags.get(flag)+" (0x"+Integer.toHexString(flag)+")"+":\t"+flagCounts.get(flag));
             }
         }
         System.out.println();
         System.out.println("[References]");
-        for (String ref: refCounts.keySet()) {
+        for (String ref: NaturalSort.naturalSort(refCounts.keySet())) {
             System.out.println(ref+":\t"+refCounts.get(ref));
         }
         System.out.println();
@@ -181,14 +208,15 @@ public class BamStats extends AbstractOutputCommand {
             System.out.println("Coding:\t"+counter.getCoding());
             System.out.println("Coding-rev:\t"+counter.getCodingRev());
             System.out.println("Junction:\t"+counter.getJunction());
+            System.out.println("Junction-rev:\t"+counter.getJunctionRev());
             System.out.println("Other-exon:\t"+counter.getOtherExon());
             System.out.println("Other-exon-rev:\t"+counter.getOtherExonRev());
             System.out.println("5'UTR:\t"+counter.getUtr5());
             System.out.println("5'UTR-rev:\t"+counter.getUtr5Rev());
             System.out.println("3'UTR:\t"+counter.getUtr3());
             System.out.println("3'UTR-rev:\t"+counter.getUtr3Rev());
-            System.out.println("Intron:\t"+counter.getCoding());
-            System.out.println("Intron-rev:\t"+counter.getCoding());
+            System.out.println("Intron:\t"+counter.getIntron());
+            System.out.println("Intron-rev:\t"+counter.getIntronRev());
             System.out.println("Mitochondrial:\t"+counter.getMitochrondrial());
             System.out.println("Intergenic:\t"+counter.getIntergenic());
         }

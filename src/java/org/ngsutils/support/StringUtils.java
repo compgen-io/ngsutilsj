@@ -238,6 +238,23 @@ public class StringUtils {
         }
         return out;
     }
+    public static String findCommonPrefix(List<String> vals) {
+        String prefix = "";
+        for (int i=0; i<vals.get(0).length(); i++) {
+            char c = vals.get(0).charAt(i);
+            boolean found = true;
+            for (String s: vals) {
+                if (s.length()<=i || s.charAt(i) != c) {
+                    found = false;
+                    break;
+                }
+            }
+            if (found) {
+                prefix += c;
+            }
+        }
+        return prefix;
+    }
     
 }
     

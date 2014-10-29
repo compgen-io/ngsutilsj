@@ -2,7 +2,6 @@ package org.ngsutils.annotation;
 
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 
 public interface AnnotationSource<T> {
     /** 

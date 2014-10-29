@@ -9,7 +9,9 @@ import net.sf.samtools.SAMRecord;
 import org.ngsutils.annotation.GTFAnnotationSource.GTFExon;
 import org.ngsutils.annotation.GTFAnnotationSource.GTFGene;
 import org.ngsutils.annotation.GTFAnnotationSource.GTFTranscript;
+import org.ngsutils.bam.Orientation;
 import org.ngsutils.bam.Strand;
+import org.ngsutils.bam.support.ReadUtils;
 
 public class AnnotatedRegionCounter {
     
@@ -27,59 +29,97 @@ public class AnnotatedRegionCounter {
     private long utr5Rev = 0;
     private long intronRev = 0;
     private long otherExonRev = 0;
-    
+    private long junctionRev = 0;
+
     protected final GTFAnnotationSource gtf;
     
     public AnnotatedRegionCounter(String filename) throws NumberFormatException, IOException {
-         gtf = new GTFAnnotationSource(filename);
+        System.err.print("Loading GTF annotation: "+filename+"...");
+        gtf = new GTFAnnotationSource(filename);
+        System.err.println(" done");
     }
     
     public void addRead(SAMRecord read) {
+        
         if (read.getReferenceName().equals("chrM") || read.getReferenceName().equals("M")) {
             this.mitochrondrial++;
             return;
         }
+
+        boolean isGene = false;
+        boolean isExon = false;
+        boolean isCoding = false;
+        boolean isJunction = false;
+        boolean isUtr3 = false;
+        boolean isUtr5 = false;
+
+        boolean isGeneRev = false;
+        boolean isExonRev = false;
+        boolean isCodingRev = false;
+        boolean isUtr3Rev = false;
+        boolean isUtr5Rev = false;
+
+        
         for (CigarElement op: read.getCigar().getCigarElements()) {
             if (op.getOperator().equals(CigarOperator.N)) {
-                this.junction++;
-                return;
+                isJunction = true;
+                break;
             }
         }
         
-        boolean genic = false;
-        boolean exonic = false;
-        boolean coding = false;
-        boolean utr3 = false;
-        boolean utr5 = false;
-        
-        boolean reversed = false;
-        
         GenomeRegion readpos = GenomeRegion.getReadStartPos(read);
+        Strand readStrand = ReadUtils.getFragmentEffectiveStrand(read, Orientation.UNSTRANDED);
+
         for(GTFGene gene: gtf.findAnnotation(readpos)) {
-            genic = true;
-            if (gene.getStrand() != readpos.strand) {
-                reversed = true;
+            isGene = true;
+
+            if (gene.getStrand() != readStrand) {
+                isGeneRev = true;
             }
 
             for (GTFTranscript txpt: gene.getTranscripts()) {
-                for (GTFExon exon: txpt.getExons()) {
-                    if (exon.toRegion().contains(readpos)) {
-                        exonic = true;
+                for (GTFExon cds: txpt.cds) {
+                    if (cds.toRegion().contains(readpos)) {
+                        isExon = true;
+                        isCoding = true;
+                        if (gene.getStrand() != readStrand) {
+                            isCodingRev = true;
+                        }
+
+                    } else {
                         if (gene.getStrand() == Strand.PLUS) {
                             if (readpos.start < txpt.getCdsStart()) {
-                                utr5 = true;
+                                isUtr5 = true;
+                                if (gene.getStrand() != readStrand) {
+                                    isUtr5Rev = true;
+                                }
                             } else if (readpos.start > txpt.getCdsEnd()) {
-                                utr3 = true;
-                            } else {
-                                coding = true;
+                                isUtr3 = true;
+                                if (gene.getStrand() != readStrand) {
+                                    isUtr3Rev = true;
+                                }
                             }
                         } else {
                             if (readpos.start < txpt.getCdsStart()) {
-                                utr3 = true;
+                                isUtr3 = true;
+                                if (gene.getStrand() != readStrand) {
+                                    isUtr3Rev = true;
+                                }
                             } else if (readpos.start > txpt.getCdsEnd()) {
-                                utr5 = true;
-                            } else {
-                                coding = true;
+                                isUtr5 = true;
+                                if (gene.getStrand() != readStrand) {
+                                    isUtr5Rev = true;
+                                }
+                            }
+                        }
+                    }
+                }
+                if (!isExon) {
+                    for (GTFExon exon: txpt.exons) {
+                        if (exon.toRegion().contains(readpos)) {
+                            isExon = true;
+                            if (gene.getStrand() != readStrand) {
+                                isExonRev = true;
                             }
                         }
                     }
@@ -87,50 +127,60 @@ public class AnnotatedRegionCounter {
             }
         }
 
-        if (coding) {
-            if (reversed) {
-                this.codingRev++;
+        if (isJunction && isGene) {
+            if (isGeneRev) {
+                junctionRev++;
             } else {
-                this.coding++;
+                junction++;
             }
             return;
         }
         
-        if (utr5) {
-            if (reversed) {
-                this.utr5Rev++;
+        if (isCoding) {
+            if (isCodingRev) {
+                codingRev++;
             } else {
-                this.utr5++;
-            }
-            return;
-        }
-
-        if (utr3) {
-            if (reversed) {
-                this.utr3Rev++;
-            } else {
-                this.utr3++;
+                coding++;
             }
             return;
         }
         
-        if (exonic) {
-            if (reversed) {
-                this.otherExonRev++;
+        if (isUtr5) {
+            if (isUtr5Rev) {
+                utr5Rev++;
             } else {
-                this.otherExon++;
+                utr5++;
             }
             return;
         }
 
-        if (genic) {
-            if (reversed) {
-                this.intronRev++;
+        if (isUtr3) {
+            if (isUtr3Rev) {
+                utr3Rev++;
             } else {
-                this.intron++;
+                utr3++;
             }
             return;
         }
+        
+        if (isExon) {
+            if (isExonRev) {
+                otherExonRev++;
+            } else {
+                otherExon++;
+            }
+            return;
+        }
+
+        if (isGene) {
+            if (isGeneRev) {
+                intronRev++;
+            } else {
+                intron++;
+            }
+            return;
+        }
+        
         this.intergenic++;
     }
 
@@ -184,5 +234,9 @@ public class AnnotatedRegionCounter {
 
     public long getOtherExonRev() {
         return otherExonRev;
+    }
+    
+    public long getJunctionRev() {
+        return junctionRev;
     }
 }

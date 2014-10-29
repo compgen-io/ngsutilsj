@@ -13,14 +13,30 @@ public class IterUtils {
         public void each(List<T> foo);
     }
 
-	public static <T,U> void zip(Iterable<T> foo, Iterable<U> bar, Each<T,U> handler) {
+    public static <T,U> void zip(Iterable<T> foo, Iterable<U> bar, Each<T,U> handler) {
+        zip(foo, bar, handler, false);
+    }
+    public static <T,U> void zip(Iterable<T> foo, Iterable<U> bar, Each<T,U> handler, boolean flush) {
 		Iterator<T> it1 = foo.iterator();
 		Iterator<U> it2 = bar.iterator();
 		
 		while (it1.hasNext() && it2.hasNext()) {
-			T one = it1.next();
-			U two = it2.next();
-			handler.each(one,  two);
+            T one = it1.next();
+            U two = it2.next();
+            handler.each(one,  two);
+		}
+		
+		if (flush) {
+            while (it1.hasNext()) {
+                T one = it1.next();
+                U two = null;
+                handler.each(one,  two);
+            }
+            while (it2.hasNext()) {
+                T one = null;
+                U two = it2.next();
+                handler.each(one,  two);
+            }
 		}
 	}
 
