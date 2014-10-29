@@ -150,9 +150,7 @@ public class BamStats extends AbstractOutputCommand {
                 }
             }
             
-            if (read.getReadPairedFlag() && !read.getReadUnmappedFlag() && !read.getMateUnmappedFlag()) {
-                mapped++;
-            } else if (!read.getReadPairedFlag() && !read.getReadUnmappedFlag()) {
+            if (!read.getReadUnmappedFlag()) {
                 mapped++;
             } else {
                 unmapped++;
@@ -181,14 +179,11 @@ public class BamStats extends AbstractOutputCommand {
         }
         reader.close();
         System.out.println("Total-reads:\t" + total);
-        System.out.println("Mapped:\t" + mapped);
-        System.out.println("Unmapped:\t" + unmapped);
+        System.out.println("Mapped-reads:\t" + mapped);
+        System.out.println("Unmapped-reads:\t" + unmapped);
         System.out.println();
         if (paired) {
             System.out.println("Average insert size: "+String.format("%.2f", insertSizeCounter.getMean()));
-//            System.out.println("Max: " + insertSizeCounter.getMax());
-//            System.out.println("Min: " + insertSizeCounter.getMin());
-//            System.out.println("Mean: " + insertSizeCounter.getMean());
             System.out.println();
         }
         System.out.println("[Flags]");
@@ -205,20 +200,91 @@ public class BamStats extends AbstractOutputCommand {
         System.out.println();
         if (counter!=null) {
             System.out.println("[Gene regions]");
-            System.out.println("Coding:\t"+counter.getCoding());
-            System.out.println("Coding-rev:\t"+counter.getCodingRev());
-            System.out.println("Junction:\t"+counter.getJunction());
-            System.out.println("Junction-rev:\t"+counter.getJunctionRev());
-            System.out.println("Other-exon:\t"+counter.getOtherExon());
+            System.out.println("Coding        :\t"+counter.getCoding());
+            System.out.println("Coding-rev    :\t"+counter.getCodingRev());
+            System.out.println("Junction      :\t"+counter.getJunction());
+            System.out.println("Junction-rev  :\t"+counter.getJunctionRev());
+            System.out.println("Other-exon    :\t"+counter.getOtherExon());
             System.out.println("Other-exon-rev:\t"+counter.getOtherExonRev());
-            System.out.println("5'UTR:\t"+counter.getUtr5());
-            System.out.println("5'UTR-rev:\t"+counter.getUtr5Rev());
-            System.out.println("3'UTR:\t"+counter.getUtr3());
-            System.out.println("3'UTR-rev:\t"+counter.getUtr3Rev());
-            System.out.println("Intron:\t"+counter.getIntron());
-            System.out.println("Intron-rev:\t"+counter.getIntronRev());
-            System.out.println("Mitochondrial:\t"+counter.getMitochrondrial());
-            System.out.println("Intergenic:\t"+counter.getIntergenic());
+            System.out.println("5'UTR         :\t"+counter.getUtr5());
+            System.out.println("5'UTR-rev     :\t"+counter.getUtr5Rev());
+            System.out.println("3'UTR         :\t"+counter.getUtr3());
+            System.out.println("3'UTR-rev     :\t"+counter.getUtr3Rev());
+            System.out.println("Intron        :\t"+counter.getIntron());
+            System.out.println("Intron-rev    :\t"+counter.getIntronRev());
+            System.out.println("Mitochondrial :\t"+counter.getMitochrondrial());
+            System.out.println("Intergenic    :\t"+counter.getIntergenic());
+            System.out.println();
+            long sense = counter.getCoding() +
+                    counter.getJunction() +
+                    counter.getOtherExon() +
+                    counter.getUtr5() +
+                    counter.getUtr3() +
+                    counter.getIntron();
+
+            long antisense = counter.getCodingRev() +
+                    counter.getJunctionRev() +
+                    counter.getOtherExonRev() +
+                    counter.getUtr5Rev() +
+                    counter.getUtr3Rev() +
+                    counter.getIntronRev();
+            
+            long intronic;
+            long exonic;
+            long junction;
+
+            // use 10-fold enrichment as a cutoff for strandedness... It should be around 100X.
+            if (Math.log10((double) sense / antisense) > 1) {
+                // FR
+                intronic = counter.getIntron();
+                exonic = sense - intronic;
+                
+                junction = counter.getJunction();
+                System.out.println("Orientation:\tFR");
+            } else if (Math.log10((double) sense / antisense) < 1) {
+                // RF
+                intronic = counter.getIntronRev();
+                exonic = antisense - intronic;
+                junction = counter.getJunctionRev();
+                System.out.println("Orientation:\tRF");
+            }  else {
+                // unstranded
+                intronic = counter.getIntron() + counter.getIntronRev();
+                exonic = sense + antisense - intronic;
+                junction = counter.getJunction() + counter.getJunctionRev();
+                System.out.println("Orientation:\tunstranded");
+            }
+            
+            System.out.println("Sense     :\t" + sense);
+            System.out.println("Anti-sense:\t" + antisense);
+            System.out.println();
+            System.out.println("Exonic    :\t" + exonic);
+            System.out.println("Intronic  :\t" + intronic);
+            System.out.println();
+            System.out.println("Junction  :\t" + junction);
+            System.out.println();
+
+            if (antisense > 0) {
+                System.out.println("Sense/anti-sense ratio     :\t"+String.format("%.2f", (sense > antisense? (double) sense / antisense:  (double) -antisense / sense)));
+            } else {
+                System.out.println("Sense/anti-sense ratio     :\t0");
+            }
+            if (intronic > 0) {
+                System.out.println("Exonic/intronic ratio      :\t"+String.format("%.2f", (double) exonic / intronic));
+            } else { 
+                System.out.println("Exonic/intronic ratio      :\t0");
+            }
+            if (counter.getIntergenic() > 0) {
+                System.out.println("Exonic/genomic ratio       :\t"+String.format("%.2f", (double) exonic / counter.getIntergenic()));
+            } else { 
+                System.out.println("Exonic/genomic ratio       :\t0");
+            }
+            if (junction > 0) {
+                System.out.println("Non-junction/junction ratio:\t"+String.format("%.2f", (double) (exonic-junction) / junction));
+            } else {
+                System.out.println("Non-junction/junction ratio:\t0");
+            }
+
         }
     }
 }
