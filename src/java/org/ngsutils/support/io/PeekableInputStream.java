@@ -120,4 +120,7 @@ public class PeekableInputStream extends InputStream {
         }
         return buffer[peekpos++];
     }
+    public void resetPeek() {
+        peekpos = 0;
+    }
 }
