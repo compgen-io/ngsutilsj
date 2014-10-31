@@ -14,8 +14,6 @@ import java.util.Map;
 import net.sf.samtools.SAMFileHeader;
 import net.sf.samtools.SAMProgramRecord;
 
-import org.ngsutils.cli.Command;
-import org.ngsutils.cli.Exec;
 import org.ngsutils.cli.annotate.GTFAnnotate;
 import org.ngsutils.cli.annotate.RepeatAnnotate;
 import org.ngsutils.cli.bam.BamCheck;
@@ -38,11 +36,9 @@ import org.ngsutils.cli.splicing.FastaJunctions;
 import org.ngsutils.cli.splicing.FindEvents;
 import org.ngsutils.cli.splicing.JunctionCount;
 import org.ngsutils.cli.splicing.JunctionDiffCli;
-import org.ngsutils.cli.sqz.FastqToSqz;
-import org.ngsutils.cli.sqz.SqzText;
-import org.ngsutils.cli.sqz.SqzToFastq;
-import org.ngsutils.cli.sqz.SqzVerify;
 import org.ngsutils.cli.varcall.GermlineVarCall;
+import org.ngsutils.support.cli.Command;
+import org.ngsutils.support.cli.Exec;
 
 import com.lexicalscope.jewel.cli.ArgumentValidationException;
 import com.lexicalscope.jewel.cli.CliFactory;
@@ -51,11 +47,6 @@ import com.lexicalscope.jewel.cli.HelpRequestedException;
 public class NGSUtils {
 	static private Map<String, Class<Exec>> execs = new HashMap<String, Class<Exec>>();
 	static {
-        loadExec(FastqToSqz.class);
-        loadExec(SqzToFastq.class);
-        loadExec(SqzText.class);
-        loadExec(SqzVerify.class);
-
         loadExec(FastqToBam.class);
 		loadExec(FastqSort.class);
 		loadExec(FastqMerge.class);
