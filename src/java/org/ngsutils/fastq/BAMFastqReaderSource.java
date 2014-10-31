@@ -64,7 +64,7 @@ public class BAMFastqReaderSource implements FastqReaderSource {
 
     @Override
     public int getPriority() {
-        return 20;
+        return 50;
     }
 
 }
