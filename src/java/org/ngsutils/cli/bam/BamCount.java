@@ -15,14 +15,14 @@ import org.ngsutils.NGSUtilsException;
 import org.ngsutils.bam.Orientation;
 import org.ngsutils.bam.Strand;
 import org.ngsutils.bam.support.ReadUtils;
-import org.ngsutils.cli.AbstractOutputCommand;
-import org.ngsutils.cli.Command;
 import org.ngsutils.cli.bam.count.BedSpans;
 import org.ngsutils.cli.bam.count.BinSpans;
 import org.ngsutils.cli.bam.count.Span;
 import org.ngsutils.cli.bam.count.SpanSource;
 import org.ngsutils.support.IterUtils;
 import org.ngsutils.support.TabWriter;
+import org.ngsutils.support.cli.AbstractOutputCommand;
+import org.ngsutils.support.cli.Command;
 import org.ngsutils.support.progress.IncrementingStats;
 import org.ngsutils.support.progress.ProgressUtils;
 

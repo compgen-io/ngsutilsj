@@ -9,9 +9,9 @@ import java.util.zip.GZIPOutputStream;
 
 import org.ngsutils.NGSUtilsException;
 import org.ngsutils.bam.BamFastqReader;
-import org.ngsutils.cli.AbstractCommand;
-import org.ngsutils.cli.Command;
 import org.ngsutils.fastq.FastqRead;
+import org.ngsutils.support.cli.AbstractCommand;
+import org.ngsutils.support.cli.Command;
 
 import com.lexicalscope.jewel.cli.ArgumentValidationException;
 import com.lexicalscope.jewel.cli.CommandLineInterface;

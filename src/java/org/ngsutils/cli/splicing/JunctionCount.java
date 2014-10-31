@@ -17,9 +17,9 @@ import org.ngsutils.annotation.GenomeRegion;
 import org.ngsutils.bam.Orientation;
 import org.ngsutils.bam.support.ReadUtils;
 import org.ngsutils.bam.support.ReadUtils.MappedReadCounter;
-import org.ngsutils.cli.AbstractOutputCommand;
-import org.ngsutils.cli.Command;
 import org.ngsutils.support.TabWriter;
+import org.ngsutils.support.cli.AbstractOutputCommand;
+import org.ngsutils.support.cli.Command;
 
 import com.lexicalscope.jewel.cli.CommandLineInterface;
 import com.lexicalscope.jewel.cli.Option;

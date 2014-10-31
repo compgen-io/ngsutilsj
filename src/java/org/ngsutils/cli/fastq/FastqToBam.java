@@ -16,12 +16,12 @@ import net.sf.samtools.SAMProgramRecord;
 import net.sf.samtools.SAMRecord;
 
 import org.ngsutils.NGSUtils;
-import org.ngsutils.cli.AbstractCommand;
-import org.ngsutils.cli.Command;
 import org.ngsutils.fastq.Fastq;
 import org.ngsutils.fastq.FastqRead;
 import org.ngsutils.fastq.FastqReader;
 import org.ngsutils.support.IterUtils;
+import org.ngsutils.support.cli.AbstractCommand;
+import org.ngsutils.support.cli.Command;
 
 import com.lexicalscope.jewel.cli.ArgumentValidationException;
 import com.lexicalscope.jewel.cli.CommandLineInterface;

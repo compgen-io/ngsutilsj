@@ -16,10 +16,10 @@ import net.sf.samtools.SAMSequenceRecord;
 
 import org.ngsutils.NGSUtilsException;
 import org.ngsutils.annotation.AnnotatedRegionCounter;
-import org.ngsutils.cli.AbstractOutputCommand;
-import org.ngsutils.cli.Command;
 import org.ngsutils.support.NaturalSort;
 import org.ngsutils.support.TallyCounts;
+import org.ngsutils.support.cli.AbstractOutputCommand;
+import org.ngsutils.support.cli.Command;
 import org.ngsutils.support.progress.FileChannelStats;
 import org.ngsutils.support.progress.ProgressMessage;
 import org.ngsutils.support.progress.ProgressUtils;

@@ -16,12 +16,12 @@ import org.ngsutils.annotation.GTFAnnotationSource;
 import org.ngsutils.annotation.GTFAnnotationSource.GTFExon;
 import org.ngsutils.annotation.GTFAnnotationSource.GTFGene;
 import org.ngsutils.annotation.GTFAnnotationSource.GTFTranscript;
-import org.ngsutils.cli.AbstractOutputCommand;
-import org.ngsutils.cli.Command;
 import org.ngsutils.support.IterUtils;
 import org.ngsutils.support.StringLineReader;
 import org.ngsutils.support.StringUtils;
 import org.ngsutils.support.TabWriter;
+import org.ngsutils.support.cli.AbstractOutputCommand;
+import org.ngsutils.support.cli.Command;
 
 import com.lexicalscope.jewel.cli.CommandLineInterface;
 import com.lexicalscope.jewel.cli.Option;

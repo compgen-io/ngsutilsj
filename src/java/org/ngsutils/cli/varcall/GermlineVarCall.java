@@ -5,11 +5,11 @@ import java.util.List;
 
 import org.ngsutils.NGSUtils;
 import org.ngsutils.NGSUtilsException;
-import org.ngsutils.cli.AbstractOutputCommand;
-import org.ngsutils.cli.Command;
 import org.ngsutils.support.StringLineReader;
 import org.ngsutils.support.StringUtils;
 import org.ngsutils.support.TabWriter;
+import org.ngsutils.support.cli.AbstractOutputCommand;
+import org.ngsutils.support.cli.Command;
 import org.ngsutils.varcall.CallCount;
 import org.ngsutils.varcall.VariantCall;
 

@@ -8,8 +8,6 @@ import java.util.Set;
 
 import org.ngsutils.NGSUtils;
 import org.ngsutils.NGSUtilsException;
-import org.ngsutils.cli.AbstractOutputCommand;
-import org.ngsutils.cli.Command;
 import org.ngsutils.junction.JunctionCounts;
 import org.ngsutils.junction.JunctionDiff;
 import org.ngsutils.junction.JunctionDiffStats;
@@ -18,6 +16,8 @@ import org.ngsutils.junction.JunctionKey;
 import org.ngsutils.junction.JunctionStats;
 import org.ngsutils.support.StringUtils;
 import org.ngsutils.support.TabWriter;
+import org.ngsutils.support.cli.AbstractOutputCommand;
+import org.ngsutils.support.cli.Command;
 import org.ngsutils.support.stats.StatUtils;
 
 import com.lexicalscope.jewel.cli.CommandLineInterface;

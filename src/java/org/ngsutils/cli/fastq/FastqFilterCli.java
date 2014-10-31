@@ -5,8 +5,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.ngsutils.NGSUtilsException;
-import org.ngsutils.cli.AbstractOutputCommand;
-import org.ngsutils.cli.Command;
 import org.ngsutils.fastq.Fastq;
 import org.ngsutils.fastq.FastqRead;
 import org.ngsutils.fastq.FastqReader;
@@ -19,6 +17,8 @@ import org.ngsutils.fastq.filter.SizeFilter;
 import org.ngsutils.fastq.filter.SuffixQualFilter;
 import org.ngsutils.fastq.filter.WhitelistFilter;
 import org.ngsutils.fastq.filter.WildcardFilter;
+import org.ngsutils.support.cli.AbstractOutputCommand;
+import org.ngsutils.support.cli.Command;
 
 import com.lexicalscope.jewel.cli.CommandLineInterface;
 import com.lexicalscope.jewel.cli.Option;

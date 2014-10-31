@@ -7,11 +7,11 @@ import java.io.OutputStream;
 import java.util.zip.GZIPOutputStream;
 
 import org.ngsutils.NGSUtilsException;
-import org.ngsutils.cli.AbstractCommand;
-import org.ngsutils.cli.Command;
 import org.ngsutils.fastq.Fastq;
 import org.ngsutils.fastq.FastqRead;
 import org.ngsutils.fastq.FastqReader;
+import org.ngsutils.support.cli.AbstractCommand;
+import org.ngsutils.support.cli.Command;
 
 import com.lexicalscope.jewel.cli.CommandLineInterface;
 import com.lexicalscope.jewel.cli.Option;

@@ -11,8 +11,8 @@ import net.sf.samtools.SAMFileReader.ValidationStringency;
 import net.sf.samtools.SAMRecord;
 
 import org.ngsutils.NGSUtilsException;
-import org.ngsutils.cli.AbstractOutputCommand;
-import org.ngsutils.cli.Command;
+import org.ngsutils.support.cli.AbstractOutputCommand;
+import org.ngsutils.support.cli.Command;
 import org.ngsutils.support.progress.FileChannelStats;
 import org.ngsutils.support.progress.ProgressMessage;
 import org.ngsutils.support.progress.ProgressUtils;

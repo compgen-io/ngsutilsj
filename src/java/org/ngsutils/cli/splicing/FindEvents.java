@@ -13,13 +13,13 @@ import org.ngsutils.NGSUtils;
 import org.ngsutils.NGSUtilsException;
 import org.ngsutils.annotation.GenomeRegion;
 import org.ngsutils.bam.Strand;
-import org.ngsutils.cli.AbstractOutputCommand;
-import org.ngsutils.cli.Command;
 import org.ngsutils.junction.JunctionDonorAcceptor;
 import org.ngsutils.junction.JunctionKey;
 import org.ngsutils.support.StringLineReader;
 import org.ngsutils.support.StringUtils;
 import org.ngsutils.support.TabWriter;
+import org.ngsutils.support.cli.AbstractOutputCommand;
+import org.ngsutils.support.cli.Command;
 
 import com.lexicalscope.jewel.cli.CommandLineInterface;
 import com.lexicalscope.jewel.cli.Option;
