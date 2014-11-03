@@ -14,20 +14,33 @@ public class Fastq {
     
     private static List<FastqReaderSource> sources = new ArrayList<FastqReaderSource>();
     
-    public static void registerSource(FastqReaderSource newsrc) {
-        int i=0;
-        for (FastqReaderSource source: sources) {
-            if (newsrc.getPriority() < source.getPriority()) {
-                break;
+    public static void registerSource(Class<? extends FastqReaderSource> clazz) {
+        try {
+            FastqReaderSource newsrc = clazz.newInstance();
+            int i=0;
+            for (FastqReaderSource source: sources) {
+                if (newsrc.getPriority() < source.getPriority()) {
+                    break;
+                }
+                i++;
             }
-            i++;
+            sources.add(i, newsrc);
+        } catch (InstantiationException | IllegalAccessException e) {
         }
-        sources.add(i, newsrc);
     }
     
     static {
-        registerSource(new BAMFastqReaderSource());
-        registerSource(new BZipFastqReaderSource());
+        registerSource(BAMFastqReaderSource.class);
+        registerSource(BZipFastqReaderSource.class);
+        registerSource(GZipFastqReaderSource.class);
+        registerSource(TextFastqReaderSource.class);
+        
+            try {
+                @SuppressWarnings("unchecked")
+                Class<? extends FastqReaderSource> clazz = (Class<? extends FastqReaderSource>) Fastq.class.getClassLoader().loadClass("org.ngsutils.sqz.SQZFastqReaderSource");
+                registerSource(clazz);
+            } catch (ClassNotFoundException e) {
+            }
     }
     
     public static FastqReader open(String filename) throws IOException {
