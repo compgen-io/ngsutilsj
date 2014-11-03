@@ -39,7 +39,7 @@ public class SuffixInputStream extends InputStream {
         int count = 0;
 
         // read a full buffer length first - we want to read only in bufferSize blocks
-        while ((count = parent.read(buffer, total, bufferSize-total)) != -1) {
+        while (total < bufferSize && (count = parent.read(buffer, total, bufferSize-total)) != -1) {
             total += count;
         }
 
