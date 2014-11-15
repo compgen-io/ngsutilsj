@@ -241,7 +241,7 @@ public class BamStats extends AbstractOutputCommand {
                 
                 junction = counter.getJunction();
                 System.out.println("Orientation:\tFR");
-            } else if (Math.log10((double) sense / antisense) < 1) {
+            } else if (Math.log10((double) sense / antisense) < -1) {
                 // RF
                 intronic = counter.getIntronRev();
                 exonic = antisense - intronic;
