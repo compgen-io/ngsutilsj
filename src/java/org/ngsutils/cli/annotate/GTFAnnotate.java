@@ -206,6 +206,9 @@ public class GTFAnnotate extends AbstractOutputCommand {
         String lastline = null;
         int colNum = -1;
         for (String line: new StringLineReader(filename)) {
+            if (line == null || line.length() == 0) {
+                continue;
+            }
             try {
                 if (line.charAt(0) == '#') {
                     if (lastline != null) {
