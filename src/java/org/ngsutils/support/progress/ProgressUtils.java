@@ -83,15 +83,19 @@ public class ProgressUtils {
             progress.start(statsMon.size());
         }
         return new Iterator<T>() {
+            boolean done = false;
             @Override
             public boolean hasNext() {
                 boolean hasNext = it.hasNext();
                 if (!hasNext) {
-                    if (progress != null) {
-                        progress.done();
-                    }
-                    if (it instanceof CloseableIterator) {
-                        ((CloseableIterator<T>) it).close();
+                    if (!done) {
+                        if (progress != null) {
+                            progress.done();
+                        }
+                        if (it instanceof CloseableIterator) {
+                            ((CloseableIterator<T>) it).close();
+                        }
+                        done = true;
                     }
                 }
                 return hasNext;

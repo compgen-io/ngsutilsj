@@ -60,8 +60,13 @@ public class FastqMerge extends AbstractOutputCommand {
 		FileInputStream fis1 = new FileInputStream(file1);
 		FileChannel channel1 = fis1.getChannel();
 
-		readers[0] = Fastq.open(fis1, null, channel1, filenames[0]);
-		readers[1] = Fastq.open(filenames[1]);
+		File file2 = new File(filenames[1]);
+        FileInputStream fis2 = new FileInputStream(file2);
+
+//        readers[0] = Fastq.open(filenames[0]);
+//        readers[1] = Fastq.open(filenames[1]);
+        readers[0] = Fastq.open(fis1, null, channel1, filenames[0]);
+        readers[1] = Fastq.open(fis2, null, null, filenames[1]);
 		
 		final Counter counter = new Counter();
 		

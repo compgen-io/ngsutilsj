@@ -37,6 +37,14 @@ public class IterUtils {
                 U two = it2.next();
                 handler.each(one,  two);
             }
+		} else {
+		    // clear out the longer of the iterators...
+            while (it1.hasNext()) {
+                it1.next();
+            }
+            while (it2.hasNext()) {
+                it2.next();
+            }
 		}
 	}
 
@@ -52,7 +60,6 @@ public class IterUtils {
         for (int i=0; i<foo.length; i++) {
             if (!its[i].hasNext()) {
                 hasNext = false;
-                break;
             }
         }
         
@@ -69,10 +76,20 @@ public class IterUtils {
             for (int i=0; i<foo.length; i++) {
                 if (!its[i].hasNext()) {
                     hasNext = false;
-                    break;
                 }
             }
+        }
 
+        // clear out iterators
+        hasNext = true;
+        while (hasNext) {
+            hasNext = false;
+            for (int i=0; i<foo.length; i++) {
+                if (its[i].hasNext()) {
+                    its[i].next();
+                    hasNext = true;
+                }
+            }
         }
     }
     

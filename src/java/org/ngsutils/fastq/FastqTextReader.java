@@ -48,26 +48,33 @@ public class FastqTextReader implements FastqReader {
 	@Override
 	public Iterator<FastqRead> iterator() {
 		nextRead = FastqRead.read(in);
-		return ProgressUtils.getIterator((name == null) ? "FASTQ": name, new Iterator<FastqRead>() {
-			@Override
-			public boolean hasNext() {
-				return (nextRead != null);
-			}
+		
+		Iterator<FastqRead> it = new Iterator<FastqRead>() {
+            @Override
+            public boolean hasNext() {
+                return (nextRead != null);
+            }
 
-			@Override
-			public FastqRead next() {
-				if (nextRead == null) {
-					throw new NoSuchElementException();
-				}
-				FastqRead old = nextRead;
-				nextRead = FastqRead.read(in);
-				return old;
-			}
+            @Override
+            public FastqRead next() {
+                if (nextRead == null) {
+                    throw new NoSuchElementException();
+                }
+                FastqRead old = nextRead;
+                nextRead = FastqRead.read(in);
+                return old;
+            }
 
-			@Override
-			public void remove() {
-				// doesn't do anything...
-            }}, new FileChannelStats(channel), new ProgressMessage<FastqRead>() {
+            @Override
+            public void remove() {
+                // doesn't do anything...
+            }};
+		
+        if (channel == null) {
+            return it;
+        }
+            
+		return ProgressUtils.getIterator((name == null) ? "FASTQ": name, it, new FileChannelStats(channel), new ProgressMessage<FastqRead>() {
                 @Override
                 public String msg(FastqRead current) {
                     return current.getName();
