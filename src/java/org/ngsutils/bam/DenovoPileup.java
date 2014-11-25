@@ -27,7 +27,7 @@ import org.ngsutils.fasta.NullFasta;
  * @author mbreese
  *
  */
-public class Pileup {
+public class DenovoPileup {
     public class RefPos implements Comparable<RefPos> {
         public final int refIndex;
         public final int pos; // 1-based
@@ -71,8 +71,8 @@ public class Pileup {
             this.pos = pos;
         }
 
-        private Pileup getOuterType() {
-            return Pileup.this;
+        private DenovoPileup getOuterType() {
+            return DenovoPileup.this;
         }
 
         @Override
@@ -237,7 +237,7 @@ public class Pileup {
     private int flagFilter = 1796; // by default the read must be mapped.
     private int flagRequired = 0;
     
-    public Pileup(InputStream is) {
+    public DenovoPileup(InputStream is) {
         this.reader = new SAMFileReader(is);
     }
     
@@ -275,7 +275,6 @@ public class Pileup {
         }
     }
 
-    
     public Iterator<PileupPos> pileup() {
         return pileup(null, -1, -1);
     }        

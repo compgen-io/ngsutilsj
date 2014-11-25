@@ -10,9 +10,9 @@ import net.sf.samtools.SAMFileReader.ValidationStringency;
 
 import org.ngsutils.NGSUtils;
 import org.ngsutils.NGSUtilsException;
-import org.ngsutils.bam.Pileup;
-import org.ngsutils.bam.Pileup.PileupPos;
-import org.ngsutils.bam.Pileup.PileupRead;
+import org.ngsutils.bam.DenovoPileup;
+import org.ngsutils.bam.DenovoPileup.PileupPos;
+import org.ngsutils.bam.DenovoPileup.PileupRead;
 import org.ngsutils.bam.support.ReadUtils;
 import org.ngsutils.support.IterUtils;
 import org.ngsutils.support.TabWriter;
@@ -95,38 +95,38 @@ public class PileupCli extends AbstractOutputCommand {
         FileInputStream fis = new FileInputStream(f);
         FileChannel channel = fis.getChannel();
         
-        final Pileup pileup = new Pileup(fis);
+        final DenovoPileup denovoPileup = new DenovoPileup(fis);
         if (lenient) {
-            pileup.getReader().setValidationStringency(ValidationStringency.LENIENT);
+            denovoPileup.getReader().setValidationStringency(ValidationStringency.LENIENT);
         } else if (silent) {
-            pileup.getReader().setValidationStringency(ValidationStringency.SILENT);
+            denovoPileup.getReader().setValidationStringency(ValidationStringency.SILENT);
         }
 
         if (refFilename != null) {
-            pileup.setFASTARef(refFilename);
+            denovoPileup.setFASTARef(refFilename);
         }
         if (paired) {
             requiredFlags |= ReadUtils.PROPER_PAIR_FLAG | ReadUtils.READ_PAIRED_FLAG;
             filterFlags |= ReadUtils.READ_UNMAPPED_FLAG | ReadUtils.MATE_UNMAPPED_FLAG; 
         }
 
-        pileup.setMinMappingQual(minMappingQual);
-        pileup.setMinBaseQual(minBaseQual);
-        pileup.setFlagFilter(filterFlags);
-        pileup.setFlagRequired(requiredFlags);
+        denovoPileup.setMinMappingQual(minMappingQual);
+        denovoPileup.setMinBaseQual(minBaseQual);
+        denovoPileup.setFlagFilter(filterFlags);
+        denovoPileup.setFlagRequired(requiredFlags);
         
         TabWriter writer = new TabWriter(out);
         writer.write_line("## program: " + NGSUtils.getVersion());
         writer.write_line("## cmd: " + NGSUtils.getArgs());
         writer.write_line("## input: " + samFilename);
         
-        for (PileupPos pileupPos: IterUtils.wrapIterator(ProgressUtils.getIterator(f.getName(), pileup.pileup(), new FileChannelStats(channel), new ProgressMessage<PileupPos>(){
+        for (PileupPos pileupPos: IterUtils.wrapIterator(ProgressUtils.getIterator(f.getName(), denovoPileup.pileup(), new FileChannelStats(channel), new ProgressMessage<PileupPos>(){
 
             @Override
             public String msg(PileupPos current) {
-                return pileup.getReader().getFileHeader().getSequence(current.refIndex).getSequenceName()+":"+current.pos;
+                return denovoPileup.getReader().getFileHeader().getSequence(current.refIndex).getSequenceName()+":"+current.pos;
             }}))) {
-            writer.write(pileup.getReader().getFileHeader().getSequence(pileupPos.refIndex).getSequenceName());
+            writer.write(denovoPileup.getReader().getFileHeader().getSequence(pileupPos.refIndex).getSequenceName());
             writer.write(pileupPos.pos);
             writer.write(pileupPos.refBase);
             writer.write(pileupPos.getCoverage());

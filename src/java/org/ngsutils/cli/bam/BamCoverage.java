@@ -1,24 +1,19 @@
 package org.ngsutils.cli.bam;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.nio.channels.FileChannel;
-
-import net.sf.samtools.SAMFileReader.ValidationStringency;
+import java.util.Iterator;
 
 import org.ngsutils.NGSUtilsException;
+import org.ngsutils.annotation.BEDAnnotationSource;
+import org.ngsutils.annotation.BEDAnnotationSource.BEDAnnotation;
 import org.ngsutils.annotation.GenomeRegion;
-import org.ngsutils.bam.Pileup;
-import org.ngsutils.bam.Pileup.PileupPos;
 import org.ngsutils.bam.support.ReadUtils;
+import org.ngsutils.pileup.BAMPileup;
+import org.ngsutils.pileup.PileupRecord;
 import org.ngsutils.support.IterUtils;
 import org.ngsutils.support.TallyCounts;
 import org.ngsutils.support.cli.AbstractOutputCommand;
 import org.ngsutils.support.cli.Command;
-import org.ngsutils.support.progress.FileChannelStats;
-import org.ngsutils.support.progress.ProgressMessage;
-import org.ngsutils.support.progress.ProgressUtils;
 
 import com.lexicalscope.jewel.cli.ArgumentValidationException;
 import com.lexicalscope.jewel.cli.CommandLineInterface;
@@ -29,6 +24,8 @@ import com.lexicalscope.jewel.cli.Unparsed;
 @Command(name="bam-coverage", desc="Scans an aligned BAM file and calculates the number of reads covering each base", cat="bam", experimental=true)
 public class BamCoverage extends AbstractOutputCommand {
     private String filename = null;
+    private String bedFilename = null;
+    
     private GenomeRegion region = null;
     
     private int minMappingQual=0;
@@ -38,15 +35,18 @@ public class BamCoverage extends AbstractOutputCommand {
     private int filterFlags = 1796;
     
     private boolean paired = false;
-
-    private boolean lenient = false;
-    private boolean silent = false;
+    private boolean all = false;
 
     @Unparsed(name = "FILE")
     public void setFilename(String filename) {
         this.filename = filename;
     }
 
+    @Option(description = "Use these regions to count (BED format)", longName="bed", defaultToNull=true)
+    public void setBedFilename(String bedFilename) {
+        this.bedFilename = bedFilename;
+    }
+    
     @Option(description = "Only count within this region", longName="region", defaultToNull=true)
     public void setRegion(String region) {
         if (region != null) {
@@ -54,20 +54,16 @@ public class BamCoverage extends AbstractOutputCommand {
         }
     }
 
+    @Option(description = "Output all coverage values (default: a summary of quantiles)", longName="all")
+    public void setAll(boolean val) {
+        this.all = val;
+    }
+
     @Option(description = "Only count properly paired reads", longName="paired")
     public void setPaired(boolean val) {
         this.paired = val;
-    }
-
-    @Option(description = "Use lenient validation strategy", longName="lenient")
-    public void setLenient(boolean lenient) {
-        this.lenient = lenient;
-    }
-
-    @Option(description = "Use silent validation strategy", longName="silent")
-    public void setSilent(boolean silent) {
-        this.silent = silent;
     }    
+
     @Option(description = "Minimum base-quality (default: 13)", longName="base-qual", defaultValue="13")
     public void setMinBaseQual(int minBaseQual) {
         this.minBaseQual = minBaseQual;
@@ -94,19 +90,10 @@ public class BamCoverage extends AbstractOutputCommand {
             throw new ArgumentValidationException("You must specify an input BAM filename!");
         }
         
-        TallyCounts tally = new TallyCounts(true);
+        TallyCounts tally = new TallyCounts();
 
-        File f = new File(filename);
-        FileInputStream fis = new FileInputStream(f);
-        FileChannel channel = fis.getChannel();
-        final Pileup pileup = new Pileup(fis);
+        BAMPileup pileup = new BAMPileup(filename);
         
-        if (lenient) {
-            pileup.getReader().setValidationStringency(ValidationStringency.LENIENT);
-        } else if (silent) {
-            pileup.getReader().setValidationStringency(ValidationStringency.SILENT);
-        }
-
         if (paired) {
             requiredFlags |= ReadUtils.PROPER_PAIR_FLAG | ReadUtils.READ_PAIRED_FLAG;
             filterFlags |= ReadUtils.READ_UNMAPPED_FLAG | ReadUtils.MATE_UNMAPPED_FLAG; 
@@ -116,27 +103,78 @@ public class BamCoverage extends AbstractOutputCommand {
         pileup.setMinBaseQual(minBaseQual);
         pileup.setFlagFilter(filterFlags);
         pileup.setFlagRequired(requiredFlags);
-        
-        int lastRef = -1;
-        
-        if (region != null && verbose) {
-            System.err.println("Region: "+region.toString());
-        }
-        
-        for (PileupPos pileupPos: IterUtils.wrapIterator(ProgressUtils.getIterator(f.getName(), pileup.pileup(region), new FileChannelStats(channel), new ProgressMessage<PileupPos>(){
 
-            @Override
-            public String msg(PileupPos current) {
-                return pileup.getReader().getFileHeader().getSequence(current.refIndex).getSequenceName()+":"+current.pos;
-            }}))) {
-            if (verbose && pileupPos.refIndex != lastRef) {
-                System.err.println(pileup.getReader().getFileHeader().getSequence(pileupPos.refIndex).getSequenceName());
-                lastRef = pileupPos.refIndex;
-            }
-            tally.incr(pileupPos.getCoverage());
+        BEDAnnotationSource bed = null;
+        
+        if (bedFilename != null) {
+            pileup.setBedFilename(bedFilename);
+            bed = new BEDAnnotationSource(bedFilename);
         }
         
-        pileup.close();
-        tally.write(out);
+        Iterator<PileupRecord> it;
+        if (region != null) {
+            it = pileup.pileup(region);
+        } else {
+            it = pileup.pileup();
+        }
+        
+        int lastPos = -1;
+
+        GenomeRegion lastRegion = null;
+
+        int tmp = 0;
+        for (PileupRecord record: IterUtils.wrapIterator(it)) {
+            tmp++;
+            if (verbose && tmp > 100000) {
+                System.err.println(record.ref+":"+record.pos+" "+record.getSampleCount(0));
+                tmp = 0;
+            }
+            if (bed!=null) {
+                for (BEDAnnotation ann : bed.findAnnotation(new GenomeRegion(record.ref, record.pos))) {
+                    GenomeRegion curRegion = ann.getCoord();
+                    if (lastRegion != null && !curRegion.equals(lastRegion)) {
+                        for (int i=lastPos+1; i<=lastRegion.end; i++) {
+//                            System.err.println(lastRegion.ref+":"+i+" 0 A");
+                            tally.incr(0);
+                        }
+                        if (record.pos > curRegion.start) {
+                            for (int i=curRegion.start; i<record.pos; i++) {
+//                                System.err.println(curRegion.ref+":"+i+" 0 B");
+                                tally.incr(0);
+                            }
+                        }
+                    }
+                    lastRegion = curRegion;
+                    break;
+                }
+            }
+            
+            if (record.isBlank()) {
+//                System.err.println(record.ref+":"+record.pos+" -0-");
+                tally.incr(0);
+            } else {
+//                if (record.getSampleCount(0) == 0) {
+//                    System.err.println(record.ref+":"+record.pos+" 0 C");
+//                }
+                tally.incr(record.getSampleCount(0));
+            }
+            lastPos = record.pos;
+        }
+
+        if (lastRegion!=null) {
+            for (int i=lastPos+1; i<=lastRegion.end; i++) {
+                tally.incr(0);
+            }
+        }
+
+        
+        if (all) {
+            tally.write(out);
+        }
+        out.write(("Min\t"+tally.getMin()+"\n").getBytes());
+        for (double pct: new double[]{0.05, 0.25, 0.5, 0.75, 0.95}) {
+            out.write((pct+"\t" + tally.getQuantile(pct)+"\n").getBytes());
+        }
+        out.write(("Max\t"+tally.getMax()+"\n").getBytes());
     }
 }
