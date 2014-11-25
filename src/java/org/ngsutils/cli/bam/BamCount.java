@@ -46,6 +46,7 @@ public class BamCount extends AbstractOutputCommand {
     private boolean proper = false;
     private boolean insert = false;
     private boolean inverted = false;
+    private boolean unique = false;
     
     private boolean startOnly = false;
     
@@ -74,6 +75,11 @@ public class BamCount extends AbstractOutputCommand {
     @Option(description = "Use silent validation strategy", longName="silent")
     public void setSilent(boolean silent) {
         this.silent = silent;
+    }
+
+    @Option(description = "Only count uniquely mapped reads", longName="unique")
+    public void setUnique(boolean unique) {
+        this.unique = unique;
     }
 
     @Option(description = "Read must be completely contained within region", longName="contained")
@@ -255,6 +261,17 @@ public class BamCount extends AbstractOutputCommand {
                             }
                             
                             reads.add(read.getReadName());
+                            
+                            if (unique) {
+                                Integer mappings = read.getIntegerAttribute("NH");
+                                if (mappings == null || mappings < 0) {
+                                    mappings = read.getIntegerAttribute("IH");
+                                }
+                                if (mappings != null && mappings > 1) {
+                                    continue;
+                                }
+                            }
+                            
                             count ++;
                             if (proper) {
                                 if (read.getReadPairedFlag() && read.getProperPairFlag()) {
