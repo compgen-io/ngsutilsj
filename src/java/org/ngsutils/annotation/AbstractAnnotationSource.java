@@ -8,6 +8,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 abstract public class AbstractAnnotationSource<T> implements AnnotationSource<T> {
     public static class RefBin {
@@ -69,7 +71,7 @@ abstract public class AbstractAnnotationSource<T> implements AnnotationSource<T>
     }
     
     protected final Map<RefBin,List<GenomeAnnotation<T>>> annotationBins = new HashMap<RefBin, List<GenomeAnnotation<T>>>();
-    protected final Set<GenomeAnnotation<T>> annotations = new HashSet<GenomeAnnotation<T>>();
+    protected final SortedSet<GenomeAnnotation<T>> annotations = new TreeSet<GenomeAnnotation<T>>();
     protected final static int BINSIZE=100_000;
     
 //    @Override
@@ -194,5 +196,23 @@ abstract public class AbstractAnnotationSource<T> implements AnnotationSource<T>
     
     public Iterator<GenomeAnnotation<T>> iterator() {
         return annotations.iterator();
+    }
+    public Iterator<GenomeRegion> regionsIterator() {
+        return new Iterator<GenomeRegion> () {
+            Iterator<GenomeAnnotation<T>> it = iterator();
+            @Override
+            public boolean hasNext() {
+                return it.hasNext();
+            }
+
+            @Override
+            public GenomeRegion next() {
+                return it.next().getCoordinates();
+            }
+
+            @Override
+            public void remove() {
+                it.remove();
+            }};
     }
 }

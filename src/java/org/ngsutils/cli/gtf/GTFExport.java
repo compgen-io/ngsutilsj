@@ -228,7 +228,7 @@ public class GTFExport extends AbstractOutputCommand {
                 } else {
                     // Look for introns that don't overlap *any* exons
                     List<GenomeRegion> geneRegions = new ArrayList<GenomeRegion>();
-                    geneRegions.add(gene.toRegion());
+                    geneRegions.add(gene.getCoord());
                     boolean found = true;
                     while (found) {
                         found = false;

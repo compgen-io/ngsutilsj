@@ -19,8 +19,9 @@ public class RepeatMaskerAnnotationSource extends AbstractAnnotationSource<Repea
     public class RepeatAnnotation implements Annotation {
         final private String repeat;
         final private String repeatFamily;
-
-        public RepeatAnnotation(String repeat, String repeatFamily) {
+        final private GenomeRegion coord;
+        public RepeatAnnotation(GenomeRegion coord, String repeat, String repeatFamily) {
+            this.coord = coord;
             this.repeat = repeat;
             this.repeatFamily = repeatFamily;
         }
@@ -36,6 +37,11 @@ public class RepeatMaskerAnnotationSource extends AbstractAnnotationSource<Repea
         @Override
         public String[] toStringArray() {
             return new String[] { repeat, repeatFamily };
+        }
+
+        @Override
+        public GenomeRegion getCoord() {
+            return coord;
         }
     }
 
@@ -62,7 +68,7 @@ public class RepeatMaskerAnnotationSource extends AbstractAnnotationSource<Repea
                 strand = Strand.NONE;
             }
             final GenomeRegion coord = new GenomeRegion(chrom, start, end, strand);
-            final RepeatAnnotation annotation = new RepeatAnnotation(cols[9], cols[10]);
+            final RepeatAnnotation annotation = new RepeatAnnotation(coord, cols[9], cols[10]);
 
             addAnnotation(coord, annotation);
             

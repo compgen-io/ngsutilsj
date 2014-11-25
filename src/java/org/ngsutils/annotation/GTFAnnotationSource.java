@@ -161,7 +161,7 @@ public class GTFAnnotationSource extends AbstractAnnotationSource<GTFGene> {
 
         private final Map<String, GTFTranscript> transcripts = new HashMap<String, GTFTranscript>();
 
-        public GTFGene(String geneId, String geneName, String ref, Strand strand) {
+        public GTFGene(GenomeRegion coord, String geneId, String geneName, String ref, Strand strand) {
             this.geneId = geneId;
             this.geneName = geneName;
             bioType = null;
@@ -263,9 +263,10 @@ public class GTFAnnotationSource extends AbstractAnnotationSource<GTFGene> {
             }
         }
 
-        public GenomeRegion toRegion() {
+        public GenomeRegion getCoord() {
             return new GenomeRegion(ref, start, end, strand);
         }
+
     }
 
     final private boolean hasBioType;
