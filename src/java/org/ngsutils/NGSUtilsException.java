@@ -1,6 +1,6 @@
 package org.ngsutils;
 
-public class NGSUtilsException extends Exception {
+public class NGSUtilsException extends RuntimeException {
 	public NGSUtilsException(String msg) {
 		super(msg);
 	}
