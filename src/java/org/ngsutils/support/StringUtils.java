@@ -3,6 +3,8 @@ package org.ngsutils.support;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -238,6 +240,15 @@ public class StringUtils {
         }
         return out;
     }
+
+    public static String findCommonPrefix(String[] vals) {
+        List<String> l = new ArrayList<String>();
+        for (String s: vals) {
+            l.add(s);
+        }
+        return findCommonPrefix(l);
+    }
+    
     public static String findCommonPrefix(List<String> vals) {
         String prefix = "";
         for (int i=0; i<vals.get(0).length(); i++) {
@@ -255,6 +266,41 @@ public class StringUtils {
         }
         return prefix;
     }
+
+    public static List<String> naturalSort(Iterable<String>iter) {
+        List<String> vals = new ArrayList<String>();
+        for (String s: iter) {
+            vals.add(s);
+        }
     
+        Collections.sort(vals, naturalSorter());
+        return vals;
+    }
+
+    public static void naturalSort(String[] str) {
+        Arrays.sort(str, naturalSorter());
+    }
+    
+    public static Comparator<String> naturalSorter() {
+        return new Comparator<String>(){
+            @Override
+            public int compare(String o1, String o2) {
+                if (o1==null && o2==null) {
+                    return 0;
+                }
+                if (o1==null) {
+                    return -1;
+                }
+                if (o2==null) {
+                    return 1;
+                }
+                String common = findCommonPrefix(new String[] {o1, o2});
+
+                NaturalTokenList ntl1 = NaturalTokenList.parseString(o1.substring(common.length()));
+                NaturalTokenList ntl2 = NaturalTokenList.parseString(o2.substring(common.length()));
+                return ntl1.compareTo(ntl2);
+            }};
+        
+    }
 }
     

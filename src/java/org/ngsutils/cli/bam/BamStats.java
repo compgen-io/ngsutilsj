@@ -16,7 +16,7 @@ import net.sf.samtools.SAMSequenceRecord;
 
 import org.ngsutils.NGSUtilsException;
 import org.ngsutils.annotation.AnnotatedRegionCounter;
-import org.ngsutils.support.NaturalSort;
+import org.ngsutils.support.StringUtils;
 import org.ngsutils.support.TallyCounts;
 import org.ngsutils.support.cli.AbstractOutputCommand;
 import org.ngsutils.support.cli.Command;
@@ -194,7 +194,7 @@ public class BamStats extends AbstractOutputCommand {
         }
         System.out.println();
         System.out.println("[References]");
-        for (String ref: NaturalSort.naturalSort(refCounts.keySet())) {
+        for (String ref: StringUtils.naturalSort(refCounts.keySet())) {
             System.out.println(ref+":\t"+refCounts.get(ref));
         }
         System.out.println();
