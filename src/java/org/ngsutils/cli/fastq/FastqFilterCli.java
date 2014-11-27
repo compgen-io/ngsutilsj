@@ -12,6 +12,7 @@ import org.ngsutils.fastq.filter.BlacklistFilter;
 import org.ngsutils.fastq.filter.FastqFilter;
 import org.ngsutils.fastq.filter.PairedFilter;
 import org.ngsutils.fastq.filter.PrefixFilter;
+import org.ngsutils.fastq.filter.PrefixQualFilter;
 import org.ngsutils.fastq.filter.SeqTrimFilter;
 import org.ngsutils.fastq.filter.SizeFilter;
 import org.ngsutils.fastq.filter.SuffixQualFilter;
@@ -29,6 +30,7 @@ import com.lexicalscope.jewel.cli.Unparsed;
 public class FastqFilterCli extends AbstractOutputCommand {
     private boolean paired = false;
     private String suffixQuality = null;
+    private String prefixQuality = null;
     private int prefixTrimLength = -1;
     private int minimumSize = -1;
     private int maxWildcard = -1;
@@ -73,6 +75,11 @@ public class FastqFilterCli extends AbstractOutputCommand {
     @Option(description = "Suffix quality filter (B-trim, use '#' for Illumina) (Default:'')", longName = "suffixqual", defaultToNull = true)
     public void setSuffixQualityFilter(String suffixQuality) {
         this.suffixQuality = suffixQuality;
+    }
+
+    @Option(description = "Prefix quality filter (B-trim, use '#' for Illumina) (Default:'')", longName = "prefixqual", defaultToNull = true)
+    public void setPrefixQualityFilter(String prefixQuality) {
+        this.prefixQuality = prefixQuality;
     }
 
     @Option(description = "Prefix trim length (Default: 0)", longName = "prefixtrim", defaultValue = "0")
@@ -127,6 +134,11 @@ public class FastqFilterCli extends AbstractOutputCommand {
 
         if (suffixQuality != null) {
             parent = new SuffixQualFilter(parent, verbose, suffixQuality.charAt(0));
+            filters.add((FastqFilter) parent);
+        }
+
+        if (prefixQuality != null) {
+            parent = new PrefixQualFilter(parent, verbose, prefixQuality.charAt(0));
             filters.add((FastqFilter) parent);
         }
 
