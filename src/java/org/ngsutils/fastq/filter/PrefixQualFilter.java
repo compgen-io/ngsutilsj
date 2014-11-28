@@ -24,7 +24,7 @@ public class PrefixQualFilter extends AbstractSingleReadFilter {
 			removed++;
 		}
 		
-		seq = seq.substring(seq.length() - removed);
+		seq = seq.substring(removed);
 
 		if (qual.length() > 0) {
 		    if (removed > 0) {
