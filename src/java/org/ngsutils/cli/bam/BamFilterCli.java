@@ -255,8 +255,6 @@ public class BamFilterCli extends AbstractCommand {
                 System.err.println("BEDExclude: "+bedExclude);
             }
         }
-        
-        
 
         SAMFileWriterFactory factory = new SAMFileWriterFactory();
 
