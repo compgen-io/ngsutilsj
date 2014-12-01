@@ -27,6 +27,7 @@ import org.ngsutils.bam.filter.FilterFlags;
 import org.ngsutils.bam.filter.NullFilter;
 import org.ngsutils.bam.filter.PairedFilter;
 import org.ngsutils.bam.filter.RequiredFlags;
+import org.ngsutils.bam.filter.UniqueMapping;
 import org.ngsutils.bam.support.ReadUtils;
 import org.ngsutils.support.cli.AbstractCommand;
 import org.ngsutils.support.cli.Command;
@@ -58,6 +59,7 @@ public class BamFilterCli extends AbstractCommand {
     private boolean bedIncludeOnlyWithin = false;
 
     private boolean paired = false;
+    private boolean unique = false;
     
     private boolean lenient = false;
     private boolean silent = false;
@@ -77,7 +79,7 @@ public class BamFilterCli extends AbstractCommand {
         this.tmpDir = tmpDir;
     }
 
-    @Option(description = "Force checking read pairing (simple - same chromosome, reversed orientation)", longName="paired")
+    @Option(description = "Force sanity checking of read pairing (simple - same chromosome, reversed orientation)", longName="paired")
     public void setPaired(boolean val) {
         this.paired = val;
     }
@@ -126,11 +128,6 @@ public class BamFilterCli extends AbstractCommand {
         this.lenient = lenient;
     }
 
-    @Option(description = "Use silent validation strategy", longName="silent")
-    public void setSilent(boolean silent) {
-        this.silent = silent;
-    }
-    
     @Option(description = "Library is in FR orientation", longName="library-fr")
     public void setLibraryFR(boolean val) {
         if (val) {
@@ -155,6 +152,11 @@ public class BamFilterCli extends AbstractCommand {
     @Option(description = "Only keep properly paired reads", longName="proper-pairs")
     public void setProperPairs(boolean val) {
         requiredFlags |= ReadUtils.PROPER_PAIR_FLAG; 
+    }
+
+    @Option(description = "Only keep reads that have one unique mapping", longName="unique-mapping")
+    public void setUniqueMapping(boolean val) {
+        unique=val; 
     }
 
     @Option(description = "Only keep mapped reads (both reads if paired)", longName="mapped")
@@ -221,6 +223,12 @@ public class BamFilterCli extends AbstractCommand {
             parent = new RequiredFlags(parent, false, requiredFlags);
             if (verbose) {
                 System.err.println("RequiredFlags: "+requiredFlags);
+            }
+        }
+        if (unique) {
+            parent = new UniqueMapping(parent, false);
+            if (verbose) {
+                System.err.println("Unique-mapping");
             }
         }
         if (paired) {
