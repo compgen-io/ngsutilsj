@@ -128,21 +128,21 @@ public class BamFilterCli extends AbstractCommand {
         this.lenient = lenient;
     }
 
-    @Option(description = "Library is in FR orientation", longName="library-fr")
+    @Option(description = "Library is in FR orientation (only used for BED filters)", longName="library-fr")
     public void setLibraryFR(boolean val) {
         if (val) {
             orient = Orientation.FR;
         }
     }
 
-    @Option(description = "Library is in RF orientation", longName="library-rf")
+    @Option(description = "Library is in RF orientation (only used for BED filters)", longName="library-rf")
     public void setLibraryRF(boolean val) {
         if (val) {
             orient = Orientation.RF;
         }
     }
 
-    @Option(description = "Library is in unstranded orientation (default)", longName="library-unstranded")
+    @Option(description = "Library is in unstranded orientation  (only used for BED filters, default)", longName="library-unstranded")
     public void setLibraryUnstranded(boolean val) {
         if (val) {
             orient = Orientation.UNSTRANDED;
@@ -286,9 +286,9 @@ public class BamFilterCli extends AbstractCommand {
 
         SAMFileWriter out;
         if (outfile != null) {
-            out = factory.makeBAMWriter(header, false, outfile);
+            out = factory.makeBAMWriter(header, true, outfile);
         } else {
-            out = factory.makeSAMWriter(header,  false,  outStream);
+            out = factory.makeSAMWriter(header,  true,  outStream);
         }
 
         long i = 0;
