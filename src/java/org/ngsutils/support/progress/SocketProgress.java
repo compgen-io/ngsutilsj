@@ -42,6 +42,17 @@ public class SocketProgress extends BaseProgress {
     }
     
     protected void startServer() {
+        Runtime.getRuntime().addShutdownHook(new Thread(new Runnable(){
+            @Override
+            public void run() {
+                if (socketPath!=null) {
+                    File f = new File(socketPath);
+                    if (f.exists()) {
+                        f.delete();
+                    }
+                }
+            }}));
+
         serverThread = new Thread(new Runnable() {
             @Override
             public void run() {
@@ -49,7 +60,7 @@ public class SocketProgress extends BaseProgress {
                     ServerSocket server = new ServerSocket(port);
                     if (socketPath != null) {
                         FileOutputStream fos = new FileOutputStream(socketPath);
-                        fos.write((""+server.getInetAddress().getCanonicalHostName()+":"+server.getLocalPort()+"\n").getBytes());
+                        fos.write((""+server.getLocalPort()+"\n").getBytes());
                         fos.close();
                     }
                     server.setSoTimeout(1000);
@@ -65,8 +76,11 @@ public class SocketProgress extends BaseProgress {
                     server.close();
                 } catch (IOException e) {
                 } finally {
-                    if (socketPath != null) {
-                        new File(socketPath).delete();
+                    if (socketPath!=null) {
+                        File f = new File(socketPath);
+                        if (f.exists()) {
+                            f.delete();
+                        }
                     }
                 }
             }
@@ -75,6 +89,8 @@ public class SocketProgress extends BaseProgress {
         //        serverThread.setDaemon(true);
         serverThread.start();
     }
+    
+   
     
     @Override
     synchronized
