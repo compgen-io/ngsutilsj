@@ -84,21 +84,26 @@ public class ProgressUtils {
         }
         return new Iterator<T>() {
             boolean done = false;
+            
+            private void done() {
+                if (!done) {
+                    if (progress != null) {
+                        progress.done();
+                    }
+                    if (it instanceof CloseableIterator) {
+                        ((CloseableIterator<T>) it).close();
+                    }
+                    done = true;
+                }
+            }
+            
             @Override
             public boolean hasNext() {
-                boolean hasNext = it.hasNext();
-                if (!hasNext) {
-                    if (!done) {
-                        if (progress != null) {
-                            progress.done();
-                        }
-                        if (it instanceof CloseableIterator) {
-                            ((CloseableIterator<T>) it).close();
-                        }
-                        done = true;
-                    }
+                if (!it.hasNext()) {
+                    done();
+                    return false;
                 }
-                return hasNext;
+                return true;
             }
 
             @Override

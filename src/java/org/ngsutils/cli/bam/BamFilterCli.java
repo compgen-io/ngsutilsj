@@ -30,6 +30,7 @@ import org.ngsutils.bam.filter.NullFilter;
 import org.ngsutils.bam.filter.PairedFilter;
 import org.ngsutils.bam.filter.RequiredFlags;
 import org.ngsutils.bam.filter.UniqueMapping;
+import org.ngsutils.bam.filter.UniqueStart;
 import org.ngsutils.bam.support.ReadUtils;
 import org.ngsutils.support.cli.AbstractCommand;
 import org.ngsutils.support.cli.Command;
@@ -62,6 +63,7 @@ public class BamFilterCli extends AbstractCommand {
 
     private boolean paired = false;
     private boolean unique = false;
+    private boolean uniqueStart = false;
     
     private boolean lenient = false;
     private boolean silent = false;
@@ -144,7 +146,7 @@ public class BamFilterCli extends AbstractCommand {
         }
     }
 
-    @Option(description = "Library is in unstranded orientation  (only used for BED filters, default)", longName="library-unstranded")
+    @Option(description = "Library is in unstranded orientation (only used for BED filters, default)", longName="library-unstranded")
     public void setLibraryUnstranded(boolean val) {
         if (val) {
             orient = Orientation.UNSTRANDED;
@@ -153,22 +155,56 @@ public class BamFilterCli extends AbstractCommand {
 
     @Option(description = "Only keep properly paired reads", longName="proper-pairs")
     public void setProperPairs(boolean val) {
-        requiredFlags |= ReadUtils.PROPER_PAIR_FLAG; 
+        if (val) {
+            requiredFlags |= ReadUtils.PROPER_PAIR_FLAG;
+        }
     }
 
     @Option(description = "Only keep reads that have one unique mapping", longName="unique-mapping")
     public void setUniqueMapping(boolean val) {
         unique=val; 
+        setMapped(true);
+    }
+
+    @Option(description = "Keep at most one read per position (strand-specific, only for single-read fragments)", longName="unique-start")
+    public void setUniqueStart(boolean val) {
+        unique=val; 
+        setMapped(true);
     }
 
     @Option(description = "Only keep mapped reads (both reads if paired)", longName="mapped")
     public void setMapped(boolean val) {
-        filterFlags |= ReadUtils.READ_UNMAPPED_FLAG | ReadUtils.MATE_UNMAPPED_FLAG; 
+        if (val) {
+            filterFlags |= ReadUtils.READ_UNMAPPED_FLAG | ReadUtils.MATE_UNMAPPED_FLAG; 
+        }
     }
 
     @Option(description = "Only keep unmapped reads", longName="unmapped")
     public void setUnmapped(boolean val) {
-        requiredFlags |= ReadUtils.READ_UNMAPPED_FLAG; 
+        if (val) {
+            requiredFlags |= ReadUtils.READ_UNMAPPED_FLAG;
+        }
+    }
+
+    @Option(description = "No secondary mappings", longName="nosecondary")
+    public void setNoSecondary(boolean val) {
+        if (val) {
+            filterFlags |= ReadUtils.SUPPLEMENTARY_ALIGNMENT_FLAG;
+        }
+    }
+
+    @Option(description = "No PCR duplicates", longName="nopcrdup")
+    public void setNoPCRDuplicates(boolean val) {
+        if (val) {
+            filterFlags |= ReadUtils.DUPLICATE_READ_FLAG;
+        }
+    }
+
+    @Option(description = "No QC failures", longName="noqcfail")
+    public void setNoQCFail(boolean val) {
+        if (val) {
+            filterFlags |= ReadUtils.READ_FAILS_VENDOR_QUALITY_CHECK_FLAG;
+        }
     }
 
     @Option(description = "Filtering flags", longName="filter-flags", defaultValue="0")
@@ -237,6 +273,12 @@ public class BamFilterCli extends AbstractCommand {
                 System.err.println("Unique-mapping");
             }
         }
+        if (uniqueStart) {
+            parent = new UniqueStart(parent, false);
+            if (verbose) {
+                System.err.println("Unique-start");
+            }
+        }
         if (paired) {
             parent = new PairedFilter(parent, false);
             if (verbose) {
@@ -300,6 +342,7 @@ public class BamFilterCli extends AbstractCommand {
                 out.addAlignment(read);
             }
         }
+
         if (verbose) {
             dumpStats(parent);
         }
