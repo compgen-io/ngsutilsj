@@ -1,7 +1,7 @@
 
 package org.ngsutils.bam.filter;
 
-import net.sf.samtools.SAMRecord;
+import htsjdk.samtools.SAMRecord;
 
 /**
  * Makes sure reads are in reversed orientations and on the same chromosome. 

@@ -1,5 +1,8 @@
 package org.ngsutils;
 
+import htsjdk.samtools.SAMFileHeader;
+import htsjdk.samtools.SAMProgramRecord;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -10,9 +13,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import net.sf.samtools.SAMFileHeader;
-import net.sf.samtools.SAMProgramRecord;
 
 import org.ngsutils.cli.annotate.GTFAnnotate;
 import org.ngsutils.cli.annotate.RepeatAnnotate;
@@ -44,6 +44,7 @@ import com.lexicalscope.jewel.cli.ArgumentValidationException;
 import com.lexicalscope.jewel.cli.CliFactory;
 import com.lexicalscope.jewel.cli.HelpRequestedException;
 
+@SuppressWarnings("deprecation")
 public class NGSUtils {
 	static private Map<String, Class<Exec>> execs = new HashMap<String, Class<Exec>>();
 	static {
@@ -105,8 +106,11 @@ public class NGSUtils {
 		String spacer = "            ";
 		for (String cmd : execs.keySet()) {
 			if (cmd.length() > minsize) {
-				minsize = cmd.length();
 	            Command c = execs.get(cmd).getAnnotation(Command.class);
+	            if (c.deprecated()) {
+	                continue;
+	            }
+                minsize = cmd.length();
 	            if (c.experimental()) {
 	                minsize += 1;
 	            }
@@ -117,6 +121,9 @@ public class NGSUtils {
 		for (String cmd : execs.keySet()) {
 			Command c = execs.get(cmd).getAnnotation(Command.class);
 			if (c != null) {
+                if (c.deprecated()) {
+                    continue;
+                }
 				if (!progs.containsKey(c.cat())) {
 					progs.put(c.cat(), new ArrayList<String>());
 				}

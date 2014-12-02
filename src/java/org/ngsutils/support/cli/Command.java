@@ -13,4 +13,5 @@ public @interface Command {
 	String cat() default "";
     String doc() default "";
     boolean experimental() default false;
+    boolean deprecated() default false;
 }

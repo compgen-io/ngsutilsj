@@ -1,9 +1,9 @@
 package org.ngsutils.cli.bam.count;
 
-import java.util.Iterator;
+import htsjdk.samtools.SAMSequenceDictionary;
+import htsjdk.samtools.SAMSequenceRecord;
 
-import net.sf.samtools.SAMSequenceDictionary;
-import net.sf.samtools.SAMSequenceRecord;
+import java.util.Iterator;
 
 import org.ngsutils.bam.Orientation;
 import org.ngsutils.bam.Strand;

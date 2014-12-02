@@ -1,13 +1,16 @@
 package org.ngsutils.cli.bam;
 
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SamInputResource;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.ValidationStringency;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.channels.FileChannel;
 import java.util.Iterator;
-
-import net.sf.samtools.SAMFileReader;
-import net.sf.samtools.SAMFileReader.ValidationStringency;
-import net.sf.samtools.SAMRecord;
 
 import org.ngsutils.NGSUtils;
 import org.ngsutils.NGSUtilsException;
@@ -30,7 +33,7 @@ import com.lexicalscope.jewel.cli.Unparsed;
 @Command(name="bam-bins", desc="Quickly count the number of reads that fall into bins", cat="bam")
 public class BinCount extends AbstractOutputCommand {
     
-    private String samFilename=null;
+    private String filename=null;
     
     private int binSize = 0;
     
@@ -44,7 +47,7 @@ public class BinCount extends AbstractOutputCommand {
     
     @Unparsed(name = "FILE")
     public void setFilename(String filename) {
-        samFilename = filename;
+        this.filename = filename;
     }
 
     @Option(description = "Count bins of size [value] (default: 50bp)", longName="bins", defaultValue="50")
@@ -95,19 +98,32 @@ public class BinCount extends AbstractOutputCommand {
 
     @Override
     public void exec() throws NGSUtilsException, IOException {
-        File file = new File(samFilename);
-        FileInputStream fis = new FileInputStream(file);
-        SAMFileReader reader = new SAMFileReader(fis);
+        SamReaderFactory readerFactory = SamReaderFactory.makeDefault();
         if (lenient) {
-            reader.setValidationStringency(ValidationStringency.LENIENT);
+            readerFactory.validationStringency(ValidationStringency.LENIENT);
         } else if (silent) {
-            reader.setValidationStringency(ValidationStringency.SILENT);
+            readerFactory.validationStringency(ValidationStringency.SILENT);
         }
 
+        SamReader reader = null;
+        String name;
+        FileChannel channel = null;
+        if (filename.equals("-")) {
+            reader = readerFactory.open(SamInputResource.of(System.in));
+            name = "<stdin>";
+        } else {
+            File f = new File(filename);
+            FileInputStream fis = new FileInputStream(f);
+            channel = fis.getChannel();
+            reader = readerFactory.open(SamInputResource.of(fis));
+            name = f.getName();
+        }
+
+        
         final TabWriter writer = new TabWriter(out);
         writer.write_line("## program: " + NGSUtils.getVersion());
         writer.write_line("## cmd: " + NGSUtils.getArgs());
-        writer.write_line("## input: " + samFilename);
+        writer.write_line("## input: " + filename);
         writer.write_line("## library-orientation: " + orient.toString());
 
         
@@ -134,7 +150,7 @@ public class BinCount extends AbstractOutputCommand {
                 }
             }});
         
-        Iterator<SAMRecord> it = ProgressUtils.getIterator(file.getName(), reader.iterator(), new FileChannelStats(fis.getChannel()), new ProgressMessage<SAMRecord>() {
+        Iterator<SAMRecord> it = ProgressUtils.getIterator(name, reader.iterator(), new FileChannelStats(channel), new ProgressMessage<SAMRecord>() {
 
             @Override
             public String msg(SAMRecord current) {

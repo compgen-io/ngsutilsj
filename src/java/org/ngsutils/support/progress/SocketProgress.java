@@ -113,8 +113,11 @@ public class SocketProgress extends BaseProgress {
             str += "\n";
             str += "Started  : " + sp.startDate + "\n";
             str += "Elapsed  : " + secondsToString(sp.elapsedMilliSec() / 1000) + "\n";
-            str += "Remaining: " + secondsToString(sp.estRemainingSec()) + "\n\n";
-    
+            
+            if (sp.total > 0) {
+                str += "Remaining: " + secondsToString(sp.estRemainingSec()) + "\n\n";
+            }
+
             str += "Total    : " + sp.total + "\n";
             str += "Current  : " + sp.current + " (" + String.format("%.1f", sp.pctComplete()*100) + "%)\n";
     

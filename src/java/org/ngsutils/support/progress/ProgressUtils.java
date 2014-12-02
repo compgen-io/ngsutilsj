@@ -1,10 +1,10 @@
 package org.ngsutils.support.progress;
 
+import htsjdk.samtools.util.CloseableIterator;
+
 import java.util.Iterator;
 
 import org.ngsutils.support.TTY;
-
-import net.sf.samtools.util.CloseableIterator;
 
 public class ProgressUtils {
     public static Progress getProgress(String name) {
@@ -51,7 +51,7 @@ public class ProgressUtils {
             return null;
         }
 
-        p = new StdErrProgress();
+        p = new ConsoleStdErrProgress();
         p.setName(name);
         return p;
     }

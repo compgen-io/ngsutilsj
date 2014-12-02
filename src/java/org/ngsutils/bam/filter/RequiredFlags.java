@@ -1,6 +1,6 @@
 package org.ngsutils.bam.filter;
 
-import net.sf.samtools.SAMRecord;
+import htsjdk.samtools.SAMRecord;
 
 public class RequiredFlags extends AbstractBamFilter {
     protected int flags = 0;

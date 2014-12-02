@@ -1,14 +1,15 @@
 package org.ngsutils.cli.bam;
 
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SAMRecordIterator;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.ValidationStringency;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
-
-import net.sf.samtools.SAMFileReader;
-import net.sf.samtools.SAMFileReader.ValidationStringency;
-import net.sf.samtools.SAMRecord;
-import net.sf.samtools.SAMRecordIterator;
 
 import org.ngsutils.NGSUtils;
 import org.ngsutils.NGSUtilsException;
@@ -134,13 +135,15 @@ public class BamCount extends AbstractOutputCommand {
             throw new NGSUtilsException("You can't specify both a bin-size and a BED file!");
         }
         
-        SAMFileReader reader = new SAMFileReader(new File(samFilename));
+        SamReaderFactory readerFactory = SamReaderFactory.makeDefault();
         if (lenient) {
-            reader.setValidationStringency(ValidationStringency.LENIENT);
+            readerFactory.validationStringency(ValidationStringency.LENIENT);
         } else if (silent) {
-            reader.setValidationStringency(ValidationStringency.SILENT);
+            readerFactory.validationStringency(ValidationStringency.SILENT);
         }
 
+        SamReader reader = readerFactory.open(new File(samFilename));
+        
         TabWriter writer = new TabWriter(out);
         writer.write_line("## program: " + NGSUtils.getVersion());
         writer.write_line("## cmd: " + NGSUtils.getArgs());

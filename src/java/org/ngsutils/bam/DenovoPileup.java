@@ -1,5 +1,11 @@
 package org.ngsutils.bam;
 
+import htsjdk.samtools.CigarElement;
+import htsjdk.samtools.CigarOperator;
+import htsjdk.samtools.SAMFileReader;
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SAMRecordIterator;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayDeque;
@@ -11,12 +17,6 @@ import java.util.List;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-import net.sf.samtools.CigarElement;
-import net.sf.samtools.CigarOperator;
-import net.sf.samtools.SAMFileReader;
-import net.sf.samtools.SAMRecord;
-import net.sf.samtools.SAMRecordIterator;
-
 import org.ngsutils.annotation.GenomeRegion;
 import org.ngsutils.fasta.FastaReader;
 import org.ngsutils.fasta.IndexedFastaFile;
@@ -26,7 +26,9 @@ import org.ngsutils.fasta.NullFasta;
  * Calculates a pileup from a BAM file
  * @author mbreese
  *
+ * Don't use this... @see PileupReader
  */
+@Deprecated
 public class DenovoPileup {
     public class RefPos implements Comparable<RefPos> {
         public final int refIndex;

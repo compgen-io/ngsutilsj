@@ -1,8 +1,8 @@
 package org.ngsutils.bam.filter;
 
-import java.util.Iterator;
+import htsjdk.samtools.SAMRecord;
 
-import net.sf.samtools.SAMRecord;
+import java.util.Iterator;
 
 public class SAMRecordIterable implements Iterable<SAMRecord> {
     private Iterator<SAMRecord> it;

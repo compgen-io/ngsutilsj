@@ -1,11 +1,11 @@
 package org.ngsutils.cli.bam.count;
 
+import htsjdk.samtools.SAMRecord;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.SortedMap;
 import java.util.TreeMap;
-
-import net.sf.samtools.SAMRecord;
 
 import org.ngsutils.bam.Orientation;
 import org.ngsutils.bam.Strand;

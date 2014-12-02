@@ -1,5 +1,7 @@
 package org.ngsutils.bam.filter;
 
+import htsjdk.samtools.SAMRecord;
+
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.HashMap;
@@ -7,8 +9,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
-
-import net.sf.samtools.SAMRecord;
 
 public abstract class AbstractBamFilter implements BamFilter, Iterable<SAMRecord> {
     protected BamFilter parent;

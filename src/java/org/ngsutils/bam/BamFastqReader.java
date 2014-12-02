@@ -1,7 +1,13 @@
 package org.ngsutils.bam;
 
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SAMRecordIterator;
+import htsjdk.samtools.SamInputResource;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.ValidationStringency;
+
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -14,11 +20,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
-import net.sf.samtools.SAMFileReader;
-import net.sf.samtools.SAMFileReader.ValidationStringency;
-import net.sf.samtools.SAMRecord;
-import net.sf.samtools.SAMRecordIterator;
-
+import org.ngsutils.NGSUtilsException;
 import org.ngsutils.bam.support.ReadUtils;
 import org.ngsutils.fastq.FastqRead;
 import org.ngsutils.fastq.FastqReader;
@@ -29,7 +31,12 @@ import org.ngsutils.support.progress.ProgressUtils;
 
 public class BamFastqReader implements FastqReader {
     
-    private final SAMFileReader reader;
+    private String filename = null;
+    private SAMRecordIterator samIterator = null;
+    private InputStream inputStream = null;
+    private FileChannel channel = null;
+
+    private SamReader reader = null;
     private String name = null;
     private boolean comments = true;
     
@@ -46,25 +53,13 @@ public class BamFastqReader implements FastqReader {
     // include mapped reads in export (default false)
     private boolean includeMapped = false;
     
-    private SAMRecordIterator samIterator = null;
-    private FileChannel channel = null;
 
     public BamFastqReader(String filename) throws FileNotFoundException {
-        if (filename.equals("-")) {
-            reader = new SAMFileReader(System.in);
-            channel = null;
-            name = filename;
-        } else {
-            File f = new File(filename);
-            FileInputStream fis = new FileInputStream(f);
-            reader = new SAMFileReader(fis);
-            channel = fis.getChannel();
-            name = f.getName();            
-        }        
+        this.filename = filename;
     }
 
     public BamFastqReader(InputStream in, FileChannel channel, String name) {
-        reader = new SAMFileReader(in);
+        this.inputStream = in;
         this.channel = channel;
         this.name = name;
     }
@@ -113,10 +108,24 @@ public class BamFastqReader implements FastqReader {
     
     @Override
     public Iterator<FastqRead> iterator() {
+        SamReaderFactory readerFactory = SamReaderFactory.makeDefault();
         if (lenient) {
-            reader.setValidationStringency(ValidationStringency.LENIENT);
+            readerFactory.validationStringency(ValidationStringency.LENIENT);
         } else if (silent) {
-            reader.setValidationStringency(ValidationStringency.SILENT);
+            readerFactory.validationStringency(ValidationStringency.SILENT);
+        }
+
+        reader = null;
+        if (filename != null) {
+            if (filename.equals("-")) {
+                reader = readerFactory.open(SamInputResource.of(System.in));
+            } else {
+                reader = readerFactory.open(new File(filename));
+            }
+        } else if (inputStream != null) {
+            reader = readerFactory.open(SamInputResource.of(inputStream));
+        } else {
+            throw new NGSUtilsException("Missing SAM resource!");
         }
 
         samIterator = reader.iterator();

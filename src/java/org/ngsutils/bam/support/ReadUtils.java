@@ -1,18 +1,18 @@
 package org.ngsutils.bam.support;
 
+import htsjdk.samtools.CigarElement;
+import htsjdk.samtools.CigarOperator;
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SAMRecord.SAMTagAndValue;
+import htsjdk.samtools.SAMRecordIterator;
+import htsjdk.samtools.SamReader;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
-
-import net.sf.samtools.CigarElement;
-import net.sf.samtools.CigarOperator;
-import net.sf.samtools.SAMFileReader;
-import net.sf.samtools.SAMRecord;
-import net.sf.samtools.SAMRecord.SAMTagAndValue;
-import net.sf.samtools.SAMRecordIterator;
 
 import org.ngsutils.annotation.GenomeRegion;
 import org.ngsutils.bam.Orientation;
@@ -238,10 +238,10 @@ public class ReadUtils {
     }
 
     
-    public static int getReadLength(SAMFileReader reader) {
+    public static int getReadLength(SamReader reader) {
     	return getReadLength(reader, 10000);
     }
-    public static int getReadLength(SAMFileReader reader, int recordsToScan) {
+    public static int getReadLength(SamReader reader, int recordsToScan) {
     	int i = 0;
     	int size = 0;
         SAMRecordIterator it = reader.iterator();
@@ -254,11 +254,11 @@ public class ReadUtils {
         return size;
     }
 
-    public static List<SAMRecord> findOverlappingReads(SAMFileReader reader, GenomeRegion pos, Orientation orient, int readLength, int minOverlap) {
+    public static List<SAMRecord> findOverlappingReads(SamReader reader, GenomeRegion pos, Orientation orient, int readLength, int minOverlap) {
         return findOverlappingReads(reader, pos, orient, readLength, minOverlap, false);
     }
 
-    public static List<SAMRecord> findOverlappingReads(SAMFileReader reader, GenomeRegion pos, Orientation orient, int readLength, int minOverlap, boolean allowGaps) {
+    public static List<SAMRecord> findOverlappingReads(SamReader reader, GenomeRegion pos, Orientation orient, int readLength, int minOverlap, boolean allowGaps) {
     	List<SAMRecord> out = new ArrayList<SAMRecord>();
 
     	SAMRecordIterator it = reader.query(pos.ref, pos.start - readLength + minOverlap, pos.start + readLength - minOverlap, true);
@@ -293,10 +293,10 @@ public class ReadUtils {
     	return out;
     }
 
-    public static SortedMap<GenomeRegion, MappedReadCounter> findJunctions(SAMFileReader reader, String ref, int start, int end, Orientation orient) {
+    public static SortedMap<GenomeRegion, MappedReadCounter> findJunctions(SamReader reader, String ref, int start, int end, Orientation orient) {
         return findJunctions(reader, ref, start, end, orient, 4, null, false);
     }
-    public static SortedMap<GenomeRegion, MappedReadCounter> findJunctions(SAMFileReader reader, String ref, int start, int end, Orientation orient, int minOverlap, String tallyTagName, boolean splitReads) {
+    public static SortedMap<GenomeRegion, MappedReadCounter> findJunctions(SamReader reader, String ref, int start, int end, Orientation orient, int minOverlap, String tallyTagName, boolean splitReads) {
         SAMRecordIterator it = reader.query(ref, start, end, true);
         SortedMap<GenomeRegion, MappedReadCounter> counters = new TreeMap<GenomeRegion, MappedReadCounter>();
         

@@ -1,10 +1,10 @@
 package org.ngsutils.annotation;
 
-import java.io.IOException;
+import htsjdk.samtools.CigarElement;
+import htsjdk.samtools.CigarOperator;
+import htsjdk.samtools.SAMRecord;
 
-import net.sf.samtools.CigarElement;
-import net.sf.samtools.CigarOperator;
-import net.sf.samtools.SAMRecord;
+import java.io.IOException;
 
 import org.ngsutils.annotation.GTFAnnotationSource.GTFExon;
 import org.ngsutils.annotation.GTFAnnotationSource.GTFGene;

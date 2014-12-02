@@ -1,9 +1,9 @@
 package org.ngsutils.bam.filter;
 
+import htsjdk.samtools.SAMRecord;
+
 import java.io.FileNotFoundException;
 import java.io.IOException;
-
-import net.sf.samtools.SAMRecord;
 
 import org.ngsutils.bam.Orientation;
 

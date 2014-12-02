@@ -1,6 +1,6 @@
 package org.ngsutils.bam.filter;
 
-import net.sf.samtools.SAMRecord;
+import htsjdk.samtools.SAMRecord;
 
 public class UniqueMapping extends AbstractBamFilter {
     

@@ -1,5 +1,12 @@
 package org.ngsutils.cli.bam;
 
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SAMSequenceRecord;
+import htsjdk.samtools.SamInputResource;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.ValidationStringency;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -8,11 +15,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.TreeMap;
-
-import net.sf.samtools.SAMFileReader;
-import net.sf.samtools.SAMFileReader.ValidationStringency;
-import net.sf.samtools.SAMRecord;
-import net.sf.samtools.SAMSequenceRecord;
 
 import org.ngsutils.NGSUtilsException;
 import org.ngsutils.annotation.AnnotatedRegionCounter;
@@ -69,23 +71,25 @@ public class BamStats extends AbstractOutputCommand {
             counter = new AnnotatedRegionCounter(gtfFilename);
         }
         
-        SAMFileReader reader;
-        FileChannel channel = null;
+        SamReaderFactory readerFactory = SamReaderFactory.makeDefault();
+        if (lenient) {
+            readerFactory.validationStringency(ValidationStringency.LENIENT);
+        } else if (silent) {
+            readerFactory.validationStringency(ValidationStringency.SILENT);
+        }
+
+        SamReader reader = null;
         String name;
+        FileChannel channel = null;
         if (filename.equals("-")) {
-            reader = new SAMFileReader(System.in);
+            reader = readerFactory.open(SamInputResource.of(System.in));
             name = "<stdin>";
         } else {
             File f = new File(filename);
             FileInputStream fis = new FileInputStream(f);
             channel = fis.getChannel();
-            reader = new SAMFileReader(fis);
+            reader = readerFactory.open(SamInputResource.of(fis));
             name = f.getName();
-        }
-        if (lenient) {
-            reader.setValidationStringency(ValidationStringency.LENIENT);
-        } else if (silent) {
-            reader.setValidationStringency(ValidationStringency.SILENT);
         }
 
         long total = 0;

@@ -6,9 +6,9 @@ import java.util.List;
 
 import org.ngsutils.NGSUtils;
 import org.ngsutils.NGSUtilsException;
-import org.ngsutils.annotation.GenomeRegion;
 import org.ngsutils.annotation.GTFAnnotationSource;
 import org.ngsutils.annotation.GTFAnnotationSource.GTFGene;
+import org.ngsutils.annotation.GenomeRegion;
 import org.ngsutils.bam.Strand;
 import org.ngsutils.support.StringLineReader;
 import org.ngsutils.support.StringUtils;

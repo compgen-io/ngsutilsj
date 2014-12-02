@@ -1,12 +1,12 @@
 package org.ngsutils.cli.bam;
 
+import htsjdk.samtools.CigarOperator;
+import htsjdk.samtools.ValidationStringency;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
-
-import net.sf.samtools.CigarOperator;
-import net.sf.samtools.SAMFileReader.ValidationStringency;
 
 import org.ngsutils.NGSUtils;
 import org.ngsutils.NGSUtilsException;
@@ -26,8 +26,16 @@ import com.lexicalscope.jewel.cli.CommandLineInterface;
 import com.lexicalscope.jewel.cli.Option;
 import com.lexicalscope.jewel.cli.Unparsed;
 
+/**
+ * PileupCli - produces output similar to samtools mpileup, but using de DenovoPileup class.
+ * @author mbreese
+ *
+ *  @See PileupReader - this class shouldn't be used, just fork out to samtools and read the mpileup output, pileup has too many undocumented edge cases for output
+ *
+ */
 @CommandLineInterface(application="ngsutilsj pileup")
-@Command(name="pileup", desc="Produces a pileup-like output", cat="bam", doc="This command aims to produce an output that is similar to the samtools mpileup. However, due to some undocumented behavior in the output format, some small variation is likely.", experimental=true)
+@Command(name="pileup", desc="Produces a pileup-like output", cat="bam", doc="This command aims to produce an output that is similar to the samtools mpileup. However, due to some undocumented behavior in the output format, some small variation is likely.", deprecated=true)
+@Deprecated
 public class PileupCli extends AbstractOutputCommand {
     
     private String samFilename=null;
@@ -91,6 +99,8 @@ public class PileupCli extends AbstractOutputCommand {
 
     @Override
     public void exec() throws NGSUtilsException, IOException {
+
+        
         File f = new File(samFilename);
         FileInputStream fis = new FileInputStream(f);
         FileChannel channel = fis.getChannel();

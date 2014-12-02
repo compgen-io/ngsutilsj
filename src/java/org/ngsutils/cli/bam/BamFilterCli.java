@@ -1,5 +1,15 @@
 package org.ngsutils.cli.bam;
 
+import htsjdk.samtools.SAMFileHeader;
+import htsjdk.samtools.SAMFileWriter;
+import htsjdk.samtools.SAMFileWriterFactory;
+import htsjdk.samtools.SAMProgramRecord;
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SamInputResource;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.ValidationStringency;
+
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -8,14 +18,6 @@ import java.io.OutputStream;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.List;
-
-import net.sf.samtools.SAMFileHeader;
-import net.sf.samtools.SAMFileReader;
-import net.sf.samtools.SAMFileReader.ValidationStringency;
-import net.sf.samtools.SAMFileWriter;
-import net.sf.samtools.SAMFileWriterFactory;
-import net.sf.samtools.SAMProgramRecord;
-import net.sf.samtools.SAMRecord;
 
 import org.ngsutils.NGSUtils;
 import org.ngsutils.NGSUtilsException;
@@ -185,31 +187,35 @@ public class BamFilterCli extends AbstractCommand {
             throw new ArgumentValidationException("You must specify an input BAM filename and an output BAM filename!");
         }
         
-        SAMFileReader reader;
+        SamReaderFactory readerFactory = SamReaderFactory.makeDefault();
+        if (lenient) {
+            readerFactory.validationStringency(ValidationStringency.LENIENT);
+        } else if (silent) {
+            readerFactory.validationStringency(ValidationStringency.SILENT);
+        }
+
+        SamReader reader = null;
+        String name;
         FileChannel channel = null;
-        String name = null;
         if (filenames.get(0).equals("-")) {
-            reader = new SAMFileReader(System.in);
-            channel = null;
+            reader = readerFactory.open(SamInputResource.of(System.in));
             name = "<stdin>";
         } else {
             File f = new File(filenames.get(0));
-            name = f.getName();
             FileInputStream fis = new FileInputStream(f);
             channel = fis.getChannel();
-                    
-            reader = new SAMFileReader(fis);
-        }
-        if (lenient) {
-            reader.setValidationStringency(ValidationStringency.LENIENT);
-        } else if (silent) {
-            reader.setValidationStringency(ValidationStringency.SILENT);
+            reader = readerFactory.open(SamInputResource.of(fis));
+            name = f.getName();
         }
 
+        
         BamFilter parent = new NullFilter(ProgressUtils.getIterator(name, reader.iterator(), new FileChannelStats(channel), new ProgressMessage<SAMRecord>(){
             @Override
             public String msg(SAMRecord current) {
-                return current.getReadName();
+                if (current != null) {
+                    return current.getReadName();
+                }
+                return null;
             }}));
         
         if (filterFlags > 0) {

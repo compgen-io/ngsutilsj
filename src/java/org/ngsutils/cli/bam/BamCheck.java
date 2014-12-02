@@ -1,14 +1,16 @@
 package org.ngsutils.cli.bam;
 
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SamInputResource;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.ValidationStringency;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
 import java.util.Iterator;
-
-import net.sf.samtools.SAMFileReader;
-import net.sf.samtools.SAMFileReader.ValidationStringency;
-import net.sf.samtools.SAMRecord;
 
 import org.ngsutils.NGSUtilsException;
 import org.ngsutils.support.cli.AbstractOutputCommand;
@@ -49,25 +51,27 @@ public class BamCheck extends AbstractOutputCommand {
         if (filename == null) {
             throw new ArgumentValidationException("You must specify an input BAM filename!");
         }
-        
-        SAMFileReader reader;
-        FileChannel channel = null;
+        SamReaderFactory readerFactory = SamReaderFactory.makeDefault();
+        if (lenient) {
+            readerFactory.validationStringency(ValidationStringency.LENIENT);
+        } else if (silent) {
+            readerFactory.validationStringency(ValidationStringency.SILENT);
+        }
+
+        SamReader reader = null;
         String name;
+        FileChannel channel = null;
         if (filename.equals("-")) {
-            reader = new SAMFileReader(System.in);
+            reader = readerFactory.open(SamInputResource.of(System.in));
             name = "<stdin>";
         } else {
             File f = new File(filename);
             FileInputStream fis = new FileInputStream(f);
             channel = fis.getChannel();
-            reader = new SAMFileReader(fis);
+            reader = readerFactory.open(SamInputResource.of(fis));
             name = f.getName();
         }
-        if (lenient) {
-            reader.setValidationStringency(ValidationStringency.LENIENT);
-        } else if (silent) {
-            reader.setValidationStringency(ValidationStringency.SILENT);
-        }
+
 
         Iterator<SAMRecord> it = ProgressUtils.getIterator(name, reader.iterator(), (channel == null)? null : new FileChannelStats(channel), new ProgressMessage<SAMRecord>() {
             long i = 0;

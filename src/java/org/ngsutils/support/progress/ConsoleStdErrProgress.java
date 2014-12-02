@@ -2,7 +2,7 @@ package org.ngsutils.support.progress;
 
 import java.io.PrintStream;
 
-public class StdErrProgress extends BaseProgress {
+public class ConsoleStdErrProgress extends BaseProgress {
     public static final String[] spinner = new String[] {"|", "/", "-", "\\"};
     
     protected PrintStream out = System.err;
@@ -41,7 +41,7 @@ public class StdErrProgress extends BaseProgress {
 
         String str = "";
         
-        if (total > -1) {
+        if (total > 0) {
             str += String.format("%.1f%% ", pctComplete()*100);
         }
         

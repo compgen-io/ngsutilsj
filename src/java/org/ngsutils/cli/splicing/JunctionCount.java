@@ -1,15 +1,17 @@
 package org.ngsutils.cli.splicing;
 
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SAMSequenceRecord;
+import htsjdk.samtools.SamInputResource;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.ValidationStringency;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.TreeSet;
-
-import net.sf.samtools.SAMFileReader;
-import net.sf.samtools.SAMFileReader.ValidationStringency;
-import net.sf.samtools.SAMRecord;
-import net.sf.samtools.SAMSequenceRecord;
 
 import org.ngsutils.NGSUtils;
 import org.ngsutils.NGSUtilsException;
@@ -28,7 +30,7 @@ import com.lexicalscope.jewel.cli.Unparsed;
 @CommandLineInterface(application="ngsutilsj junction-count")
 @Command(name="junction-count", desc="Counts the number of reads that map to splice junctions", cat="splicing", experimental=true)
 public class JunctionCount extends AbstractOutputCommand {
-    private String samFilename = null;
+    private String filename = null;
     
     private boolean lenient = false;
     private boolean silent = false;
@@ -42,7 +44,7 @@ public class JunctionCount extends AbstractOutputCommand {
     
     @Unparsed(name = "FILE")
     public void setFilename(String filename) {
-        samFilename = filename;
+        this.filename = filename;
     }
 
     @Option(description = "Use lenient validation strategy", longName="lenient")
@@ -98,17 +100,24 @@ public class JunctionCount extends AbstractOutputCommand {
 
     @Override
     public void exec() throws NGSUtilsException, IOException {
-        SAMFileReader reader = new SAMFileReader(new File(samFilename));
+        SamReaderFactory readerFactory = SamReaderFactory.makeDefault();
         if (lenient) {
-            reader.setValidationStringency(ValidationStringency.LENIENT);
+            readerFactory.validationStringency(ValidationStringency.LENIENT);
         } else if (silent) {
-            reader.setValidationStringency(ValidationStringency.SILENT);
+            readerFactory.validationStringency(ValidationStringency.SILENT);
+        }
+
+        SamReader reader = null;
+        if (filename.equals("-")) {
+            reader = readerFactory.open(SamInputResource.of(System.in));
+        } else {
+            reader = readerFactory.open(new File(filename));
         }
 
         TabWriter writer = new TabWriter(out);
         writer.write_line("## program: " + NGSUtils.getVersion());
         writer.write_line("## cmd: " + NGSUtils.getArgs());
-        writer.write_line("## input: " + samFilename);
+        writer.write_line("## input: " + filename);
 //        writer.write_line("## annotation: " + gtfFilename);
         writer.write_line("## library-orientation: " + orient.toString());
         writer.write_line("## min-overlap: " + minOverlap);
