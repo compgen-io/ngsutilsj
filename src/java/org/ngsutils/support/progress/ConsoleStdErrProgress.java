@@ -32,6 +32,7 @@ public class ConsoleStdErrProgress extends BaseProgress {
     
     @Override
     public void done() {
+        super.done();
         clearLine();
         out.println("Done! Elapsed: " + secondsToString(elapsedMilliSec() / 1000));
     }
