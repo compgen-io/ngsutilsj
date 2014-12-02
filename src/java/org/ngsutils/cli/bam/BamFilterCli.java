@@ -295,15 +295,7 @@ public class BamFilterCli extends AbstractCommand {
             out = factory.makeSAMWriter(header,  true,  outStream);
         }
 
-        long i = 0;
         for (SAMRecord read: parent) {
-            if (verbose) {
-                i++;
-                if (i % 100000 == 0) {
-                    System.err.println("Read: " + i);
-                }
-                
-            }
             if (read != null) {
                 out.addAlignment(read);
             }
