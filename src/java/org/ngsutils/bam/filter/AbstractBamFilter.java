@@ -43,7 +43,11 @@ public abstract class AbstractBamFilter implements BamFilter, Iterable<SAMRecord
             return;
         }
         while (nextRead == null) {
-            nextRead = parent.next();
+            // need to do this hasNext() check to notify parent that we might be done...
+            // (this is needed for a progress meter to get notified)
+            if (parent.hasNext()) {
+                nextRead = parent.next();
+            }
             if (nextRead == null) {
                 break;
             }
