@@ -168,7 +168,7 @@ public class BamFilterCli extends AbstractCommand {
 
     @Option(description = "Keep at most one read per position (strand-specific, only for single-read fragments)", longName="unique-start")
     public void setUniqueStart(boolean val) {
-        unique=val; 
+        uniqueStart=val; 
         setMapped(true);
     }
 
@@ -315,7 +315,7 @@ public class BamFilterCli extends AbstractCommand {
         } else {
             outfile = new File(outFilename);
         }
-
+        
         if (tmpDir != null) {
             factory.setTempDirectory(new File(tmpDir));
         } else if (outfile == null || outfile.getParent() == null) {
