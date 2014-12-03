@@ -280,12 +280,13 @@ public class NGSUtils {
         String pgTemplate = "ngsutilsj:" + prog + "-";
         String pgID = pgTemplate;
         boolean found = true;
-        int i = 1;
+        int i = 0;
         
         SAMProgramRecord mostRecent = null;
         
         while (found) {
             found = false;
+            i++;
             pgID = pgTemplate + i;
             if (header!=null) {
                 for (SAMProgramRecord record: header.getProgramRecords()) {
