@@ -294,10 +294,9 @@ public class StringUtils {
                 if (o2==null) {
                     return 1;
                 }
-                String common = findCommonPrefix(new String[] {o1, o2});
 
-                NaturalTokenList ntl1 = NaturalTokenList.parseString(o1.substring(common.length()));
-                NaturalTokenList ntl2 = NaturalTokenList.parseString(o2.substring(common.length()));
+                NaturalTokenList ntl1 = NaturalTokenList.parseString(o1);
+                NaturalTokenList ntl2 = NaturalTokenList.parseString(o2);
                 return ntl1.compareTo(ntl2);
             }};
         

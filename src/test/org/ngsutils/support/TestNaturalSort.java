@@ -21,10 +21,15 @@ public class TestNaturalSort {
 
     @Test
     public void testNaturalSort() {
-        String[] str = new String[] { "chr1", "chrY", "chr10", "chr3", "chrX", "chr2", "chr20" };
-        String[] correct = new String[] { "chr1", "chr2", "chr3", "chr10", "chr20", "chrX", "chrY" };
+        String[] str = "chr1 chr2 chr3 chr4 chr5 chr6 chr7 chr8 chr9 chr12 chr16 chr17 chr20 chr10 chr21 chr11 chr13 chr14 chr15 chr18 chr19 chr22 chrM chrX chrY".split(" ");
+        String[] correct = new String[] { "chr1", "chr2", "chr3", "chr4", "chr5", "chr6", 
+                                          "chr7", "chr8", "chr9", "chr10", "chr11", "chr12",
+                                          "chr13", "chr14", "chr15", "chr16", "chr17", "chr18",
+                                          "chr19", "chr20", "chr21", "chr22", "chrM", "chrX", "chrY" };
 
+        System.out.println("Unsorted: " + StringUtils.join(", ",str));
         StringUtils.naturalSort(str);
+        System.out.println("Sorted  : " + StringUtils.join(", ",str));
         
         for (int i=0; i< str.length; i++) {
             assertEquals(correct[i], str[i]);

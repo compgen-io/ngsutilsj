@@ -20,6 +20,7 @@ import org.ngsutils.NGSUtilsException;
 import org.ngsutils.annotation.AnnotatedRegionCounter;
 import org.ngsutils.support.StringUtils;
 import org.ngsutils.support.TallyCounts;
+import org.ngsutils.support.TallyValues;
 import org.ngsutils.support.cli.AbstractOutputCommand;
 import org.ngsutils.support.cli.Command;
 import org.ngsutils.support.progress.FileChannelStats;
@@ -39,6 +40,9 @@ public class BamStats extends AbstractOutputCommand {
     private boolean lenient = false;
     private boolean silent = false;
 
+    private Map<String,TallyCounts> numTagCounts = new HashMap<String,TallyCounts>();
+    private Map<String,TallyValues> strTagCounts = new HashMap<String,TallyValues>();
+    
     @Unparsed(name = "FILE")
     public void setFilename(String filename) {
         this.filename = filename;
@@ -59,16 +63,30 @@ public class BamStats extends AbstractOutputCommand {
         this.gtfFilename = filename;
     }    
 
+    @Option(description = "Count tag value distribution (comma-delimited list, including type, e.g. NH:i,RG:Z)", longName="tags", defaultToNull=true)
+    public void setTags(String tags) {
+        for (String k: tags.split(",")) {
+            String[] tag_type = k.trim().split(":");
+            if (tag_type[1].toUpperCase().equals("Z")) {
+                strTagCounts.put(tag_type[0], new TallyValues());
+            } else if (tag_type[1].toUpperCase().equals("I")) {
+                numTagCounts.put(tag_type[0], new TallyCounts());
+            } else {
+                throw new ArgumentValidationException("You must specify tags and their type (ex: NH:i)!");
+            }
+        }
+    }
+    
     @Override
     public void exec() throws NGSUtilsException, IOException {
         if (filename == null) {
             throw new ArgumentValidationException("You must specify an input BAM filename!");
         }
         
-        AnnotatedRegionCounter counter = null;
+        AnnotatedRegionCounter geneRegionCounter = null;
         
         if (gtfFilename != null) {
-            counter = new AnnotatedRegionCounter(gtfFilename);
+            geneRegionCounter = new AnnotatedRegionCounter(gtfFilename);
         }
         
         SamReaderFactory readerFactory = SamReaderFactory.makeDefault();
@@ -161,6 +179,14 @@ public class BamStats extends AbstractOutputCommand {
                 continue;                
             }
 
+            for (String tag: strTagCounts.keySet()) {
+                strTagCounts.get(tag).incr(read.getStringAttribute(tag));
+            }
+
+            for (String tag: numTagCounts.keySet()) {
+                numTagCounts.get(tag).incr(read.getIntegerAttribute(tag));
+            }
+
             if (read.getReadPairedFlag()) {
                 paired = true; 
                 if (read.getProperPairFlag() && read.getReferenceIndex().equals(read.getMateReferenceIndex())) {
@@ -173,65 +199,83 @@ public class BamStats extends AbstractOutputCommand {
             
             refCounts.put(read.getReferenceName(), refCounts.get(read.getReferenceName())+1);
             
-            if (counter != null) {
+            if (geneRegionCounter != null) {
                 if (!read.getReadPairedFlag() || (!read.getSecondOfPairFlag() && read.getProperPairFlag() && !read.getDuplicateReadFlag() && !read.getReadFailsVendorQualityCheckFlag())) {
                     // We only profile the first read of a pair... and only proper pairs
-                    counter.addRead(read);
+                    geneRegionCounter.addRead(read);
                     
                 }
             }
         }
         reader.close();
-        System.out.println("Total-reads:\t" + total);
-        System.out.println("Mapped-reads:\t" + mapped);
-        System.out.println("Unmapped-reads:\t" + unmapped);
-        System.out.println();
+
+        println("Total-reads:\t" + total);
+        println("Mapped-reads:\t" + mapped);
+        println("Unmapped-reads:\t" + unmapped);
+
         if (paired) {
-            System.out.println("Average insert size: "+String.format("%.2f", insertSizeCounter.getMean()));
-            System.out.println();
+            println();
+            println("Average insert size: "+String.format("%.2f", insertSizeCounter.getMean()));
         }
-        System.out.println("[Flags]");
+
+        println();
+        println("[Flags]");
         for (int flag:flags.keySet()) {
             if (flagCounts.get(flag) > 0) {
-                System.out.println(flags.get(flag)+" (0x"+Integer.toHexString(flag)+")"+":\t"+flagCounts.get(flag));
+                println(flags.get(flag)+" (0x"+Integer.toHexString(flag)+")"+":\t"+flagCounts.get(flag));
             }
         }
-        System.out.println();
-        System.out.println("[References]");
-        for (String ref: StringUtils.naturalSort(refCounts.keySet())) {
-            System.out.println(ref+":\t"+refCounts.get(ref));
+        
+        for (String tag: strTagCounts.keySet()) {
+            println();
+            println("["+tag+"]");
+            strTagCounts.get(tag).write(out);
         }
-        System.out.println();
-        if (counter!=null) {
-            System.out.println("[Gene regions]");
-            System.out.println("Coding        :\t"+counter.getCoding());
-            System.out.println("Coding-rev    :\t"+counter.getCodingRev());
-            System.out.println("Junction      :\t"+counter.getJunction());
-            System.out.println("Junction-rev  :\t"+counter.getJunctionRev());
-            System.out.println("Other-exon    :\t"+counter.getOtherExon());
-            System.out.println("Other-exon-rev:\t"+counter.getOtherExonRev());
-            System.out.println("5'UTR         :\t"+counter.getUtr5());
-            System.out.println("5'UTR-rev     :\t"+counter.getUtr5Rev());
-            System.out.println("3'UTR         :\t"+counter.getUtr3());
-            System.out.println("3'UTR-rev     :\t"+counter.getUtr3Rev());
-            System.out.println("Intron        :\t"+counter.getIntron());
-            System.out.println("Intron-rev    :\t"+counter.getIntronRev());
-            System.out.println("Mitochondrial :\t"+counter.getMitochrondrial());
-            System.out.println("Intergenic    :\t"+counter.getIntergenic());
-            System.out.println();
-            long sense = counter.getCoding() +
-                    counter.getJunction() +
-                    counter.getOtherExon() +
-                    counter.getUtr5() +
-                    counter.getUtr3() +
-                    counter.getIntron();
 
-            long antisense = counter.getCodingRev() +
-                    counter.getJunctionRev() +
-                    counter.getOtherExonRev() +
-                    counter.getUtr5Rev() +
-                    counter.getUtr3Rev() +
-                    counter.getIntronRev();
+        for (String tag: numTagCounts.keySet()) {
+            println();
+            println("["+tag+"]");
+            numTagCounts.get(tag).write(out);
+        }
+        
+        println();
+        println("[References]");
+        for (String ref: StringUtils.naturalSort(refCounts.keySet())) {
+            println(ref+":\t"+refCounts.get(ref));
+        }
+
+        println();
+        if (geneRegionCounter!=null) {
+            println("[Gene regions]");
+            println("Coding        :\t"+geneRegionCounter.getCoding());
+            println("Coding-rev    :\t"+geneRegionCounter.getCodingRev());
+            println("Junction      :\t"+geneRegionCounter.getJunction());
+            println("Junction-rev  :\t"+geneRegionCounter.getJunctionRev());
+            println("Other-exon    :\t"+geneRegionCounter.getOtherExon());
+            println("Other-exon-rev:\t"+geneRegionCounter.getOtherExonRev());
+            println("5'UTR         :\t"+geneRegionCounter.getUtr5());
+            println("5'UTR-rev     :\t"+geneRegionCounter.getUtr5Rev());
+            println("3'UTR         :\t"+geneRegionCounter.getUtr3());
+            println("3'UTR-rev     :\t"+geneRegionCounter.getUtr3Rev());
+            println("Intron        :\t"+geneRegionCounter.getIntron());
+            println("Intron-rev    :\t"+geneRegionCounter.getIntronRev());
+            println("Mitochondrial :\t"+geneRegionCounter.getMitochrondrial());
+            println("Intergenic    :\t"+geneRegionCounter.getIntergenic());
+            println();
+
+            long sense = geneRegionCounter.getCoding() +
+                    geneRegionCounter.getJunction() +
+                    geneRegionCounter.getOtherExon() +
+                    geneRegionCounter.getUtr5() +
+                    geneRegionCounter.getUtr3() +
+                    geneRegionCounter.getIntron();
+
+            long antisense = geneRegionCounter.getCodingRev() +
+                    geneRegionCounter.getJunctionRev() +
+                    geneRegionCounter.getOtherExonRev() +
+                    geneRegionCounter.getUtr5Rev() +
+                    geneRegionCounter.getUtr3Rev() +
+                    geneRegionCounter.getIntronRev();
             
             long intronic;
             long exonic;
@@ -240,55 +284,61 @@ public class BamStats extends AbstractOutputCommand {
             // use 10-fold enrichment as a cutoff for strandedness... It should be around 100X.
             if (Math.log10((double) sense / antisense) > 1) {
                 // FR
-                intronic = counter.getIntron();
+                intronic = geneRegionCounter.getIntron();
                 exonic = sense - intronic;
                 
-                junction = counter.getJunction();
-                System.out.println("Orientation:\tFR");
+                junction = geneRegionCounter.getJunction();
+                println("Orientation:\tFR");
             } else if (Math.log10((double) sense / antisense) < -1) {
                 // RF
-                intronic = counter.getIntronRev();
+                intronic = geneRegionCounter.getIntronRev();
                 exonic = antisense - intronic;
-                junction = counter.getJunctionRev();
-                System.out.println("Orientation:\tRF");
+                junction = geneRegionCounter.getJunctionRev();
+                println("Orientation:\tRF");
             }  else {
                 // unstranded
-                intronic = counter.getIntron() + counter.getIntronRev();
+                intronic = geneRegionCounter.getIntron() + geneRegionCounter.getIntronRev();
                 exonic = sense + antisense - intronic;
-                junction = counter.getJunction() + counter.getJunctionRev();
-                System.out.println("Orientation:\tunstranded");
+                junction = geneRegionCounter.getJunction() + geneRegionCounter.getJunctionRev();
+                println("Orientation:\tunstranded");
             }
             
-            System.out.println("Sense     :\t" + sense);
-            System.out.println("Anti-sense:\t" + antisense);
-            System.out.println();
-            System.out.println("Exonic    :\t" + exonic);
-            System.out.println("Intronic  :\t" + intronic);
-            System.out.println();
-            System.out.println("Junction  :\t" + junction);
-            System.out.println();
+            println("Sense     :\t" + sense);
+            println("Anti-sense:\t" + antisense);
+            println();
+            println("Exonic    :\t" + exonic);
+            println("Intronic  :\t" + intronic);
+            println();
+            println("Junction  :\t" + junction);
+            println();
 
             if (antisense > 0) {
-                System.out.println("Sense/anti-sense ratio     :\t"+String.format("%.2f", (sense > antisense? (double) sense / antisense:  (double) -antisense / sense)));
+                println("Sense/anti-sense ratio     :\t"+String.format("%.2f", (sense > antisense? (double) sense / antisense:  (double) -antisense / sense)));
             } else {
-                System.out.println("Sense/anti-sense ratio     :\t0");
+                println("Sense/anti-sense ratio     :\t0");
             }
             if (intronic > 0) {
-                System.out.println("Exonic/intronic ratio      :\t"+String.format("%.2f", (double) exonic / intronic));
+                println("Exonic/intronic ratio      :\t"+String.format("%.2f", (double) exonic / intronic));
             } else { 
-                System.out.println("Exonic/intronic ratio      :\t0");
+                println("Exonic/intronic ratio      :\t0");
             }
-            if (counter.getIntergenic() > 0) {
-                System.out.println("Exonic/genomic ratio       :\t"+String.format("%.2f", (double) exonic / counter.getIntergenic()));
+            if (geneRegionCounter.getIntergenic() > 0) {
+                println("Exonic/genomic ratio       :\t"+String.format("%.2f", (double) exonic / geneRegionCounter.getIntergenic()));
             } else { 
-                System.out.println("Exonic/genomic ratio       :\t0");
+                println("Exonic/genomic ratio       :\t0");
             }
             if (junction > 0) {
-                System.out.println("Non-junction/junction ratio:\t"+String.format("%.2f", (double) (exonic-junction) / junction));
+                println("Non-junction/junction ratio:\t"+String.format("%.2f", (double) (exonic-junction) / junction));
             } else {
-                System.out.println("Non-junction/junction ratio:\t0");
+                println("Non-junction/junction ratio:\t0");
             }
-
         }
+    }
+    
+    private void println() throws IOException {
+        println("");
+    }
+    private void println(String s) throws IOException {
+        out.write((s+"\n").getBytes());
     }
 }
