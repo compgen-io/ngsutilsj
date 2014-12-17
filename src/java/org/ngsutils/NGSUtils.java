@@ -269,7 +269,9 @@ public class NGSUtils {
 		} catch (HelpRequestedException e) {
 			System.err.println(e.getMessage());
 		}
-		System.err.println("");
+        System.err.println("");
+        System.err.println("Marcus R. Breese <marcus@breese.com>");
+        System.err.println("http://ngsutils.org/ngsutilsj");
 		System.err.println(getVersion());
 	}
 
