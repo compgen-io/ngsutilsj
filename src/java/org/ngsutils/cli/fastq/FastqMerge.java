@@ -17,6 +17,7 @@ import org.ngsutils.support.cli.Command;
 
 import com.lexicalscope.jewel.cli.ArgumentValidationException;
 import com.lexicalscope.jewel.cli.CommandLineInterface;
+import com.lexicalscope.jewel.cli.Option;
 import com.lexicalscope.jewel.cli.Unparsed;
 
 @CommandLineInterface(application="ngsutilsj fastq-merge")
@@ -24,8 +25,15 @@ import com.lexicalscope.jewel.cli.Unparsed;
 public class FastqMerge extends AbstractOutputCommand {
 	private String[] filenames=null;
 
+	private boolean ignoreReadNum = false;
+	
 	public FastqMerge(){
 	}
+
+   @Option(description = "Ignore Illumina read numbers in read names (/1, /2)", longName="ignore-readnum")
+    public void setIgnoreReadNum(boolean value) {
+        this.ignoreReadNum = value;
+    }
 
 	@Unparsed(name="FILE1 FILE2")
 	public void setFilenames(List<String> files) throws IOException {
@@ -73,7 +81,30 @@ public class FastqMerge extends AbstractOutputCommand {
 		IterUtils.zip(readers[0], readers[1], new IterUtils.Each<FastqRead, FastqRead>() {
 			public void each(FastqRead one, FastqRead two) {
 				counter.incr();
-				if (one.getName().equals(two.getName())) {
+				String n1 = one.getName(); 
+				String n2 = two.getName();
+				
+				if (ignoreReadNum) {
+                    if (n1.endsWith("/1")) {
+                        n1 = n1.substring(0, n1.length()-2);
+                        one.setName(n1);
+                        if (one.getComment() != null) {
+                            one.setComment("/1 " + one.getComment());
+                        } else {
+                            one.setComment("/1");
+                        }
+                    }
+                    if (n2.endsWith("/2")) {
+                        n2 = n2.substring(0, n2.length()-2);
+                        two.setName(n2);
+                        if (two.getComment() != null) {
+                            two.setComment("/2 " + two.getComment());
+                        } else {
+                            two.setComment("/2");
+                        }
+                    }
+				}
+                if (n1.equals(n2)) {
 					try {
 						one.write(out);
 						two.write(out);
