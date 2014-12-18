@@ -82,7 +82,7 @@ public class FastqMerge extends AbstractOutputCommand {
 						System.exit(1);
 					}
 				} else {
-					System.err.println("Error! Unpaired files! ");
+					System.err.println("Error! Unpaired files! (Read: "+counter.getValue()+", Expected: "+one.getName()+", Got: "+two.getName()+")");
 					System.exit(1);
 				}
 			}
