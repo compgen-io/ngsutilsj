@@ -28,7 +28,7 @@
 
 	<target name="jar" depends="compile, git.revision">
         <copy file="LICENSE" todir="${build.dir}/classes/"/>
-        <copy file="INCLUDED" todir="${build.dir}/classes/"/>
+        <copy file="INCLUDES" todir="${build.dir}/classes/"/>
         <delete file="${build.dir}/classes/VERSION"/>
  		<echo file="${build.dir}/classes/VERSION" message="ngsutilsj-${version}-${repository.version}"/>
 
