@@ -89,7 +89,6 @@ public class BinCounter {
         int endbin = read.getAlignmentEnd() / binSize;
         
         // catch up to the current bin.
-//        System.err.println("curBin: "+curBin+" / startbin="+startbin+ " readpos:" + read.getAlignmentStart() + " endpos:"+read.getAlignmentEnd()+" // "+ strand);
         while (curBin < startbin) {
             int count = 0;
             if (plus.containsKey(curBin)) {

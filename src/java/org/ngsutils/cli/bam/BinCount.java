@@ -30,7 +30,7 @@ import com.lexicalscope.jewel.cli.Option;
 import com.lexicalscope.jewel.cli.Unparsed;
 
 @CommandLineInterface(application="ngsutilsj bam-bins")
-@Command(name="bam-bins", desc="Quickly count the number of reads that fall into bins", cat="bam")
+@Command(name="bam-bins", desc="Quickly count the number of reads that fall into bins (bins assigned based on 5' end of the read)", cat="bam")
 public class BinCount extends AbstractOutputCommand {
     
     private String filename=null;
@@ -160,7 +160,7 @@ public class BinCount extends AbstractOutputCommand {
         while (it.hasNext()) {
             SAMRecord read = it.next();
 
-            if (read.isSecondaryOrSupplementary() || read.getDuplicateReadFlag() || read.getNotPrimaryAlignmentFlag() || read.getReadUnmappedFlag()) {
+            if (read.isSecondaryOrSupplementary() || read.getDuplicateReadFlag() || read.getNotPrimaryAlignmentFlag() || read.getReadUnmappedFlag() || read.getSupplementaryAlignmentFlag()) {
                 // skip all secondary / duplicate / unmapped reads
                 continue;
             }

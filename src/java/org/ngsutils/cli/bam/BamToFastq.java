@@ -18,6 +18,13 @@ import com.lexicalscope.jewel.cli.CommandLineInterface;
 import com.lexicalscope.jewel.cli.Option;
 import com.lexicalscope.jewel.cli.Unparsed;
 
+/**
+ * TODO: Add option for exporting arbitrary tag values as comments (e.g. RG:Z, BC:Z, etc...)
+ * TODO: Add option for exporting by Read Group
+ * @author mbreese
+ *
+ */
+
 @CommandLineInterface(application="ngsutilsj bam-fastq")
 @Command(name="bam-fastq", desc="Export the read sequences from a BAM file in FASTQ format", cat="bam")
 public class BamToFastq extends AbstractCommand {

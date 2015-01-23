@@ -1,5 +1,9 @@
 package org.ngsutils.annotation;
 
+import htsjdk.samtools.CigarElement;
+import htsjdk.samtools.CigarOperator;
+import htsjdk.samtools.SAMRecord;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -11,6 +15,7 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 
 import org.ngsutils.annotation.GTFAnnotationSource.GTFGene;
+import org.ngsutils.bam.Orientation;
 import org.ngsutils.bam.Strand;
 import org.ngsutils.support.StringLineReader;
 import org.ngsutils.support.StringUtils;
@@ -85,6 +90,10 @@ public class GTFAnnotationSource extends AbstractAnnotationSource<GTFGene> {
             return end;
         }
 
+        public boolean hasCDS() {
+            return (cdsStart > -1 && cdsEnd > -1);
+        }
+        
         public int getCdsStart() {
             return cdsStart;
         }
@@ -274,7 +283,11 @@ public class GTFAnnotationSource extends AbstractAnnotationSource<GTFGene> {
     public GTFAnnotationSource(String filename) throws NumberFormatException, IOException {
         final Map<String, GTFGene> cache = new HashMap<String, GTFGene>();
         boolean hasBioType = false;
+        String lastChrom = null;
         for (final String line : new StringLineReader(filename)) {
+            if (line.charAt(0) == '#') {
+                continue;
+            }
             final String[] cols = StringUtils.strip(line).split("\t", -1);
 
             final String chrom = cols[0];
@@ -283,33 +296,52 @@ public class GTFAnnotationSource extends AbstractAnnotationSource<GTFGene> {
             final int end = Integer.parseInt(cols[4]);
             final Strand strand = Strand.parse(cols[6]);
 
+            /*
+             *  If we don't clear the cache, genes that appear on multiple
+             *  chromosomes (miRNAs?) will get their start/end coordinates all
+             *  messed up.
+             */
+            if (!chrom.equals(lastChrom) ) {
+                for (final String geneId : cache.keySet()) {
+                    final GTFGene gene = cache.get(geneId);
+                    final GenomeRegion coord = new GenomeRegion(gene.getRef(),
+                            gene.getStart(), gene.getEnd(), gene.getStrand());
+                    addAnnotation(coord, gene);
+                }
+                cache.clear();
+                lastChrom = chrom;
+            }
+            
             String geneId = "";
             String transcriptId = "";
             String geneName = "";
             String bioType = null;
 
-            final String[] attrs = cols[8].split(";");
+            final String[] attrs = StringUtils.quotedSplit(cols[8], ';');
             for (final String attr : attrs) {
-                final String[] kv = StringUtils.strip(attr).split(" ", 2);
-                final String k = kv[0];
-                final String v = StringUtils.strip(kv[1], "\"");
-                switch (k) {
-                case "gene_id":
-                    geneId = v;
-                    break;
-                case "gene_name":
-                    geneName = v;
-                    break;
-                case "transcript_id":
-                    transcriptId = v;
-                    break;
-                case "gene_biotype":
-                    bioType = v;
-                    break;
+                if (StringUtils.strip(attr).length() > 0) {
+                    final String[] kv = StringUtils.strip(attr).split(" ", 2);
+                    final String k = kv[0];
+                    final String v = StringUtils.strip(kv[1], "\"");
+//                    System.err.println("Attribute: "+ attr+" k="+k+", v="+v);
+                    switch (k) {
+                    case "gene_id":
+                        geneId = v;
+                        break;
+                    case "gene_name":
+                        geneName = v;
+                        break;
+                    case "transcript_id":
+                        transcriptId = v;
+                        break;
+                    case "gene_biotype":
+                        bioType = v;
+                        break;
+                    }
                 }
             }
 
-            if (hasBioType == false && !bioType.equals("")) {
+            if (hasBioType == false && bioType!=null && !bioType.equals("")) {
                 hasBioType = true;
             }
 
@@ -317,6 +349,7 @@ public class GTFAnnotationSource extends AbstractAnnotationSource<GTFGene> {
             if (cache.containsKey(geneId)) {
                 gene = cache.get(geneId);
             } else {
+//                System.err.println("Adding gene: "+geneId+" ("+geneName+", "+ chrom +")");
                 gene = new GTFGene(geneId, geneName, chrom, strand, bioType);
                 cache.put(geneId, gene);
             }
@@ -403,4 +436,279 @@ public class GTFAnnotationSource extends AbstractAnnotationSource<GTFGene> {
         return retval;
     }
 
+    /**
+     * Find the Genic region for this read
+     * This could be either sense or anti-sense
+     * @param read
+     * @return
+     */
+    public GenicRegion findGenicRegion(SAMRecord read) {
+        boolean isJunction = false;
+        
+        for (CigarElement op: read.getCigar().getCigarElements()) {
+            if (op.getOperator().equals(CigarOperator.N)) {
+                isJunction = true;
+                break;
+            }
+        }
+        
+        GenomeRegion readpos = GenomeRegion.getReadStartPos(read, Orientation.UNSTRANDED);        
+        GenicRegion geneReg = findGenicRegionForPos(readpos);
+        
+        if (isJunction && geneReg.isGene) {
+            if (geneReg.isCoding) {
+                if (geneReg.isSense) {
+                    return GenicRegion.JUNCTION;
+                }
+                return GenicRegion.JUNCTION_ANTI;
+            } else {
+                if (geneReg.isSense) {
+                    return GenicRegion.NC_JUNCTION;
+                }
+                return GenicRegion.NC_JUNCTION_ANTI;
+            }
+        }
+        
+        return geneReg; 
+
+    }
+
+    public GenicRegion findGenicRegionForRegion(GenomeRegion reg) {
+        GenicRegion genStart = findGenicRegionForPos(reg.getStartPos());
+        GenicRegion genEnd = findGenicRegionForPos(reg.getEndPos());
+
+        // If we agree, just return one.
+        if (genStart == genEnd) {
+            return genStart;
+        }
+        
+        // If one end is in a gene and the other isn't, use the gene annotation
+        if (genStart.isGene && !genEnd.isGene) {
+            return genStart;
+        }
+        if (!genStart.isGene && genEnd.isGene) {
+            return genEnd;
+        }
+        
+        // If one end is in an exon and the other isn't, we must be crossing a junction. (this will miss junctions we completely span...)
+        if (genStart.isExon && !genEnd.isExon) {
+            if (genStart.isCoding) {
+                if (genStart.isSense) {
+                    return GenicRegion.JUNCTION;
+                }
+                return GenicRegion.JUNCTION_ANTI;
+            } else {
+                if (genStart.isSense) {
+                    return GenicRegion.NC_JUNCTION;
+                }
+                return GenicRegion.NC_JUNCTION_ANTI;
+            }
+        }
+
+        if (!genStart.isExon && genEnd.isExon) {
+            if (genEnd.isCoding) {
+                if (genEnd.isSense) {
+                    return GenicRegion.JUNCTION;
+                }
+                return GenicRegion.JUNCTION_ANTI;
+            } else {
+                if (genEnd.isSense) {
+                    return GenicRegion.NC_JUNCTION;
+                }
+                return GenicRegion.NC_JUNCTION_ANTI;
+            }
+        }
+
+        // If one end is coding, and the other isn't, call it coding
+        if (genStart.isCoding && !genEnd.isCoding) {
+            return genStart;
+        }
+        if (!genStart.isCoding && genEnd.isCoding) {
+            return genEnd;
+        }
+
+        // When in doubt, just return based on priority (lower is better)
+        if (genStart.compareTo(genEnd) < 0) {
+            return genStart;
+        }
+        return genEnd;
+    
+    }
+
+    
+    public GenicRegion findGenicRegionForPos(GenomeRegion pos) {
+        return findGenicRegionForPos(pos, null);
+    }
+    
+    public GenicRegion findGenicRegionForPos(GenomeRegion pos, String geneId) {
+        if (pos.ref.equals("chrM") || pos.ref.equals("M")) {
+            return GenicRegion.MITOCHONDRIAL;
+        }
+
+        boolean isGene = false;
+        boolean isExon = false;
+        boolean isCoding = false;
+        boolean isUtr3 = false;
+        boolean isUtr5 = false;
+
+        boolean isCodingIntron = false;
+        boolean isUtr3Intron = false;
+        boolean isUtr5Intron = false;
+
+        boolean isGeneRev = false;
+        boolean isExonRev = false;
+        boolean isCodingRev = false;
+        boolean isUtr3Rev = false;
+        boolean isUtr5Rev = false;
+
+        Strand origStrand = pos.strand;
+        GenomeRegion unstrandedPos = pos.clone(Strand.NONE);
+        
+        for(GTFGene gene: findAnnotation(unstrandedPos)) {
+            if (geneId != null && !gene.getGeneId().equals(geneId)) {
+                continue;
+            }
+            isGene = true;
+
+            if (gene.getStrand() != origStrand) {
+                isGeneRev = true;
+            }
+
+            for (GTFTranscript txpt: gene.getTranscripts()) {
+                if (txpt.hasCDS()) {
+                    for (GTFExon cds: txpt.cds) {
+                        if (cds.toRegion().contains(unstrandedPos)) {
+                            isExon = true;
+                            isCoding = true;
+                            if (gene.getStrand() != origStrand) {
+                                isCodingRev = true;
+                            }
+                        }
+                    }
+                    if (!isCoding) {
+                        for (GTFExon exon: txpt.exons) {
+                            if (exon.toRegion().contains(unstrandedPos)) {
+                                isExon = true;
+                                if (gene.getStrand() != origStrand) {
+                                    isExonRev = true;
+                                }
+                            }
+                        } 
+                    }
+                    if (isExon) {
+                        if (gene.getStrand() == Strand.PLUS) {
+                            if (unstrandedPos.start < txpt.getCdsStart()) {
+                                isUtr5 = true;
+                                if (gene.getStrand() != origStrand) {
+                                    isUtr5Rev = true;
+                                }
+                            } else if (unstrandedPos.start > txpt.getCdsEnd()) {
+                                isUtr3 = true;
+                                if (gene.getStrand() != origStrand) {
+                                    isUtr3Rev = true;
+                                }
+                            }
+                        } else {
+                            if (unstrandedPos.start < txpt.getCdsStart()) {
+                                isUtr3 = true;
+                                if (gene.getStrand() != origStrand) {
+                                    isUtr3Rev = true;
+                                }
+                            } else if (unstrandedPos.start > txpt.getCdsEnd()) {
+                                isUtr5 = true;
+                                if (gene.getStrand() != origStrand) {
+                                    isUtr5Rev = true;
+                                }
+                            }
+                        }
+                    } else {
+                        if (gene.getStrand() == Strand.PLUS) {
+                            if (unstrandedPos.start < txpt.getCdsStart()) {
+                                isUtr5Intron = true; 
+                            } else if (unstrandedPos.start > txpt.getCdsEnd()) {
+                                isUtr3Intron = true; 
+                            } else {
+                                isCodingIntron = true;
+                            }
+                        } else {
+                            if (unstrandedPos.start < txpt.getCdsStart()) {
+                                isUtr3Intron = true; 
+                            } else if (unstrandedPos.start > txpt.getCdsEnd()) {
+                                isUtr5Intron = true; 
+                            } else {
+                                isCodingIntron = true;
+                            }
+                        }
+                    }             
+                } else {
+                    for (GTFExon exon: txpt.exons) {
+                        if (exon.toRegion().contains(unstrandedPos)) {
+                            isExon = true;
+                            if (gene.getStrand() != origStrand) {
+                                isExonRev = true;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        if (isCoding) {
+            if (isCodingRev) {
+                return GenicRegion.CODING_ANTI;
+            } else {
+                return GenicRegion.CODING;
+            }
+        }
+        
+        if (isUtr5) {
+            if (isUtr5Rev) {
+                return GenicRegion.UTR5_ANTI;
+            } else {
+                return GenicRegion.UTR5;
+            }
+        }
+
+        if (isUtr3) {
+            if (isUtr3Rev) {
+                return GenicRegion.UTR3_ANTI;
+            } else {
+                return GenicRegion.UTR3;
+            }
+        }
+        
+        if (isExon) {
+            if (isExonRev) {
+                return GenicRegion.NC_EXON_ANTI;
+            } else {
+                return GenicRegion.NC_EXON;
+            }
+        }
+
+        if (isGene) {
+            if (isGeneRev) {
+                if (isCodingIntron) {
+                    return GenicRegion.CODING_INTRON_ANTI;
+                } else if (isUtr5Intron) {
+                    return GenicRegion.UTR5_INTRON_ANTI;
+                } else if (isUtr3Intron) {
+                    return GenicRegion.UTR3_INTRON_ANTI;
+                } else {
+                    return GenicRegion.NC_INTRON_ANTI;
+                }
+            } else {
+                if (isCodingIntron) {
+                    return GenicRegion.CODING_INTRON;
+                } else if (isUtr5Intron) {
+                    return GenicRegion.UTR5_INTRON;
+                } else if (isUtr3Intron) {
+                    return GenicRegion.UTR3_INTRON;
+                } else {
+                    return GenicRegion.NC_INTRON;
+                }
+            }
+        }
+        
+        return GenicRegion.INTERGENIC;
+    }    
 }

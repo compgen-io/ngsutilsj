@@ -134,9 +134,10 @@ public class ReadUtils {
         if (read.getReadUnmappedFlag()) {
             return null;
         }
+                
         if (!read.getReadPairedFlag() || read.getFirstOfPairFlag()) {
             // unpaired or first read in a pair
-            if (orient == Orientation.FR || orient == Orientation.UNSTRANDED) {
+            if (orient == null || orient == Orientation.FR || orient == Orientation.UNSTRANDED) {
                 if (read.getReadNegativeStrandFlag()) {
                     return Strand.MINUS;
                 } else {
@@ -151,7 +152,7 @@ public class ReadUtils {
             }
         } else {
             // paired end and second read...
-            if (orient == Orientation.FR || orient == Orientation.UNSTRANDED) {
+            if (orient == null || orient == Orientation.FR || orient == Orientation.UNSTRANDED) {
                 // this assumes read1 and read2 are sequenced in opposite
                 if (read.getReadNegativeStrandFlag()) {
                     return Strand.PLUS;
@@ -264,7 +265,7 @@ public class ReadUtils {
     	SAMRecordIterator it = reader.query(pos.ref, pos.start - readLength + minOverlap, pos.start + readLength - minOverlap, true);
         while (it.hasNext()) {
             SAMRecord read = it.next();
-            if (read.isSecondaryOrSupplementary() || read.getDuplicateReadFlag() || read.getNotPrimaryAlignmentFlag() || read.getReadUnmappedFlag()) {
+            if (read.isSecondaryOrSupplementary() || read.getDuplicateReadFlag() || read.getNotPrimaryAlignmentFlag() || read.getReadUnmappedFlag() || read.getSupplementaryAlignmentFlag()) {
                 // skip all secondary / duplicate / unmapped reads
                 continue;
             }
@@ -302,7 +303,7 @@ public class ReadUtils {
         
         while (it.hasNext()) {
             SAMRecord read = it.next();
-            if (read.isSecondaryOrSupplementary() || read.getDuplicateReadFlag() || read.getNotPrimaryAlignmentFlag() || read.getReadUnmappedFlag()) {
+            if (read.isSecondaryOrSupplementary() || read.getDuplicateReadFlag() || read.getNotPrimaryAlignmentFlag() || read.getReadUnmappedFlag() || read.getSupplementaryAlignmentFlag()) {
                 // skip all secondary / duplicate / unmapped reads
                 continue;
             }

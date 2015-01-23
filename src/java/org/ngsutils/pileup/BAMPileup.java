@@ -26,9 +26,7 @@ public class BAMPileup {
     
     public BAMPileup(String bamFilename) {
         this.bamFilename = bamFilename;
-        this.refFilename = null;
     }
-    
    
     public Iterator<PileupRecord> pileup() {
         return pileup(null);

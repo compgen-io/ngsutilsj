@@ -18,6 +18,7 @@ import java.util.TreeMap;
 
 import org.ngsutils.NGSUtilsException;
 import org.ngsutils.annotation.AnnotatedRegionCounter;
+import org.ngsutils.annotation.GenicRegion;
 import org.ngsutils.support.StringUtils;
 import org.ngsutils.support.TallyCounts;
 import org.ngsutils.support.TallyValues;
@@ -200,10 +201,9 @@ public class BamStats extends AbstractOutputCommand {
             refCounts.put(read.getReferenceName(), refCounts.get(read.getReferenceName())+1);
             
             if (geneRegionCounter != null) {
-                if (!read.getReadPairedFlag() || (!read.getSecondOfPairFlag() && read.getProperPairFlag() && !read.getDuplicateReadFlag() && !read.getReadFailsVendorQualityCheckFlag())) {
+                if (!read.getReadPairedFlag() || (!read.getSecondOfPairFlag() && read.getProperPairFlag() && !read.getDuplicateReadFlag() && !read.getReadFailsVendorQualityCheckFlag() && !read.getSupplementaryAlignmentFlag())) {
                     // We only profile the first read of a pair... and only proper pairs
                     geneRegionCounter.addRead(read);
-                    
                 }
             }
         }
@@ -241,96 +241,90 @@ public class BamStats extends AbstractOutputCommand {
         println();
         println("[References]");
         for (String ref: StringUtils.naturalSort(refCounts.keySet())) {
-            println(ref+":\t"+refCounts.get(ref));
+            println(ref+"\t"+refCounts.get(ref));
         }
 
         println();
         if (geneRegionCounter!=null) {
-            println("[Gene regions]");
-            println("Coding        :\t"+geneRegionCounter.getCoding());
-            println("Coding-rev    :\t"+geneRegionCounter.getCodingRev());
-            println("Junction      :\t"+geneRegionCounter.getJunction());
-            println("Junction-rev  :\t"+geneRegionCounter.getJunctionRev());
-            println("Other-exon    :\t"+geneRegionCounter.getOtherExon());
-            println("Other-exon-rev:\t"+geneRegionCounter.getOtherExonRev());
-            println("5'UTR         :\t"+geneRegionCounter.getUtr5());
-            println("5'UTR-rev     :\t"+geneRegionCounter.getUtr5Rev());
-            println("3'UTR         :\t"+geneRegionCounter.getUtr3());
-            println("3'UTR-rev     :\t"+geneRegionCounter.getUtr3Rev());
-            println("Intron        :\t"+geneRegionCounter.getIntron());
-            println("Intron-rev    :\t"+geneRegionCounter.getIntronRev());
-            println("Mitochondrial :\t"+geneRegionCounter.getMitochrondrial());
-            println("Intergenic    :\t"+geneRegionCounter.getIntergenic());
-            println();
-
-            long sense = geneRegionCounter.getCoding() +
-                    geneRegionCounter.getJunction() +
-                    geneRegionCounter.getOtherExon() +
-                    geneRegionCounter.getUtr5() +
-                    geneRegionCounter.getUtr3() +
-                    geneRegionCounter.getIntron();
-
-            long antisense = geneRegionCounter.getCodingRev() +
-                    geneRegionCounter.getJunctionRev() +
-                    geneRegionCounter.getOtherExonRev() +
-                    geneRegionCounter.getUtr5Rev() +
-                    geneRegionCounter.getUtr3Rev() +
-                    geneRegionCounter.getIntronRev();
+            int maxlen = 0;
+            for (GenicRegion reg: GenicRegion.values()) {
+                if (reg.getDescription().length() > maxlen) {
+                    maxlen = reg.getDescription().length();
+                }
+            }
             
+            println("[Gene regions]");
+            for (GenicRegion reg: GenicRegion.values()) {
+                println(StringUtils.rfill(reg.getDescription(), maxlen)+"\t"+geneRegionCounter.getRegionCount(reg));
+            }
+            println();
+            
+            long sense = 0;
+            long antisense = 0;
+            for (GenicRegion reg: GenicRegion.values()) {
+                if (reg.isGene) {
+                    if (reg.isSense) {
+                        sense += geneRegionCounter.getRegionCount(reg);
+                    } else {
+                        antisense += geneRegionCounter.getRegionCount(reg);
+                    }
+                }
+            }
+
             long intronic;
             long exonic;
             long junction;
 
-            // use 10-fold enrichment as a cutoff for strandedness... It should be around 100X.
+            // use 10-fold enrichment as a cutoff for strandedness... It should be around 50-100X.
             if (Math.log10((double) sense / antisense) > 1) {
                 // FR
-                intronic = geneRegionCounter.getIntron();
+                intronic = geneRegionCounter.getRegionCount(GenicRegion.NC_INTRON, GenicRegion.CODING_INTRON, GenicRegion.UTR3_INTRON, GenicRegion.UTR5_INTRON);
                 exonic = sense - intronic;
                 
-                junction = geneRegionCounter.getJunction();
-                println("Orientation:\tFR");
+                junction = geneRegionCounter.getRegionCount(GenicRegion.JUNCTION, GenicRegion.JUNCTION_ANTI);
+                println("Orientation\tFR");
             } else if (Math.log10((double) sense / antisense) < -1) {
                 // RF
-                intronic = geneRegionCounter.getIntronRev();
+                intronic = geneRegionCounter.getRegionCount(GenicRegion.NC_INTRON_ANTI, GenicRegion.CODING_INTRON_ANTI, GenicRegion.UTR3_INTRON_ANTI, GenicRegion.UTR5_INTRON_ANTI);
                 exonic = antisense - intronic;
-                junction = geneRegionCounter.getJunctionRev();
-                println("Orientation:\tRF");
+                junction = geneRegionCounter.getRegionCount(GenicRegion.JUNCTION_ANTI, GenicRegion.NC_JUNCTION_ANTI);
+                println("Orientation\tRF");
             }  else {
                 // unstranded
-                intronic = geneRegionCounter.getIntron() + geneRegionCounter.getIntronRev();
+                intronic = geneRegionCounter.getRegionCount(GenicRegion.NC_INTRON, GenicRegion.CODING_INTRON, GenicRegion.UTR3_INTRON, GenicRegion.UTR5_INTRON, GenicRegion.NC_INTRON_ANTI, GenicRegion.CODING_INTRON_ANTI, GenicRegion.UTR3_INTRON_ANTI, GenicRegion.UTR5_INTRON_ANTI);
                 exonic = sense + antisense - intronic;
-                junction = geneRegionCounter.getJunction() + geneRegionCounter.getJunctionRev();
-                println("Orientation:\tunstranded");
+                junction = geneRegionCounter.getRegionCount(GenicRegion.JUNCTION, GenicRegion.JUNCTION_ANTI);
+                println("Orientation\tunstranded");
             }
             
-            println("Sense     :\t" + sense);
-            println("Anti-sense:\t" + antisense);
+            println("Sense      \t" + sense);
+            println("Anti-sense \t" + antisense);
             println();
-            println("Exonic    :\t" + exonic);
-            println("Intronic  :\t" + intronic);
+            println("Exonic     \t" + exonic);
+            println("Intronic   \t" + intronic);
             println();
-            println("Junction  :\t" + junction);
+            println("Junction   \t" + junction);
             println();
 
             if (antisense > 0) {
-                println("Sense/anti-sense ratio     :\t"+String.format("%.2f", (sense > antisense? (double) sense / antisense:  (double) -antisense / sense)));
+                println("Sense/anti-sense ratio     \t"+String.format("%.2f", (sense > antisense? (double) sense / antisense:  (double) -antisense / sense)));
             } else {
-                println("Sense/anti-sense ratio     :\t0");
+                println("Sense/anti-sense ratio     \t0");
             }
             if (intronic > 0) {
-                println("Exonic/intronic ratio      :\t"+String.format("%.2f", (double) exonic / intronic));
+                println("Exonic/intronic ratio      \t"+String.format("%.2f", (double) exonic / intronic));
             } else { 
-                println("Exonic/intronic ratio      :\t0");
+                println("Exonic/intronic ratio      \t0");
             }
-            if (geneRegionCounter.getIntergenic() > 0) {
-                println("Exonic/genomic ratio       :\t"+String.format("%.2f", (double) exonic / geneRegionCounter.getIntergenic()));
+            if (geneRegionCounter.getRegionCount(GenicRegion.INTERGENIC) > 0) {
+                println("Exonic/genomic ratio       \t"+String.format("%.2f", (double) exonic / geneRegionCounter.getRegionCount(GenicRegion.INTERGENIC)));
             } else { 
-                println("Exonic/genomic ratio       :\t0");
+                println("Exonic/genomic ratio       \t0");
             }
             if (junction > 0) {
-                println("Non-junction/junction ratio:\t"+String.format("%.2f", (double) (exonic-junction) / junction));
+                println("Non-junction/junction ratio\t"+String.format("%.2f", (double) (exonic-junction) / junction));
             } else {
-                println("Non-junction/junction ratio:\t0");
+                println("Non-junction/junction ratio\t0");
             }
         }
     }

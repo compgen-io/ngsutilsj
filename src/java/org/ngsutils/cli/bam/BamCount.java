@@ -226,7 +226,7 @@ public class BamCount extends AbstractOutputCommand {
                 while (it.hasNext()) {
                     SAMRecord read = it.next();
 
-                    if (read.isSecondaryOrSupplementary() || read.getDuplicateReadFlag() || read.getNotPrimaryAlignmentFlag() || read.getReadUnmappedFlag()) {
+                    if (read.isSecondaryOrSupplementary() || read.getDuplicateReadFlag() || read.getNotPrimaryAlignmentFlag() || read.getReadUnmappedFlag() || read.getSupplementaryAlignmentFlag()) {
                         // skip all secondary / duplicate / unmapped reads
                         continue;
                     }

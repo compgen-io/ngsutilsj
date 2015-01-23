@@ -76,4 +76,10 @@ public class FastqRead {
 		}
 		out.write(rec.getBytes());
 	}
+    public void setName(String name) {
+        this.name = name;
+    }
+    public void setComment(String comment) {
+        this.comment = comment;
+    }
 }

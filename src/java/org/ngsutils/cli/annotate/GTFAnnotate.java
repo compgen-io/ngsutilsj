@@ -8,6 +8,7 @@ import org.ngsutils.NGSUtils;
 import org.ngsutils.NGSUtilsException;
 import org.ngsutils.annotation.GTFAnnotationSource;
 import org.ngsutils.annotation.GTFAnnotationSource.GTFGene;
+import org.ngsutils.annotation.GenicRegion;
 import org.ngsutils.annotation.GenomeRegion;
 import org.ngsutils.bam.Strand;
 import org.ngsutils.support.StringLineReader;
@@ -136,17 +137,30 @@ public class GTFAnnotate extends AbstractOutputCommand {
 
     @Option(description = "Add gene_id annotation", longName="gene-id")
     public void setGeneId(boolean val) {
-        outputs.add("gene_id");
+        if (val) {
+            outputs.add("gene_id");
+        }
+    }
+
+    @Option(description = "Add genic region annotation", longName="genic-region")
+    public void setGenicRegion(boolean val) {
+        if (val) {
+            outputs.add("genic_region");
+        }
     }
 
     @Option(description = "Add gene_name annotation", longName="gene-name")
     public void setGeneName(boolean val) {
-        outputs.add("gene_name");
+        if (val) {
+            outputs.add("gene_name");
+        }
     }
 
     @Option(description = "Add biotype annotation", longName="biotype")
     public void setBioType(boolean val) {
-        outputs.add("biotype");
+        if (val) {
+            outputs.add("biotype");
+        }
     }
 
 
@@ -186,7 +200,6 @@ public class GTFAnnotate extends AbstractOutputCommand {
             refCol = 0;
             startCol = 1;
         }
-        
 
         TabWriter writer = new TabWriter(out);
         writer.write_line("## program: " + NGSUtils.getVersion());
@@ -266,6 +279,7 @@ public class GTFAnnotate extends AbstractOutputCommand {
                             writer.write("biotype");                    
                         }
                     }
+                    
                     writer.eol();
                     continue;
                 }
@@ -275,9 +289,11 @@ public class GTFAnnotate extends AbstractOutputCommand {
                 }
                 
                 List<GTFGene> annVals;
+                GenomeRegion genomeRegion = null;
                 if (regionCol > -1) {
                     String region = cols[regionCol];
-                    annVals = ann.findAnnotation(GenomeRegion.parse(region));
+                    genomeRegion = GenomeRegion.parse(region);
+                    annVals = ann.findAnnotation(genomeRegion);
                 } else if (junctionCol > -1) {
                     String junction = cols[junctionCol];
                     annVals = ann.findJunction(junction);
@@ -298,18 +314,45 @@ public class GTFAnnotate extends AbstractOutputCommand {
                     if (strandCol>-1) {
                         strand = Strand.parse(cols[strandCol]);
                     }
-                    annVals = ann.findAnnotation(new GenomeRegion(ref, start, end, strand));
+                    genomeRegion = new GenomeRegion(ref, start, end, strand);
+                    annVals = ann.findAnnotation(genomeRegion);
                 }
 
                 String[] geneIds = new String[annVals.size()];
                 String[] geneNames = new String[annVals.size()];
                 String[] bioTypes = new String[annVals.size()];
+                String[] regions = new String[annVals.size()];
                
                 for (int i=0; i < annVals.size(); i++) {
                     GTFGene gene = annVals.get(i);
                     geneIds[i] = gene.getGeneId();
                     geneNames[i] = gene.getGeneName();
                     bioTypes[i] = gene.getBioType();
+                    if (genomeRegion != null) {
+                        // determine region annotation based on start/end of the region
+                        GenicRegion start = ann.findGenicRegionForPos(genomeRegion.getStartPos(), gene.getGeneId());
+                        GenicRegion end = ann.findGenicRegionForPos(genomeRegion.getEndPos(), gene.getGeneId());
+
+                        if (start == end) {
+                            regions[i] = start.toString();
+                        } else {
+                            if (start.isExon != end.isExon) {
+                                if (start.isSense) {
+                                    regions[i] = GenicRegion.JUNCTION.toString();
+                                } else {
+                                    regions[i] = GenicRegion.JUNCTION_ANTI.toString();
+                                }
+                            } else {
+                                if (start.ordinal() < end.ordinal()) {
+                                    regions[i] = start.toString();
+                                } else {
+                                    regions[i] = end.toString();
+                                }
+                            }
+                        }
+                    } else {
+                        regions[i] = "";
+                    }
                 }
                 if (outputs.size()>0) {
                     for (String output: outputs) {
@@ -330,6 +373,10 @@ public class GTFAnnotate extends AbstractOutputCommand {
                             break;
                         case "biotype":
                             writer.write(StringUtils.join(",", bioTypes));
+                            break;
+                        case "genic_region":
+                            writer.write(StringUtils.join(",", regions));
+
                             break;
                         }
                     }

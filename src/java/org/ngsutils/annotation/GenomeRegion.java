@@ -10,9 +10,14 @@ import org.ngsutils.bam.Orientation;
 import org.ngsutils.bam.Strand;
 import org.ngsutils.bam.support.ReadUtils;
 
+
+/*
+ * There be dragons here... off by one dragons.
+ */
+
 public class GenomeRegion implements Comparable<GenomeRegion> {
     final public String ref;
-    final public int start; // genome regions are 0-based
+    final public int start; // genome regions are stored 0-based
     final public int end;
     final public Strand strand;
     
@@ -44,8 +49,16 @@ public class GenomeRegion implements Comparable<GenomeRegion> {
         super();
         this.ref = ref;
         this.start = start;
-        this.end = start;
+        this.end = start+1; // TODO: Should this be start + 1??? Check how this plays with comparisons.
         this.strand = Strand.NONE;
+    }
+    
+    public GenomeRegion clone() {
+        return clone(null);
+    }
+
+    public GenomeRegion clone(Strand strand) {
+        return new GenomeRegion(this.ref, this.start, this.end, (strand == null ? this.strand: strand));
     }
     
     public static List<GenomeRegion> getReadAlignmentRegions(SAMRecord read, Orientation orient) {
@@ -91,7 +104,7 @@ public class GenomeRegion implements Comparable<GenomeRegion> {
             int end = Integer.parseInt(startend.substring(startend.indexOf('-')+1));
             
             if (!zero) {
-                start = start - 1; // if this isn't zero based, then adjust the start position
+                start = start - 1; // if this isn't zero based INPUT, then adjust the start position
             }
             
             return new GenomeRegion(ref, start, end, strand);
@@ -234,8 +247,43 @@ public class GenomeRegion implements Comparable<GenomeRegion> {
     }
 
     public static GenomeRegion getReadStartPos(SAMRecord read) {
+        return GenomeRegion.getReadStartPos(read, null);
+    }
+
+    /**
+     * Returns the 5' start site of a read (strand-specific, not what is included in
+     * BAM file for minus strand reads).
+     * @param read
+     * @param orient
+     * @return
+     */
+    
+    public static GenomeRegion getReadStartPos(SAMRecord read, Orientation orient) {
         String ref = read.getReferenceName();
-        int pos = read.getAlignmentStart()-1;
-        return new GenomeRegion(ref, pos);
+        int pos;
+        Strand strand;
+
+        if (read.getReadNegativeStrandFlag()) {
+            pos = read.getAlignmentEnd();
+        } else {
+            pos = read.getAlignmentStart()-1;
+        }
+        
+        if (orient != null) {
+            strand = ReadUtils.getFragmentEffectiveStrand(read, orient);
+        } else if (read.getReadNegativeStrandFlag()) {
+            strand = Strand.MINUS;
+        } else {
+            strand = Strand.PLUS;
+        }
+
+        return new GenomeRegion(ref, pos, strand);
+    }
+
+    public GenomeRegion getStartPos() {
+        return new GenomeRegion(ref, start, start + 1, strand);
+    }
+    public GenomeRegion getEndPos() {
+        return new GenomeRegion(ref, end-1, end, strand);
     }
 }

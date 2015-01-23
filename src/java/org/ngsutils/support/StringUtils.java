@@ -23,8 +23,10 @@ public class StringUtils {
     public static String strip(String str, String rem) {
         Pattern pattern = Pattern.compile("^"+ rem +"(.*?)"+ rem +"$");
         Matcher m = pattern.matcher(str);
-        m.find();
-        return m.group(1);
+        if (m.find()) {        
+            return m.group(1);
+        }
+        return str;
     }
     public static String strip(String str) {
         return strip(str, "\\s*");
@@ -33,15 +35,19 @@ public class StringUtils {
     public static String rstrip(String str) {
         Pattern pattern = Pattern.compile("^(.*?)\\s*$");        
         Matcher m = pattern.matcher(str);
-        m.find();
-        return m.group(1);
+        if (m.find()) {        
+            return m.group(1);
+        }
+        return str;
     }
     
     public static String lstrip(String str) {
         Pattern pattern = Pattern.compile("^\\s*(.*?)$");
         Matcher m = pattern.matcher(str);
-        m.find();
-        return m.group(1);
+        if (m.find()) {        
+            return m.group(1);
+        }
+        return str;
     }
     
     public static int matchCount(String one, String two) {
@@ -299,7 +305,44 @@ public class StringUtils {
                 NaturalTokenList ntl2 = NaturalTokenList.parseString(o2);
                 return ntl1.compareTo(ntl2);
             }};
+    }
+    
+    public static String rfill(String s, int len) {
+        return rfill(s, len, ' ');
+    }
+    public static String rfill(String s, int len, char fillChar) {
+        while (s.length() < len) {
+            s += fillChar;
+        }
+        return s;
+    }
+    public static String[] quotedSplit(String str, char delim) {
+        return quotedSplit(str, delim, '"');
+    }
+    
+    public static String[] quotedSplit(String str, char delim, char quoteChar) {
+        String buf = "";
+        boolean inquote = false;
+        List<String> tokens = new ArrayList<String>();
         
+        for (int i=0; i< str.length(); i++) {
+            if (inquote) {
+                buf += str.charAt(i);
+                if (str.charAt(i) == quoteChar) {
+                    inquote = false;
+                }
+            } else if (str.charAt(i) == delim) {
+                tokens.add(buf);
+                buf = "";
+            } else {
+                buf += str.charAt(i);
+                if (str.charAt(i) == quoteChar) {
+                    inquote = true;
+                }
+            }
+        }
+                
+        return tokens.toArray(new String[tokens.size()]);
     }
 }
     
