@@ -173,8 +173,10 @@ public class NGSUtils {
 		}
 		spacer += " - ";
 		System.err.println("[help]");
-		System.err.println("  help command" + spacer
-				+ "Help message for the given command");
+        System.err.println("  help command" + spacer
+                + "Help message for the given command");
+        System.err.println("  license     " + spacer
+                + "Display licenses");
 		
         System.err.println("");
         System.err.println("* = experimental command");
@@ -210,7 +212,9 @@ public class NGSUtils {
 	    
 		if (args.length == 0) {
 			usage();
-		} else if (args[0].equals("help")) {
+        } else if (args[0].equals("license")) {
+            license();
+        } else if (args[0].equals("help")) {
 			if (args.length == 1) {
 				usage();
 			} else {
@@ -310,5 +314,22 @@ public class NGSUtils {
             programRecord.setPreviousProgramGroupId(mostRecent.getId());
         }
         return programRecord;
+    }
+    
+    private static void showFile(String fname) throws IOException {
+        InputStream is = NGSUtils.class.getClassLoader().getResourceAsStream(fname);
+        int c;
+        while ((c = is.read()) > -1) {
+            System.err.print((char) c);
+        }
+        is.close();
+        
+    }
+    
+    private static void license() throws IOException {
+        showFile("LICENSE");
+        System.err.println();
+        System.err.println();
+        showFile("INCLUDED");
     }
 }
