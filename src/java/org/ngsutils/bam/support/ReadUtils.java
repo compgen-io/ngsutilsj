@@ -14,7 +14,7 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-import org.ngsutils.annotation.GenomeRegion;
+import org.ngsutils.annotation.GenomeSpan;
 import org.ngsutils.bam.Orientation;
 import org.ngsutils.bam.Strand;
 
@@ -182,8 +182,8 @@ public class ReadUtils {
      * @param minOverlap - the minimum amount of flanking sequence there needs to be (default: 4bp).
      * @return
      */
-    public static List<GenomeRegion> getFlankingRegions(SAMRecord read, Orientation orient, int minOverlap) {
-        List<GenomeRegion> out = new ArrayList<GenomeRegion>();
+    public static List<GenomeSpan> getFlankingRegions(SAMRecord read, Orientation orient, int minOverlap) {
+        List<GenomeSpan> out = new ArrayList<GenomeSpan>();
         Strand strand = getFragmentEffectiveStrand(read, orient);
         
         int refpos = read.getAlignmentStart() - 1; // alignment-start is 1-based
@@ -207,7 +207,7 @@ public class ReadUtils {
 //                readpos += el.getLength();
 //                break;
             case N:
-          	    out.add(new GenomeRegion(read.getReferenceName(), flankStart, refpos, strand));
+          	    out.add(new GenomeSpan(read.getReferenceName(), flankStart, refpos, strand));
                 refpos += el.getLength();
                 flankStart = refpos;
                 break;
@@ -218,12 +218,12 @@ public class ReadUtils {
             }
         }
         
-        out.add(new GenomeRegion(read.getReferenceName(), flankStart, refpos, strand));
+        out.add(new GenomeSpan(read.getReferenceName(), flankStart, refpos, strand));
 
         // check the first and last flanks... if they are too short, then don't return anything.
         if (out.size() > 1) {
-            GenomeRegion first = out.get(0);
-            GenomeRegion last = out.get(out.size()-1);
+            GenomeSpan first = out.get(0);
+            GenomeSpan last = out.get(out.size()-1);
         	
             if (first.length() < minOverlap) {
                 out.clear();
@@ -234,7 +234,7 @@ public class ReadUtils {
         
         return out;
     }
-    public static List<GenomeRegion> getJunctionFlankingRegions(SAMRecord read, Orientation orient) {
+    public static List<GenomeSpan> getJunctionFlankingRegions(SAMRecord read, Orientation orient) {
         return getFlankingRegions(read, orient, 4);
     }
 
@@ -255,11 +255,11 @@ public class ReadUtils {
         return size;
     }
 
-    public static List<SAMRecord> findOverlappingReads(SamReader reader, GenomeRegion pos, Orientation orient, int readLength, int minOverlap) {
+    public static List<SAMRecord> findOverlappingReads(SamReader reader, GenomeSpan pos, Orientation orient, int readLength, int minOverlap) {
         return findOverlappingReads(reader, pos, orient, readLength, minOverlap, false);
     }
 
-    public static List<SAMRecord> findOverlappingReads(SamReader reader, GenomeRegion pos, Orientation orient, int readLength, int minOverlap, boolean allowGaps) {
+    public static List<SAMRecord> findOverlappingReads(SamReader reader, GenomeSpan pos, Orientation orient, int readLength, int minOverlap, boolean allowGaps) {
     	List<SAMRecord> out = new ArrayList<SAMRecord>();
 
     	SAMRecordIterator it = reader.query(pos.ref, pos.start - readLength + minOverlap, pos.start + readLength - minOverlap, true);
@@ -283,7 +283,7 @@ public class ReadUtils {
             	continue;
             }
             
-            for (GenomeRegion region: ReadUtils.getFlankingRegions(read, orient, minOverlap)) {
+            for (GenomeSpan region: ReadUtils.getFlankingRegions(read, orient, minOverlap)) {
             	if (region.start <= (pos.start - minOverlap) && region.end >= (pos.start + minOverlap)) {
             		out.add(read);
             		break;
@@ -294,12 +294,12 @@ public class ReadUtils {
     	return out;
     }
 
-    public static SortedMap<GenomeRegion, MappedReadCounter> findJunctions(SamReader reader, String ref, int start, int end, Orientation orient) {
+    public static SortedMap<GenomeSpan, MappedReadCounter> findJunctions(SamReader reader, String ref, int start, int end, Orientation orient) {
         return findJunctions(reader, ref, start, end, orient, 4, null, false);
     }
-    public static SortedMap<GenomeRegion, MappedReadCounter> findJunctions(SamReader reader, String ref, int start, int end, Orientation orient, int minOverlap, String tallyTagName, boolean splitReads) {
+    public static SortedMap<GenomeSpan, MappedReadCounter> findJunctions(SamReader reader, String ref, int start, int end, Orientation orient, int minOverlap, String tallyTagName, boolean splitReads) {
         SAMRecordIterator it = reader.query(ref, start, end, true);
-        SortedMap<GenomeRegion, MappedReadCounter> counters = new TreeMap<GenomeRegion, MappedReadCounter>();
+        SortedMap<GenomeSpan, MappedReadCounter> counters = new TreeMap<GenomeSpan, MappedReadCounter>();
         
         while (it.hasNext()) {
             SAMRecord read = it.next();
@@ -310,9 +310,9 @@ public class ReadUtils {
            
             if (read.getAlignmentBlocks().size() > 1) {
                 int last_end = -1;
-                for (GenomeRegion flank: ReadUtils.getFlankingRegions(read, orient, minOverlap)) {
+                for (GenomeSpan flank: ReadUtils.getFlankingRegions(read, orient, minOverlap)) {
                     if (last_end != -1) {
-                        GenomeRegion junction = new GenomeRegion(read.getReferenceName(), last_end, flank.start, flank.strand);
+                        GenomeSpan junction = new GenomeSpan(read.getReferenceName(), last_end, flank.start, flank.strand);
                         
                         if (!counters.containsKey(junction)) {
                             counters.put(junction, new MappedReadCounter(tallyTagName, splitReads));

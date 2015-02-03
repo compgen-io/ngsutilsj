@@ -57,7 +57,7 @@ abstract public class AbstractAnnotationSource<T> implements AnnotationSource<T>
             }
             return true;
         }
-        public static List<RefBin> getBins(GenomeRegion coord) {
+        public static List<RefBin> getBins(GenomeSpan coord) {
             int start = coord.start / BINSIZE;
             int end = coord.end / BINSIZE;
 
@@ -95,10 +95,10 @@ abstract public class AbstractAnnotationSource<T> implements AnnotationSource<T>
 //    }
 
     @Override
-    public List<T> findAnnotation(final GenomeRegion coord) {
+    public List<T> findAnnotation(final GenomeSpan coord) {
         return findAnnotation(coord, false);
     }
-    public List<T> findAnnotation(final GenomeRegion coord, boolean onlyWithin) {
+    public List<T> findAnnotation(final GenomeSpan coord, boolean onlyWithin) {
         final Set<T> outs = new HashSet<T>();
        
         for (RefBin bin: RefBin.getBins(coord)) {
@@ -142,11 +142,11 @@ abstract public class AbstractAnnotationSource<T> implements AnnotationSource<T>
 //    }
 
     @Override
-    public boolean hasAnnotation(final GenomeRegion coord) {
+    public boolean hasAnnotation(final GenomeSpan coord) {
         return hasAnnotation(coord, false);
     }
     @Override
-    public boolean hasAnnotation(final GenomeRegion coord, boolean onlyWithin) {
+    public boolean hasAnnotation(final GenomeSpan coord, boolean onlyWithin) {
         for (RefBin bin: RefBin.getBins(coord)) {
             if (annotationBins.containsKey(bin)) {
                 for (GenomeAnnotation<T> ga: annotationBins.get(bin)) {
@@ -167,7 +167,7 @@ abstract public class AbstractAnnotationSource<T> implements AnnotationSource<T>
     }
     
     
-    protected void addAnnotation(GenomeRegion coord, T value) {
+    protected void addAnnotation(GenomeSpan coord, T value) {
         GenomeAnnotation<T> ga = new GenomeAnnotation<T>(coord, value);
         for (RefBin bin: RefBin.getBins(coord)) {
             if (!annotationBins.containsKey(bin)) {
@@ -197,8 +197,8 @@ abstract public class AbstractAnnotationSource<T> implements AnnotationSource<T>
     public Iterator<GenomeAnnotation<T>> iterator() {
         return annotations.iterator();
     }
-    public Iterator<GenomeRegion> regionsIterator() {
-        return new Iterator<GenomeRegion> () {
+    public Iterator<GenomeSpan> regionsIterator() {
+        return new Iterator<GenomeSpan> () {
             Iterator<GenomeAnnotation<T>> it = iterator();
             @Override
             public boolean hasNext() {
@@ -206,7 +206,7 @@ abstract public class AbstractAnnotationSource<T> implements AnnotationSource<T>
             }
 
             @Override
-            public GenomeRegion next() {
+            public GenomeSpan next() {
                 return it.next().getCoordinates();
             }
 

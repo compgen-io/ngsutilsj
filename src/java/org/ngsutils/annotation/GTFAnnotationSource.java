@@ -51,8 +51,8 @@ public class GTFAnnotationSource extends AbstractAnnotationSource<GTFGene> {
             return end;
         }
         
-        public GenomeRegion toRegion() {
-            return new GenomeRegion(parent.getParent().getRef(), start, end, parent.getParent().getStrand());
+        public GenomeSpan toRegion() {
+            return new GenomeSpan(parent.getParent().getRef(), start, end, parent.getParent().getStrand());
         }
     }
 
@@ -106,8 +106,8 @@ public class GTFAnnotationSource extends AbstractAnnotationSource<GTFGene> {
             return exons;
         }
 
-        public GenomeRegion toRegion() {
-            return new GenomeRegion(parent.getRef(), start, end, parent.getStrand());
+        public GenomeSpan toRegion() {
+            return new GenomeSpan(parent.getRef(), start, end, parent.getStrand());
         }
 
         public void addExon(int start, int end) {
@@ -170,7 +170,7 @@ public class GTFAnnotationSource extends AbstractAnnotationSource<GTFGene> {
 
         private final Map<String, GTFTranscript> transcripts = new HashMap<String, GTFTranscript>();
 
-        public GTFGene(GenomeRegion coord, String geneId, String geneName, String ref, Strand strand) {
+        public GTFGene(GenomeSpan coord, String geneId, String geneName, String ref, Strand strand) {
             this.geneId = geneId;
             this.geneName = geneName;
             bioType = null;
@@ -243,7 +243,7 @@ public class GTFAnnotationSource extends AbstractAnnotationSource<GTFGene> {
         }
 
         public List<GTFExon> getExons() {
-            SortedMap<GenomeRegion, GTFExon> exons = new TreeMap<GenomeRegion, GTFExon>();
+            SortedMap<GenomeSpan, GTFExon> exons = new TreeMap<GenomeSpan, GTFExon>();
             for (GTFTranscript t:transcripts.values()){
                 for (GTFExon ex: t.getExons()) {
                     exons.put(ex.toRegion(), ex);
@@ -252,14 +252,14 @@ public class GTFAnnotationSource extends AbstractAnnotationSource<GTFGene> {
             return new ArrayList<GTFExon>(exons.values());
         }
 
-        public List<GenomeRegion> getExonRegions() {
-            SortedSet<GenomeRegion> exons = new TreeSet<GenomeRegion>();
+        public List<GenomeSpan> getExonRegions() {
+            SortedSet<GenomeSpan> exons = new TreeSet<GenomeSpan>();
             for (GTFTranscript t:transcripts.values()){
                 for (GTFExon ex: t.getExons()) {
                     exons.add(ex.toRegion());
                 }
             }
-            return new ArrayList<GenomeRegion>(exons);
+            return new ArrayList<GenomeSpan>(exons);
         }
 
         
@@ -272,8 +272,8 @@ public class GTFAnnotationSource extends AbstractAnnotationSource<GTFGene> {
             }
         }
 
-        public GenomeRegion getCoord() {
-            return new GenomeRegion(ref, start, end, strand);
+        public GenomeSpan getCoord() {
+            return new GenomeSpan(ref, start, end, strand);
         }
 
     }
@@ -304,7 +304,7 @@ public class GTFAnnotationSource extends AbstractAnnotationSource<GTFGene> {
             if (!chrom.equals(lastChrom) ) {
                 for (final String geneId : cache.keySet()) {
                     final GTFGene gene = cache.get(geneId);
-                    final GenomeRegion coord = new GenomeRegion(gene.getRef(),
+                    final GenomeSpan coord = new GenomeSpan(gene.getRef(),
                             gene.getStart(), gene.getEnd(), gene.getStrand());
                     addAnnotation(coord, gene);
                 }
@@ -367,7 +367,7 @@ public class GTFAnnotationSource extends AbstractAnnotationSource<GTFGene> {
 
         for (final String geneId : cache.keySet()) {
             final GTFGene gene = cache.get(geneId);
-            final GenomeRegion coord = new GenomeRegion(gene.getRef(),
+            final GenomeSpan coord = new GenomeSpan(gene.getRef(),
                     gene.getStart(), gene.getEnd(), gene.getStrand());
             addAnnotation(coord, gene);
         }
@@ -413,7 +413,7 @@ public class GTFAnnotationSource extends AbstractAnnotationSource<GTFGene> {
         
         List<GTFGene>  retval = new ArrayList<GTFGene>();
         
-        for (GTFGene gene: findAnnotation(new GenomeRegion(ref, start))) {
+        for (GTFGene gene: findAnnotation(new GenomeSpan(ref, start))) {
             boolean matchStart = false;
             boolean matchEnd = false;
             for (GTFExon exon: gene.getExons()) {
@@ -452,7 +452,7 @@ public class GTFAnnotationSource extends AbstractAnnotationSource<GTFGene> {
             }
         }
         
-        GenomeRegion readpos = GenomeRegion.getReadStartPos(read, Orientation.UNSTRANDED);        
+        GenomeSpan readpos = GenomeSpan.getReadStartPos(read, Orientation.UNSTRANDED);        
         GenicRegion geneReg = findGenicRegionForPos(readpos);
         
         if (isJunction && geneReg.isGene) {
@@ -473,7 +473,7 @@ public class GTFAnnotationSource extends AbstractAnnotationSource<GTFGene> {
 
     }
 
-    public GenicRegion findGenicRegionForRegion(GenomeRegion reg) {
+    public GenicRegion findGenicRegionForRegion(GenomeSpan reg) {
         GenicRegion genStart = findGenicRegionForPos(reg.getStartPos());
         GenicRegion genEnd = findGenicRegionForPos(reg.getEndPos());
 
@@ -536,11 +536,11 @@ public class GTFAnnotationSource extends AbstractAnnotationSource<GTFGene> {
     }
 
     
-    public GenicRegion findGenicRegionForPos(GenomeRegion pos) {
+    public GenicRegion findGenicRegionForPos(GenomeSpan pos) {
         return findGenicRegionForPos(pos, null);
     }
     
-    public GenicRegion findGenicRegionForPos(GenomeRegion pos, String geneId) {
+    public GenicRegion findGenicRegionForPos(GenomeSpan pos, String geneId) {
         if (pos.ref.equals("chrM") || pos.ref.equals("M")) {
             return GenicRegion.MITOCHONDRIAL;
         }
@@ -562,7 +562,7 @@ public class GTFAnnotationSource extends AbstractAnnotationSource<GTFGene> {
         boolean isUtr5Rev = false;
 
         Strand origStrand = pos.strand;
-        GenomeRegion unstrandedPos = pos.clone(Strand.NONE);
+        GenomeSpan unstrandedPos = pos.clone(Strand.NONE);
         
         for(GTFGene gene: findAnnotation(unstrandedPos)) {
             if (geneId != null && !gene.getGeneId().equals(geneId)) {

@@ -8,7 +8,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.ngsutils.NGSUtilsException;
-import org.ngsutils.annotation.GenomeRegion;
+import org.ngsutils.annotation.GenomeSpan;
 import org.ngsutils.support.StringUtils;
 
 public class BAMPileup {
@@ -32,7 +32,7 @@ public class BAMPileup {
         return pileup(null);
     }
 
-    public Iterator<PileupRecord> pileup(GenomeRegion region) {
+    public Iterator<PileupRecord> pileup(GenomeSpan region) {
         List<String> cmd = new ArrayList<String>();
         cmd.add("samtools");
         cmd.add("mpileup");

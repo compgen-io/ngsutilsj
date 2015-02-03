@@ -11,7 +11,7 @@ import java.util.Set;
 
 import org.ngsutils.NGSUtils;
 import org.ngsutils.NGSUtilsException;
-import org.ngsutils.annotation.GenomeRegion;
+import org.ngsutils.annotation.GenomeSpan;
 import org.ngsutils.bam.Strand;
 import org.ngsutils.junction.JunctionDonorAcceptor;
 import org.ngsutils.junction.JunctionKey;
@@ -168,7 +168,7 @@ public class FindEvents extends AbstractOutputCommand {
             TabWriter failed = new TabWriter(failedFilename);
             for (JunctionKey junc: allJunctions) {
                 if (!validJunctions.containsKey(junc)) {
-                    GenomeRegion region = GenomeRegion.parse(junc.name, true);
+                    GenomeSpan region = GenomeSpan.parse(junc.name, true);
                     failed.write(region.ref, ""+region.start, ""+region.end, junc.name, "0", junc.strand.toString());
                     failed.eol();
                 }
@@ -225,7 +225,7 @@ public class FindEvents extends AbstractOutputCommand {
             List<Double> pvalues = new ArrayList<Double>();
             List<Double> pctdiffs = new ArrayList<Double>();
             for (JunctionKey junc: event) {
-                GenomeRegion region = GenomeRegion.parse(junc.name, true);
+                GenomeSpan region = GenomeSpan.parse(junc.name, true);
                 if (start == -1) {
                     chrom = region.ref;
                     start = region.start;

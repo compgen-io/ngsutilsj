@@ -9,7 +9,7 @@ import org.ngsutils.NGSUtilsException;
 import org.ngsutils.annotation.GTFAnnotationSource;
 import org.ngsutils.annotation.GTFAnnotationSource.GTFGene;
 import org.ngsutils.annotation.GenicRegion;
-import org.ngsutils.annotation.GenomeRegion;
+import org.ngsutils.annotation.GenomeSpan;
 import org.ngsutils.bam.Strand;
 import org.ngsutils.support.StringLineReader;
 import org.ngsutils.support.StringUtils;
@@ -289,11 +289,11 @@ public class GTFAnnotate extends AbstractOutputCommand {
                 }
                 
                 List<GTFGene> annVals;
-                GenomeRegion genomeRegion = null;
+                GenomeSpan genomeSpan = null;
                 if (regionCol > -1) {
                     String region = cols[regionCol];
-                    genomeRegion = GenomeRegion.parse(region);
-                    annVals = ann.findAnnotation(genomeRegion);
+                    genomeSpan = GenomeSpan.parse(region);
+                    annVals = ann.findAnnotation(genomeSpan);
                 } else if (junctionCol > -1) {
                     String junction = cols[junctionCol];
                     annVals = ann.findJunction(junction);
@@ -314,8 +314,8 @@ public class GTFAnnotate extends AbstractOutputCommand {
                     if (strandCol>-1) {
                         strand = Strand.parse(cols[strandCol]);
                     }
-                    genomeRegion = new GenomeRegion(ref, start, end, strand);
-                    annVals = ann.findAnnotation(genomeRegion);
+                    genomeSpan = new GenomeSpan(ref, start, end, strand);
+                    annVals = ann.findAnnotation(genomeSpan);
                 }
 
                 String[] geneIds = new String[annVals.size()];
@@ -328,10 +328,10 @@ public class GTFAnnotate extends AbstractOutputCommand {
                     geneIds[i] = gene.getGeneId();
                     geneNames[i] = gene.getGeneName();
                     bioTypes[i] = gene.getBioType();
-                    if (genomeRegion != null) {
+                    if (genomeSpan != null) {
                         // determine region annotation based on start/end of the region
-                        GenicRegion start = ann.findGenicRegionForPos(genomeRegion.getStartPos(), gene.getGeneId());
-                        GenicRegion end = ann.findGenicRegionForPos(genomeRegion.getEndPos(), gene.getGeneId());
+                        GenicRegion start = ann.findGenicRegionForPos(genomeSpan.getStartPos(), gene.getGeneId());
+                        GenicRegion end = ann.findGenicRegionForPos(genomeSpan.getEndPos(), gene.getGeneId());
 
                         if (start == end) {
                             regions[i] = start.toString();

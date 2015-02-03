@@ -7,8 +7,8 @@ public class SimpleAnnotationSource extends AbstractAnnotationSource<SimpleValue
 
     public class SimpleValueAnnotation implements Annotation, Comparable<SimpleValueAnnotation> {
         final private String value;
-        final private GenomeRegion coord;
-        public SimpleValueAnnotation(GenomeRegion coord, String value) {
+        final private GenomeSpan coord;
+        public SimpleValueAnnotation(GenomeSpan coord, String value) {
             this.coord = coord;
             this.value = value;
         }
@@ -32,30 +32,30 @@ public class SimpleAnnotationSource extends AbstractAnnotationSource<SimpleValue
         }
 
         @Override
-        public GenomeRegion getCoord() {
+        public GenomeSpan getCoord() {
             return coord;
         }
 
     }
 
-    public void addAnnotation(GenomeRegion coord, String val) {
+    public void addAnnotation(GenomeSpan coord, String val) {
         this.addAnnotation(coord, new SimpleValueAnnotation(coord, val));
     }
     
     public void addAnnotation(String ref, int pos, String val) {
-        addAnnotation(new GenomeRegion(ref, pos, Strand.NONE), val);
+        addAnnotation(new GenomeSpan(ref, pos, Strand.NONE), val);
     }
     
     public void addAnnotation(String ref, int pos, Strand strand, String val) {
-        addAnnotation(new GenomeRegion(ref, pos, strand), val);
+        addAnnotation(new GenomeSpan(ref, pos, strand), val);
     }
     
     public void addAnnotation(String ref, int start, int end, String val) {
-        addAnnotation(new GenomeRegion(ref, start, end, Strand.NONE), val);
+        addAnnotation(new GenomeSpan(ref, start, end, Strand.NONE), val);
     }
 
     public void addAnnotation(String ref, int start, int end, Strand strand, String val) {
-        addAnnotation(new GenomeRegion(ref, start, end, strand), val);
+        addAnnotation(new GenomeSpan(ref, start, end, strand), val);
     }
     
     

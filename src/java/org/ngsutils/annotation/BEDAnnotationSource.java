@@ -22,9 +22,9 @@ public class BEDAnnotationSource extends AbstractAnnotationSource<BEDAnnotation>
     public class BEDAnnotation implements Annotation {
         final private String name;
         final private double score;
-        final private GenomeRegion coord;
+        final private GenomeSpan coord;
         
-        public BEDAnnotation(GenomeRegion coord, String name, double score) {
+        public BEDAnnotation(GenomeSpan coord, String name, double score) {
             this.coord = coord;
             this.name = name;
             this.score = score;
@@ -40,7 +40,7 @@ public class BEDAnnotationSource extends AbstractAnnotationSource<BEDAnnotation>
             return name;
         }
         
-        public GenomeRegion getCoord() {
+        public GenomeSpan getCoord() {
             return coord;
         }
     }
@@ -90,7 +90,7 @@ public class BEDAnnotationSource extends AbstractAnnotationSource<BEDAnnotation>
             }
 
             
-            final GenomeRegion coord = new GenomeRegion(chrom, start, end, strand);
+            final GenomeSpan coord = new GenomeSpan(chrom, start, end, strand);
             final BEDAnnotation annotation = new BEDAnnotation(coord, name, score);
 
             addAnnotation(coord, annotation);

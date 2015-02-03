@@ -16,7 +16,7 @@ import org.ngsutils.varcall.VariantCall;
 import com.lexicalscope.jewel.cli.CommandLineInterface;
 import com.lexicalscope.jewel.cli.Option;
 import com.lexicalscope.jewel.cli.Unparsed;
-
+@Deprecated
 @CommandLineInterface(application="ngsutilsj varcall-germline")
 @Command(name="varcall-germline", desc="Call germline variants", cat="variants", experimental=true)
 public class GermlineVarCall extends AbstractOutputCommand {
@@ -36,22 +36,22 @@ public class GermlineVarCall extends AbstractOutputCommand {
         this.pileupFilename = pileupFilename;
     }
 
-    @Option(description = "Don't perform background count correction (third minor count, default:true)", longName="nobg")
+    @Option(description = "Skip background count correction (third minor count)", longName="nobg")
     public void setNoBackground(boolean val) {
         this.backgroundCorrect = false;
     }
 
-    @Option(description = "Minimum basecall-quality score (default: 13)", longName="base-qual", defaultValue="13")
+    @Option(description = "Minimum basecall-quality score (default: 13)", longName="min-qual", defaultValue="13")
     public void setMinBaseQual(int minBaseQual) {
         this.minBaseQual = minBaseQual;
     }
 
-    @Option(description = "Minimum coverage depth (default: 10)", longName="depth", defaultValue="10")
+    @Option(description = "Minimum coverage depth (default: 10)", longName="min-coverage", defaultValue="10")
     public void setMinDepth(int minDepth) {
         this.minDepth = minDepth;
     }
 
-    @Option(description = "Minimum basecall depth (default: 5)", longName="depth", defaultValue="5")
+    @Option(description = "Minimum base calls (default: 5)", longName="min-basecalls", defaultValue="5")
     public void setMinCallDepth(int minCallDepth) {
         this.minCallDepth = minCallDepth;
     }

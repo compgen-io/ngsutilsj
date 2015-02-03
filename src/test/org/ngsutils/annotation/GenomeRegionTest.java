@@ -10,7 +10,7 @@ public class GenomeRegionTest {
 
     @Test
     public void testContains() {
-        GenomeRegion foo = new GenomeRegion("chr1", 100, 200, Strand.PLUS);
+        GenomeSpan foo = new GenomeSpan("chr1", 100, 200, Strand.PLUS);
         assertTrue(foo.contains("chr1", 100, 101, Strand.PLUS));
         assertTrue(foo.contains("chr1", 100, 150, Strand.PLUS));
         assertTrue(foo.contains("chr1", 100, 200, Strand.PLUS));
@@ -29,7 +29,7 @@ public class GenomeRegionTest {
 
     @Test
     public void testOverlaps() {
-        GenomeRegion foo = new GenomeRegion("chr1", 100, 200, Strand.PLUS);
+        GenomeSpan foo = new GenomeSpan("chr1", 100, 200, Strand.PLUS);
 
         assertTrue(foo.overlaps("chr1", 50, 150, Strand.PLUS));
         assertTrue(foo.overlaps("chr1", 150, 175, Strand.PLUS));

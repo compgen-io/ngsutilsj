@@ -15,7 +15,7 @@ import org.ngsutils.annotation.GTFAnnotationSource.GTFExon;
 import org.ngsutils.annotation.GTFAnnotationSource.GTFGene;
 import org.ngsutils.annotation.GTFAnnotationSource.GTFTranscript;
 import org.ngsutils.annotation.GenomeAnnotation;
-import org.ngsutils.annotation.GenomeRegion;
+import org.ngsutils.annotation.GenomeSpan;
 import org.ngsutils.support.IterUtils;
 import org.ngsutils.support.StringLineReader;
 import org.ngsutils.support.StringUtils;
@@ -148,7 +148,7 @@ public class GTFExport extends AbstractOutputCommand {
             if (exportExon) {
                 if (!combine) {
                     int i=1;
-                    for (GenomeRegion exon:gene.getExonRegions()) {
+                    for (GenomeSpan exon:gene.getExonRegions()) {
                         writer.write(exon.ref);
                         writer.write(exon.start);
                         writer.write(exon.end);
@@ -160,12 +160,12 @@ public class GTFExport extends AbstractOutputCommand {
                     }
                 } else {
                     // combine overlapping exons
-                    List<GenomeRegion> exons = gene.getExonRegions();
+                    List<GenomeSpan> exons = gene.getExonRegions();
                     
                     boolean found = true;
                     while (found) {
-                        GenomeRegion target = null;
-                        GenomeRegion query = null;
+                        GenomeSpan target = null;
+                        GenomeSpan query = null;
                         found = false;
                         
                         for (int i=0; i < exons.size() && !found; i++) {
@@ -183,13 +183,13 @@ public class GTFExport extends AbstractOutputCommand {
 
                             int start = Math.min(target.start,  query.start);
                             int end = Math.max(target.end,  query.end);
-                            exons.add(new GenomeRegion(target.ref, start, end, target.strand));
+                            exons.add(new GenomeSpan(target.ref, start, end, target.strand));
                         }
                     }
 
                     Collections.sort(exons);
                     int i=1;
-                    for (GenomeRegion exon:exons) {
+                    for (GenomeSpan exon:exons) {
                         writer.write(exon.ref);
                         writer.write(exon.start);
                         writer.write(exon.end);
@@ -204,18 +204,18 @@ public class GTFExport extends AbstractOutputCommand {
 
             if (exportIntron) {
                 if (!combine) {
-                    Set<GenomeRegion> introns = new HashSet<GenomeRegion>();
+                    Set<GenomeSpan> introns = new HashSet<GenomeSpan>();
                     for (GTFTranscript txpt:gene.getTranscripts()) {
                         int lastEnd = -1;
                         for (GTFExon exon:txpt.getExons()) {
                             if (lastEnd > -1) {
-                                introns.add(new GenomeRegion(gene.getRef(), lastEnd, exon.getStart(), gene.getStrand()));
+                                introns.add(new GenomeSpan(gene.getRef(), lastEnd, exon.getStart(), gene.getStrand()));
                             }
                             lastEnd = exon.getEnd();
                         }
                     }
                     int i = 1;
-                    for (GenomeRegion intron:introns) {
+                    for (GenomeSpan intron:introns) {
                         writer.write(intron.ref);
                         writer.write(intron.start);
                         writer.write(intron.end);
@@ -227,14 +227,14 @@ public class GTFExport extends AbstractOutputCommand {
                     }
                 } else {
                     // Look for introns that don't overlap *any* exons
-                    List<GenomeRegion> geneRegions = new ArrayList<GenomeRegion>();
+                    List<GenomeSpan> geneRegions = new ArrayList<GenomeSpan>();
                     geneRegions.add(gene.getCoord());
                     boolean found = true;
                     while (found) {
                         found = false;
-                        for (GenomeRegion exon:gene.getExonRegions()) {
-                            GenomeRegion match = null;
-                            for (GenomeRegion gr:geneRegions) {
+                        for (GenomeSpan exon:gene.getExonRegions()) {
+                            GenomeSpan match = null;
+                            for (GenomeSpan gr:geneRegions) {
                                 if (gr.overlaps(exon)) {
                                     match = gr;
                                     break;
@@ -250,11 +250,11 @@ public class GTFExport extends AbstractOutputCommand {
                                 int end2 = match.end;
                                 
                                 if (start1 < end1) {
-                                    GenomeRegion gr = new GenomeRegion(match.ref, start1, end1, match.strand);
+                                    GenomeSpan gr = new GenomeSpan(match.ref, start1, end1, match.strand);
                                     geneRegions.add(gr);
                                 }
                                 if (start2 < end2) {
-                                    GenomeRegion gr = new GenomeRegion(match.ref, start2, end2, match.strand);
+                                    GenomeSpan gr = new GenomeSpan(match.ref, start2, end2, match.strand);
                                     geneRegions.add(gr);
                                 }
                                 
@@ -265,7 +265,7 @@ public class GTFExport extends AbstractOutputCommand {
                     }
                     Collections.sort(geneRegions);
                     int i=1;
-                    for (GenomeRegion intron:geneRegions) {
+                    for (GenomeSpan intron:geneRegions) {
                         writer.write(intron.ref);
                         writer.write(intron.start);
                         writer.write(intron.end);

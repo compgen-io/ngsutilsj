@@ -45,50 +45,50 @@ public class TestSimpleValueAnnotation {
     @Test
     public void testFindAnnotationByPositionBadRef() {
         List<SimpleValueAnnotation> vals;
-        vals = sva.findAnnotation(new GenomeRegion("chrX", 100));
+        vals = sva.findAnnotation(new GenomeSpan("chrX", 100));
         assertEquals("", StringUtils.join(";", vals));
     }
     
     @Test
     public void testFindAnnotationByPosition() {
         List<SimpleValueAnnotation> vals;
-        vals = sva.findAnnotation(new GenomeRegion("chr1", 100));
+        vals = sva.findAnnotation(new GenomeSpan("chr1", 100));
         assertEquals("A", StringUtils.join(";", vals));
 
-        vals = sva.findAnnotation(new GenomeRegion("chr1", 300));
+        vals = sva.findAnnotation(new GenomeSpan("chr1", 300));
         assertEquals("B", StringUtils.join(";", vals));
 
-        vals = sva.findAnnotation(new GenomeRegion("chr1", 350));
+        vals = sva.findAnnotation(new GenomeSpan("chr1", 350));
         Collections.sort(vals);
         assertEquals("B;F", StringUtils.join(";", vals));
 
-        vals = sva.findAnnotation(new GenomeRegion("chr1", 520));
+        vals = sva.findAnnotation(new GenomeSpan("chr1", 520));
         Collections.sort(vals);
         assertEquals("C;F;H", StringUtils.join(";", vals));
 
-        vals = sva.findAnnotation(new GenomeRegion("chr1", 680));
+        vals = sva.findAnnotation(new GenomeSpan("chr1", 680));
         assertEquals(0, vals.size());
     }
 
     @Test
     public void testFindAnnotationRange() {
         List<SimpleValueAnnotation> vals;
-        vals = sva.findAnnotation(new GenomeRegion("chr1", 680, 820));
+        vals = sva.findAnnotation(new GenomeSpan("chr1", 680, 820));
         assertEquals("D", StringUtils.join(";", vals));
 
-        vals = sva.findAnnotation(new GenomeRegion("chr1", 680, 1000));
+        vals = sva.findAnnotation(new GenomeSpan("chr1", 680, 1000));
         Collections.sort(vals);
         assertEquals("D;E", StringUtils.join(";", vals));
 
-        vals = sva.findAnnotation(new GenomeRegion("chr1", 150, 250));
+        vals = sva.findAnnotation(new GenomeSpan("chr1", 150, 250));
         Collections.sort(vals);
         assertEquals("A", StringUtils.join(";", vals));
 
-        vals = sva.findAnnotation(new GenomeRegion("chr1", 425, 480));
+        vals = sva.findAnnotation(new GenomeSpan("chr1", 425, 480));
         Collections.sort(vals);
         assertEquals("F;G;H", StringUtils.join(";", vals));
 
-        vals = sva.findAnnotation(new GenomeRegion("chr1", 820, 850));
+        vals = sva.findAnnotation(new GenomeSpan("chr1", 820, 850));
         assertEquals(0, vals.size());
     }
     

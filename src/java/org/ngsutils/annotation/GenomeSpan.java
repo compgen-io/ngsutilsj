@@ -15,13 +15,13 @@ import org.ngsutils.bam.support.ReadUtils;
  * There be dragons here... off by one dragons.
  */
 
-public class GenomeRegion implements Comparable<GenomeRegion> {
+public class GenomeSpan implements Comparable<GenomeSpan> {
     final public String ref;
     final public int start; // genome regions are stored 0-based
     final public int end;
     final public Strand strand;
     
-    public GenomeRegion(String ref, int start, int end, Strand strand){
+    public GenomeSpan(String ref, int start, int end, Strand strand){
         super();
         this.ref = ref;
         this.start = start;
@@ -29,7 +29,7 @@ public class GenomeRegion implements Comparable<GenomeRegion> {
         this.strand = strand;
     }
 
-    public GenomeRegion(String ref, int start, int end){
+    public GenomeSpan(String ref, int start, int end){
         super();
         this.ref = ref;
         this.start = start;
@@ -37,7 +37,7 @@ public class GenomeRegion implements Comparable<GenomeRegion> {
         this.strand = Strand.NONE;
     }
 
-    public GenomeRegion(String ref, int start, Strand strand){
+    public GenomeSpan(String ref, int start, Strand strand){
         super();
         this.ref = ref;
         this.start = start;
@@ -45,7 +45,7 @@ public class GenomeRegion implements Comparable<GenomeRegion> {
         this.strand = strand;
     }
     
-    public GenomeRegion(String ref, int start){
+    public GenomeSpan(String ref, int start){
         super();
         this.ref = ref;
         this.start = start;
@@ -53,40 +53,40 @@ public class GenomeRegion implements Comparable<GenomeRegion> {
         this.strand = Strand.NONE;
     }
     
-    public GenomeRegion clone() {
+    public GenomeSpan clone() {
         return clone(null);
     }
 
-    public GenomeRegion clone(Strand strand) {
-        return new GenomeRegion(this.ref, this.start, this.end, (strand == null ? this.strand: strand));
+    public GenomeSpan clone(Strand strand) {
+        return new GenomeSpan(this.ref, this.start, this.end, (strand == null ? this.strand: strand));
     }
     
-    public static List<GenomeRegion> getReadAlignmentRegions(SAMRecord read, Orientation orient) {
-        List<GenomeRegion> out = new ArrayList<GenomeRegion>();
+    public static List<GenomeSpan> getReadAlignmentRegions(SAMRecord read, Orientation orient) {
+        List<GenomeSpan> out = new ArrayList<GenomeSpan>();
         for (AlignmentBlock block:read.getAlignmentBlocks()) {
             if (orient == Orientation.UNSTRANDED) {
-                out.add(new GenomeRegion(read.getReferenceName(), block.getReferenceStart()-1,  block.getReferenceStart()-1+block.getLength(), Strand.NONE));
+                out.add(new GenomeSpan(read.getReferenceName(), block.getReferenceStart()-1,  block.getReferenceStart()-1+block.getLength(), Strand.NONE));
             } else {
-                out.add(new GenomeRegion(read.getReferenceName(), block.getReferenceStart()-1,  block.getReferenceStart()-1+block.getLength(), ReadUtils.getFragmentEffectiveStrand(read, orient)));
+                out.add(new GenomeSpan(read.getReferenceName(), block.getReferenceStart()-1,  block.getReferenceStart()-1+block.getLength(), ReadUtils.getFragmentEffectiveStrand(read, orient)));
             }
         }
         return out;
     }
     
     // Strings are chrom:start-end, where start is the 1-based start position.
-    public static GenomeRegion parse(String str) {
+    public static GenomeSpan parse(String str) {
         return parse(str, Strand.NONE, false);
     }
     
-    public static GenomeRegion parse(String str, boolean zero) {
+    public static GenomeSpan parse(String str, boolean zero) {
         return parse(str, Strand.NONE, zero);
     }
     
-    public static GenomeRegion parse(String str, Strand strand) {
+    public static GenomeSpan parse(String str, Strand strand) {
         return parse(str, strand, false);
     }
     
-    public static GenomeRegion parse(String str, Strand strand, boolean zero) {
+    public static GenomeSpan parse(String str, Strand strand, boolean zero) {
         if (str.indexOf(':') <= 0) {
             return null;
         }
@@ -98,7 +98,7 @@ public class GenomeRegion implements Comparable<GenomeRegion> {
             return null;
         } else if (startend.indexOf('-') == -1) {
             int pos = Integer.parseInt(startend);
-            return new GenomeRegion(ref, pos, strand);
+            return new GenomeSpan(ref, pos, strand);
         } else {
             int start = Integer.parseInt(startend.substring(0, startend.indexOf('-')));
             int end = Integer.parseInt(startend.substring(startend.indexOf('-')+1));
@@ -107,15 +107,15 @@ public class GenomeRegion implements Comparable<GenomeRegion> {
                 start = start - 1; // if this isn't zero based INPUT, then adjust the start position
             }
             
-            return new GenomeRegion(ref, start, end, strand);
+            return new GenomeSpan(ref, start, end, strand);
         }
     }
     
-    public boolean contains(GenomeRegion coord) {
+    public boolean contains(GenomeSpan coord) {
         return contains(coord.ref, coord.start, coord.end, coord.strand, true);
     }
 
-    public boolean overlaps(GenomeRegion coord) {
+    public boolean overlaps(GenomeSpan coord) {
         return contains(coord.ref, coord.start, coord.end, coord.strand, false);
     }
 
@@ -199,7 +199,7 @@ public class GenomeRegion implements Comparable<GenomeRegion> {
         if (getClass() != obj.getClass()) {
             return false;
         }
-        GenomeRegion other = (GenomeRegion) obj;
+        GenomeSpan other = (GenomeSpan) obj;
         if (end != other.end) {
             return false;
         }
@@ -217,7 +217,7 @@ public class GenomeRegion implements Comparable<GenomeRegion> {
     }
 
     @Override
-    public int compareTo(GenomeRegion o) {
+    public int compareTo(GenomeSpan o) {
         if (!ref.equals(o.ref)) {
             return ref.compareTo(o.ref);
         }
@@ -246,8 +246,8 @@ public class GenomeRegion implements Comparable<GenomeRegion> {
         return end - start;
     }
 
-    public static GenomeRegion getReadStartPos(SAMRecord read) {
-        return GenomeRegion.getReadStartPos(read, null);
+    public static GenomeSpan getReadStartPos(SAMRecord read) {
+        return GenomeSpan.getReadStartPos(read, null);
     }
 
     /**
@@ -258,7 +258,7 @@ public class GenomeRegion implements Comparable<GenomeRegion> {
      * @return
      */
     
-    public static GenomeRegion getReadStartPos(SAMRecord read, Orientation orient) {
+    public static GenomeSpan getReadStartPos(SAMRecord read, Orientation orient) {
         String ref = read.getReferenceName();
         int pos;
         Strand strand;
@@ -277,13 +277,13 @@ public class GenomeRegion implements Comparable<GenomeRegion> {
             strand = Strand.PLUS;
         }
 
-        return new GenomeRegion(ref, pos, strand);
+        return new GenomeSpan(ref, pos, strand);
     }
 
-    public GenomeRegion getStartPos() {
-        return new GenomeRegion(ref, start, start + 1, strand);
+    public GenomeSpan getStartPos() {
+        return new GenomeSpan(ref, start, start + 1, strand);
     }
-    public GenomeRegion getEndPos() {
-        return new GenomeRegion(ref, end-1, end, strand);
+    public GenomeSpan getEndPos() {
+        return new GenomeSpan(ref, end-1, end, strand);
     }
 }

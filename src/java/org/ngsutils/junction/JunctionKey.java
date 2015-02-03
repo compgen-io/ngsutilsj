@@ -1,6 +1,6 @@
 package org.ngsutils.junction;
 
-import org.ngsutils.annotation.GenomeRegion;
+import org.ngsutils.annotation.GenomeSpan;
 import org.ngsutils.bam.Strand;
 
 public class JunctionKey implements Comparable<JunctionKey> {
@@ -106,7 +106,7 @@ public class JunctionKey implements Comparable<JunctionKey> {
 
     @Override
     public int compareTo(JunctionKey o) {
-        int val = GenomeRegion.parse(name, strand).compareTo(GenomeRegion.parse(o.name, o.strand));
+        int val = GenomeSpan.parse(name, strand).compareTo(GenomeSpan.parse(o.name, o.strand));
      
         if (val != 0) {
             return val;

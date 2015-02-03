@@ -6,7 +6,7 @@ import java.util.Iterator;
 import org.ngsutils.NGSUtilsException;
 import org.ngsutils.annotation.BEDAnnotationSource;
 import org.ngsutils.annotation.BEDAnnotationSource.BEDAnnotation;
-import org.ngsutils.annotation.GenomeRegion;
+import org.ngsutils.annotation.GenomeSpan;
 import org.ngsutils.bam.support.ReadUtils;
 import org.ngsutils.pileup.BAMPileup;
 import org.ngsutils.pileup.PileupRecord;
@@ -26,7 +26,7 @@ public class BamCoverage extends AbstractOutputCommand {
     private String filename = null;
     private String bedFilename = null;
     
-    private GenomeRegion region = null;
+    private GenomeSpan region = null;
     
     private int minMappingQual=0;
     private int minBaseQual=13;
@@ -50,7 +50,7 @@ public class BamCoverage extends AbstractOutputCommand {
     @Option(description = "Only count within this region", longName="region", defaultToNull=true)
     public void setRegion(String region) {
         if (region != null) {
-            this.region = GenomeRegion.parse(region);
+            this.region = GenomeSpan.parse(region);
         }
     }
 
@@ -120,7 +120,7 @@ public class BamCoverage extends AbstractOutputCommand {
         
         int lastPos = -1;
 
-        GenomeRegion lastRegion = null;
+        GenomeSpan lastRegion = null;
 
         int tmp = 0;
         for (PileupRecord record: IterUtils.wrapIterator(it)) {
@@ -130,8 +130,8 @@ public class BamCoverage extends AbstractOutputCommand {
                 tmp = 0;
             }
             if (bed!=null) {
-                for (BEDAnnotation ann : bed.findAnnotation(new GenomeRegion(record.ref, record.pos))) {
-                    GenomeRegion curRegion = ann.getCoord();
+                for (BEDAnnotation ann : bed.findAnnotation(new GenomeSpan(record.ref, record.pos))) {
+                    GenomeSpan curRegion = ann.getCoord();
                     if (lastRegion != null && !curRegion.equals(lastRegion)) {
                         for (int i=lastPos+1; i<=lastRegion.end; i++) {
 //                            System.err.println(lastRegion.ref+":"+i+" 0 A");

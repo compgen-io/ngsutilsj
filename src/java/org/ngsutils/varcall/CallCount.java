@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Deprecated
 public class CallCount implements Comparable<CallCount>{
     protected static class CallCounter {
         private Map<String, CallCount> counts = new HashMap<String,CallCount>();

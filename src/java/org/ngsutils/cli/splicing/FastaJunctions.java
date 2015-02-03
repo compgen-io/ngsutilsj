@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.util.List;
 
 import org.ngsutils.NGSUtilsException;
-import org.ngsutils.annotation.GenomeRegion;
+import org.ngsutils.annotation.GenomeSpan;
 import org.ngsutils.fasta.FastaReader;
 import org.ngsutils.fasta.IndexedFastaFile;
 import org.ngsutils.support.StringLineReader;
@@ -23,7 +23,7 @@ public class FastaJunctions extends AbstractOutputCommand {
     
     private String fastaName = null;
     private String juncName = null;
-    private GenomeRegion junction = null;
+    private GenomeSpan junction = null;
     private int wrap = 60;
     private int size = 100;
     private boolean markJunction = false;
@@ -33,7 +33,7 @@ public class FastaJunctions extends AbstractOutputCommand {
     public void setArgs(List<String> args) {
         fastaName = args.get(0);
         if (args.size()>1) {
-            junction = GenomeRegion.parse(args.get(1), true);
+            junction = GenomeSpan.parse(args.get(1), true);
         }
     }
 
@@ -88,7 +88,7 @@ public class FastaJunctions extends AbstractOutputCommand {
                     
                     String[] junctions = cols[0].split(";");
                     for (int i=0; i< junctions.length; i++) {
-                        GenomeRegion junc = GenomeRegion.parse(junctions[i], true);
+                        GenomeSpan junc = GenomeSpan.parse(junctions[i], true);
                         processRegion(fasta, junc, (junctions.length > 1) ? name+"-"+(i+1) : name);
                     }
                 }
@@ -98,10 +98,10 @@ public class FastaJunctions extends AbstractOutputCommand {
         fasta.close();        
     }
     
-    protected void processRegion(FastaReader fasta, GenomeRegion region) throws IOException {
+    protected void processRegion(FastaReader fasta, GenomeSpan region) throws IOException {
         processRegion(fasta, region, null);
     }
-    protected void processRegion(FastaReader fasta, GenomeRegion region, String name) throws IOException {
+    protected void processRegion(FastaReader fasta, GenomeSpan region, String name) throws IOException {
         int up_start = region.start - size;
         int down_end = region.end + size;
 

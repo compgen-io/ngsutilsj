@@ -6,7 +6,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 
 import org.ngsutils.annotation.BEDAnnotationSource;
-import org.ngsutils.annotation.GenomeRegion;
+import org.ngsutils.annotation.GenomeSpan;
 import org.ngsutils.bam.Orientation;
 
 public class BedExclude extends AbstractBamFilter {
@@ -27,7 +27,7 @@ public class BedExclude extends AbstractBamFilter {
     @Override
     public boolean keepRead(SAMRecord read) {
         if (onlyWithin) {
-            for (GenomeRegion block: GenomeRegion.getReadAlignmentRegions(read, orient)) {
+            for (GenomeSpan block: GenomeSpan.getReadAlignmentRegions(read, orient)) {
                 if (!bed.hasAnnotation(block, onlyWithin)) {
                     return true;
                 }
@@ -38,7 +38,7 @@ public class BedExclude extends AbstractBamFilter {
             return false;
             
         }
-        for (GenomeRegion block: GenomeRegion.getReadAlignmentRegions(read, orient)) {
+        for (GenomeSpan block: GenomeSpan.getReadAlignmentRegions(read, orient)) {
             if (bed.hasAnnotation(block)) {
                 if (verbose) {
                     System.err.println("Block: "+block+ " matched BED region!");

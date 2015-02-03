@@ -6,7 +6,7 @@ import java.util.List;
 import org.ngsutils.NGSUtils;
 import org.ngsutils.NGSUtilsException;
 import org.ngsutils.annotation.AnnotationSource;
-import org.ngsutils.annotation.GenomeRegion;
+import org.ngsutils.annotation.GenomeSpan;
 import org.ngsutils.annotation.RepeatMaskerAnnotationSource;
 import org.ngsutils.annotation.RepeatMaskerAnnotationSource.RepeatAnnotation;
 import org.ngsutils.bam.Strand;
@@ -216,7 +216,7 @@ public class RepeatAnnotate extends AbstractOutputCommand {
                 strand = Strand.parse(cols[strandCol]);
             }
             
-            List<RepeatAnnotation> annVals = ann.findAnnotation(new GenomeRegion(ref, start, end, strand)); 
+            List<RepeatAnnotation> annVals = ann.findAnnotation(new GenomeSpan(ref, start, end, strand)); 
            
             for (int i=0; i < ann.getAnnotationNames().length; i++) {
                 String[] outvals = new String[annVals.size()];

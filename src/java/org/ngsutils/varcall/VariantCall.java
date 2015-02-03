@@ -5,7 +5,7 @@ import java.util.List;
 
 import org.apache.commons.math3.distribution.PoissonDistribution;
 
-
+@Deprecated
 public class VariantCall {
     public final CallCount major;
     public final CallCount minor;

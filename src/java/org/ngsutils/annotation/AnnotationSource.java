@@ -20,8 +20,8 @@ public interface AnnotationSource<T> {
      * @param strand - if known
      * @return
      */
-    public List<T> findAnnotation(GenomeRegion coord);
-    public List<T> findAnnotation(GenomeRegion coord, boolean onlyWithin);
+    public List<T> findAnnotation(GenomeSpan coord);
+    public List<T> findAnnotation(GenomeSpan coord, boolean onlyWithin);
 //    public List<T> findAnnotation(String ref, int start);
 //    public List<T> findAnnotation(String ref, int start, Strand strand);
 //    public List<T> findAnnotation(String ref, int start, int end);
@@ -36,8 +36,8 @@ public interface AnnotationSource<T> {
      * @param strand - if known
      * @return
      */
-    public boolean hasAnnotation(GenomeRegion coord);
-    public boolean hasAnnotation(GenomeRegion coord, boolean onlyWithin);
+    public boolean hasAnnotation(GenomeSpan coord);
+    public boolean hasAnnotation(GenomeSpan coord, boolean onlyWithin);
 //    public boolean hasAnnotation(String ref, int start);
 //    public boolean hasAnnotation(String ref, int start, Strand strand);
 //    public boolean hasAnnotation(String ref, int start, int end);

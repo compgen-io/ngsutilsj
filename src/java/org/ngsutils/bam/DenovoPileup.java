@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-import org.ngsutils.annotation.GenomeRegion;
+import org.ngsutils.annotation.GenomeSpan;
 import org.ngsutils.fasta.FastaReader;
 import org.ngsutils.fasta.IndexedFastaFile;
 import org.ngsutils.fasta.NullFasta;
@@ -281,7 +281,7 @@ public class DenovoPileup {
         return pileup(null, -1, -1);
     }        
 
-    public Iterator<PileupPos> pileup(GenomeRegion region) {
+    public Iterator<PileupPos> pileup(GenomeSpan region) {
         if (region == null) {
             return pileup(null, -1, -1);
         }

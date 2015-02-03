@@ -15,7 +15,7 @@ import java.util.TreeSet;
 
 import org.ngsutils.NGSUtils;
 import org.ngsutils.NGSUtilsException;
-import org.ngsutils.annotation.GenomeRegion;
+import org.ngsutils.annotation.GenomeSpan;
 import org.ngsutils.bam.Orientation;
 import org.ngsutils.bam.support.ReadUtils;
 import org.ngsutils.bam.support.ReadUtils.MappedReadCounter;
@@ -153,15 +153,15 @@ public class JunctionCount extends AbstractOutputCommand {
                 System.err.println("Finding junctions for: " + refRecord.getSequenceName());
             }
             
-            SortedMap<GenomeRegion, MappedReadCounter> counters = ReadUtils.findJunctions(reader, refRecord.getSequenceName(), 0, refRecord.getSequenceLength(), orient, minOverlap, editDistance ? "NM": null, splitReads);
+            SortedMap<GenomeSpan, MappedReadCounter> counters = ReadUtils.findJunctions(reader, refRecord.getSequenceName(), 0, refRecord.getSequenceLength(), orient, minOverlap, editDistance ? "NM": null, splitReads);
 
             if (verbose) {
                 System.err.println("                found: " + counters.size());
             }
             
-            SortedSet<GenomeRegion> intronCache = new TreeSet<GenomeRegion>();
+            SortedSet<GenomeSpan> intronCache = new TreeSet<GenomeSpan>();
 
-            for (GenomeRegion junc: counters.keySet()) {
+            for (GenomeSpan junc: counters.keySet()) {
                 writer.write(junc.ref+":"+junc.start+"-"+junc.end);
                 writer.write(""+junc.strand);
                 if (splitReads) {
@@ -187,8 +187,8 @@ public class JunctionCount extends AbstractOutputCommand {
                 }
                 
                 if (retainedIntrons) {
-                    intronCache.add(new GenomeRegion(junc.ref, junc.start, junc.strand));
-                    intronCache.add(new GenomeRegion(junc.ref, junc.end, junc.strand));                	
+                    intronCache.add(new GenomeSpan(junc.ref, junc.start, junc.strand));
+                    intronCache.add(new GenomeSpan(junc.ref, junc.end, junc.strand));                	
                 }
             }
             
@@ -197,7 +197,7 @@ public class JunctionCount extends AbstractOutputCommand {
                     System.err.println("    - looking for retained introns");
                 }
 
-                for (GenomeRegion spliceSite: intronCache) {
+                for (GenomeSpan spliceSite: intronCache) {
                     MappedReadCounter counter = new MappedReadCounter(editDistance ? "NM": null, splitReads);
                     for (SAMRecord read: ReadUtils.findOverlappingReads(reader, spliceSite, orient, readLength, minOverlap)) {
                         counter.addRead(read);
