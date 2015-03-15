@@ -38,7 +38,7 @@
         <jar destfile="${dist.dir}/ngsutilsj-${version}-${repository.version}.jar" basedir="${build.dir}/classes"/>
 	    <jarjar jarfile="${dist.dir}/ngsutilsj.jar.tmp">
             <manifest>
-                <attribute name="Main-Class" value="org.ngsutils.NGSUtils"/>
+                <attribute name="Main-Class" value="io.compgen.ngsutils.NGSUtils"/>
             </manifest>
 	        <zipfileset src="${lib.dir}/objenesis-2.1.jar"/>
             <zipfileset src="${lib.dir}/jewelcli-0.8.9.jar"/>

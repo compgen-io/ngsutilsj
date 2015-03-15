@@ -2,6 +2,7 @@ package org.ngsutils.support;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import io.compgen.ngsutils.support.io.DataIO;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -9,7 +10,6 @@ import java.io.IOException;
 import java.util.Arrays;
 
 import org.junit.Test;
-import org.ngsutils.support.io.DataIO;
 
 public class DataIOTest {
 

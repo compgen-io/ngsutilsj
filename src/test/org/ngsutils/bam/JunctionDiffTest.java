@@ -1,11 +1,11 @@
 package org.ngsutils.bam;
 
 import static org.junit.Assert.assertEquals;
+import io.compgen.ngsutils.junction.JunctionDiff;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.ngsutils.junction.JunctionDiff;
 
 public class JunctionDiffTest {
 

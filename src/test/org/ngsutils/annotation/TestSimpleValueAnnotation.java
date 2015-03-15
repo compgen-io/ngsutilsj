@@ -1,6 +1,10 @@
 package org.ngsutils.annotation;
 
 import static org.junit.Assert.assertEquals;
+import io.compgen.ngsutils.annotation.GenomeSpan;
+import io.compgen.ngsutils.annotation.SimpleAnnotationSource;
+import io.compgen.ngsutils.annotation.SimpleAnnotationSource.SimpleValueAnnotation;
+import io.compgen.ngsutils.support.StringUtils;
 
 import java.util.Collections;
 import java.util.List;
@@ -8,8 +12,6 @@ import java.util.List;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.ngsutils.annotation.SimpleAnnotationSource.SimpleValueAnnotation;
-import org.ngsutils.support.StringUtils;
 
 public class TestSimpleValueAnnotation {
     SimpleAnnotationSource sva;

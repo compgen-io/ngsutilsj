@@ -3,13 +3,16 @@ package org.ngsutils.annotation;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import io.compgen.ngsutils.annotation.BEDAnnotationSource;
+import io.compgen.ngsutils.annotation.GenomeAnnotation;
+import io.compgen.ngsutils.annotation.GenomeSpan;
+import io.compgen.ngsutils.annotation.BEDAnnotationSource.BEDAnnotation;
+import io.compgen.ngsutils.bam.Strand;
+import io.compgen.ngsutils.support.IterUtils;
+import io.compgen.ngsutils.support.StringUtils;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.ngsutils.annotation.BEDAnnotationSource.BEDAnnotation;
-import org.ngsutils.bam.Strand;
-import org.ngsutils.support.IterUtils;
-import org.ngsutils.support.StringUtils;
 
 public class TestBEDAnnotation {
     BEDAnnotationSource bed;
