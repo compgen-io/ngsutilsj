@@ -1,4 +1,4 @@
-package org.ngsutils.annotation;
+package io.compgen.ngsutils.annotation;
 
 import static org.junit.Assert.assertEquals;
 import io.compgen.ngsutils.annotation.GenomeSpan;

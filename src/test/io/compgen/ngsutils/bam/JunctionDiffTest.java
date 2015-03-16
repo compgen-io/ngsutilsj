@@ -1,4 +1,4 @@
-package org.ngsutils.bam;
+package io.compgen.ngsutils.bam;
 
 import static org.junit.Assert.assertEquals;
 import io.compgen.ngsutils.junction.JunctionDiff;

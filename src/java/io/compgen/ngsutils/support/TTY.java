@@ -1,7 +1,7 @@
 package io.compgen.ngsutils.support;
 
 /**
- * This relies on io.compgen.ngsutils.support.tty.fd[0-2] being set by the ngsutils stub
+ * This relies on io.compgen.ngsutils.support.tty.fd[0-2] being set by the ngsutilsj stub
  * shell script.
  * @author mbreese
  *

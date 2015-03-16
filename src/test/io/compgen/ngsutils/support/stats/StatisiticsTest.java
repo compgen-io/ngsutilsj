@@ -1,4 +1,4 @@
-package org.ngsutils.support.stats;
+package io.compgen.ngsutils.support.stats;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;

@@ -1,4 +1,4 @@
-package org.ngsutils.annotation;
+package io.compgen.ngsutils.annotation;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -19,7 +19,7 @@ public class TestBEDAnnotation {
     
     @Before
     public void setUp() throws Exception {
-        bed = new BEDAnnotationSource(getClass().getClassLoader().getResourceAsStream("org/ngsutils/annotation/test.bed"));
+        bed = new BEDAnnotationSource(getClass().getClassLoader().getResourceAsStream("io/compgen/ngsutils/annotation/test.bed"));
     }
 
     @Test
