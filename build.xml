@@ -1,5 +1,5 @@
 <project name="ngsutilsj" default="jar">
-    <property name="version" value="0.2"/>
+    <property name="version" value="0.3"/>
     <property name="lib.dir" value="lib"/>
     <property name="build.dir" value="build"/>
     <property name="dist.dir" value="dist"/>
@@ -35,7 +35,7 @@
 		<mkdir dir="${dist.dir}"/>
 	    <taskdef name="jarjar" classname="com.tonicsystems.jarjar.JarJarTask"
 	        classpath="${lib.dir}/jarjar-1.4.jar"/>
-        <jar destfile="${dist.dir}/ngsutilsj-${version}-${repository.version}.jar" basedir="${build.dir}/classes"/>
+        <jar destfile="${dist.dir}/ngsutilsj-${version}.jar" basedir="${build.dir}/classes"/>
 	    <jarjar jarfile="${dist.dir}/ngsutilsj.jar.tmp">
             <manifest>
                 <attribute name="Main-Class" value="io.compgen.ngsutils.NGSUtils"/>
