@@ -1,16 +1,18 @@
 package io.compgen.ngsutils.cli.splicing;
 
+import io.compgen.cmdline.annotation.Command;
+import io.compgen.cmdline.annotation.Exec;
+import io.compgen.cmdline.annotation.Option;
+import io.compgen.cmdline.annotation.UnnamedArg;
+import io.compgen.cmdline.impl.AbstractOutputCommand;
 import io.compgen.ngsutils.NGSUtils;
-import io.compgen.ngsutils.NGSUtilsException;
 import io.compgen.ngsutils.annotation.GenomeSpan;
 import io.compgen.ngsutils.bam.Strand;
 import io.compgen.ngsutils.junction.JunctionDonorAcceptor;
 import io.compgen.ngsutils.junction.JunctionKey;
-import io.compgen.ngsutils.support.StringLineReader;
-import io.compgen.ngsutils.support.StringUtils;
-import io.compgen.ngsutils.support.TabWriter;
-import io.compgen.ngsutils.support.cli.AbstractOutputCommand;
-import io.compgen.ngsutils.support.cli.Command;
+import io.compgen.support.StringLineReader;
+import io.compgen.support.StringUtils;
+import io.compgen.support.TabWriter;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -21,12 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.lexicalscope.jewel.cli.CommandLineInterface;
-import com.lexicalscope.jewel.cli.Option;
-import com.lexicalscope.jewel.cli.Unparsed;
-
-@CommandLineInterface(application="ngsutilsj find-events")
-@Command(name="find-events", desc="Merges differentially spliced junction counts (junction-diff) into events of related junctions", cat="splicing", experimental=true)
+@Command(name="find-events", desc="Merges differentially spliced junction counts (junction-diff) into events of related junctions", category="splicing", experimental=true)
 public class FindEvents extends AbstractOutputCommand {
     public class JunctionEventStats {
         public final double pvalue;
@@ -40,11 +37,10 @@ public class FindEvents extends AbstractOutputCommand {
 
     private String filename = null;
     private String failedFilename = null;
+    private String bedFilename = null;
     
     private double pctThreshold = 0.1;
     private double fdrThreshold = 0.1;
-    
-    private String bedFilename = null;
 
     private Set<String> used = new HashSet<String>();
     
@@ -55,34 +51,34 @@ public class FindEvents extends AbstractOutputCommand {
     private Map<JunctionDonorAcceptor, List<JunctionKey>> acceptors = new HashMap<JunctionDonorAcceptor, List<JunctionKey>>();
 
     
-    @Unparsed(name = "FILE")
+    @UnnamedArg(name = "FILE")
     public void setFilename(String filename) {
         this.filename = filename;
     }
 
-    @Option(description = "Minimum FDR cut-off (default: 0.1)", longName="fdr", defaultValue="0.1")
+    @Option(desc="Minimum FDR cut-off (default: 0.1)", name="fdr", defaultValue="0.1")
     public void setFDRThreshold(double val) {
         this.fdrThreshold = val;
     }
 
-    @Option(description = "Output failed junctions here (BED)", longName="failed", defaultToNull=true)
+    @Option(desc="Output failed junctions here (BED)", name="failed")
     public void setFailedFilename(String failedFilename) {
         this.failedFilename = failedFilename;
     }
 
-    @Option(description = "Output BED file for all junctions passing filters", longName="bed", defaultToNull=true)
+    @Option(desc="Output BED file for all junctions passing filters", name="bed")
     public void setBedFilename(String filename) {
         this.bedFilename = filename;
     }
 
-    @Option(description = "Minimum pct-difference (default: 0.1)", longName="pct-dff", defaultValue="0.1")
+    @Option(desc="Minimum pct-difference (default: 0.1)", name="pct-dff", defaultValue="0.1")
     public void setPctDiff(double val) {
         this.pctThreshold = val;
     }
 
 
-    @Override
-    public void exec() throws NGSUtilsException, IOException {
+    @Exec
+    public void exec() throws IOException {
         
         String[] header = null;
         int juncIdx = -1;

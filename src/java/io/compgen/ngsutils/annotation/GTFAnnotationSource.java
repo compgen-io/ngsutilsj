@@ -6,8 +6,8 @@ import htsjdk.samtools.SAMRecord;
 import io.compgen.ngsutils.annotation.GTFAnnotationSource.GTFGene;
 import io.compgen.ngsutils.bam.Orientation;
 import io.compgen.ngsutils.bam.Strand;
-import io.compgen.ngsutils.support.StringLineReader;
-import io.compgen.ngsutils.support.StringUtils;
+import io.compgen.support.StringLineReader;
+import io.compgen.support.StringUtils;
 
 import java.io.IOException;
 import java.util.ArrayList;

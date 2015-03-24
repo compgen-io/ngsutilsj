@@ -1,18 +1,21 @@
 package io.compgen.ngsutils.cli.splicing;
 
+import io.compgen.cmdline.annotation.Command;
+import io.compgen.cmdline.annotation.Exec;
+import io.compgen.cmdline.annotation.Option;
+import io.compgen.cmdline.annotation.UnnamedArg;
+import io.compgen.cmdline.impl.AbstractOutputCommand;
 import io.compgen.ngsutils.NGSUtils;
-import io.compgen.ngsutils.NGSUtilsException;
 import io.compgen.ngsutils.junction.JunctionCounts;
 import io.compgen.ngsutils.junction.JunctionDiff;
+import io.compgen.ngsutils.junction.JunctionDiffException;
 import io.compgen.ngsutils.junction.JunctionDiffStats;
+import io.compgen.ngsutils.junction.JunctionDiffStats.JunctionDiffSample;
 import io.compgen.ngsutils.junction.JunctionKey;
 import io.compgen.ngsutils.junction.JunctionStats;
-import io.compgen.ngsutils.junction.JunctionDiffStats.JunctionDiffSample;
-import io.compgen.ngsutils.support.StringUtils;
-import io.compgen.ngsutils.support.TabWriter;
-import io.compgen.ngsutils.support.cli.AbstractOutputCommand;
-import io.compgen.ngsutils.support.cli.Command;
 import io.compgen.ngsutils.support.stats.StatUtils;
+import io.compgen.support.StringUtils;
+import io.compgen.support.TabWriter;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -20,12 +23,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import com.lexicalscope.jewel.cli.CommandLineInterface;
-import com.lexicalscope.jewel.cli.Option;
-import com.lexicalscope.jewel.cli.Unparsed;
-
-@CommandLineInterface(application="ngsutilsj junction-diff")
-@Command(name="junction-diff", desc="Given counts files, find differentially spliced junctions", cat="splicing", experimental=true)
+@Command(name="junction-diff", desc="Given counts files, find differentially spliced junctions", category="splicing", experimental=true)
 public class JunctionDiffCli extends AbstractOutputCommand {
     private List<String> filenames;
     private Integer[] groups;
@@ -33,22 +31,22 @@ public class JunctionDiffCli extends AbstractOutputCommand {
     private double maxEditDistance = -1;
     private int minTotalCount = -1;
     
-    @Unparsed(name = "FILEs")
+    @UnnamedArg(name = "FILEs")
     public void setFilename(List<String> filenames) {
         this.filenames = filenames;
     }
 
-    @Option(description = "Require the average edit-distance to be below {value}", longName="max-edit-distance", defaultValue="-1")
+    @Option(desc="Require the average edit-distance to be below {value}", name="max-edit-distance", defaultValue="-1")
     public void setMaxEditDistance(double maxEditDistance) {
         this.maxEditDistance = maxEditDistance;
     }
 
-    @Option(description = "Require more than {value} total number of reads crossing a junction", longName="min-total-count", defaultValue="-1")
+    @Option(desc="Require more than {value} total number of reads crossing a junction", name="min-total-count", defaultValue="-1")
     public void setMinTotalCount(int minTotalCount) {
         this.minTotalCount = minTotalCount;
     }
 
-    @Option(description = "Comma-delimited list of groups in the same order as the files are given (1=control, 2=experimental, Example: --groups 1,1,1,2,2,2)", longName="groups")
+    @Option(desc="Comma-delimited list of groups in the same order as the files are given (1=control, 2=experimental, Example: --groups 1,1,1,2,2,2)", name="groups")
     public void setGroups(String value) {
         List<Integer> tmp = new ArrayList<Integer>();
         for (String s:value.split(",")) {
@@ -59,8 +57,8 @@ public class JunctionDiffCli extends AbstractOutputCommand {
         
     }
 
-    @Override
-    public void exec() throws NGSUtilsException, IOException {
+    @Exec
+    public void exec() throws IOException, JunctionDiffException {
         
         JunctionDiff juncDiff = new JunctionDiff();
         juncDiff.setMinTotalCount(minTotalCount);

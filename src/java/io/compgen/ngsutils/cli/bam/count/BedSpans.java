@@ -1,7 +1,7 @@
 package io.compgen.ngsutils.cli.bam.count;
 
 import io.compgen.ngsutils.bam.Strand;
-import io.compgen.ngsutils.support.AbstractLineReader;
+import io.compgen.support.AbstractLineReader;
 
 import java.io.BufferedReader;
 import java.io.FileReader;

@@ -5,8 +5,13 @@ import htsjdk.samtools.SAMRecordIterator;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.ValidationStringency;
+import io.compgen.cmdline.annotation.Command;
+import io.compgen.cmdline.annotation.Exec;
+import io.compgen.cmdline.annotation.Option;
+import io.compgen.cmdline.annotation.UnnamedArg;
+import io.compgen.cmdline.exceptions.CommandArgumentException;
+import io.compgen.cmdline.impl.AbstractOutputCommand;
 import io.compgen.ngsutils.NGSUtils;
-import io.compgen.ngsutils.NGSUtilsException;
 import io.compgen.ngsutils.bam.Orientation;
 import io.compgen.ngsutils.bam.Strand;
 import io.compgen.ngsutils.bam.support.ReadUtils;
@@ -14,29 +19,22 @@ import io.compgen.ngsutils.cli.bam.count.BedSpans;
 import io.compgen.ngsutils.cli.bam.count.BinSpans;
 import io.compgen.ngsutils.cli.bam.count.Span;
 import io.compgen.ngsutils.cli.bam.count.SpanSource;
-import io.compgen.ngsutils.support.IterUtils;
-import io.compgen.ngsutils.support.TabWriter;
-import io.compgen.ngsutils.support.cli.AbstractOutputCommand;
-import io.compgen.ngsutils.support.cli.Command;
-import io.compgen.ngsutils.support.progress.IncrementingStats;
-import io.compgen.ngsutils.support.progress.ProgressUtils;
+import io.compgen.support.IterUtils;
+import io.compgen.support.TabWriter;
+import io.compgen.support.progress.IncrementingStats;
+import io.compgen.support.progress.ProgressUtils;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 
-import com.lexicalscope.jewel.cli.CommandLineInterface;
-import com.lexicalscope.jewel.cli.Option;
-import com.lexicalscope.jewel.cli.Unparsed;
-
-@CommandLineInterface(application="ngsutilsj bam-count")
-@Command(name="bam-count", desc="Counts the number of reads within a BED region or by bins (--bed or --bins required)", cat="bam")
+@Command(name="bam-count", desc="Counts the number of reads within a BED region or by bins (--bed or --bins required)", category="bam")
 public class BamCount extends AbstractOutputCommand {
     
     private String samFilename=null;
-    
     private String bedFilename=null;
+    
     private int binSize = 0;
     
     private boolean contained = false;
@@ -52,86 +50,86 @@ public class BamCount extends AbstractOutputCommand {
     
     private Orientation orient = Orientation.UNSTRANDED;
     
-    @Unparsed(name = "FILE")
+    @UnnamedArg(name = "FILE")
     public void setFilename(String filename) {
         samFilename = filename;
     }
 
-    @Option(description = "Count bins of size [value]", longName="bins", defaultValue="0")
+    @Option(desc="Count bins of size [value]", name="bins", defaultValue="0")
     public void setBinSize(int binSize) {
         this.binSize = binSize;
     }
 
-    @Option(description = "Count reads within BED regions", longName="bed", defaultToNull=true)
+    @Option(desc="Count reads within BED regions", name="bed")
     public void setBedFile(String bedFilename) {
         this.bedFilename = bedFilename;
     }
 
-    @Option(description = "Use lenient validation strategy", longName="lenient")
+    @Option(desc="Use lenient validation strategy", name="lenient")
     public void setLenient(boolean lenient) {
         this.lenient = lenient;
     }
 
-    @Option(description = "Use silent validation strategy", longName="silent")
+    @Option(desc="Use silent validation strategy", name="silent")
     public void setSilent(boolean silent) {
         this.silent = silent;
     }
 
-    @Option(description = "Only count uniquely mapped reads", longName="unique")
+    @Option(desc="Only count uniquely mapped reads", name="unique")
     public void setUnique(boolean unique) {
         this.unique = unique;
     }
 
-    @Option(description = "Read must be completely contained within region", longName="contained")
+    @Option(desc="Read must be completely contained within region", name="contained")
     public void setContained(boolean contained) {
         this.contained = contained;
     }
 
-    @Option(description = "Library is in FR orientation", longName="library-fr")
+    @Option(desc="Library is in FR orientation", name="library-fr")
     public void setLibraryFR(boolean val) {
         if (val) {
             orient = Orientation.FR;
         }
     }
 
-    @Option(description = "Library is in RF orientation", longName="library-rf")
+    @Option(desc="Library is in RF orientation", name="library-rf")
     public void setLibraryRF(boolean val) {
         if (val) {
             orient = Orientation.RF;
         }
     }
 
-    @Option(description = "Library is in unstranded orientation (default)", longName="library-unstranded")
+    @Option(desc="Library is in unstranded orientation (default)", name="library-unstranded")
     public void setLibraryUnstranded(boolean val) {
         if (val) {
             orient = Orientation.UNSTRANDED;
         }
     }
 
-    @Option(description = "Also report the number/ratio of properly-paired reads", longName="proper-pairs")
+    @Option(desc="Also report the number/ratio of properly-paired reads", name="proper-pairs")
     public void setProperPairs(boolean val) {
         proper = val;
     }
 
-    @Option(description = "Also report the average insert-size of reads", longName="insert-size")
+    @Option(desc="Also report the average insert-size of reads", name="insert-size")
     public void setInsertSize(boolean val) {
         insert = val;
     }
 
-    @Option(description = "Also report the number of inverted reads (FF,RR)", longName="inverted")
+    @Option(desc="Also report the number of inverted reads (FF,RR)", name="inverted")
     public void setInverted(boolean val) {
         inverted = val;
     }
 
-    @Option(description = "Only count the starting mapped position (strand specific, for pairs - only counts the first pair)", longName="startonly")
+    @Option(desc="Only count the starting mapped position (strand specific, for pairs - only counts the first pair)", name="startonly")
     public void setStartOnly(boolean val) {
         startOnly = val;
     }
 
-    @Override
-    public void exec() throws NGSUtilsException, IOException {
+    @Exec
+    public void exec() throws CommandArgumentException, IOException {
         if (binSize > 0 && bedFilename != null) {
-            throw new NGSUtilsException("You can't specify both a bin-size and a BED file!");
+            throw new CommandArgumentException("You can't specify both a bin-size and a BED file!");
         }
         
         SamReaderFactory readerFactory = SamReaderFactory.makeDefault();
@@ -162,7 +160,7 @@ public class BamCount extends AbstractOutputCommand {
         } else { // TODO: add a GTF span source 
             reader.close();
             writer.close();
-            throw new NGSUtilsException("You must specify either a bin-size or a BED file!");
+            throw new CommandArgumentException("You must specify either a bin-size or a BED file!");
         }
 
         writer.write_line("## counts: number of reads ");
@@ -201,7 +199,7 @@ public class BamCount extends AbstractOutputCommand {
         
         int spanCount = 0;
         
-        for (Span span: IterUtils.wrapIterator(ProgressUtils.getIterator(name, spanSource.iterator(), new IncrementingStats(spanSource.size())))) {
+        for (Span span: IterUtils.wrap(ProgressUtils.getIterator(name, spanSource.iterator(), new IncrementingStats(spanSource.size())))) {
             spanCount ++;
             if (verbose && spanCount % 1000 == 0) {
                 System.err.println("[" +spanCount + "]" + span.getRefName()+":"+span.getStarts()[0]);

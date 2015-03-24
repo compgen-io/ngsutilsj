@@ -1,14 +1,13 @@
 package io.compgen.ngsutils.fastq.filter;
 
-import io.compgen.ngsutils.NGSUtilsException;
 import io.compgen.ngsutils.fastq.FastqRead;
 
 public class WildcardFilter extends AbstractSingleReadFilter {
 	private int maxWildcards;
-	public WildcardFilter(Iterable<FastqRead> parent, boolean verbose, int maxWildcards) throws NGSUtilsException {
+	public WildcardFilter(Iterable<FastqRead> parent, boolean verbose, int maxWildcards) throws FilteringException {
 		super(parent, verbose);
         if (maxWildcards < 0) {
-            throw new NGSUtilsException("Number of wildcard calls must be zero or greater!");
+            throw new FilteringException("Number of wildcard calls must be zero or greater!");
         }
 		this.maxWildcards = maxWildcards;
         if (verbose) {

@@ -1,6 +1,5 @@
 package io.compgen.ngsutils.fastq.filter;
 
-import io.compgen.ngsutils.NGSUtilsException;
 import io.compgen.ngsutils.fastq.FastqRead;
 
 import java.util.Iterator;
@@ -37,7 +36,7 @@ public abstract class AbstractSingleReadFilter implements FastqFilter, Iterable<
 	    if (isfirst) {
 	        try {
                 checkNext();
-            } catch (NGSUtilsException e) {
+            } catch (FilteringException e) {
                 throw new RuntimeException(e);
             }
 	        isfirst = false;
@@ -48,9 +47,9 @@ public abstract class AbstractSingleReadFilter implements FastqFilter, Iterable<
 	public void remove() {		
 	}
 
-	abstract protected FastqRead filterRead(FastqRead read) throws NGSUtilsException;
+	abstract protected FastqRead filterRead(FastqRead read) throws FilteringException;
 	
-	private void checkNext() throws NGSUtilsException {
+	private void checkNext() throws FilteringException {
 		while (parent.hasNext()) {
 			FastqRead read = parent.next();
 			if (verbose) {
@@ -92,7 +91,7 @@ public abstract class AbstractSingleReadFilter implements FastqFilter, Iterable<
 			}
 			
 			return retval;
-		} catch (NGSUtilsException e) {
+		} catch (FilteringException e) {
 			throw new RuntimeException(e);
 		}
 	}

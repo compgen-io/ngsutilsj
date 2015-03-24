@@ -1,6 +1,5 @@
 package io.compgen.ngsutils.fastq.filter;
 
-import io.compgen.ngsutils.NGSUtilsException;
 import io.compgen.ngsutils.fastq.FastqRead;
 
 import java.io.BufferedReader;
@@ -11,7 +10,7 @@ import java.util.Set;
 
 public class BlacklistFilter extends AbstractSingleReadFilter {
 	private Set<String> names = new HashSet<String>();
-	public BlacklistFilter(Iterable<FastqRead> parent, boolean verbose, String listFilename) throws NGSUtilsException, IOException {
+	public BlacklistFilter(Iterable<FastqRead> parent, boolean verbose, String listFilename) throws FilteringException, IOException {
 		super(parent, verbose);
 
 		BufferedReader br = new BufferedReader(new FileReader(listFilename));

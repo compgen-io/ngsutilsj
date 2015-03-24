@@ -6,17 +6,21 @@ import htsjdk.samtools.SamInputResource;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.ValidationStringency;
-import io.compgen.ngsutils.NGSUtilsException;
+import io.compgen.cmdline.annotation.Command;
+import io.compgen.cmdline.annotation.Exec;
+import io.compgen.cmdline.annotation.Option;
+import io.compgen.cmdline.annotation.UnnamedArg;
+import io.compgen.cmdline.exceptions.CommandArgumentException;
+import io.compgen.cmdline.impl.AbstractOutputCommand;
 import io.compgen.ngsutils.annotation.AnnotatedRegionCounter;
 import io.compgen.ngsutils.annotation.GenicRegion;
-import io.compgen.ngsutils.support.StringUtils;
-import io.compgen.ngsutils.support.TallyCounts;
-import io.compgen.ngsutils.support.TallyValues;
-import io.compgen.ngsutils.support.cli.AbstractOutputCommand;
-import io.compgen.ngsutils.support.cli.Command;
-import io.compgen.ngsutils.support.progress.FileChannelStats;
-import io.compgen.ngsutils.support.progress.ProgressMessage;
-import io.compgen.ngsutils.support.progress.ProgressUtils;
+import io.compgen.ngsutils.support.CloseableFinalizer;
+import io.compgen.support.StringUtils;
+import io.compgen.support.TallyCounts;
+import io.compgen.support.TallyValues;
+import io.compgen.support.progress.FileChannelStats;
+import io.compgen.support.progress.ProgressMessage;
+import io.compgen.support.progress.ProgressUtils;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -27,13 +31,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.TreeMap;
 
-import com.lexicalscope.jewel.cli.ArgumentValidationException;
-import com.lexicalscope.jewel.cli.CommandLineInterface;
-import com.lexicalscope.jewel.cli.Option;
-import com.lexicalscope.jewel.cli.Unparsed;
-
-@CommandLineInterface(application="ngsutilsj bam-stats")
-@Command(name="bam-stats", desc="Stats about a BAM file and the library orientation", cat="bam", experimental=true)
+@Command(name="bam-stats", desc="Stats about a BAM file and the library orientation", category="bam", experimental=true)
 public class BamStats extends AbstractOutputCommand {
     private String filename = null;
     private String gtfFilename = null;
@@ -41,46 +39,46 @@ public class BamStats extends AbstractOutputCommand {
     private boolean silent = false;
 
     private Map<String,TallyCounts> numTagCounts = new HashMap<String,TallyCounts>();
-    private Map<String,TallyValues> strTagCounts = new HashMap<String,TallyValues>();
+    private Map<String,TallyValues<String>> strTagCounts = new HashMap<String,TallyValues<String>>();
     
-    @Unparsed(name = "FILE")
+    @UnnamedArg(name = "FILE")
     public void setFilename(String filename) {
         this.filename = filename;
     }
 
-    @Option(description = "Use lenient validation strategy", longName="lenient")
+    @Option(desc="Use lenient validation strategy", name="lenient")
     public void setLenient(boolean lenient) {
         this.lenient = lenient;
     }
 
-    @Option(description = "Use silent validation strategy", longName="silent")
+    @Option(desc="Use silent validation strategy", name="silent")
     public void setSilent(boolean silent) {
         this.silent = silent;
     }    
 
-    @Option(description = "GTF annotation file", longName="gtf", defaultToNull=true)
+    @Option(desc="GTF annotation file", name="gtf")
     public void setGTFFilename(String filename) {
         this.gtfFilename = filename;
     }    
 
-    @Option(description = "Count tag value distribution (comma-delimited list, including type, e.g. NH:i,RG:Z)", longName="tags", defaultToNull=true)
-    public void setTags(String tags) {
+    @Option(desc="Count tag value distribution (comma-delimited list, including type, e.g. NH:i,RG:Z)", name="tags")
+    public void setTags(String tags) throws CommandArgumentException {
         for (String k: tags.split(",")) {
             String[] tag_type = k.trim().split(":");
             if (tag_type[1].toUpperCase().equals("Z")) {
-                strTagCounts.put(tag_type[0], new TallyValues());
+                strTagCounts.put(tag_type[0], new TallyValues<String>());
             } else if (tag_type[1].toUpperCase().equals("I")) {
                 numTagCounts.put(tag_type[0], new TallyCounts());
             } else {
-                throw new ArgumentValidationException("You must specify tags and their type (ex: NH:i)!");
+                throw new CommandArgumentException("You must specify tags and their type (ex: NH:i)!");
             }
         }
     }
     
-    @Override
-    public void exec() throws NGSUtilsException, IOException {
+    @Exec
+    public void exec() throws IOException, CommandArgumentException {
         if (filename == null) {
-            throw new ArgumentValidationException("You must specify an input BAM filename!");
+            throw new CommandArgumentException("You must specify an input BAM filename!");
         }
         
         AnnotatedRegionCounter geneRegionCounter = null;
@@ -156,7 +154,7 @@ public class BamStats extends AbstractOutputCommand {
             public String msg(SAMRecord current) {
                 i++;
                 return i+" "+current.getReadName();
-            }});;
+            }}, new CloseableFinalizer<SAMRecord>(){});;
         while (it.hasNext()) {
             SAMRecord read = it.next();
             if (read.getReadPairedFlag() && read.getSecondOfPairFlag()) {

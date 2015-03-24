@@ -6,14 +6,13 @@ import htsjdk.samtools.SamInputResource;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.ValidationStringency;
-import io.compgen.ngsutils.NGSUtilsException;
 import io.compgen.ngsutils.bam.support.ReadUtils;
 import io.compgen.ngsutils.fastq.FastqRead;
 import io.compgen.ngsutils.fastq.FastqReader;
-import io.compgen.ngsutils.support.StringUtils;
-import io.compgen.ngsutils.support.progress.FileChannelStats;
-import io.compgen.ngsutils.support.progress.ProgressMessage;
-import io.compgen.ngsutils.support.progress.ProgressUtils;
+import io.compgen.support.StringUtils;
+import io.compgen.support.progress.FileChannelStats;
+import io.compgen.support.progress.ProgressMessage;
+import io.compgen.support.progress.ProgressUtils;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -124,7 +123,7 @@ public class BamFastqReader implements FastqReader {
         } else if (inputStream != null) {
             reader = readerFactory.open(SamInputResource.of(inputStream));
         } else {
-            throw new NGSUtilsException("Missing SAM resource!");
+            throw new RuntimeException("Missing SAM resource!");
         }
 
         samIterator = reader.iterator();

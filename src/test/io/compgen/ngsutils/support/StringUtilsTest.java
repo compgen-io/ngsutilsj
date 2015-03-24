@@ -1,7 +1,7 @@
 package io.compgen.ngsutils.support;
 
 import static org.junit.Assert.assertEquals;
-import io.compgen.ngsutils.support.StringUtils;
+import io.compgen.support.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;

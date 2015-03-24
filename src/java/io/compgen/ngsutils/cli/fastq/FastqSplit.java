@@ -1,11 +1,14 @@
 package io.compgen.ngsutils.cli.fastq;
 
-import io.compgen.ngsutils.NGSUtilsException;
+import io.compgen.cmdline.annotation.Command;
+import io.compgen.cmdline.annotation.Exec;
+import io.compgen.cmdline.annotation.Option;
+import io.compgen.cmdline.annotation.UnnamedArg;
+import io.compgen.cmdline.exceptions.CommandArgumentException;
+import io.compgen.cmdline.impl.AbstractCommand;
 import io.compgen.ngsutils.fastq.Fastq;
 import io.compgen.ngsutils.fastq.FastqRead;
 import io.compgen.ngsutils.fastq.FastqReader;
-import io.compgen.ngsutils.support.cli.AbstractCommand;
-import io.compgen.ngsutils.support.cli.Command;
 
 import java.io.BufferedOutputStream;
 import java.io.FileOutputStream;
@@ -13,12 +16,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.zip.GZIPOutputStream;
 
-import com.lexicalscope.jewel.cli.CommandLineInterface;
-import com.lexicalscope.jewel.cli.Option;
-import com.lexicalscope.jewel.cli.Unparsed;
-
-@CommandLineInterface(application = "ngsutilsj fastq-split")
-@Command(name = "fastq-split", desc = "Splits an FASTQ file into smaller files", cat="fastq")
+@Command(name = "fastq-split", desc = "Splits an FASTQ file into smaller files", category="fastq")
 public class FastqSplit extends AbstractCommand {
 	private String filename;
 
@@ -29,31 +27,31 @@ public class FastqSplit extends AbstractCommand {
 	public FastqSplit() {
 	}
 
-	@Unparsed(name = "FILE")
+	@UnnamedArg(name = "FILE")
 	public void setFilename(String filename) throws IOException {
 	    this.filename = filename;
 	}
 
-	@Option(description = "Number of subfiles to split into", shortName = "n", longName="num")
+	@Option(desc="Number of subfiles to split into", charName = "n", name="num")
 	public void setNum(int num) {
 		this.num = num;
 	}
 
-	@Option(description = "Output filename template", shortName = "o", defaultToNull=true, longName = "output")
+	@Option(desc="Output filename template", charName = "o", name="output")
 	public void setOutputTemplate(String outputTemplate) throws IOException {
 		this.outputTemplate = outputTemplate;
 	}
 
-	@Option(description = "Compress output (default: false)", shortName = "z", longName = "compress")
+	@Option(desc="Compress output (default: false)", charName = "z", name="compress")
 	public void setCompressOuput(boolean compressOuput) {
 		this.compressOuput = compressOuput;
 	}
 
-	@Override
-	public void exec() throws IOException, NGSUtilsException {
+	@Exec
+	public void exec() throws IOException, CommandArgumentException {
         if (outputTemplate == null) {
             if (filename.equals("-")) {
-                throw new NGSUtilsException("You must specify an output template if reading from stdin");
+                throw new CommandArgumentException("You must specify an output template if reading from stdin");
             }
             if (filename.contains(".fastq")) {
                 outputTemplate = filename.substring(0, filename.indexOf(".fastq"));

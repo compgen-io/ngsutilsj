@@ -6,15 +6,17 @@ import htsjdk.samtools.SamInputResource;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.ValidationStringency;
+import io.compgen.cmdline.annotation.Command;
+import io.compgen.cmdline.annotation.Exec;
+import io.compgen.cmdline.annotation.Option;
+import io.compgen.cmdline.annotation.UnnamedArg;
+import io.compgen.cmdline.impl.AbstractOutputCommand;
 import io.compgen.ngsutils.NGSUtils;
-import io.compgen.ngsutils.NGSUtilsException;
 import io.compgen.ngsutils.annotation.GenomeSpan;
 import io.compgen.ngsutils.bam.Orientation;
 import io.compgen.ngsutils.bam.support.ReadUtils;
 import io.compgen.ngsutils.bam.support.ReadUtils.MappedReadCounter;
-import io.compgen.ngsutils.support.TabWriter;
-import io.compgen.ngsutils.support.cli.AbstractOutputCommand;
-import io.compgen.ngsutils.support.cli.Command;
+import io.compgen.support.TabWriter;
 
 import java.io.File;
 import java.io.IOException;
@@ -22,12 +24,7 @@ import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-import com.lexicalscope.jewel.cli.CommandLineInterface;
-import com.lexicalscope.jewel.cli.Option;
-import com.lexicalscope.jewel.cli.Unparsed;
-
-@CommandLineInterface(application="ngsutilsj junction-count")
-@Command(name="junction-count", desc="Counts the number of reads that map to splice junctions", cat="splicing", experimental=true)
+@Command(name="junction-count", desc="Counts the number of reads that map to splice junctions", category="splicing", experimental=true)
 public class JunctionCount extends AbstractOutputCommand {
     private String filename = null;
     
@@ -41,64 +38,64 @@ public class JunctionCount extends AbstractOutputCommand {
 
     private Orientation orient = Orientation.UNSTRANDED;
     
-    @Unparsed(name = "FILE")
+    @UnnamedArg(name = "FILE")
     public void setFilename(String filename) {
         this.filename = filename;
     }
 
-    @Option(description = "Use lenient validation strategy", longName="lenient")
+    @Option(desc="Use lenient validation strategy", name="lenient")
     public void setLenient(boolean lenient) {
         this.lenient = lenient;
     }
 
-    @Option(description = "Use silent validation strategy", longName="silent")
+    @Option(desc="Use silent validation strategy", name="silent")
     public void setSilent(boolean silent) {
         this.silent = silent;
     }
 
-    @Option(description = "Library is in FR orientation", longName="library-fr")
+    @Option(desc="Library is in FR orientation", name="library-fr")
     public void setLibraryFR(boolean val) {
         if (val) {
             orient = Orientation.FR;
         }
     }
 
-    @Option(description = "Library is in RF orientation", longName="library-rf")
+    @Option(desc="Library is in RF orientation", name="library-rf")
     public void setLibraryRF(boolean val) {
         if (val) {
             orient = Orientation.RF;
         }
     }
 
-    @Option(description = "Library is in unstranded orientation (default)", longName="library-unstranded")
+    @Option(desc="Library is in unstranded orientation (default)", name="library-unstranded")
     public void setLibraryUnstranded(boolean val) {
         if (val) {
             orient = Orientation.UNSTRANDED;
         }
     }
 
-    @Option(description = "Also count reads for retained introns (default: false)", longName="retained-introns")
+    @Option(desc="Also count reads for retained introns (default: false)", name="retained-introns")
     public void setRetainedIntrons(boolean val) {
         this.retainedIntrons = val;
     }
 
-    @Option(description = "Minimum overlap for retained introns (default: 10)", longName="min-overlap", defaultValue="10")
+    @Option(desc="Minimum overlap for retained introns (default: 10)", name="min-overlap", defaultValue="10")
     public void setMinOverlap(int val) {
         this.minOverlap = val;
     }
 
-    @Option(description = "Separate counts by read number (R1/R2) (default: false)", longName="split-reads")
+    @Option(desc="Separate counts by read number (R1/R2) (default: false)", name="split-reads")
     public void setSplitReads(boolean val) {
         this.splitReads = val;
     }
 
-    @Option(description = "Also report the average edit distance for a reads mapping to a junction (default: false)", longName="edit-distance")
+    @Option(desc="Also report the average edit distance for a reads mapping to a junction (default: false)", name="edit-distance")
     public void setEditDistance(boolean val) {
         this.editDistance = val;
     }
 
-    @Override
-    public void exec() throws NGSUtilsException, IOException {
+    @Exec
+    public void exec() throws IOException {
         SamReaderFactory readerFactory = SamReaderFactory.makeDefault();
         if (lenient) {
             readerFactory.validationStringency(ValidationStringency.LENIENT);

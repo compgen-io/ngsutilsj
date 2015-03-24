@@ -5,12 +5,12 @@ Build-only: jarjar (Apache License 2.0)
 
 Embedded:  HTSJDK (MIT)
            SQZ (MIT)
+           compgen-support (MIT)
+           compgen-cmdline (MIT)
            Apache Commons Compress (Apache License 2.0)
            Apache Commons JEXL (Apache License 2.0)
            Apache Commons Logging (Apache License 2.0)
            Apache Commons Math (Apache License 2.0)
-           Jewel CLI (Apache License 2.0)
-           Objenesis (Apache License 2.0)
            Snappy-java (Apache License 2.0)
 
 
@@ -39,7 +39,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 
 
-MIT License / SQZ
+MIT License / SQZ, compgen-*
 -----------------------------------------------------------------------------
 The MIT License
 

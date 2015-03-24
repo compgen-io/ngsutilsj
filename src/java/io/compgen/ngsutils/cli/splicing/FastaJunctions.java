@@ -1,24 +1,21 @@
 package io.compgen.ngsutils.cli.splicing;
 
-import io.compgen.ngsutils.NGSUtilsException;
+import io.compgen.cmdline.annotation.Command;
+import io.compgen.cmdline.annotation.Exec;
+import io.compgen.cmdline.annotation.Option;
+import io.compgen.cmdline.annotation.UnnamedArg;
+import io.compgen.cmdline.exceptions.CommandArgumentException;
+import io.compgen.cmdline.impl.AbstractOutputCommand;
 import io.compgen.ngsutils.annotation.GenomeSpan;
 import io.compgen.ngsutils.fasta.FastaReader;
 import io.compgen.ngsutils.fasta.IndexedFastaFile;
-import io.compgen.ngsutils.support.StringLineReader;
-import io.compgen.ngsutils.support.StringUtils;
-import io.compgen.ngsutils.support.cli.AbstractOutputCommand;
-import io.compgen.ngsutils.support.cli.Command;
+import io.compgen.support.StringLineReader;
+import io.compgen.support.StringUtils;
 
 import java.io.IOException;
 import java.util.List;
 
-import com.lexicalscope.jewel.cli.ArgumentValidationException;
-import com.lexicalscope.jewel.cli.CommandLineInterface;
-import com.lexicalscope.jewel.cli.Option;
-import com.lexicalscope.jewel.cli.Unparsed;
-
-@CommandLineInterface(application="ngsutilsj junction-flank")
-@Command(name="junction-flank", desc="Extract sequences flanking a junction.", cat="splicing", doc="Junctions should be specified as ref:start-end, where start and end are the 0-based coordinates that mark the *intronic* parts of the junction. Junctions can also be semi-colon delimited to include more that one event per line.")
+@Command(name="junction-flank", desc="Extract sequences flanking a junction.", category="splicing", doc="Junctions should be specified as ref:start-end, where start and end are the 0-based coordinates that mark the *intronic* parts of the junction. Junctions can also be semi-colon delimited to include more that one event per line.")
 public class FastaJunctions extends AbstractOutputCommand {
     
     private String fastaName = null;
@@ -29,7 +26,7 @@ public class FastaJunctions extends AbstractOutputCommand {
     private boolean markJunction = false;
     private boolean markOverlap = false;
     
-    @Unparsed(name = "FILE chrom:start-end")
+    @UnnamedArg(name = "FILE chrom:start-end")
     public void setArgs(List<String> args) {
         fastaName = args.get(0);
         if (args.size()>1) {
@@ -37,12 +34,12 @@ public class FastaJunctions extends AbstractOutputCommand {
         }
     }
 
-    @Option(description = "Junction list filename - col 1 junction, col 2 name (optional)", longName="file", defaultToNull=true)
+    @Option(desc="Junction list filename - col 1 junction, col 2 name (optional)", name="file")
     public void setJunctionFilename(String juncName) {
         this.juncName = juncName;
     }
 
-    @Option(description = "Mark junction with [] for primer design", longName="mark")
+    @Option(desc="Mark junction with [] for primer design", name="mark")
     public void setMarkJunction(boolean mark) {
         this.markJunction = mark;
         if (markOverlap) {
@@ -50,7 +47,7 @@ public class FastaJunctions extends AbstractOutputCommand {
         }
     }
 
-    @Option(description = "Mark junction with - for primer overlap", longName="overlap")
+    @Option(desc="Mark junction with - for primer overlap", name="overlap")
     public void setMarkOverlap(boolean mark) {
         this.markOverlap = mark;
         if (markJunction) {
@@ -58,15 +55,15 @@ public class FastaJunctions extends AbstractOutputCommand {
         }
     }
 
-    @Option(description = "Length of flanking sequence (bp) (default: 100)", longName="size", defaultToNull=true)
+    @Option(desc="Length of flanking sequence (bp) (default: 100)", name="size")
     public void setSize(int size) {
         this.size = size;
     }
 
-    @Override
-    public void exec() throws NGSUtilsException, IOException {
+    @Exec
+    public void exec() throws CommandArgumentException, IOException {
         if (fastaName == null) {
-            throw new ArgumentValidationException("Missing/Invalid arguments!");
+            throw new CommandArgumentException("Missing/Invalid arguments!");
         }
         
         FastaReader fasta = new IndexedFastaFile(fastaName);

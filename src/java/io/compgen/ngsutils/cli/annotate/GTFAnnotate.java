@@ -1,28 +1,26 @@
 package io.compgen.ngsutils.cli.annotate;
 
+import io.compgen.cmdline.annotation.Command;
+import io.compgen.cmdline.annotation.Exec;
+import io.compgen.cmdline.annotation.Option;
+import io.compgen.cmdline.annotation.UnnamedArg;
+import io.compgen.cmdline.exceptions.CommandArgumentException;
+import io.compgen.cmdline.impl.AbstractOutputCommand;
 import io.compgen.ngsutils.NGSUtils;
-import io.compgen.ngsutils.NGSUtilsException;
 import io.compgen.ngsutils.annotation.GTFAnnotationSource;
+import io.compgen.ngsutils.annotation.GTFAnnotationSource.GTFGene;
 import io.compgen.ngsutils.annotation.GenicRegion;
 import io.compgen.ngsutils.annotation.GenomeSpan;
-import io.compgen.ngsutils.annotation.GTFAnnotationSource.GTFGene;
 import io.compgen.ngsutils.bam.Strand;
-import io.compgen.ngsutils.support.StringLineReader;
-import io.compgen.ngsutils.support.StringUtils;
-import io.compgen.ngsutils.support.TabWriter;
-import io.compgen.ngsutils.support.cli.AbstractOutputCommand;
-import io.compgen.ngsutils.support.cli.Command;
+import io.compgen.support.StringLineReader;
+import io.compgen.support.StringUtils;
+import io.compgen.support.TabWriter;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.lexicalscope.jewel.cli.CommandLineInterface;
-import com.lexicalscope.jewel.cli.Option;
-import com.lexicalscope.jewel.cli.Unparsed;
-
-@CommandLineInterface(application="ngsutilsj annotate-gtf")
-@Command(name="annotate-gtf", desc="Finds gene annotations from a GTF model", doc="Note: Column indexes start at 1.", cat="annotation")
+@Command(name="annotate-gtf", desc="Finds gene annotations from a GTF model", doc="Note: Column indexes start at 1.", category="annotation")
 public class GTFAnnotate extends AbstractOutputCommand {
     
     private String filename=null;
@@ -44,18 +42,18 @@ public class GTFAnnotate extends AbstractOutputCommand {
     
     private List<String> outputs = new ArrayList<String>();
     
-    @Unparsed(name = "FILE")
+    @UnnamedArg(name = "FILE")
     public void setFilename(String filename) {
         this.filename = filename;
     }
 
-    @Option(description = "GTF  filename", longName="gtf", defaultToNull=true)
+    @Option(desc = "GTF  filename", name="gtf")
     public void setGTFFilename(String gtfFilename) {
         this.gtfFilename = gtfFilename;
     }
 
 
-    @Option(description = "Column of chromosome (Default: 1)", longName="col-chrom", defaultValue="-1")
+    @Option(desc="Column of chromosome (Default: 1)", name="col-chrom", defaultValue="-1")
     public void setChromCol(int val) {
         if (val > 0) {
             // stored as 0-based, given as 1-based
@@ -65,7 +63,7 @@ public class GTFAnnotate extends AbstractOutputCommand {
         }
     }
 
-    @Option(description = "Column of start-position (1-based position) (Default: 2)", longName="col-start", defaultValue="-1")
+    @Option(desc="Column of start-position (1-based position) (Default: 2)", name="col-start", defaultValue="-1")
     public void setStartCol(int val) {
         if (val > 0) {
             // stored as 0-based, given as 1-based
@@ -75,7 +73,7 @@ public class GTFAnnotate extends AbstractOutputCommand {
         }
     }
 
-    @Option(description = "Column of end-position (Default: -1, no end col)", longName="col-end", defaultValue="-1")
+    @Option(desc="Column of end-position (Default: -1, no end col)", name="col-end", defaultValue="-1")
     public void setEndCol(int val) {
         if (val > 0) {
             // stored as 0-based, given as 1-based
@@ -85,7 +83,7 @@ public class GTFAnnotate extends AbstractOutputCommand {
         }
     }
 
-    @Option(description = "Column of strand (Default: -1, not strand-specific)", longName="col-strand", defaultValue="-1")
+    @Option(desc="Column of strand (Default: -1, not strand-specific)", name="col-strand", defaultValue="-1")
     public void setStrandCol(int val) {
         if (val > 0) {
             // stored as 0-based, given as 1-based
@@ -95,7 +93,7 @@ public class GTFAnnotate extends AbstractOutputCommand {
         }
     }
 
-    @Option(description = "Column of a region (Default: -1, not used)", longName="col-region", defaultValue="-1")
+    @Option(desc="Column of a region (Default: -1, not used)", name="col-region", defaultValue="-1")
     public void setRegionCol(int val) {
         if (val > 0) {
             // stored as 0-based, given as 1-based
@@ -105,7 +103,7 @@ public class GTFAnnotate extends AbstractOutputCommand {
         }
     }
 
-    @Option(description = "Column of a junction (Default: -1, not used)", longName="col-junction", defaultValue="-1")
+    @Option(desc="Column of a junction (Default: -1, not used)", name="col-junction", defaultValue="-1")
     public void setJunctionCol(int val) {
         if (val > 0) {
             // stored as 0-based, given as 1-based
@@ -115,7 +113,7 @@ public class GTFAnnotate extends AbstractOutputCommand {
         }
     }
 
-    @Option(description = "Use BED3 format presets", longName="bed3")
+    @Option(desc="Use BED3 format presets", name="bed3")
     public void setUseBED3(boolean val) {
         if (val) {
             this.refCol = 0;
@@ -125,7 +123,7 @@ public class GTFAnnotate extends AbstractOutputCommand {
         }
     }
 
-    @Option(description = "Use BED6 format presets", longName="bed6")
+    @Option(desc="Use BED6 format presets", name="bed6")
     public void setUseBED6(boolean val) {
         if (val) {
             this.refCol = 0;
@@ -135,28 +133,28 @@ public class GTFAnnotate extends AbstractOutputCommand {
         }
     }
 
-    @Option(description = "Add gene_id annotation", longName="gene-id")
+    @Option(desc="Add gene_id annotation", name="gene-id")
     public void setGeneId(boolean val) {
         if (val) {
             outputs.add("gene_id");
         }
     }
 
-    @Option(description = "Add genic region annotation", longName="genic-region")
+    @Option(desc="Add genic region annotation", name="genic-region")
     public void setGenicRegion(boolean val) {
         if (val) {
             outputs.add("genic_region");
         }
     }
 
-    @Option(description = "Add gene_name annotation", longName="gene-name")
+    @Option(desc="Add gene_name annotation", name="gene-name")
     public void setGeneName(boolean val) {
         if (val) {
             outputs.add("gene_name");
         }
     }
 
-    @Option(description = "Add biotype annotation", longName="biotype")
+    @Option(desc="Add biotype annotation", name="biotype")
     public void setBioType(boolean val) {
         if (val) {
             outputs.add("biotype");
@@ -164,35 +162,35 @@ public class GTFAnnotate extends AbstractOutputCommand {
     }
 
 
-    @Option(description = "Input file uses one-based coordinates (default is 0-based)", longName="one")
+    @Option(desc="Input file uses one-based coordinates (default is 0-based)", name="one")
     public void setOneBased(boolean val) {
         zeroBased = !val;
     }
 
-    @Option(description = "Input file doesn't have a header row", longName="noheader")
+    @Option(desc="Input file doesn't have a header row", name="noheader")
     public void setHasHeader(boolean val) {
         hasHeader = !val;
     }
 
-    @Option(description = "The header is the last commented line", longName="header-comment")
+    @Option(desc="The header is the last commented line", name="header-comment")
     public void setHeaderComment(boolean val) {
         headerComment = val;
     }
 
 
-    @Option(description = "Repeat can be within [value] bp of the genomic range (requires start and end columns)", longName="within", defaultValue="0")
+    @Option(desc="Repeat can be within [value] bp of the genomic range (requires start and end columns)", name="within", defaultValue="0")
     public void setWithin(int val) {
         this.within = val;
     }
 
-    @Override
-    public void exec() throws NGSUtilsException, IOException {
+    @Exec
+    public void exec() throws CommandArgumentException, IOException {
         if (gtfFilename == null) {
-            throw new NGSUtilsException("You must specify a GTF file!");
+            throw new CommandArgumentException("You must specify a GTF file!");
         }
         
         if (filename == null) {
-            throw new NGSUtilsException("You must specify an input file! (- for stdin)");
+            throw new CommandArgumentException("You must specify an input file! (- for stdin)");
         }
         
         if (refCol == -1 && startCol == -1 && regionCol == -1 && junctionCol == -1) {

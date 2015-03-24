@@ -3,13 +3,10 @@ package io.compgen.ngsutils.annotation;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import io.compgen.ngsutils.annotation.BEDAnnotationSource;
-import io.compgen.ngsutils.annotation.GenomeAnnotation;
-import io.compgen.ngsutils.annotation.GenomeSpan;
 import io.compgen.ngsutils.annotation.BEDAnnotationSource.BEDAnnotation;
 import io.compgen.ngsutils.bam.Strand;
-import io.compgen.ngsutils.support.IterUtils;
-import io.compgen.ngsutils.support.StringUtils;
+import io.compgen.support.IterUtils;
+import io.compgen.support.StringUtils;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -24,7 +21,7 @@ public class TestBEDAnnotation {
 
     @Test
     public void testHasAnnotation() {
-        for (GenomeAnnotation<BEDAnnotation> ann:IterUtils.wrapIterator(bed.iterator())) {
+        for (GenomeAnnotation<BEDAnnotation> ann:IterUtils.wrap(bed.iterator())) {
             System.err.println(ann);
             
         }

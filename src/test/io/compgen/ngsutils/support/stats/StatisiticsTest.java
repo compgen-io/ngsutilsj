@@ -2,7 +2,6 @@ package io.compgen.ngsutils.support.stats;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import io.compgen.ngsutils.support.stats.StatUtils;
 
 import java.text.DecimalFormat;
 import java.util.Arrays;

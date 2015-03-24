@@ -6,13 +6,18 @@ import htsjdk.samtools.SAMFileWriter;
 import htsjdk.samtools.SAMFileWriterFactory;
 import htsjdk.samtools.SAMProgramRecord;
 import htsjdk.samtools.SAMRecord;
+import io.compgen.cmdline.annotation.Command;
+import io.compgen.cmdline.annotation.Exec;
+import io.compgen.cmdline.annotation.Option;
+import io.compgen.cmdline.annotation.UnnamedArg;
+import io.compgen.cmdline.exceptions.CommandArgumentException;
+import io.compgen.cmdline.impl.AbstractCommand;
 import io.compgen.ngsutils.NGSUtils;
 import io.compgen.ngsutils.fastq.Fastq;
 import io.compgen.ngsutils.fastq.FastqRead;
 import io.compgen.ngsutils.fastq.FastqReader;
-import io.compgen.ngsutils.support.IterUtils;
-import io.compgen.ngsutils.support.cli.AbstractCommand;
-import io.compgen.ngsutils.support.cli.Command;
+import io.compgen.support.IterUtils;
+import io.compgen.support.IterUtils.EachPair;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -22,13 +27,7 @@ import java.io.OutputStream;
 import java.nio.channels.FileChannel;
 import java.util.List;
 
-import com.lexicalscope.jewel.cli.ArgumentValidationException;
-import com.lexicalscope.jewel.cli.CommandLineInterface;
-import com.lexicalscope.jewel.cli.Option;
-import com.lexicalscope.jewel.cli.Unparsed;
-
-@CommandLineInterface(application = "ngsutilsj fastq-bam")
-@Command(name = "fastq-bam", desc = "Converts a FASTQ file (or two paired files) into an unmapped BAM file", cat="fastq")
+@Command(name = "fastq-bam", desc = "Converts a FASTQ file (or two paired files) into an unmapped BAM file", category="fastq")
 public class FastqToBam extends AbstractCommand {
     private String[] filenames = null;
 	private String outputFilename = null;
@@ -42,7 +41,7 @@ public class FastqToBam extends AbstractCommand {
 	public FastqToBam() {
 	}
 
-    @Unparsed(name="FILE1 FILE2")
+    @UnnamedArg(name="FILE1 FILE2")
     public void setFilenames(List<String> files) throws IOException {
         if (files.size() == 2) {
             this.filenames = new String[2];
@@ -57,54 +56,54 @@ public class FastqToBam extends AbstractCommand {
         }
     }
 
-    @Option(description = "Output filename (Default: stdout)", shortName = "o", defaultValue="-", longName = "output")
+    @Option(desc="Output filename (Default: stdout)", charName = "o", defaultValue="-", name="output")
     public void setOutputFilename(String outFilename) {
         this.outputFilename = outFilename;
     }
 
-    @Option(description = "Automatically write an MD5 file", longName = "md5")
+    @Option(desc="Automatically write an MD5 file", name="md5")
     public void setCalcMD5(boolean val) {
         this.calcMD5 = val;
     }
 
-    @Option(description = "Add paired FASTQ files serially, rather than interleaved", longName = "serial")
+    @Option(desc="Add paired FASTQ files serially, rather than interleaved", name="serial")
     public void setSerial(boolean val) {
         this.serial = val;
     }
     
-    @Option(description = "Force overwriting output file", longName = "force")
+    @Option(desc="Force overwriting output file", name="force")
     public void setForce(boolean val) {
         this.force = val;
     }
     
-    @Option(description = "Compression-level: fast (1)", longName = "fast")
+    @Option(desc="Compression-level: fast (1)", name="fast")
     public void setFast(boolean val) {
         if (val) {
             compressionLevel = 1;
         }
     }
 
-    @Option(description = "Compression-level: best (9)", longName = "best")
+    @Option(desc="Compression-level: best (9)", name="best")
     public void setBest(boolean val) {
         if (val) {
             compressionLevel = 9;
         }
     }
 
-    @Option(description = "Include comments field from FASTQ file", longName = "comments")
+    @Option(desc="Include comments field from FASTQ file", name="comments")
     public void setComments(boolean val) {
         this.comments = val;
     }
     
-    @Option(description = "Write temporary files here", longName="tmpdir", defaultToNull=true)
+    @Option(desc="Write temporary files here", name="tmpdir")
     public void setTmpDir(String tmpDir) {
         this.tmpDir = tmpDir;
     }
 
-	@Override
-	public void exec() throws IOException {
+	@Exec
+	public void exec() throws IOException, CommandArgumentException {
 	    if (filenames == null) {
-            throw new ArgumentValidationException("You must supply one or two FASTQ files to convert.");
+            throw new CommandArgumentException("You must supply one or two FASTQ files to convert.");
 	    }
 	   	    
         SAMFileWriterFactory factory = new SAMFileWriterFactory();
@@ -255,7 +254,7 @@ public class FastqToBam extends AbstractCommand {
                 out.addAlignment(record);
             }
         } else {
-            IterUtils.zip(readers[0], readers[1], new IterUtils.Each<FastqRead, FastqRead>() {
+            IterUtils.zip(readers[0], readers[1], new EachPair<FastqRead, FastqRead>() {
                 long i = 0;
                 public void each(FastqRead one, FastqRead two) {
                     if (verbose) {

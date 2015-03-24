@@ -2,28 +2,26 @@ package io.compgen.ngsutils.cli.bam;
 
 import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.ValidationStringency;
+import io.compgen.cmdline.annotation.Command;
+import io.compgen.cmdline.annotation.Exec;
+import io.compgen.cmdline.annotation.Option;
+import io.compgen.cmdline.annotation.UnnamedArg;
+import io.compgen.cmdline.impl.AbstractOutputCommand;
 import io.compgen.ngsutils.NGSUtils;
-import io.compgen.ngsutils.NGSUtilsException;
 import io.compgen.ngsutils.bam.DenovoPileup;
 import io.compgen.ngsutils.bam.DenovoPileup.PileupPos;
 import io.compgen.ngsutils.bam.DenovoPileup.PileupRead;
 import io.compgen.ngsutils.bam.support.ReadUtils;
-import io.compgen.ngsutils.support.IterUtils;
-import io.compgen.ngsutils.support.TabWriter;
-import io.compgen.ngsutils.support.cli.AbstractOutputCommand;
-import io.compgen.ngsutils.support.cli.Command;
-import io.compgen.ngsutils.support.progress.FileChannelStats;
-import io.compgen.ngsutils.support.progress.ProgressMessage;
-import io.compgen.ngsutils.support.progress.ProgressUtils;
+import io.compgen.support.IterUtils;
+import io.compgen.support.TabWriter;
+import io.compgen.support.progress.FileChannelStats;
+import io.compgen.support.progress.ProgressMessage;
+import io.compgen.support.progress.ProgressUtils;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
-
-import com.lexicalscope.jewel.cli.CommandLineInterface;
-import com.lexicalscope.jewel.cli.Option;
-import com.lexicalscope.jewel.cli.Unparsed;
 
 /**
  * PileupCli - produces output similar to samtools mpileup, but using de DenovoPileup class.
@@ -32,8 +30,7 @@ import com.lexicalscope.jewel.cli.Unparsed;
  *  @See PileupReader - this class shouldn't be used, just fork out to samtools and read the mpileup output, pileup has too many undocumented edge cases for output
  *
  */
-@CommandLineInterface(application="ngsutilsj pileup")
-@Command(name="pileup", desc="Produces a pileup-like output", cat="bam", doc="This command aims to produce an output that is similar to the samtools mpileup. However, due to some undocumented behavior in the output format, some small variation is likely.", deprecated=true)
+@Command(name="pileup", desc="Produces a pileup-like output", category="bam", doc="This command aims to produce an output that is similar to the samtools mpileup. However, due to some undocumented behavior in the output format, some small variation is likely.", deprecated=true)
 @Deprecated
 public class PileupCli extends AbstractOutputCommand {
     
@@ -51,55 +48,53 @@ public class PileupCli extends AbstractOutputCommand {
     
     private boolean paired = false;
     
-    @Unparsed(name = "FILE")
+    @UnnamedArg(name = "FILE")
     public void setFilename(String filename) {
         samFilename = filename;
     }
 
-    @Option(description = "Reference FASTA file (indexed)", longName="ref", defaultToNull=true)
+    @Option(desc="Reference FASTA file (indexed)", name="ref")
     public void setRefFilename(String filename) {
         this.refFilename = filename;
     }
 
-    @Option(description = "Only count properly paired reads", longName="paired")
+    @Option(desc="Only count properly paired reads", name="paired")
     public void setPaired(boolean val) {
         this.paired = val;
     }
 
-    @Option(description = "Use lenient validation strategy", longName="lenient")
+    @Option(desc="Use lenient validation strategy", name="lenient")
     public void setLenient(boolean lenient) {
         this.lenient = lenient;
     }
 
-    @Option(description = "Use silent validation strategy", longName="silent")
+    @Option(desc="Use silent validation strategy", name="silent")
     public void setSilent(boolean silent) {
         this.silent = silent;
     }
 
-    @Option(description = "Minimum base-quality (default: 13)", longName="base-qual", defaultValue="13")
+    @Option(desc="Minimum base-quality (default: 13)", name="base-qual", defaultValue="13")
     public void setMinBaseQual(int minBaseQual) {
         this.minBaseQual = minBaseQual;
     }
 
-    @Option(description = "Minimum read mapping-quality (default: 0)", longName="map-qual", defaultValue="0")
+    @Option(desc="Minimum read mapping-quality (default: 0)", name="map-qual", defaultValue="0")
     public void setMinMappingQual(int minMappingQual) {
         this.minMappingQual = minMappingQual;
     }
 
-    @Option(description = "Required flags", longName="flags-req", defaultValue="0")
+    @Option(desc="Required flags", name="flags-req", defaultValue="0")
     public void setRequiredFlags(int requiredFlags) {
         this.requiredFlags = requiredFlags;
     }
 
-    @Option(description = "Filter flags (Default: 1796)", longName="flags-filter", defaultValue="1796")
+    @Option(desc="Filter flags (Default: 1796)", name="flags-filter", defaultValue="1796")
     public void setFilterFlags(int filterFlags) {
         this.filterFlags = filterFlags;
     }
 
-    @Override
-    public void exec() throws NGSUtilsException, IOException {
-
-        
+    @Exec
+    public void exec() throws IOException {
         File f = new File(samFilename);
         FileInputStream fis = new FileInputStream(f);
         FileChannel channel = fis.getChannel();
@@ -129,7 +124,7 @@ public class PileupCli extends AbstractOutputCommand {
         writer.write_line("## cmd: " + NGSUtils.getArgs());
         writer.write_line("## input: " + samFilename);
         
-        for (PileupPos pileupPos: IterUtils.wrapIterator(ProgressUtils.getIterator(f.getName(), denovoPileup.pileup(), new FileChannelStats(channel), new ProgressMessage<PileupPos>(){
+        for (PileupPos pileupPos: IterUtils.wrap(ProgressUtils.getIterator(f.getName(), denovoPileup.pileup(), new FileChannelStats(channel), new ProgressMessage<PileupPos>(){
 
             @Override
             public String msg(PileupPos current) {

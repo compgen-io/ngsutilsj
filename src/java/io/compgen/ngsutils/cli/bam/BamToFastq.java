@@ -1,10 +1,13 @@
 package io.compgen.ngsutils.cli.bam;
 
-import io.compgen.ngsutils.NGSUtilsException;
+import io.compgen.cmdline.annotation.Command;
+import io.compgen.cmdline.annotation.Exec;
+import io.compgen.cmdline.annotation.Option;
+import io.compgen.cmdline.annotation.UnnamedArg;
+import io.compgen.cmdline.exceptions.CommandArgumentException;
+import io.compgen.cmdline.impl.AbstractCommand;
 import io.compgen.ngsutils.bam.BamFastqReader;
 import io.compgen.ngsutils.fastq.FastqRead;
-import io.compgen.ngsutils.support.cli.AbstractCommand;
-import io.compgen.ngsutils.support.cli.Command;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -13,11 +16,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.zip.GZIPOutputStream;
 
-import com.lexicalscope.jewel.cli.ArgumentValidationException;
-import com.lexicalscope.jewel.cli.CommandLineInterface;
-import com.lexicalscope.jewel.cli.Option;
-import com.lexicalscope.jewel.cli.Unparsed;
-
 /**
  * TODO: Add option for exporting arbitrary tag values as comments (e.g. RG:Z, BC:Z, etc...)
  * TODO: Add option for exporting by Read Group
@@ -25,8 +23,7 @@ import com.lexicalscope.jewel.cli.Unparsed;
  *
  */
 
-@CommandLineInterface(application="ngsutilsj bam-fastq")
-@Command(name="bam-fastq", desc="Export the read sequences from a BAM file in FASTQ format", cat="bam")
+@Command(name="bam-fastq", desc="Export the read sequences from a BAM file in FASTQ format", category="bam")
 public class BamToFastq extends AbstractCommand {
     
     private String filename=null;
@@ -44,76 +41,76 @@ public class BamToFastq extends AbstractCommand {
     private boolean lenient = false;
     private boolean silent = false;
 
-    @Unparsed(name = "INFILE")
+    @UnnamedArg(name = "INFILE")
     public void setFilename(String filename) {
         this.filename = filename;
     }
 
-    @Option(description = "Output filename template (default: stdout)", longName="out", defaultToNull=true)
+    @Option(desc="Output filename template (default: stdout)", name="out")
     public void setOutTemplate(String outTemplate) {
         this.outTemplate = outTemplate;
     }
 
-    @Option(description = "Force overwriting output", longName="force")
+    @Option(desc="Force overwriting output", name="force")
     public void setForce(boolean val) {
         this.force = val;
     }
 
-    @Option(description = "Compress output", longName="gz")
+    @Option(desc="Compress output", name="gz")
     public void setCompress(boolean val) {
         this.compress = val;
     }
 
-    @Option(description = "Split output into paired files (default: interleaved)", longName="split")
+    @Option(desc="Split output into paired files (default: interleaved)", name="split")
     public void setSplit(boolean val) {
         this.split = val;
     }
 
-    @Option(description = "Ouput only first reads (default: output both)", longName="first")
+    @Option(desc="Ouput only first reads (default: output both)", name="first")
     public void setFirst(boolean val) {
         this.onlyFirst = val;
     }
 
-    @Option(description = "Ouput only second reads (default: output both)", longName="second")
+    @Option(desc="Ouput only second reads (default: output both)", name="second")
     public void setSecond(boolean val) {
         this.onlySecond = val;
     }
 
-    @Option(description = "Include mapped reads *may require more memory* (default: output only unmapped)", longName="mapped")
+    @Option(desc="Include mapped reads *may require more memory* (default: output only unmapped)", name="mapped")
     public void setIncludeMapped(boolean val) {
         this.includeMapped = val;
     }
 
-    @Option(description = "Use lenient validation strategy", longName="lenient")
+    @Option(desc="Use lenient validation strategy", name="lenient")
     public void setLenient(boolean lenient) {
         this.lenient = lenient;
     }
 
-    @Option(description = "Use silent validation strategy", longName="silent")
+    @Option(desc="Use silent validation strategy", name="silent")
     public void setSilent(boolean silent) {
         this.silent = silent;
     }
    
-    @Option(description = "Include comments tag from BAM file", longName = "comments")
+    @Option(desc="Include comments tag from BAM file", name="comments")
     public void setComments(boolean val) {
         this.comments = val;
     }
 
-    @Override
-    public void exec() throws NGSUtilsException, IOException {        
+    @Exec
+    public void exec() throws IOException, CommandArgumentException {        
         if (filename == null) {
-            throw new ArgumentValidationException("You must specify an input BAM file!");
+            throw new CommandArgumentException("You must specify an input BAM file!");
         }
         if (split && (outTemplate == null || outTemplate.equals("-"))) {
-            throw new ArgumentValidationException("You cannot have split output to stdout!");
+            throw new CommandArgumentException("You cannot have split output to stdout!");
         }
 
         if (onlyFirst && onlySecond) {
-            throw new ArgumentValidationException("You can not use --first and --second at the same time!");
+            throw new CommandArgumentException("You can not use --first and --second at the same time!");
         }
 
         if (split && (onlyFirst || onlySecond)) {
-            throw new ArgumentValidationException("You can not use --split and --first or --second at the same time!");
+            throw new CommandArgumentException("You can not use --split and --first or --second at the same time!");
         }
         
         OutputStream[] outs;
@@ -138,7 +135,7 @@ public class BamToFastq extends AbstractCommand {
                 }
             }
             if (new File(outFilename).exists() && !force) {
-                throw new ArgumentValidationException("Output file: "+ outFilename+" exists! Use --force to overwrite!");
+                throw new CommandArgumentException("Output file: "+ outFilename+" exists! Use --force to overwrite!");
             }
             if (verbose) {
                 System.err.println("Output: " + outFilename);
@@ -157,7 +154,7 @@ public class BamToFastq extends AbstractCommand {
             }
             for (String outFilename: outFilenames) {
                 if (new File(outFilename).exists() && !force) {
-                    throw new ArgumentValidationException("Output file: "+ outFilename+" exists! Use --force to overwrite!");
+                    throw new CommandArgumentException("Output file: "+ outFilename+" exists! Use --force to overwrite!");
                 }
                 if (verbose) {
                     System.err.println("Output: " + outFilename);
@@ -180,7 +177,7 @@ public class BamToFastq extends AbstractCommand {
                 outFilename = outTemplate+".fastq";
             }
             if (new File(outFilename).exists() && !force) {
-                throw new ArgumentValidationException("Output file: "+ outFilename+" exists! Use --force to overwrite!");
+                throw new CommandArgumentException("Output file: "+ outFilename+" exists! Use --force to overwrite!");
             }
             if (verbose) {
                 System.err.println("Output: " + outFilename);

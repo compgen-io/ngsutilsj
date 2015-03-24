@@ -1,40 +1,37 @@
 package io.compgen.ngsutils.cli.fasta;
 
-import io.compgen.ngsutils.NGSUtilsException;
+import io.compgen.cmdline.annotation.Command;
+import io.compgen.cmdline.annotation.Exec;
+import io.compgen.cmdline.annotation.UnnamedArg;
+import io.compgen.cmdline.exceptions.CommandArgumentException;
+import io.compgen.cmdline.impl.AbstractOutputCommand;
 import io.compgen.ngsutils.annotation.GenomeSpan;
 import io.compgen.ngsutils.fasta.FastaReader;
 import io.compgen.ngsutils.fasta.IndexedFastaFile;
-import io.compgen.ngsutils.support.cli.AbstractOutputCommand;
-import io.compgen.ngsutils.support.cli.Command;
 
 import java.io.IOException;
 import java.util.List;
 
-import com.lexicalscope.jewel.cli.ArgumentValidationException;
-import com.lexicalscope.jewel.cli.CommandLineInterface;
-import com.lexicalscope.jewel.cli.Unparsed;
-
-@CommandLineInterface(application="ngsutilsj faidx")
-@Command(name="faidx", desc="Extract subsequences from an indexed FASTA file", cat="fasta")
+@Command(name="faidx", desc="Extract subsequences from an indexed FASTA file", category="fasta")
 public class FastaCLI extends AbstractOutputCommand {
     
     private String filename = null;
     private GenomeSpan region = null;
     private int wrap = 60;
     
-    @Unparsed(name = "FILE chrom:start-end")
-    public void setArgs(List<String> args) {
+    @UnnamedArg(name = "FILE chrom:start-end")
+    public void setArgs(List<String> args) throws CommandArgumentException {
         if (args.size() != 2) {
-            throw new ArgumentValidationException("Missing/Invalid arguments!");
+            throw new CommandArgumentException("Missing/Invalid arguments!");
         }
         filename = args.get(0);
         region = GenomeSpan.parse(args.get(1));
     }
 
-    @Override
-    public void exec() throws NGSUtilsException, IOException {
+    @Exec
+    public void exec() throws IOException, CommandArgumentException {
         if (filename == null) {
-            throw new ArgumentValidationException("Missing/Invalid arguments!");
+            throw new CommandArgumentException("Missing/Invalid arguments!");
         }
         FastaReader fasta = new IndexedFastaFile(filename);
         System.out.println(">"+region);

@@ -1,7 +1,7 @@
 package io.compgen.ngsutils.support.stats;
 
 import static org.apache.commons.math3.util.CombinatoricsUtils.factorialDouble;
-import io.compgen.ngsutils.support.ComparablePair;
+import io.compgen.support.ComparablePair;
 
 import java.util.ArrayList;
 import java.util.Arrays;

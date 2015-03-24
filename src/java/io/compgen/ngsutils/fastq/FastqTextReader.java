@@ -1,8 +1,8 @@
 package io.compgen.ngsutils.fastq;
 
-import io.compgen.ngsutils.support.progress.FileChannelStats;
-import io.compgen.ngsutils.support.progress.ProgressMessage;
-import io.compgen.ngsutils.support.progress.ProgressUtils;
+import io.compgen.support.progress.FileChannelStats;
+import io.compgen.support.progress.ProgressMessage;
+import io.compgen.support.progress.ProgressUtils;
 
 import java.io.BufferedReader;
 import java.io.IOException;

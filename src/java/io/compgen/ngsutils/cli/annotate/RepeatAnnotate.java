@@ -1,27 +1,25 @@
 package io.compgen.ngsutils.cli.annotate;
 
+import io.compgen.cmdline.annotation.Command;
+import io.compgen.cmdline.annotation.Exec;
+import io.compgen.cmdline.annotation.Option;
+import io.compgen.cmdline.annotation.UnnamedArg;
+import io.compgen.cmdline.exceptions.CommandArgumentException;
+import io.compgen.cmdline.impl.AbstractOutputCommand;
 import io.compgen.ngsutils.NGSUtils;
-import io.compgen.ngsutils.NGSUtilsException;
 import io.compgen.ngsutils.annotation.AnnotationSource;
 import io.compgen.ngsutils.annotation.GenomeSpan;
 import io.compgen.ngsutils.annotation.RepeatMaskerAnnotationSource;
 import io.compgen.ngsutils.annotation.RepeatMaskerAnnotationSource.RepeatAnnotation;
 import io.compgen.ngsutils.bam.Strand;
-import io.compgen.ngsutils.support.StringLineReader;
-import io.compgen.ngsutils.support.StringUtils;
-import io.compgen.ngsutils.support.TabWriter;
-import io.compgen.ngsutils.support.cli.AbstractOutputCommand;
-import io.compgen.ngsutils.support.cli.Command;
+import io.compgen.support.StringLineReader;
+import io.compgen.support.StringUtils;
+import io.compgen.support.TabWriter;
 
 import java.io.IOException;
 import java.util.List;
 
-import com.lexicalscope.jewel.cli.CommandLineInterface;
-import com.lexicalscope.jewel.cli.Option;
-import com.lexicalscope.jewel.cli.Unparsed;
-
-@CommandLineInterface(application="ngsutilsj annotate-repeat")
-@Command(name="annotate-repeat", desc="Calculates Repeat masker annotations", doc="Note: Column indexes start at 1.", cat="annotation")
+@Command(name="annotate-repeat", desc="Calculates Repeat masker annotations", doc="Note: Column indexes start at 1.", category="annotation")
 public class RepeatAnnotate extends AbstractOutputCommand {
     
     private String filename=null;
@@ -38,18 +36,18 @@ public class RepeatAnnotate extends AbstractOutputCommand {
     
     private boolean zeroBased = true;
     
-    @Unparsed(name = "FILE")
+    @UnnamedArg(name = "FILE")
     public void setFilename(String filename) {
         this.filename = filename;
     }
 
-    @Option(description = "RepeatMasker annotation filename", longName="repeat", defaultToNull=true)
+    @Option(desc="RepeatMasker annotation filename", name="repeat")
     public void setRepeatFilename(String repeatFilename) {
         this.repeatFilename = repeatFilename;
     }
 
 
-    @Option(description = "Column of chromosome (Default: 1)", longName="col-chrom", defaultValue="1")
+    @Option(desc="Column of chromosome (Default: 1)", name="col-chrom", defaultValue="1")
     public void setChromCol(int val) {
         if (val > 0) {
             // stored as 0-based, given as 1-based
@@ -59,7 +57,7 @@ public class RepeatAnnotate extends AbstractOutputCommand {
         }
     }
 
-    @Option(description = "Column of start-position (1-based position) (Default: 2)", longName="col-start", defaultValue="2")
+    @Option(desc="Column of start-position (1-based position) (Default: 2)", name="col-start", defaultValue="2")
     public void setStartCol(int val) {
         if (val > 0) {
             // stored as 0-based, given as 1-based
@@ -69,7 +67,7 @@ public class RepeatAnnotate extends AbstractOutputCommand {
         }
     }
 
-    @Option(description = "Column of end-position (Default: -1, no end col)", longName="col-end", defaultValue="-1")
+    @Option(desc="Column of end-position (Default: -1, no end col)", name="col-end", defaultValue="-1")
     public void setEndCol(int val) {
         if (val > 0) {
             // stored as 0-based, given as 1-based
@@ -79,7 +77,7 @@ public class RepeatAnnotate extends AbstractOutputCommand {
         }
     }
 
-    @Option(description = "Column of strand (Default: -1, not strand-specific)", longName="col-strand", defaultValue="-1")
+    @Option(desc="Column of strand (Default: -1, not strand-specific)", name="col-strand", defaultValue="-1")
     public void setStrandCol(int val) {
         if (val > 0) {
             // stored as 0-based, given as 1-based
@@ -89,7 +87,7 @@ public class RepeatAnnotate extends AbstractOutputCommand {
         }
     }
 
-    @Option(description = "Use BED3 format presets", longName="bed3")
+    @Option(desc="Use BED3 format presets", name="bed3")
     public void setUseBED3(boolean val) {
         if (val) {
             this.refCol = 0;
@@ -99,7 +97,7 @@ public class RepeatAnnotate extends AbstractOutputCommand {
         }
     }
 
-    @Option(description = "Use BED6 format presets", longName="bed6")
+    @Option(desc="Use BED6 format presets", name="bed6")
     public void setUseBED6(boolean val) {
         if (val) {
             this.refCol = 0;
@@ -109,39 +107,39 @@ public class RepeatAnnotate extends AbstractOutputCommand {
         }
     }
 
-    @Option(description = "Input file uses one-based coordinates (default is 0-based)", longName="one")
+    @Option(desc="Input file uses one-based coordinates (default is 0-based)", name="one")
     public void setOneBased(boolean val) {
         zeroBased = !val;
     }
 
-    @Option(description = "Input file doesn't have a header row", longName="noheader")
+    @Option(desc="Input file doesn't have a header row", name="noheader")
     public void setHasHeader(boolean val) {
         hasHeader = !val;
     }
 
-    @Option(description = "The header is the last commented line", longName="header-comment")
+    @Option(desc="The header is the last commented line", name="header-comment")
     public void setHeaderComment(boolean val) {
         headerComment = val;
     }
 
 
-    @Option(description = "Repeat can be within [value] bp of the genomic range (requires start and end columns)", longName="within", defaultValue="0")
+    @Option(desc="Repeat can be within [value] bp of the genomic range (requires start and end columns)", name="within", defaultValue="0")
     public void setWithin(int val) {
         this.within = val;
     }
 
-    @Override
-    public void exec() throws NGSUtilsException, IOException {
+    @Exec
+    public void exec() throws CommandArgumentException, IOException {
         if (repeatFilename == null) {
-            throw new NGSUtilsException("You must specify a repeatmasker annotation file!");
+            throw new CommandArgumentException("You must specify a repeatmasker annotation file!");
         }
         
         if (filename == null) {
-            throw new NGSUtilsException("You must specify an input file! (- for stdin)");
+            throw new CommandArgumentException("You must specify an input file! (- for stdin)");
         }
         
         if (refCol == -1 || startCol == -1) {
-            throw new NGSUtilsException("You must specify at least a chrom-column and start-column!");
+            throw new CommandArgumentException("You must specify at least a chrom-column and start-column!");
         }
 
 

@@ -1,13 +1,18 @@
 package io.compgen.ngsutils.cli.fastq;
 
 
+import io.compgen.cmdline.annotation.Command;
+import io.compgen.cmdline.annotation.Exec;
+import io.compgen.cmdline.annotation.Option;
+import io.compgen.cmdline.annotation.UnnamedArg;
+import io.compgen.cmdline.exceptions.CommandArgumentException;
+import io.compgen.cmdline.impl.AbstractOutputCommand;
 import io.compgen.ngsutils.fastq.Fastq;
 import io.compgen.ngsutils.fastq.FastqRead;
 import io.compgen.ngsutils.fastq.FastqReader;
-import io.compgen.ngsutils.support.Counter;
-import io.compgen.ngsutils.support.IterUtils;
-import io.compgen.ngsutils.support.cli.AbstractOutputCommand;
-import io.compgen.ngsutils.support.cli.Command;
+import io.compgen.support.Counter;
+import io.compgen.support.IterUtils;
+import io.compgen.support.IterUtils.EachPair;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -15,13 +20,7 @@ import java.io.IOException;
 import java.nio.channels.FileChannel;
 import java.util.List;
 
-import com.lexicalscope.jewel.cli.ArgumentValidationException;
-import com.lexicalscope.jewel.cli.CommandLineInterface;
-import com.lexicalscope.jewel.cli.Option;
-import com.lexicalscope.jewel.cli.Unparsed;
-
-@CommandLineInterface(application="ngsutilsj fastq-merge")
-@Command(name="fastq-merge", desc="Merges two FASTQ files (R1/R2) into one interleaved file.", cat="fastq")
+@Command(name="fastq-merge", desc="Merges two FASTQ files (R1/R2) into one interleaved file.", category="fastq")
 public class FastqMerge extends AbstractOutputCommand {
 	private String[] filenames=null;
 
@@ -30,12 +29,12 @@ public class FastqMerge extends AbstractOutputCommand {
 	public FastqMerge(){
 	}
 
-   @Option(description = "Ignore Illumina read numbers in read names (/1, /2)", longName="ignore-readnum")
+   @Option(desc="Ignore Illumina read numbers in read names (/1, /2)", name="ignore-readnum")
     public void setIgnoreReadNum(boolean value) {
         this.ignoreReadNum = value;
     }
 
-	@Unparsed(name="FILE1 FILE2")
+	@UnnamedArg(name="FILE1 FILE2")
 	public void setFilenames(List<String> files) throws IOException {
 		if (files.size() != 2) {
 			System.err.println("You must supply two files to merge!");
@@ -51,10 +50,10 @@ public class FastqMerge extends AbstractOutputCommand {
 //		this.readers[1] = new FastqReader(files.get(1));
 	}
 
-   @Override
-   public void exec() throws IOException {
+   @Exec
+   public void exec() throws IOException, CommandArgumentException {
         if (filenames == null) {
-            throw new ArgumentValidationException("You must supply two FASTQ files to merge.");
+            throw new CommandArgumentException("You must supply two FASTQ files to merge.");
         }
        
 		if (verbose) {
@@ -78,7 +77,7 @@ public class FastqMerge extends AbstractOutputCommand {
 		
 		final Counter counter = new Counter();
 		
-		IterUtils.zip(readers[0], readers[1], new IterUtils.Each<FastqRead, FastqRead>() {
+		IterUtils.zip(readers[0], readers[1], new EachPair<FastqRead, FastqRead>() {
 			public void each(FastqRead one, FastqRead two) {
 				counter.incr();
 				String n1 = one.getName(); 

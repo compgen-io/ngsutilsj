@@ -1,27 +1,24 @@
 package io.compgen.ngsutils.cli.bam;
 
-import io.compgen.ngsutils.NGSUtilsException;
+import io.compgen.cmdline.annotation.Command;
+import io.compgen.cmdline.annotation.Exec;
+import io.compgen.cmdline.annotation.Option;
+import io.compgen.cmdline.annotation.UnnamedArg;
+import io.compgen.cmdline.exceptions.CommandArgumentException;
+import io.compgen.cmdline.impl.AbstractOutputCommand;
 import io.compgen.ngsutils.annotation.BEDAnnotationSource;
-import io.compgen.ngsutils.annotation.GenomeSpan;
 import io.compgen.ngsutils.annotation.BEDAnnotationSource.BEDAnnotation;
+import io.compgen.ngsutils.annotation.GenomeSpan;
 import io.compgen.ngsutils.bam.support.ReadUtils;
 import io.compgen.ngsutils.pileup.BAMPileup;
 import io.compgen.ngsutils.pileup.PileupRecord;
-import io.compgen.ngsutils.support.IterUtils;
-import io.compgen.ngsutils.support.TallyCounts;
-import io.compgen.ngsutils.support.cli.AbstractOutputCommand;
-import io.compgen.ngsutils.support.cli.Command;
+import io.compgen.support.IterUtils;
+import io.compgen.support.TallyCounts;
 
 import java.io.IOException;
 import java.util.Iterator;
 
-import com.lexicalscope.jewel.cli.ArgumentValidationException;
-import com.lexicalscope.jewel.cli.CommandLineInterface;
-import com.lexicalscope.jewel.cli.Option;
-import com.lexicalscope.jewel.cli.Unparsed;
-
-@CommandLineInterface(application="ngsutilsj bam-coverage")
-@Command(name="bam-coverage", desc="Scans an aligned BAM file and calculates the number of reads covering each base", cat="bam", experimental=true)
+@Command(name="bam-coverage", desc="Scans an aligned BAM file and calculates the number of reads covering each base", category="bam", experimental=true)
 public class BamCoverage extends AbstractOutputCommand {
     private String filename = null;
     private String bedFilename = null;
@@ -37,57 +34,57 @@ public class BamCoverage extends AbstractOutputCommand {
     private boolean paired = false;
     private boolean all = false;
 
-    @Unparsed(name = "FILE")
+    @UnnamedArg(name = "FILE")
     public void setFilename(String filename) {
         this.filename = filename;
     }
 
-    @Option(description = "Use these regions to count (BED format)", longName="bed", defaultToNull=true)
+    @Option(desc="Use these regions to count (BED format)", name="bed")
     public void setBedFilename(String bedFilename) {
         this.bedFilename = bedFilename;
     }
     
-    @Option(description = "Only count within this region", longName="region", defaultToNull=true)
+    @Option(desc="Only count within this region", name="region")
     public void setRegion(String region) {
         if (region != null) {
             this.region = GenomeSpan.parse(region);
         }
     }
 
-    @Option(description = "Output all coverage values (default: a summary of quantiles)", longName="all")
+    @Option(desc="Output all coverage values (default: a summary of quantiles)", name="all")
     public void setAll(boolean val) {
         this.all = val;
     }
 
-    @Option(description = "Only count properly paired reads", longName="paired")
+    @Option(desc="Only count properly paired reads", name="paired")
     public void setPaired(boolean val) {
         this.paired = val;
     }    
 
-    @Option(description = "Minimum base-quality (default: 13)", longName="base-qual", defaultValue="13")
+    @Option(desc="Minimum base-quality (default: 13)", name="base-qual", defaultValue="13")
     public void setMinBaseQual(int minBaseQual) {
         this.minBaseQual = minBaseQual;
     }
 
-    @Option(description = "Minimum read mapping-quality (default: 0)", longName="map-qual", defaultValue="0")
+    @Option(desc="Minimum read mapping-quality (default: 0)", name="map-qual", defaultValue="0")
     public void setMinMappingQual(int minMappingQual) {
         this.minMappingQual = minMappingQual;
     }
 
-    @Option(description = "Required flags", longName="flags-req", defaultValue="0")
+    @Option(desc="Required flags", name="flags-req", defaultValue="0")
     public void setRequiredFlags(int requiredFlags) {
         this.requiredFlags = requiredFlags;
     }
 
-    @Option(description = "Filter flags (Default: 1796)", longName="flags-filter", defaultValue="1796")
+    @Option(desc="Filter flags (Default: 1796)", name="flags-filter", defaultValue="1796")
     public void setFilterFlags(int filterFlags) {
         this.filterFlags = filterFlags;
     }
 
-    @Override
-    public void exec() throws NGSUtilsException, IOException {
+    @Exec
+    public void exec() throws IOException, CommandArgumentException {
         if (filename == null) {
-            throw new ArgumentValidationException("You must specify an input BAM filename!");
+            throw new CommandArgumentException("You must specify an input BAM filename!");
         }
         
         TallyCounts tally = new TallyCounts();
@@ -123,7 +120,7 @@ public class BamCoverage extends AbstractOutputCommand {
         GenomeSpan lastRegion = null;
 
         int tmp = 0;
-        for (PileupRecord record: IterUtils.wrapIterator(it)) {
+        for (PileupRecord record: IterUtils.wrap(it)) {
             tmp++;
             if (verbose && tmp > 100000) {
                 System.err.println(record.ref+":"+record.pos+" "+record.getSampleCount(0));

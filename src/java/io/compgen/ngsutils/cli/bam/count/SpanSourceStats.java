@@ -1,6 +1,6 @@
 package io.compgen.ngsutils.cli.bam.count;
 
-import io.compgen.ngsutils.support.progress.ProgressStats;
+import io.compgen.support.progress.ProgressStats;
 
 
 public class SpanSourceStats implements ProgressStats {

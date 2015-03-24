@@ -1,11 +1,14 @@
 package io.compgen.ngsutils.cli.fastq;
 
+import io.compgen.cmdline.annotation.Command;
+import io.compgen.cmdline.annotation.Exec;
+import io.compgen.cmdline.annotation.Option;
+import io.compgen.cmdline.annotation.UnnamedArg;
+import io.compgen.cmdline.impl.AbstractOutputCommand;
 import io.compgen.ngsutils.fastq.Fastq;
 import io.compgen.ngsutils.fastq.FastqRead;
 import io.compgen.ngsutils.fastq.FastqReader;
-import io.compgen.ngsutils.support.ComparablePair;
-import io.compgen.ngsutils.support.cli.AbstractOutputCommand;
-import io.compgen.ngsutils.support.cli.Command;
+import io.compgen.support.ComparablePair;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -19,12 +22,7 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.zip.GZIPOutputStream;
 
-import com.lexicalscope.jewel.cli.CommandLineInterface;
-import com.lexicalscope.jewel.cli.Option;
-import com.lexicalscope.jewel.cli.Unparsed;
-
-@CommandLineInterface(application="ngsutilsj fastq-sort")
-@Command(name="fastq-sort", desc="Sorts a FASTQ file", cat="fastq")
+@Command(name="fastq-sort", desc="Sorts a FASTQ file", category="fastq")
 public class FastqSort extends AbstractOutputCommand {
 	private String filename =  null;
 
@@ -40,36 +38,32 @@ public class FastqSort extends AbstractOutputCommand {
 	public FastqSort(){
 	}
 
-	@Option(description="Number of reads to include in temporary files (default: 200000)", longName="buf", defaultValue="200000")
+	@Option(desc="Number of reads to include in temporary files (default: 200000)", name="buf", defaultValue="200000")
 	public void setBufferSize(int bufferSize) {
 		this.bufferSize = bufferSize;
 	}
 
-	@Option(description="Sort by sequence (default: sort by name)", longName="seq")
+	@Option(desc="Sort by sequence (default: sort by name)", name="seq")
 	public void setBySequence(boolean bySequence) {
 		this.bySequence = bySequence;
 	}
 
-	@Unparsed(name="FILE")
+	@UnnamedArg(name="FILE")
 	public void setFilename(String filename) throws IOException {
 	    this.filename = filename;
 	}
 
-    @Option(helpRequest=true, description="Display help", shortName="h")
-    public void setHelp(boolean help) {
-	}
-
-	@Option(description="Compress temporary files (default: true)", longName="nogz")
+	@Option(desc="Compress temporary files (default: true)", name="nogz")
 	public void setNoCompressTemp(boolean noCompressTemp) {
 		this.noCompressTemp = noCompressTemp;
 	}
 
-	@Option(description="Write temporary files to this directory", longName="tmp", defaultToNull=true)
+	@Option(desc="Write temporary files to this directory", name="tmp")
 	public void setTmpdir(String tmpdir) {
 		this.tmpdir = new File(tmpdir);
 	}
 
-    @Override
+    @Exec
 	public void exec() throws IOException {
 		long readCount = 0;
 		ArrayList<FastqRead> buffer = new ArrayList<FastqRead>();

@@ -9,8 +9,13 @@ import htsjdk.samtools.SamInputResource;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.ValidationStringency;
+import io.compgen.cmdline.annotation.Command;
+import io.compgen.cmdline.annotation.Exec;
+import io.compgen.cmdline.annotation.Option;
+import io.compgen.cmdline.annotation.UnnamedArg;
+import io.compgen.cmdline.exceptions.CommandArgumentException;
+import io.compgen.cmdline.impl.AbstractCommand;
 import io.compgen.ngsutils.NGSUtils;
-import io.compgen.ngsutils.NGSUtilsException;
 import io.compgen.ngsutils.bam.Orientation;
 import io.compgen.ngsutils.bam.filter.BamFilter;
 import io.compgen.ngsutils.bam.filter.BedExclude;
@@ -22,11 +27,10 @@ import io.compgen.ngsutils.bam.filter.RequiredFlags;
 import io.compgen.ngsutils.bam.filter.UniqueMapping;
 import io.compgen.ngsutils.bam.filter.UniqueStart;
 import io.compgen.ngsutils.bam.support.ReadUtils;
-import io.compgen.ngsutils.support.cli.AbstractCommand;
-import io.compgen.ngsutils.support.cli.Command;
-import io.compgen.ngsutils.support.progress.FileChannelStats;
-import io.compgen.ngsutils.support.progress.ProgressMessage;
-import io.compgen.ngsutils.support.progress.ProgressUtils;
+import io.compgen.ngsutils.support.CloseableFinalizer;
+import io.compgen.support.progress.FileChannelStats;
+import io.compgen.support.progress.ProgressMessage;
+import io.compgen.support.progress.ProgressUtils;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -37,13 +41,7 @@ import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.lexicalscope.jewel.cli.ArgumentValidationException;
-import com.lexicalscope.jewel.cli.CommandLineInterface;
-import com.lexicalscope.jewel.cli.Option;
-import com.lexicalscope.jewel.cli.Unparsed;
-
-@CommandLineInterface(application="ngsutilsj bam-filter")
-@Command(name="bam-filter", desc="Filters out reads based upon various criteria", cat="bam")
+@Command(name="bam-filter", desc="Filters out reads based upon various criteria", category="bam")
 public class BamFilterCli extends AbstractCommand {
     
     private List<String> filenames=null;
@@ -55,7 +53,7 @@ public class BamFilterCli extends AbstractCommand {
     private boolean bedExcludeRequireBoth = false;
     private boolean bedExcludeOnlyWithin = false;
     
-    private String bedInclude = null;
+    private String bedIncludeFile = null;
     private boolean bedIncludeRequireOne = false;
     private boolean bedIncludeRequireBoth = false;
     private boolean bedIncludeOnlyWithin = false;
@@ -72,154 +70,157 @@ public class BamFilterCli extends AbstractCommand {
     
     private Orientation orient = Orientation.UNSTRANDED;
     
-    @Unparsed(name = "INFILE OUTFILE")
-    public void setFilename(List<String> filenames) {
+    @UnnamedArg(name = "INFILE OUTFILE")
+    public void setFilename(List<String> filenames) throws CommandArgumentException {
+        if (filenames.size() != 2) {
+            throw new CommandArgumentException("You must specify both an input and an output file.");
+        }
         this.filenames = filenames;
     }
 
-    @Option(description = "Write temporary files here", longName="tmpdir", defaultToNull=true)
+    @Option(desc="Write temporary files here", name="tmpdir")
     public void setTmpDir(String tmpDir) {
         this.tmpDir = tmpDir;
     }
 
-    @Option(description = "Force sanity checking of read pairing (simple - same chromosome, reversed orientation)", longName="paired")
+    @Option(desc="Force sanity checking of read pairing (simple - same chromosome, reversed orientation)", name="paired")
     public void setPaired(boolean val) {
         this.paired = val;
     }
 
-    @Option(description = "Exclude reads within BED regions", longName="bed-exclude", defaultToNull=true)
+    @Option(desc="Exclude reads within BED regions", name="bed-exclude")
     public void setBedExcludeFile(String bedExclude) {
         this.bedExclude = bedExclude;
     }
 
-    @Option(description = "BED Exclude option: only-within", longName="bed-excl-only-within")
+    @Option(desc="BED Exclude option: only-within", name="bed-excl-only-within")
     public void setBEDExcludeWithin(boolean val) {
         this.bedExcludeOnlyWithin = val;
     }
 
-    @Option(description = "BED Exclude option: require-one", longName="bed-excl-require-one")
+    @Option(desc="BED Exclude option: require-one", name="bed-excl-require-one")
     public void setBEDExcludeRequireOne(boolean val) {
         this.bedExcludeRequireOne = val;
     }
 
-    @Option(description = "BED Exclude option: require-both", longName="bed-excl-require-both")
+    @Option(desc="BED Exclude option: require-both", name="bed-excl-require-both")
     public void setBEDExcludeRequireBoth(boolean val) {
         this.bedExcludeRequireBoth = val;
     }
-    @Option(description = "Include reads within BED regions", longName="bed-include", defaultToNull=true)
-    public void setBedIncludeFile(String bedInclude) {
-        this.bedInclude = bedInclude;
+    @Option(desc="Include reads within BED regions", name="bed-include")
+    public void setBedIncludeFile(String bedIncludeFile) {
+        this.bedIncludeFile = bedIncludeFile;
     }
 
-    @Option(description = "BED Include option: only-within", longName="bed-incl-only-within")
+    @Option(desc="BED Include option: only-within", name="bed-incl-only-within")
     public void setBEDIncludeWithin(boolean val) {
         this.bedIncludeOnlyWithin = val;
     }
 
-    @Option(description = "BED Include option: require-one", longName="bed-incl-require-one")
+    @Option(desc="BED Include option: require-one", name="bed-incl-require-one")
     public void setBEDIncludeKeep(boolean val) {
         this.bedIncludeRequireOne = val;
     }
 
-    @Option(description = "BED Include option: require-both", longName="bed-incl-require-both")
+    @Option(desc="BED Include option: require-both", name="bed-incl-require-both")
     public void setBEDIncludeRemove(boolean val) {
         this.bedIncludeRequireBoth = val;
     }
 
-    @Option(description = "Use lenient validation strategy", longName="lenient")
+    @Option(desc="Use lenient validation strategy", name="lenient")
     public void setLenient(boolean lenient) {
         this.lenient = lenient;
     }
 
-    @Option(description = "Library is in FR orientation (only used for BED filters)", longName="library-fr")
+    @Option(desc="Library is in FR orientation (only used for BED filters)", name="library-fr")
     public void setLibraryFR(boolean val) {
         if (val) {
             orient = Orientation.FR;
         }
     }
 
-    @Option(description = "Library is in RF orientation (only used for BED filters)", longName="library-rf")
+    @Option(desc="Library is in RF orientation (only used for BED filters)", name="library-rf")
     public void setLibraryRF(boolean val) {
         if (val) {
             orient = Orientation.RF;
         }
     }
 
-    @Option(description = "Library is in unstranded orientation (only used for BED filters, default)", longName="library-unstranded")
+    @Option(desc="Library is in unstranded orientation (only used for BED filters, default)", name="library-unstranded")
     public void setLibraryUnstranded(boolean val) {
         if (val) {
             orient = Orientation.UNSTRANDED;
         }
     }
 
-    @Option(description = "Only keep properly paired reads", longName="proper-pairs")
+    @Option(desc="Only keep properly paired reads", name="proper-pairs")
     public void setProperPairs(boolean val) {
         if (val) {
             requiredFlags |= ReadUtils.PROPER_PAIR_FLAG;
         }
     }
 
-    @Option(description = "Only keep reads that have one unique mapping", longName="unique-mapping")
+    @Option(desc="Only keep reads that have one unique mapping", name="unique-mapping")
     public void setUniqueMapping(boolean val) {
         unique=val; 
         setMapped(true);
     }
 
-    @Option(description = "Keep at most one read per position (strand-specific, only for single-read fragments)", longName="unique-start")
+    @Option(desc="Keep at most one read per position (strand-specific, only for single-read fragments)", name="unique-start")
     public void setUniqueStart(boolean val) {
         uniqueStart=val; 
         setMapped(true);
     }
 
-    @Option(description = "Only keep mapped reads (both reads if paired)", longName="mapped")
+    @Option(desc="Only keep mapped reads (both reads if paired)", name="mapped")
     public void setMapped(boolean val) {
         if (val) {
             filterFlags |= ReadUtils.READ_UNMAPPED_FLAG | ReadUtils.MATE_UNMAPPED_FLAG; 
         }
     }
 
-    @Option(description = "Only keep unmapped reads", longName="unmapped")
+    @Option(desc="Only keep unmapped reads", name="unmapped")
     public void setUnmapped(boolean val) {
         if (val) {
             requiredFlags |= ReadUtils.READ_UNMAPPED_FLAG;
         }
     }
 
-    @Option(description = "No secondary mappings", longName="nosecondary")
+    @Option(desc="No secondary mappings", name="nosecondary")
     public void setNoSecondary(boolean val) {
         if (val) {
             filterFlags |= ReadUtils.SUPPLEMENTARY_ALIGNMENT_FLAG;
         }
     }
 
-    @Option(description = "No PCR duplicates", longName="nopcrdup")
+    @Option(desc="No PCR duplicates", name="nopcrdup")
     public void setNoPCRDuplicates(boolean val) {
         if (val) {
             filterFlags |= ReadUtils.DUPLICATE_READ_FLAG;
         }
     }
 
-    @Option(description = "No QC failures", longName="noqcfail")
+    @Option(desc="No QC failures", name="noqcfail")
     public void setNoQCFail(boolean val) {
         if (val) {
             filterFlags |= ReadUtils.READ_FAILS_VENDOR_QUALITY_CHECK_FLAG;
         }
     }
 
-    @Option(description = "Filtering flags", longName="filter-flags", defaultValue="0")
+    @Option(desc="Filtering flags", name="filter-flags", defaultValue="0")
     public void setFilterFlags(int flag) {
         filterFlags |= flag; 
     }
 
-    @Option(description = "Required flags", longName="required-flags", defaultValue="0")
+    @Option(desc="Required flags", name="required-flags", defaultValue="0")
     public void setRequiredFlags(int flag) {
         requiredFlags |= flag; 
     }
 
-    @Override
-    public void exec() throws NGSUtilsException, IOException {
+    @Exec
+    public void exec() throws CommandArgumentException, IOException {
         if (filenames == null || filenames.size()!=2) {
-            throw new ArgumentValidationException("You must specify an input BAM filename and an output BAM filename!");
+            throw new CommandArgumentException("You must specify an input BAM filename and an output BAM filename!");
         }
         
         SamReaderFactory readerFactory = SamReaderFactory.makeDefault();
@@ -251,7 +252,7 @@ public class BamFilterCli extends AbstractCommand {
                     return current.getReadName();
                 }
                 return null;
-            }}));
+            }}, new CloseableFinalizer<SAMRecord>()));
         
         if (filterFlags > 0) {
             parent = new FilterFlags(parent, false, filterFlags);
@@ -284,13 +285,13 @@ public class BamFilterCli extends AbstractCommand {
                 System.err.println("Paired");
             }
         }
-        if (bedInclude!=null) {
-            parent = new BedInclude(parent, false, bedInclude, orient);
+        if (bedIncludeFile!=null) {
+            parent = new BedInclude(parent, false, bedIncludeFile, orient);
             ((BedInclude)parent).setOnlyWithin(bedIncludeOnlyWithin);
             ((BedInclude)parent).setRequireOnePair(bedIncludeRequireOne);
             ((BedInclude)parent).setRequireBothPairs(bedIncludeRequireBoth);
             if (verbose) {
-                System.err.println("BEDInclude: "+bedInclude);
+                System.err.println("BEDInclude: "+bedIncludeFile);
             }
         }
         if (bedExclude!=null) {

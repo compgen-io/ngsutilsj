@@ -1,8 +1,7 @@
 package io.compgen.ngsutils.pileup;
 
-import io.compgen.ngsutils.NGSUtilsException;
 import io.compgen.ngsutils.annotation.GenomeSpan;
-import io.compgen.ngsutils.support.StringUtils;
+import io.compgen.support.StringUtils;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
@@ -94,7 +93,7 @@ public class BAMPileup {
         try {
             proc = pb.start();
         } catch (IOException e) {
-            throw new NGSUtilsException("Cannot start samtools mpileup! " + e.getMessage());
+            throw new RuntimeException("Cannot start samtools mpileup! " + e.getMessage());
         }
         InputStream bis = new BufferedInputStream(proc.getInputStream());
         PileupReader reader = new PileupReader(bis);
@@ -108,7 +107,7 @@ public class BAMPileup {
                     proc.getInputStream().close();
                     proc.getOutputStream().close();
                     if (proc.exitValue()!=0) {
-                        throw new NGSUtilsException("Error running: "+ StringUtils.join(" ", pb.command()));
+                        throw new RuntimeException("Error running: "+ StringUtils.join(" ", pb.command()));
                     }
                 } catch (InterruptedException e) {
                     e.printStackTrace();

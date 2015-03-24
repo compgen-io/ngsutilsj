@@ -1,11 +1,17 @@
 package io.compgen.ngsutils.cli.fastq;
 
-import io.compgen.ngsutils.NGSUtilsException;
+import io.compgen.cmdline.annotation.Command;
+import io.compgen.cmdline.annotation.Exec;
+import io.compgen.cmdline.annotation.Option;
+import io.compgen.cmdline.annotation.UnnamedArg;
+import io.compgen.cmdline.exceptions.CommandArgumentException;
+import io.compgen.cmdline.impl.AbstractOutputCommand;
 import io.compgen.ngsutils.fastq.Fastq;
 import io.compgen.ngsutils.fastq.FastqRead;
 import io.compgen.ngsutils.fastq.FastqReader;
 import io.compgen.ngsutils.fastq.filter.BlacklistFilter;
 import io.compgen.ngsutils.fastq.filter.FastqFilter;
+import io.compgen.ngsutils.fastq.filter.FilteringException;
 import io.compgen.ngsutils.fastq.filter.PairedFilter;
 import io.compgen.ngsutils.fastq.filter.PrefixFilter;
 import io.compgen.ngsutils.fastq.filter.PrefixQualFilter;
@@ -14,19 +20,12 @@ import io.compgen.ngsutils.fastq.filter.SizeFilter;
 import io.compgen.ngsutils.fastq.filter.SuffixQualFilter;
 import io.compgen.ngsutils.fastq.filter.WhitelistFilter;
 import io.compgen.ngsutils.fastq.filter.WildcardFilter;
-import io.compgen.ngsutils.support.cli.AbstractOutputCommand;
-import io.compgen.ngsutils.support.cli.Command;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.lexicalscope.jewel.cli.CommandLineInterface;
-import com.lexicalscope.jewel.cli.Option;
-import com.lexicalscope.jewel.cli.Unparsed;
-
-@CommandLineInterface(application = "ngsutilsj fastq-filter")
-@Command(name = "fastq-filter", desc = "Filters reads from a FASTQ file.", cat = "fastq")
+@Command(name = "fastq-filter", desc = "Filters reads from a FASTQ file.", category="fastq")
 public class FastqFilterCli extends AbstractOutputCommand {
     private boolean paired = false;
     private String suffixQuality = null;
@@ -47,70 +46,70 @@ public class FastqFilterCli extends AbstractOutputCommand {
     public FastqFilterCli() {
     }
 
-    @Unparsed(name = "FILE")
+    @UnnamedArg(name = "FILE")
     public void setFilename(String filename) throws IOException {
         this.filename = filename;
     }
 
-    @Option(description = "Sequence trim filter (adapters) (Default: not used)", longName = "trim-seq", defaultToNull=true)
+    @Option(desc="Sequence trim filter (adapters) (Default: not used)", name="trim-seq")
     public void setTrimSeq(String trimSeq) {
         this.trimSeq = trimSeq;
     }
 
-    @Option(description = "Sequence trim minimum overlap (default: 4)", longName = "trim-overlap", defaultValue="4")
+    @Option(desc="Sequence trim minimum overlap (default: 4)", name="trim-overlap", defaultValue="4")
     public void setTrimMinOverlap(int trimMinOverlap) {
         this.trimMinOverlap = trimMinOverlap;
     }
 
-    @Option(description = "Sequence trim minimum percent match (default: 0.9)", longName = "trim-pct", defaultValue="0.9")
+    @Option(desc="Sequence trim minimum percent match (default: 0.9)", name="trim-pct", defaultValue="0.9")
     public void setTrimMinPctMatch(double trimMinPctMatch) {
         this.trimMinPctMatch = trimMinPctMatch;
     }
     
-    @Option(description = "Paired filter (for interleaved files) (Default: not used)", longName = "paired")
+    @Option(desc="Paired filter (for interleaved files) (Default: not used)", name="paired")
     public void setPaired(boolean paired) {
         this.paired = paired;
     }
 
-    @Option(description = "Suffix quality filter (B-trim, use '#' for Illumina) (Default:'')", longName = "suffixqual", defaultToNull = true)
+    @Option(desc="Suffix quality filter (B-trim, use '#' for Illumina) (Default:'')", name="suffixqual")
     public void setSuffixQualityFilter(String suffixQuality) {
         this.suffixQuality = suffixQuality;
     }
 
-    @Option(description = "Prefix quality filter (B-trim, use '#' for Illumina) (Default:'')", longName = "prefixqual", defaultToNull = true)
+    @Option(desc="Prefix quality filter (B-trim, use '#' for Illumina) (Default:'')", name="prefixqual")
     public void setPrefixQualityFilter(String prefixQuality) {
         this.prefixQuality = prefixQuality;
     }
 
-    @Option(description = "Prefix trim length (Default: 0)", longName = "prefixtrim", defaultValue = "0")
+    @Option(desc="Prefix trim length (Default: 0)", name="prefixtrim", defaultValue = "0")
     public void setPrefixTrimLength(int prefixTrimLength) {
         this.prefixTrimLength = prefixTrimLength;
     }
 
-    @Option(description = "Minimum read length (Default: 35)", longName = "size", defaultValue = "35")
+    @Option(desc="Minimum read length (Default: 35)", name="size", defaultValue = "35")
     public void setMinimumSize(int minimumSize) {
         this.minimumSize = minimumSize;
     }
 
-    @Option(description = "Maximum wildcard calls (Default: 2)", longName = "wildcard", defaultValue = "2")
+    @Option(desc="Maximum wildcard calls (Default: 2)", name="wildcard", defaultValue = "2")
     public void setMaxWildcard(int maxWildcard) {
         this.maxWildcard = maxWildcard;
     }
 
-    @Option(description = "Blacklist filename (read names)", longName = "blacklist", defaultToNull=true)
+    @Option(desc="Blacklist filename (read names)", name="blacklist")
     public void setBlacklist(String blacklist) {
         this.blacklist = blacklist;
     }
 
-    @Option(description = "Whitelist filename (read names)", longName = "whitelist", defaultToNull=true)
+    @Option(desc="Whitelist filename (read names)", name="whitelist")
     public void setWhitelist(String whitelist) {
         this.whitelist = whitelist;
     }
     
-    @Override
-    public void exec() throws IOException, NGSUtilsException {
+    @Exec
+    public void exec() throws IOException, CommandArgumentException, FilteringException {
         if (whitelist != null && blacklist != null) {
-            throw new NGSUtilsException("You can not specify both a whitelist and a blacklist!");
+            throw new CommandArgumentException("You can not specify both a whitelist and a blacklist!");
         }
         
         FastqReader reader = Fastq.open(filename);

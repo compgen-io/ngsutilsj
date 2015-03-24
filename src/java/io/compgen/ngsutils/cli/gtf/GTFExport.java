@@ -1,19 +1,22 @@
 package io.compgen.ngsutils.cli.gtf;
 
-import io.compgen.ngsutils.NGSUtilsException;
+import io.compgen.cmdline.annotation.Command;
+import io.compgen.cmdline.annotation.Exec;
+import io.compgen.cmdline.annotation.Option;
+import io.compgen.cmdline.annotation.UnnamedArg;
+import io.compgen.cmdline.exceptions.CommandArgumentException;
+import io.compgen.cmdline.impl.AbstractOutputCommand;
 import io.compgen.ngsutils.annotation.AnnotationSource;
 import io.compgen.ngsutils.annotation.GTFAnnotationSource;
-import io.compgen.ngsutils.annotation.GenomeAnnotation;
-import io.compgen.ngsutils.annotation.GenomeSpan;
 import io.compgen.ngsutils.annotation.GTFAnnotationSource.GTFExon;
 import io.compgen.ngsutils.annotation.GTFAnnotationSource.GTFGene;
 import io.compgen.ngsutils.annotation.GTFAnnotationSource.GTFTranscript;
-import io.compgen.ngsutils.support.IterUtils;
-import io.compgen.ngsutils.support.StringLineReader;
-import io.compgen.ngsutils.support.StringUtils;
-import io.compgen.ngsutils.support.TabWriter;
-import io.compgen.ngsutils.support.cli.AbstractOutputCommand;
-import io.compgen.ngsutils.support.cli.Command;
+import io.compgen.ngsutils.annotation.GenomeAnnotation;
+import io.compgen.ngsutils.annotation.GenomeSpan;
+import io.compgen.support.IterUtils;
+import io.compgen.support.StringLineReader;
+import io.compgen.support.StringUtils;
+import io.compgen.support.TabWriter;
 
 import java.io.File;
 import java.io.IOException;
@@ -23,12 +26,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import com.lexicalscope.jewel.cli.CommandLineInterface;
-import com.lexicalscope.jewel.cli.Option;
-import com.lexicalscope.jewel.cli.Unparsed;
-
-@CommandLineInterface(application="ngsutilsj gtf-export")
-@Command(name="gtf-export", desc="Export gene annotations from a GTF file as BED regions", cat="gtf")
+@Command(name="gtf-export", desc="Export gene annotations from a GTF file as BED regions", category="gtf")
 public class GTFExport extends AbstractOutputCommand {
     private String filename=null;
     private String whitelist = null;
@@ -39,41 +37,41 @@ public class GTFExport extends AbstractOutputCommand {
     
     private boolean combine = false;
     
-    @Unparsed(name = "FILE")
+    @UnnamedArg(name = "FILE")
     public void setFilename(String filename) {
         this.filename = filename;
     }
 
-    @Option(description = "Whitelist of gene names to use", longName="whitelist", defaultToNull=true)
+    @Option(desc="Whitelist of gene names to use", name="whitelist")
     public void setWhitelist(String whitelist) {
         this.whitelist = whitelist;
     }
 
-    @Option(description = "Combine overlapping exons/introns ", longName="combine")
+    @Option(desc="Combine overlapping exons/introns ", name="combine")
     public void setCombine(boolean val) {
         combine = true;
     }
 
-    @Option(description = "Export whole gene region", longName="genes")
+    @Option(desc="Export whole gene region", name="genes")
     public void setGene(boolean val) {
         exportGene = true;
     }
 
-    @Option(description = "Export introns", longName="introns")
+    @Option(desc="Export introns", name="introns")
     public void setIntron(boolean val) {
         exportIntron = true;
     }
 
-    @Option(description = "Export exons", longName="exons")
+    @Option(desc="Export exons", name="exons")
     public void setExon(boolean val) {
         exportExon = true;
     }
 
 
-    @Override
-    public void exec() throws NGSUtilsException, IOException {
+    @Exec
+    public void exec() throws CommandArgumentException, IOException {
         if (filename == null) {
-            throw new NGSUtilsException("You must specify a GTF file! (- for stdin)");
+            throw new CommandArgumentException("You must specify a GTF file! (- for stdin)");
         }
         
         int exportCount = 0;
@@ -87,7 +85,7 @@ public class GTFExport extends AbstractOutputCommand {
             exportCount++;
         }
         if (exportCount != 1) {
-            throw new NGSUtilsException("You must specify only one type of region to export (gene, intron, exon, etc)");
+            throw new CommandArgumentException("You must specify only one type of region to export (gene, intron, exon, etc)");
         }
 
         if (verbose && combine) {
@@ -128,7 +126,7 @@ public class GTFExport extends AbstractOutputCommand {
             System.err.println(" [done]");
         }
 
-        for (GenomeAnnotation<GTFGene> ga:IterUtils.wrapIterator(ann.iterator())) {
+        for (GenomeAnnotation<GTFGene> ga:IterUtils.wrap(ann.iterator())) {
             GTFGene gene = ga.getValue();
             if (whitelistSet != null) {
                 if (!whitelistSet.contains(gene.getGeneName())) {

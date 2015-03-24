@@ -1,10 +1,9 @@
 package io.compgen.ngsutils.junction;
 
-import io.compgen.ngsutils.NGSUtilsException;
 import io.compgen.ngsutils.bam.Strand;
-import io.compgen.ngsutils.support.StringLineReader;
-import io.compgen.ngsutils.support.StringUtils;
 import io.compgen.ngsutils.support.stats.PermutedNullDistribution;
+import io.compgen.support.StringLineReader;
+import io.compgen.support.StringUtils;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -44,7 +43,7 @@ public class JunctionDiff {
         this.maxEditDistance = maxEditDistance;
     }
     
-    public JunctionDiffStats findJunctions(List<String> filenames, Integer[] groups) throws IOException, NGSUtilsException {
+    public JunctionDiffStats findJunctions(List<String> filenames, Integer[] groups) throws IOException, JunctionDiffException {
         sampleCount = filenames.size();
         System.err.println("Number of samples: "+ sampleCount);
         sampleNames = StringUtils.getUniqueNames(filenames);
@@ -172,7 +171,7 @@ public class JunctionDiff {
         return valid;
     }
 
-    private void readFile(String filename, int sampleCount, int sampleNum) throws IOException, NGSUtilsException {
+    private void readFile(String filename, int sampleCount, int sampleNum) throws IOException, JunctionDiffException {
         String[] header = null;
         
         int juncIdx = -1;
@@ -217,7 +216,7 @@ public class JunctionDiff {
                         splitReads = fileSplitReads;
                     } else {
                         if (splitReads != fileSplitReads) {
-                            throw new NGSUtilsException("You can not compare split-read samples and non-split-read samples!");
+                            throw new JunctionDiffException("You can not compare split-read samples and non-split-read samples!");
                         }
                     }
                 } else {

@@ -1,6 +1,6 @@
 package io.compgen.ngsutils.pileup;
 
-import io.compgen.ngsutils.support.AbstractLineReader;
+import io.compgen.support.AbstractLineReader;
 
 import java.io.IOException;
 import java.io.InputStream;
