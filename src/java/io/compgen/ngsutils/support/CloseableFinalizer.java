@@ -1,7 +1,7 @@
 package io.compgen.ngsutils.support;
 
 import htsjdk.samtools.util.CloseableIterator;
-import io.compgen.support.progress.ProgressFinalizer;
+import io.compgen.common.progress.ProgressFinalizer;
 
 import java.util.Iterator;
 

@@ -1,7 +1,7 @@
 package io.compgen.ngsutils.pileup;
 
+import io.compgen.common.StringUtils;
 import io.compgen.ngsutils.annotation.GenomeSpan;
-import io.compgen.support.StringUtils;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;

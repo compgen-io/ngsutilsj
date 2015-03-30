@@ -6,14 +6,14 @@ import io.compgen.cmdline.annotation.Option;
 import io.compgen.cmdline.annotation.UnnamedArg;
 import io.compgen.cmdline.exceptions.CommandArgumentException;
 import io.compgen.cmdline.impl.AbstractOutputCommand;
+import io.compgen.common.IterUtils;
+import io.compgen.common.TallyCounts;
 import io.compgen.ngsutils.annotation.BEDAnnotationSource;
 import io.compgen.ngsutils.annotation.BEDAnnotationSource.BEDAnnotation;
 import io.compgen.ngsutils.annotation.GenomeSpan;
 import io.compgen.ngsutils.bam.support.ReadUtils;
 import io.compgen.ngsutils.pileup.BAMPileup;
 import io.compgen.ngsutils.pileup.PileupRecord;
-import io.compgen.support.IterUtils;
-import io.compgen.support.TallyCounts;
 
 import java.io.IOException;
 import java.util.Iterator;

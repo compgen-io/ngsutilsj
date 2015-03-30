@@ -1,9 +1,9 @@
 package io.compgen.ngsutils.annotation;
 
+import io.compgen.common.StringLineReader;
+import io.compgen.common.StringUtils;
 import io.compgen.ngsutils.annotation.RepeatMaskerAnnotationSource.RepeatAnnotation;
 import io.compgen.ngsutils.bam.Strand;
-import io.compgen.support.StringLineReader;
-import io.compgen.support.StringUtils;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;

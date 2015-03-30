@@ -5,10 +5,10 @@ import io.compgen.cmdline.annotation.Exec;
 import io.compgen.cmdline.annotation.Option;
 import io.compgen.cmdline.annotation.UnnamedArg;
 import io.compgen.cmdline.impl.AbstractOutputCommand;
+import io.compgen.common.ComparablePair;
 import io.compgen.ngsutils.fastq.Fastq;
 import io.compgen.ngsutils.fastq.FastqRead;
 import io.compgen.ngsutils.fastq.FastqReader;
-import io.compgen.support.ComparablePair;
 
 import java.io.BufferedOutputStream;
 import java.io.File;

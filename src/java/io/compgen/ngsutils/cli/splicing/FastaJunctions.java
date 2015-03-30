@@ -6,11 +6,11 @@ import io.compgen.cmdline.annotation.Option;
 import io.compgen.cmdline.annotation.UnnamedArg;
 import io.compgen.cmdline.exceptions.CommandArgumentException;
 import io.compgen.cmdline.impl.AbstractOutputCommand;
+import io.compgen.common.StringLineReader;
+import io.compgen.common.StringUtils;
 import io.compgen.ngsutils.annotation.GenomeSpan;
 import io.compgen.ngsutils.fasta.FastaReader;
 import io.compgen.ngsutils.fasta.IndexedFastaFile;
-import io.compgen.support.StringLineReader;
-import io.compgen.support.StringUtils;
 
 import java.io.IOException;
 import java.util.List;

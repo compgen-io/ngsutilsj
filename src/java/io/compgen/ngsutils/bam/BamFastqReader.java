@@ -6,13 +6,13 @@ import htsjdk.samtools.SamInputResource;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.ValidationStringency;
+import io.compgen.common.StringUtils;
+import io.compgen.common.progress.FileChannelStats;
+import io.compgen.common.progress.ProgressMessage;
+import io.compgen.common.progress.ProgressUtils;
 import io.compgen.ngsutils.bam.support.ReadUtils;
 import io.compgen.ngsutils.fastq.FastqRead;
 import io.compgen.ngsutils.fastq.FastqReader;
-import io.compgen.support.StringUtils;
-import io.compgen.support.progress.FileChannelStats;
-import io.compgen.support.progress.ProgressMessage;
-import io.compgen.support.progress.ProgressUtils;
 
 import java.io.File;
 import java.io.FileNotFoundException;

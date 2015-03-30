@@ -5,6 +5,8 @@ import htsjdk.samtools.SAMProgramRecord;
 import io.compgen.cmdline.Help;
 import io.compgen.cmdline.License;
 import io.compgen.cmdline.MainBuilder;
+import io.compgen.common.StringUtils;
+import io.compgen.common.progress.SocketProgress;
 import io.compgen.ngsutils.cli.annotate.GTFAnnotate;
 import io.compgen.ngsutils.cli.annotate.RepeatAnnotate;
 import io.compgen.ngsutils.cli.bam.BamCheck;
@@ -27,8 +29,6 @@ import io.compgen.ngsutils.cli.splicing.FastaJunctions;
 import io.compgen.ngsutils.cli.splicing.FindEvents;
 import io.compgen.ngsutils.cli.splicing.JunctionCount;
 import io.compgen.ngsutils.cli.splicing.JunctionDiffCli;
-import io.compgen.support.StringUtils;
-import io.compgen.support.progress.SocketProgress;
 
 import java.io.IOException;
 

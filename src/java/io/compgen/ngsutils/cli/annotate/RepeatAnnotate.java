@@ -6,15 +6,15 @@ import io.compgen.cmdline.annotation.Option;
 import io.compgen.cmdline.annotation.UnnamedArg;
 import io.compgen.cmdline.exceptions.CommandArgumentException;
 import io.compgen.cmdline.impl.AbstractOutputCommand;
+import io.compgen.common.StringLineReader;
+import io.compgen.common.StringUtils;
+import io.compgen.common.TabWriter;
 import io.compgen.ngsutils.NGSUtils;
 import io.compgen.ngsutils.annotation.AnnotationSource;
 import io.compgen.ngsutils.annotation.GenomeSpan;
 import io.compgen.ngsutils.annotation.RepeatMaskerAnnotationSource;
 import io.compgen.ngsutils.annotation.RepeatMaskerAnnotationSource.RepeatAnnotation;
 import io.compgen.ngsutils.bam.Strand;
-import io.compgen.support.StringLineReader;
-import io.compgen.support.StringUtils;
-import io.compgen.support.TabWriter;
 
 import java.io.IOException;
 import java.util.List;

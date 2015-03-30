@@ -3,11 +3,11 @@ package io.compgen.ngsutils.annotation;
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMRecord;
+import io.compgen.common.StringLineReader;
+import io.compgen.common.StringUtils;
 import io.compgen.ngsutils.annotation.GTFAnnotationSource.GTFGene;
 import io.compgen.ngsutils.bam.Orientation;
 import io.compgen.ngsutils.bam.Strand;
-import io.compgen.support.StringLineReader;
-import io.compgen.support.StringUtils;
 
 import java.io.IOException;
 import java.util.ArrayList;

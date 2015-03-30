@@ -1,9 +1,9 @@
 package io.compgen.ngsutils.junction;
 
+import io.compgen.common.StringLineReader;
+import io.compgen.common.StringUtils;
 import io.compgen.ngsutils.bam.Strand;
 import io.compgen.ngsutils.support.stats.PermutedNullDistribution;
-import io.compgen.support.StringLineReader;
-import io.compgen.support.StringUtils;
 
 import java.io.IOException;
 import java.util.ArrayList;

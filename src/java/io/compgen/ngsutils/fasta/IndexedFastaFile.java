@@ -1,7 +1,7 @@
 package io.compgen.ngsutils.fasta;
 
-import io.compgen.support.StringLineReader;
-import io.compgen.support.StringUtils;
+import io.compgen.common.StringLineReader;
+import io.compgen.common.StringUtils;
 
 import java.io.File;
 import java.io.IOException;

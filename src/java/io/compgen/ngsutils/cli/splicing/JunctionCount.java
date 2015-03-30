@@ -11,12 +11,12 @@ import io.compgen.cmdline.annotation.Exec;
 import io.compgen.cmdline.annotation.Option;
 import io.compgen.cmdline.annotation.UnnamedArg;
 import io.compgen.cmdline.impl.AbstractOutputCommand;
+import io.compgen.common.TabWriter;
 import io.compgen.ngsutils.NGSUtils;
 import io.compgen.ngsutils.annotation.GenomeSpan;
 import io.compgen.ngsutils.bam.Orientation;
 import io.compgen.ngsutils.bam.support.ReadUtils;
 import io.compgen.ngsutils.bam.support.ReadUtils.MappedReadCounter;
-import io.compgen.support.TabWriter;
 
 import java.io.File;
 import java.io.IOException;

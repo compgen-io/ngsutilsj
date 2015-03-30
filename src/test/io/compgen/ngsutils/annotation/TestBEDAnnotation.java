@@ -3,10 +3,10 @@ package io.compgen.ngsutils.annotation;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import io.compgen.common.IterUtils;
+import io.compgen.common.StringUtils;
 import io.compgen.ngsutils.annotation.BEDAnnotationSource.BEDAnnotation;
 import io.compgen.ngsutils.bam.Strand;
-import io.compgen.support.IterUtils;
-import io.compgen.support.StringUtils;
 
 import org.junit.Before;
 import org.junit.Test;

@@ -5,14 +5,14 @@ import io.compgen.cmdline.annotation.Exec;
 import io.compgen.cmdline.annotation.Option;
 import io.compgen.cmdline.annotation.UnnamedArg;
 import io.compgen.cmdline.impl.AbstractOutputCommand;
+import io.compgen.common.StringLineReader;
+import io.compgen.common.StringUtils;
+import io.compgen.common.TabWriter;
 import io.compgen.ngsutils.NGSUtils;
 import io.compgen.ngsutils.annotation.GenomeSpan;
 import io.compgen.ngsutils.bam.Strand;
 import io.compgen.ngsutils.junction.JunctionDonorAcceptor;
 import io.compgen.ngsutils.junction.JunctionKey;
-import io.compgen.support.StringLineReader;
-import io.compgen.support.StringUtils;
-import io.compgen.support.TabWriter;
 
 import java.io.IOException;
 import java.util.ArrayList;

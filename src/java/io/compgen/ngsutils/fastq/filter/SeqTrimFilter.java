@@ -1,7 +1,7 @@
 package io.compgen.ngsutils.fastq.filter;
 
+import io.compgen.common.StringUtils;
 import io.compgen.ngsutils.fastq.FastqRead;
-import io.compgen.support.StringUtils;
 
 public class SeqTrimFilter extends AbstractSingleReadFilter {
     final private int minOverlap;

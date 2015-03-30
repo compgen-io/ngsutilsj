@@ -15,7 +15,7 @@ public class AnnotatedRegionCounter {
         gtf = new GTFAnnotationSource(filename);
         System.err.println(" done");
         for (GenicRegion region: GenicRegion.values()) {
-            regionCounts.put(region, 0l);
+            regionCounts.put(region, 0L);
         }
     }
     

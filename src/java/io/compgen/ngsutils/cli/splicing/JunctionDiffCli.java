@@ -5,6 +5,8 @@ import io.compgen.cmdline.annotation.Exec;
 import io.compgen.cmdline.annotation.Option;
 import io.compgen.cmdline.annotation.UnnamedArg;
 import io.compgen.cmdline.impl.AbstractOutputCommand;
+import io.compgen.common.StringUtils;
+import io.compgen.common.TabWriter;
 import io.compgen.ngsutils.NGSUtils;
 import io.compgen.ngsutils.junction.JunctionCounts;
 import io.compgen.ngsutils.junction.JunctionDiff;
@@ -14,8 +16,6 @@ import io.compgen.ngsutils.junction.JunctionDiffStats.JunctionDiffSample;
 import io.compgen.ngsutils.junction.JunctionKey;
 import io.compgen.ngsutils.junction.JunctionStats;
 import io.compgen.ngsutils.support.stats.StatUtils;
-import io.compgen.support.StringUtils;
-import io.compgen.support.TabWriter;
 
 import java.io.IOException;
 import java.util.ArrayList;

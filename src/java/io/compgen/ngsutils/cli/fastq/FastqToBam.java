@@ -12,12 +12,12 @@ import io.compgen.cmdline.annotation.Option;
 import io.compgen.cmdline.annotation.UnnamedArg;
 import io.compgen.cmdline.exceptions.CommandArgumentException;
 import io.compgen.cmdline.impl.AbstractCommand;
+import io.compgen.common.IterUtils;
+import io.compgen.common.IterUtils.EachPair;
 import io.compgen.ngsutils.NGSUtils;
 import io.compgen.ngsutils.fastq.Fastq;
 import io.compgen.ngsutils.fastq.FastqRead;
 import io.compgen.ngsutils.fastq.FastqReader;
-import io.compgen.support.IterUtils;
-import io.compgen.support.IterUtils.EachPair;
 
 import java.io.BufferedOutputStream;
 import java.io.File;

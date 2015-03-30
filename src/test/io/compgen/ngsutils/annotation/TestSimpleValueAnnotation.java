@@ -1,8 +1,8 @@
 package io.compgen.ngsutils.annotation;
 
 import static org.junit.Assert.assertEquals;
+import io.compgen.common.StringUtils;
 import io.compgen.ngsutils.annotation.SimpleAnnotationSource.SimpleValueAnnotation;
-import io.compgen.support.StringUtils;
 
 import java.util.Collections;
 import java.util.List;

@@ -1,6 +1,6 @@
 package io.compgen.ngsutils.pileup;
 
-import io.compgen.support.StringUtils;
+import io.compgen.common.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
