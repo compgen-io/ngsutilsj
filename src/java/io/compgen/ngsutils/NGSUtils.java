@@ -15,6 +15,7 @@ import io.compgen.ngsutils.cli.bam.BamCoverage;
 import io.compgen.ngsutils.cli.bam.BamFilterCli;
 import io.compgen.ngsutils.cli.bam.BamStats;
 import io.compgen.ngsutils.cli.bam.BamToFastq;
+import io.compgen.ngsutils.cli.bam.BamToBed;
 import io.compgen.ngsutils.cli.bam.BinCount;
 import io.compgen.ngsutils.cli.bam.PileupCli;
 import io.compgen.ngsutils.cli.fasta.FastaCLI;
@@ -59,6 +60,7 @@ public class NGSUtils {
             .addCommand(BamToFastq.class)
             .addCommand(BamFilterCli.class)
             .addCommand(BamStats.class)
+            .addCommand(BamToBed.class)
             .addCommand(JunctionCount.class)
             .addCommand(FindEvents.class)
             .addCommand(JunctionDiffCli.class)

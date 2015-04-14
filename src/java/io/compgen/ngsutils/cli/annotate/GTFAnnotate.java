@@ -47,13 +47,13 @@ public class GTFAnnotate extends AbstractOutputCommand {
         this.filename = filename;
     }
 
-    @Option(desc = "GTF  filename", name="gtf")
+    @Option(desc = "GTF filename", name="gtf", helpValue="fname")
     public void setGTFFilename(String gtfFilename) {
         this.gtfFilename = gtfFilename;
     }
 
 
-    @Option(desc="Column of chromosome (Default: 1)", name="col-chrom", defaultValue="-1")
+    @Option(desc="Column of chromosome", defaultText="1", name="col-chrom", defaultValue="-1")
     public void setChromCol(int val) {
         if (val > 0) {
             // stored as 0-based, given as 1-based
@@ -63,7 +63,7 @@ public class GTFAnnotate extends AbstractOutputCommand {
         }
     }
 
-    @Option(desc="Column of start-position (1-based position) (Default: 2)", name="col-start", defaultValue="-1")
+    @Option(desc="Column of start-position (1-based position)", defaultText="2", name="col-start", defaultValue="-1")
     public void setStartCol(int val) {
         if (val > 0) {
             // stored as 0-based, given as 1-based
@@ -73,7 +73,7 @@ public class GTFAnnotate extends AbstractOutputCommand {
         }
     }
 
-    @Option(desc="Column of end-position (Default: -1, no end col)", name="col-end", defaultValue="-1")
+    @Option(desc="Column of end-position", defaultText="no end col", name="col-end", defaultValue="-1")
     public void setEndCol(int val) {
         if (val > 0) {
             // stored as 0-based, given as 1-based
@@ -83,7 +83,7 @@ public class GTFAnnotate extends AbstractOutputCommand {
         }
     }
 
-    @Option(desc="Column of strand (Default: -1, not strand-specific)", name="col-strand", defaultValue="-1")
+    @Option(desc="Column of strand", defaultText="not strand-specific", name="col-strand", defaultValue="-1")
     public void setStrandCol(int val) {
         if (val > 0) {
             // stored as 0-based, given as 1-based
@@ -93,7 +93,7 @@ public class GTFAnnotate extends AbstractOutputCommand {
         }
     }
 
-    @Option(desc="Column of a region (Default: -1, not used)", name="col-region", defaultValue="-1")
+    @Option(desc="Column of a region", defaultText="not used", name="col-region", defaultValue="-1")
     public void setRegionCol(int val) {
         if (val > 0) {
             // stored as 0-based, given as 1-based
@@ -103,7 +103,7 @@ public class GTFAnnotate extends AbstractOutputCommand {
         }
     }
 
-    @Option(desc="Column of a junction (Default: -1, not used)", name="col-junction", defaultValue="-1")
+    @Option(desc="Column of a junction", defaultText="not used", name="col-junction", defaultValue="-1")
     public void setJunctionCol(int val) {
         if (val > 0) {
             // stored as 0-based, given as 1-based
@@ -161,7 +161,6 @@ public class GTFAnnotate extends AbstractOutputCommand {
         }
     }
 
-
     @Option(desc="Input file uses one-based coordinates (default is 0-based)", name="one")
     public void setOneBased(boolean val) {
         zeroBased = !val;
@@ -212,7 +211,7 @@ public class GTFAnnotate extends AbstractOutputCommand {
         if (verbose) {
             System.err.println(" [done]");
         }
-
+        
         boolean first = true;
         String lastline = null;
         int colNum = -1;

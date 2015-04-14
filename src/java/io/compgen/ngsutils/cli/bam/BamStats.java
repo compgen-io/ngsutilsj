@@ -56,7 +56,7 @@ public class BamStats extends AbstractOutputCommand {
         this.silent = silent;
     }    
 
-    @Option(desc="GTF annotation file", name="gtf")
+    @Option(desc="GTF annotation file (note: library-orientation will be automatically determined)", name="gtf")
     public void setGTFFilename(String filename) {
         this.gtfFilename = filename;
     }    
@@ -148,13 +148,16 @@ public class BamStats extends AbstractOutputCommand {
         TallyCounts insertSizeCounter = new TallyCounts();
         boolean paired = false;
         
-        Iterator<SAMRecord> it = ProgressUtils.getIterator(name, reader.iterator(), (channel == null)? null : new FileChannelStats(channel), new ProgressMessage<SAMRecord>() {
-            long i = 0;
-            @Override
-            public String msg(SAMRecord current) {
-                i++;
-                return i+" "+current.getReadName();
-            }}, new CloseableFinalizer<SAMRecord>(){});;
+        Iterator<SAMRecord> it = ProgressUtils.getIterator(name, reader.iterator(), (channel == null)? null : new FileChannelStats(channel), 
+            new ProgressMessage<SAMRecord>() {
+                long i = 0;
+                @Override
+                public String msg(SAMRecord current) {
+                    i++;
+                    return i+" "+current.getReadName();
+                }
+            }, new CloseableFinalizer<SAMRecord>(){});
+
         while (it.hasNext()) {
             SAMRecord read = it.next();
             if (read.getReadPairedFlag() && read.getSecondOfPairFlag()) {
