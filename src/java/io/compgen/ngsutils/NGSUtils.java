@@ -14,11 +14,17 @@ import io.compgen.ngsutils.cli.bam.BamCount;
 import io.compgen.ngsutils.cli.bam.BamCoverage;
 import io.compgen.ngsutils.cli.bam.BamFilterCli;
 import io.compgen.ngsutils.cli.bam.BamStats;
-import io.compgen.ngsutils.cli.bam.BamToFastq;
 import io.compgen.ngsutils.cli.bam.BamToBed;
+import io.compgen.ngsutils.cli.bam.BamToFastq;
 import io.compgen.ngsutils.cli.bam.BinCount;
 import io.compgen.ngsutils.cli.bam.PileupCli;
-import io.compgen.ngsutils.cli.fasta.FastaCLI;
+import io.compgen.ngsutils.cli.bed.BedCleanScore;
+import io.compgen.ngsutils.cli.bed.BedExtend;
+import io.compgen.ngsutils.cli.bed.BedToBed3;
+import io.compgen.ngsutils.cli.bed.BedToBed6;
+import io.compgen.ngsutils.cli.bed.BedToFasta;
+import io.compgen.ngsutils.cli.fasta.FastaIndex;
+import io.compgen.ngsutils.cli.fasta.FastaTag;
 import io.compgen.ngsutils.cli.fastq.FastqFilterCli;
 import io.compgen.ngsutils.cli.fastq.FastqMerge;
 import io.compgen.ngsutils.cli.fastq.FastqSeparate;
@@ -45,6 +51,7 @@ public class NGSUtils {
             .setHelpHeader("NGSUtilsJ - Data wrangling for NGS\n---------------------------------------")
             .setDefaultUsage("Usage: ngsutilsj cmd [options]")
             .setHelpFooter("http://compgen.io/ngsutilsj\n"+MainBuilder.readFile("VERSION"))
+            .setCategoryOrder(new String[] { "bam", "bed", "fasta", "fastq", "gtf", "splicing", "help"})
             .addCommand(License.class)
             .addCommand(Help.class)
             .addCommand(FastqToBam.class)
@@ -65,11 +72,17 @@ public class NGSUtils {
             .addCommand(FindEvents.class)
             .addCommand(JunctionDiffCli.class)
             .addCommand(FastaJunctions.class)
-            .addCommand(FastaCLI.class)
+            .addCommand(FastaIndex.class)
             .addCommand(PileupCli.class)
             .addCommand(RepeatAnnotate.class)
             .addCommand(GTFAnnotate.class)
             .addCommand(GTFExport.class)
+            .addCommand(FastaTag.class)
+            .addCommand(BedExtend.class)
+            .addCommand(BedToFasta.class)
+            .addCommand(BedToBed3.class)
+            .addCommand(BedToBed6.class)
+            .addCommand(BedCleanScore.class)
             .findAndRun(args);
     }
 

@@ -10,7 +10,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
-public class IndexedFastaFile implements FastaReader {
+public class IndexedFastaFile extends BasicFastaReader {
     public class IndexRecord {
         public final String name;
         public final long length;
@@ -32,7 +32,9 @@ public class IndexedFastaFile implements FastaReader {
 
     private Map<String, IndexRecord> indexMap = new LinkedHashMap<String, IndexRecord>();
     
-    public IndexedFastaFile(String filename) throws IOException {
+    protected IndexedFastaFile(String filename) throws IOException {
+        super(filename);
+        
         if (!new File(filename+".fai").exists()) {
             throw new IOException("Missing FAI index file!");
         }
@@ -62,7 +64,7 @@ public class IndexedFastaFile implements FastaReader {
      * @see io.compgen.ngsutils.fasta.FASTAReader#fetch(java.lang.String, int, int)
      */
     @Override
-    public String fetch(String ref, int start, int end) throws IOException {
+    public String fetchSequence(String ref, int start, int end) throws IOException {
         if (!indexMap.containsKey(ref)) {
             throw new RuntimeException("Invalid reference name! \""+ref+"\" not found in FASTA file!");
         }

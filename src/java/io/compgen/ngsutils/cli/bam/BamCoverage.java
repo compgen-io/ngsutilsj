@@ -9,9 +9,9 @@ import io.compgen.cmdline.impl.AbstractOutputCommand;
 import io.compgen.common.IterUtils;
 import io.compgen.common.TallyCounts;
 import io.compgen.ngsutils.annotation.BEDAnnotationSource;
-import io.compgen.ngsutils.annotation.BEDAnnotationSource.BEDAnnotation;
 import io.compgen.ngsutils.annotation.GenomeSpan;
 import io.compgen.ngsutils.bam.support.ReadUtils;
+import io.compgen.ngsutils.bed.BedRecord;
 import io.compgen.ngsutils.pileup.BAMPileup;
 import io.compgen.ngsutils.pileup.PileupRecord;
 
@@ -127,7 +127,7 @@ public class BamCoverage extends AbstractOutputCommand {
                 tmp = 0;
             }
             if (bed!=null) {
-                for (BEDAnnotation ann : bed.findAnnotation(new GenomeSpan(record.ref, record.pos))) {
+                for (BedRecord ann : bed.findAnnotation(new GenomeSpan(record.ref, record.pos))) {
                     GenomeSpan curRegion = ann.getCoord();
                     if (lastRegion != null && !curRegion.equals(lastRegion)) {
                         for (int i=lastPos+1; i<=lastRegion.end; i++) {

@@ -7,7 +7,6 @@ import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordIterator;
 import io.compgen.ngsutils.annotation.GenomeSpan;
 import io.compgen.ngsutils.fasta.FastaReader;
-import io.compgen.ngsutils.fasta.IndexedFastaFile;
 import io.compgen.ngsutils.fasta.NullFasta;
 
 import java.io.IOException;
@@ -243,7 +242,7 @@ public class DenovoPileup {
     }
     
     public void setFASTARef(String filename) throws IOException {
-        fastaRef = new IndexedFastaFile(filename);
+        fastaRef = FastaReader.open(filename);
     }
     
     public void setMinMappingQual(int minMappingQual) {
@@ -385,7 +384,7 @@ public class DenovoPileup {
                                 String deletedSeq = "?";
                                 
                                 try {
-                                    deletedSeq = fastaRef.fetch(read.getReferenceName(), refPos-1, refPos-1+cigarLen);
+                                    deletedSeq = fastaRef.fetchSequence(read.getReferenceName(), refPos-1, refPos-1+cigarLen);
                                 } catch (IOException e) {
                                     e.printStackTrace();
                                 }
@@ -427,7 +426,7 @@ public class DenovoPileup {
                         if (!pileupPos.containsKey(refPosKey)) {
                             if (fastaRef != null) {
                                 try {
-                                    pileupPos.put(refPosKey, new PileupPos(read.getReferenceIndex(), refPos, fastaRef.fetch(read.getReferenceName(), refPos-1, refPos)));
+                                    pileupPos.put(refPosKey, new PileupPos(read.getReferenceIndex(), refPos, fastaRef.fetchSequence(read.getReferenceName(), refPos-1, refPos)));
                                 } catch (IOException e) {
                                     e.printStackTrace();
                                 }

@@ -10,7 +10,6 @@ import io.compgen.common.StringLineReader;
 import io.compgen.common.StringUtils;
 import io.compgen.ngsutils.annotation.GenomeSpan;
 import io.compgen.ngsutils.fasta.FastaReader;
-import io.compgen.ngsutils.fasta.IndexedFastaFile;
 
 import java.io.IOException;
 import java.util.List;
@@ -66,7 +65,7 @@ public class FastaJunctions extends AbstractOutputCommand {
             throw new CommandArgumentException("Missing/Invalid arguments!");
         }
         
-        FastaReader fasta = new IndexedFastaFile(fastaName);
+        FastaReader fasta = FastaReader.open(fastaName);
         
         if (junction != null) {
             processRegion(fasta, junction);
@@ -102,8 +101,8 @@ public class FastaJunctions extends AbstractOutputCommand {
         int up_start = region.start - size;
         int down_end = region.end + size;
 
-        String upseq = fasta.fetch(region.ref, up_start, region.start);
-        String downseq = fasta.fetch(region.ref, region.end, down_end);
+        String upseq = fasta.fetchSequence(region.ref, up_start, region.start);
+        String downseq = fasta.fetchSequence(region.ref, region.end, down_end);
         String seq;
         
         if (markJunction) {

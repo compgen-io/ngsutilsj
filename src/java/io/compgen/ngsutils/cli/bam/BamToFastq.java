@@ -23,7 +23,7 @@ import java.util.zip.GZIPOutputStream;
  *
  */
 
-@Command(name="bam-fastq", desc="Export the read sequences from a BAM file in FASTQ format", category="bam")
+@Command(name="bam-tofastq", desc="Export the read sequences from a BAM file in FASTQ format", category="bam")
 public class BamToFastq extends AbstractCommand {
     
     private String filename=null;

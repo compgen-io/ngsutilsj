@@ -5,8 +5,8 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import io.compgen.common.IterUtils;
 import io.compgen.common.StringUtils;
-import io.compgen.ngsutils.annotation.BEDAnnotationSource.BEDAnnotation;
 import io.compgen.ngsutils.bam.Strand;
+import io.compgen.ngsutils.bed.BedRecord;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -21,7 +21,7 @@ public class TestBEDAnnotation {
 
     @Test
     public void testHasAnnotation() {
-        for (GenomeAnnotation<BEDAnnotation> ann:IterUtils.wrap(bed.iterator())) {
+        for (GenomeAnnotation<BedRecord> ann:IterUtils.wrap(bed.iterator())) {
             System.err.println(ann);
             
         }
