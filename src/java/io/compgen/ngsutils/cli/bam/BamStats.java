@@ -37,6 +37,7 @@ public class BamStats extends AbstractOutputCommand {
     private String gtfFilename = null;
     private boolean lenient = false;
     private boolean silent = false;
+    private boolean showUnmappedRef = false;
 
     private Map<String,TallyCounts> numTagCounts = new HashMap<String,TallyCounts>();
     private Map<String,TallyValues<String>> strTagCounts = new HashMap<String,TallyValues<String>>();
@@ -44,6 +45,11 @@ public class BamStats extends AbstractOutputCommand {
     @UnnamedArg(name = "FILE")
     public void setFilename(String filename) {
         this.filename = filename;
+    }
+
+    @Option(desc="Display reference counts even if they have no reads mapped to them", name="showUnmappedRef")
+    public void setShowUnmappedRef(boolean showUnmappedRef) {
+        this.showUnmappedRef = showUnmappedRef;
     }
 
     @Option(desc="Use lenient validation strategy", name="lenient")
@@ -249,7 +255,9 @@ public class BamStats extends AbstractOutputCommand {
         println();
         println("[References]");
         for (String ref: StringUtils.naturalSort(refCounts.keySet())) {
-            println(ref+"\t"+refCounts.get(ref));
+            if (showUnmappedRef || refCounts.get(ref) > 0) {
+                println(ref+"\t"+refCounts.get(ref));
+            }
         }
 
         println();
