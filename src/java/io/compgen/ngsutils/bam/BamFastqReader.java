@@ -10,9 +10,9 @@ import io.compgen.common.StringUtils;
 import io.compgen.common.progress.FileChannelStats;
 import io.compgen.common.progress.ProgressMessage;
 import io.compgen.common.progress.ProgressUtils;
-import io.compgen.ngsutils.bam.support.ReadUtils;
 import io.compgen.ngsutils.fastq.FastqRead;
 import io.compgen.ngsutils.fastq.FastqReader;
+import io.compgen.ngsutils.support.SeqUtils;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -167,7 +167,7 @@ public class BamFastqReader implements FastqReader {
                     String seq;
                     String qual;
                     if (read.getReadNegativeStrandFlag()) {
-                        seq = ReadUtils.revcomp(read.getReadString());
+                        seq = SeqUtils.revcomp(read.getReadString());
                         qual = StringUtils.reverse(read.getBaseQualityString());
                     } else {
                         seq = read.getReadString();
@@ -181,30 +181,34 @@ public class BamFastqReader implements FastqReader {
   
                     FastqRead fq = new FastqRead(name, seq, qual, comment);
                     
-                    if (first && !second && read.getFirstOfPairFlag() && (!deduplicate || !exported.contains(name))) {
-                        buf.add(fq);
-                        exported.add(name);
-                    } else if (second && !first && read.getSecondOfPairFlag() && (!deduplicate || !exported.contains(name))) {
-                        buf.add(fq);
-                        exported.add(name);
-                    } else if (first && second && (!deduplicate || !exported.contains(name))) {
-                        if (firstReads.containsKey(name) && read.getSecondOfPairFlag()) {
-                            buf.add(firstReads.remove(name));
+                    if (read.getReadPairedFlag()) {
+                        if (first && !second && read.getFirstOfPairFlag() && (!deduplicate || !exported.contains(name))) {
                             buf.add(fq);
-                            if (deduplicate) {
-                                exported.add(name);
-                            }
-                        } else if (secondReads.containsKey(name) && read.getFirstOfPairFlag()) {
+                            exported.add(name);
+                        } else if (second && !first && read.getSecondOfPairFlag() && (!deduplicate || !exported.contains(name))) {
                             buf.add(fq);
-                            buf.add(secondReads.remove(name));
-                            if (deduplicate) {
-                                exported.add(name);
+                            exported.add(name);
+                        } else if (first && second && (!deduplicate || !exported.contains(name))) {
+                            if (firstReads.containsKey(name) && read.getSecondOfPairFlag()) {
+                                buf.add(firstReads.remove(name));
+                                buf.add(fq);
+                                if (deduplicate) {
+                                    exported.add(name);
+                                }
+                            } else if (secondReads.containsKey(name) && read.getFirstOfPairFlag()) {
+                                buf.add(fq);
+                                buf.add(secondReads.remove(name));
+                                if (deduplicate) {
+                                    exported.add(name);
+                                }
+                            } else if (read.getFirstOfPairFlag()) {
+                                firstReads.put(name, fq);
+                            } else if (read.getSecondOfPairFlag()) {
+                                secondReads.put(name, fq);
                             }
-                        } else if (read.getFirstOfPairFlag()) {
-                            firstReads.put(name, fq);
-                        } else if (read.getSecondOfPairFlag()) {
-                            secondReads.put(name, fq);
                         }
+                    } else {
+                        buf.add(fq);
                     }
                 }
             }
