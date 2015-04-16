@@ -42,48 +42,52 @@ import java.io.IOException;
 @SuppressWarnings("deprecation")
 public class NGSUtils {
     
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
         NGSUtils.args = StringUtils.join(" ", args);
         SocketProgress.setHeader("NGSUtilsJ - " + NGSUtils.args);
-        
-        new MainBuilder()
-            .setProgName("ngsutilsj")
-            .setHelpHeader("NGSUtilsJ - Data wrangling for NGS\n---------------------------------------")
-            .setDefaultUsage("Usage: ngsutilsj cmd [options]")
-            .setHelpFooter("http://compgen.io/ngsutilsj\n"+MainBuilder.readFile("VERSION"))
-            .setCategoryOrder(new String[] { "bam", "bed", "fasta", "fastq", "gtf", "splicing", "help"})
-            .addCommand(License.class)
-            .addCommand(Help.class)
-            .addCommand(FastqToBam.class)
-            .addCommand(FastqSort.class)
-            .addCommand(FastqMerge.class)
-            .addCommand(FastqSeparate.class)
-            .addCommand(FastqSplit.class)
-            .addCommand(FastqFilterCli.class)
-            .addCommand(BinCount.class)
-            .addCommand(BamCheck.class)
-            .addCommand(BamCount.class)
-            .addCommand(BamCoverage.class)
-            .addCommand(BamToFastq.class)
-            .addCommand(BamFilterCli.class)
-            .addCommand(BamStats.class)
-            .addCommand(BamToBed.class)
-            .addCommand(JunctionCount.class)
-            .addCommand(FindEvents.class)
-            .addCommand(JunctionDiffCli.class)
-            .addCommand(FastaJunctions.class)
-            .addCommand(FastaIndex.class)
-            .addCommand(PileupCli.class)
-            .addCommand(RepeatAnnotate.class)
-            .addCommand(GTFAnnotate.class)
-            .addCommand(GTFExport.class)
-            .addCommand(FastaTag.class)
-            .addCommand(BedExtend.class)
-            .addCommand(BedToFasta.class)
-            .addCommand(BedToBed3.class)
-            .addCommand(BedToBed6.class)
-            .addCommand(BedCleanScore.class)
-            .findAndRun(args);
+        try {
+            new MainBuilder()
+                .setProgName("ngsutilsj")
+                .setHelpHeader("NGSUtilsJ - Data wrangling for NGS\n---------------------------------------")
+                .setDefaultUsage("Usage: ngsutilsj cmd [options]")
+                .setHelpFooter("http://compgen.io/ngsutilsj\n"+MainBuilder.readFile("VERSION"))
+                .setCategoryOrder(new String[] { "bam", "bed", "fasta", "fastq", "gtf", "splicing", "help"})
+                .addCommand(License.class)
+                .addCommand(Help.class)
+                .addCommand(FastqToBam.class)
+                .addCommand(FastqSort.class)
+                .addCommand(FastqMerge.class)
+                .addCommand(FastqSeparate.class)
+                .addCommand(FastqSplit.class)
+                .addCommand(FastqFilterCli.class)
+                .addCommand(BinCount.class)
+                .addCommand(BamCheck.class)
+                .addCommand(BamCount.class)
+                .addCommand(BamCoverage.class)
+                .addCommand(BamToFastq.class)
+                .addCommand(BamFilterCli.class)
+                .addCommand(BamStats.class)
+                .addCommand(BamToBed.class)
+                .addCommand(JunctionCount.class)
+                .addCommand(FindEvents.class)
+                .addCommand(JunctionDiffCli.class)
+                .addCommand(FastaJunctions.class)
+                .addCommand(FastaIndex.class)
+                .addCommand(PileupCli.class)
+                .addCommand(RepeatAnnotate.class)
+                .addCommand(GTFAnnotate.class)
+                .addCommand(GTFExport.class)
+                .addCommand(FastaTag.class)
+                .addCommand(BedExtend.class)
+                .addCommand(BedToFasta.class)
+                .addCommand(BedToBed3.class)
+                .addCommand(BedToBed6.class)
+                .addCommand(BedCleanScore.class)
+                .findAndRun(args);
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.exit(1);
+        }
     }
 
 	public static String getVersion() {
