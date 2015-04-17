@@ -20,7 +20,7 @@ public class GenomeSpan implements Comparable<GenomeSpan> {
     final public int end;
     final public Strand strand;
     
-    public GenomeSpan(String ref, int start, int end, Strand strand){
+    public GenomeSpan(String ref, int start, int end, Strand strand) {
         super();
         this.ref = ref;
         this.start = start;
@@ -28,28 +28,17 @@ public class GenomeSpan implements Comparable<GenomeSpan> {
         this.strand = strand;
     }
 
+    public GenomeSpan(String ref, int start){
+        this(ref, start, Strand.NONE);
+    }
+    
     public GenomeSpan(String ref, int start, int end){
-        super();
-        this.ref = ref;
-        this.start = start;
-        this.end = end;
-        this.strand = Strand.NONE;
+        this(ref, start, end, Strand.NONE);
     }
 
     public GenomeSpan(String ref, int start, Strand strand){
-        super();
-        this.ref = ref;
-        this.start = start;
-        this.end = start;
-        this.strand = strand;
-    }
-    
-    public GenomeSpan(String ref, int start){
-        super();
-        this.ref = ref;
-        this.start = start;
-        this.end = start+1; // TODO: Should this be start + 1??? Check how this plays with comparisons.
-        this.strand = Strand.NONE;
+        // TODO: Should the end be start + 1??? Check how this plays with comparisons.
+        this(ref, start, start+1, Strand.NONE);
     }
     
     public GenomeSpan clone() {
@@ -97,6 +86,9 @@ public class GenomeSpan implements Comparable<GenomeSpan> {
             return null;
         } else if (startend.indexOf('-') == -1) {
             int pos = Integer.parseInt(startend);
+            if (!zero) {
+                pos = pos - 1; // if this isn't zero based INPUT, then adjust the start position
+            }
             return new GenomeSpan(ref, pos, strand);
         } else {
             int start = Integer.parseInt(startend.substring(0, startend.indexOf('-')));
@@ -162,19 +154,23 @@ public class GenomeSpan implements Comparable<GenomeSpan> {
         }
         return false;
     }
-    
+
     @Override                                                                                                                                                                                                                                                     
     public String toString() {
+        return toString(false);
+    }
+
+    public String toString(boolean oneBasedStart) {
         if (start == end) {
             if (strand==Strand.NONE) {
-                return ref+":"+Integer.toString(start);
+                return ref+":"+Integer.toString(start + (oneBasedStart ? 1: 0));
             }
-            return ref+strand+":"+Integer.toString(start);
+            return ref+strand+":"+Integer.toString(start + (oneBasedStart ? 1: 0));
         }
         if (strand==Strand.NONE) {
-            return ref+":"+Integer.toString(start)+"-"+Integer.toString(end);
+            return ref+":"+Integer.toString(start + (oneBasedStart ? 1: 0))+"-"+Integer.toString(end);
         }
-        return ref+strand+":"+Integer.toString(start)+"-"+Integer.toString(end);
+        return ref+strand+":"+Integer.toString(start + (oneBasedStart ? 1: 0))+"-"+Integer.toString(end);
     }
 
     @Override                                                                                                                                                                                                                                                     
@@ -285,4 +281,5 @@ public class GenomeSpan implements Comparable<GenomeSpan> {
     public GenomeSpan getEndPos() {
         return new GenomeSpan(ref, end-1, end, strand);
     }
+
 }

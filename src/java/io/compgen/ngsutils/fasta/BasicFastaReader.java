@@ -10,6 +10,7 @@ import java.util.Iterator;
 public class BasicFastaReader extends FastaReader {
     protected final String filename;
     private boolean closed = false;
+    private StringLineReader reader = null;
     
     protected BasicFastaReader(String filename) {
         this.filename = filename;
@@ -29,10 +30,8 @@ public class BasicFastaReader extends FastaReader {
             }
         }
         
-        while (it.hasNext()) {
-            // exhaust iterator to close open file
-            // should probably be something more efficient, but for random access, we should be indexed anyway.
-            it.next();
+        if (reader != null) {
+            reader.close();
         }
         
         return seq;
@@ -48,9 +47,11 @@ public class BasicFastaReader extends FastaReader {
         if (closed) {
             throw new IOException("FastaReader closed");
         }
+        
+        reader = new StringLineReader(filename);
+        
         return new Iterator<FastaRecord> () {
 
-        StringLineReader reader = new StringLineReader(filename);
         Iterator<String> it = null;
         
         FastaRecord nextRecord = null;

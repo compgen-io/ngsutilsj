@@ -23,7 +23,7 @@ import io.compgen.ngsutils.cli.bed.BedExtend;
 import io.compgen.ngsutils.cli.bed.BedToBed3;
 import io.compgen.ngsutils.cli.bed.BedToBed6;
 import io.compgen.ngsutils.cli.bed.BedToFasta;
-import io.compgen.ngsutils.cli.fasta.FastaIndex;
+import io.compgen.ngsutils.cli.fasta.FastaSubseq;
 import io.compgen.ngsutils.cli.fasta.FastaTag;
 import io.compgen.ngsutils.cli.fastq.FastqFilterCli;
 import io.compgen.ngsutils.cli.fastq.FastqMerge;
@@ -72,7 +72,7 @@ public class NGSUtils {
                 .addCommand(FindEvents.class)
                 .addCommand(JunctionDiffCli.class)
                 .addCommand(FastaJunctions.class)
-                .addCommand(FastaIndex.class)
+                .addCommand(FastaSubseq.class)
                 .addCommand(PileupCli.class)
                 .addCommand(RepeatAnnotate.class)
                 .addCommand(GTFAnnotate.class)

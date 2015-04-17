@@ -12,8 +12,8 @@ import io.compgen.ngsutils.fasta.FastaReader;
 import java.io.IOException;
 import java.util.List;
 
-@Command(name="faidx", desc="Extract subsequences from an indexed FASTA file", category="fasta")
-public class FastaIndex extends AbstractOutputCommand {
+@Command(name="fasta-subseq", desc="Extract subsequences from a FASTA file (optionally, indexed)", category="fasta", doc="Note: the start-position in the region should be 1-based")
+public class FastaSubseq extends AbstractOutputCommand {
     
     private String filename = null;
     private GenomeSpan region = null;
@@ -31,6 +31,9 @@ public class FastaIndex extends AbstractOutputCommand {
         }
         filename = args.get(0);
         region = GenomeSpan.parse(args.get(1));
+        if (region.start < 0) {
+            throw new CommandArgumentException("Invalid region!");
+        }
     }
 
     @Exec
@@ -39,8 +42,8 @@ public class FastaIndex extends AbstractOutputCommand {
             throw new CommandArgumentException("Missing/invalid arguments!");
         }
         FastaReader fasta = FastaReader.open(filename);
-        System.out.println(">"+region);
-        String seq = fasta.fetchSequence(region.ref, region.start-1, region.end);
+        System.out.println(">"+region.toString(true));
+        String seq = fasta.fetchSequence(region.ref, region.start, region.end);
         while (seq.length() > wrap) {
             System.out.println(seq.substring(0, wrap));
             seq = seq.substring(wrap);
