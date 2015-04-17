@@ -78,7 +78,7 @@ public class BamFilterCli extends AbstractCommand {
         this.filenames = filenames;
     }
 
-    @Option(desc="Write temporary files here", name="tmpdir")
+    @Option(desc="Write temporary files here", name="tmpdir", helpValue="dir")
     public void setTmpDir(String tmpDir) {
         this.tmpDir = tmpDir;
     }
@@ -88,7 +88,7 @@ public class BamFilterCli extends AbstractCommand {
         this.paired = val;
     }
 
-    @Option(desc="Exclude reads within BED regions", name="bed-exclude")
+    @Option(desc="Exclude reads within BED regions", name="bed-exclude", helpValue="fname")
     public void setBedExcludeFile(String bedExclude) {
         this.bedExclude = bedExclude;
     }
@@ -107,7 +107,7 @@ public class BamFilterCli extends AbstractCommand {
     public void setBEDExcludeRequireBoth(boolean val) {
         this.bedExcludeRequireBoth = val;
     }
-    @Option(desc="Include reads within BED regions", name="bed-include")
+    @Option(desc="Include reads within BED regions", name="bed-include", helpValue="fname")
     public void setBedIncludeFile(String bedIncludeFile) {
         this.bedIncludeFile = bedIncludeFile;
     }
