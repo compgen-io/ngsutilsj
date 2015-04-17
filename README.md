@@ -3,7 +3,7 @@ ngsutilsj
 
 This is a set of companion programs for NGSUtils written in Java. Any programs that are here
 have been either newly written or rewritten from the Python NGSUtils in order to be more efficient.
-For the most part, these are currently tools that work with compressed FASTQ files, but other tools
+For the most part, these are currently tools that work with compressed FASTQ or BAM files, but other tools
 will be ported over to Java versions as needed.
 
 As an added convenience, this project can be used via an embedded JAR file. If you run "ant jar", you will find two new files in the dist/
