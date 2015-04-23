@@ -1,6 +1,6 @@
 package io.compgen.ngsutils.fastq;
 
-import io.compgen.ngsutils.support.io.PeekableInputStream;
+import io.compgen.common.io.PeekableInputStream;
 
 import java.io.IOException;
 import java.io.InputStream;

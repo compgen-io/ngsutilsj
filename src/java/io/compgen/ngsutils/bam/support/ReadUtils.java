@@ -344,4 +344,15 @@ public class ReadUtils {
         return (int)longVal;
 
     }
+
+    public static boolean isReadUniquelyMapped(SAMRecord read) {
+        Integer mappings = read.getIntegerAttribute("NH");
+        if (mappings == null || mappings < 0) {
+            mappings = read.getIntegerAttribute("IH");
+        }
+        if (mappings != null && mappings > 1) {
+            return false;
+        }
+        return true;
+    }
 }

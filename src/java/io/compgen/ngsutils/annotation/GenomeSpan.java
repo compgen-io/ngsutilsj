@@ -38,7 +38,7 @@ public class GenomeSpan implements Comparable<GenomeSpan> {
 
     public GenomeSpan(String ref, int start, Strand strand){
         // TODO: Should the end be start + 1??? Check how this plays with comparisons.
-        this(ref, start, start+1, Strand.NONE);
+        this(ref, start, start+1, strand);
     }
     
     public GenomeSpan clone() {

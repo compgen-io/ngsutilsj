@@ -262,14 +262,8 @@ public class BamCount extends AbstractOutputCommand {
                             
                             reads.add(read.getReadName());
                             
-                            if (unique) {
-                                Integer mappings = read.getIntegerAttribute("NH");
-                                if (mappings == null || mappings < 0) {
-                                    mappings = read.getIntegerAttribute("IH");
-                                }
-                                if (mappings != null && mappings > 1) {
-                                    continue;
-                                }
+                            if (unique && !ReadUtils.isReadUniquelyMapped(read)) {
+                                continue;                                    
                             }
                             
                             count ++;

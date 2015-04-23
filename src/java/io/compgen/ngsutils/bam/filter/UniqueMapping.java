@@ -1,5 +1,6 @@
 package io.compgen.ngsutils.bam.filter;
 
+import io.compgen.ngsutils.bam.support.ReadUtils;
 import htsjdk.samtools.SAMRecord;
 
 public class UniqueMapping extends AbstractBamFilter {
@@ -10,13 +11,6 @@ public class UniqueMapping extends AbstractBamFilter {
 
     @Override
     public boolean keepRead(SAMRecord read) {
-        Integer mappings = read.getIntegerAttribute("NH");
-        if (mappings == null || mappings < 0) {
-            mappings = read.getIntegerAttribute("IH");
-        }
-        if (mappings != null && mappings > 1) {
-            return false;
-        }
-        return true;
+        return ReadUtils.isReadUniquelyMapped(read);
     }
 }

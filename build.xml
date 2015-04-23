@@ -46,11 +46,15 @@
 		<mkdir dir="${dist.dir}"/>
 	    <taskdef name="jarjar" classname="com.tonicsystems.jarjar.JarJarTask"
 	        classpath="${blib.dir}/jarjar-1.4.jar"/>
-        <jar destfile="${dist.dir}/ngsutilsj-${version}.jar" basedir="${build.dir}/classes"/>
+        <jar destfile="${dist.dir}/${ant.project.name}-${version}.jar">
+            <fileset dir="${build.dir}/classes"/>
+            <fileset dir="${src.dir}/java" includes="**/*.java"/>
+        </jar>
 	    <jarjar jarfile="${dist.dir}/ngsutilsj.jar.tmp">
             <manifest>
                 <attribute name="Main-Class" value="io.compgen.ngsutils.NGSUtils"/>
             </manifest>
+            <fileset dir="${build.dir}/classes"/>
             <zipfileset src="${lib.dir}/htsjdk-1.126.jar"/>
             <zipfileset src="${lib.dir}/snappy-java-1.0.3-rc3.jar"/>
             <zipfileset src="${lib.dir}/commons-jexl-2.1.1.jar"/>
@@ -60,8 +64,7 @@
             <zipfileset src="${lib.dir}/compgen-cmdline-0.4.1.jar"/>
             <zipfileset src="${lib.dir}/commons-compress-1.8.1.jar"/>
 	    	<zipfileset src="${lib.dir}/sqz-api-0.1-7513df2.jar"/>
-	    	            
-	        <fileset dir="${build.dir}/classes"/>
+            <zap pattern="*.java"/>
 	    </jarjar>
         <delete file="${dist.dir}/ngsutilsj"/>
  		<concat destfile="${dist.dir}/ngsutilsj" binary="true">
