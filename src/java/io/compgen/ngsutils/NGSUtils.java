@@ -50,7 +50,7 @@ public class NGSUtils {
                 .setProgName("ngsutilsj")
                 .setHelpHeader("NGSUtilsJ - Data wrangling for NGS\n---------------------------------------")
                 .setDefaultUsage("Usage: ngsutilsj cmd [options]")
-                .setHelpFooter("http://compgen.io/ngsutilsj\n"+MainBuilder.readFile("VERSION"))
+                .setHelpFooter("http://compgen.io/ngsutilsj\n" + getVersion())
                 .setCategoryOrder(new String[] { "bam", "bed", "fasta", "fastq", "gtf", "splicing", "help"})
                 .addCommand(License.class)
                 .addCommand(Help.class)
@@ -92,7 +92,7 @@ public class NGSUtils {
 
 	public static String getVersion() {
 	    try {
-            return MainBuilder.readFile("VERSION");
+            return MainBuilder.readFile("io/compgen/ngsutilsj/VERSION");
         } catch (IOException e) {
             return "unknown";
         }
