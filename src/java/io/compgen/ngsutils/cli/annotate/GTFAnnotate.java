@@ -20,7 +20,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-@Command(name="annotate-gtf", desc="Finds gene annotations from a GTF model", doc="Note: Column indexes start at 1.", category="annotation")
+@Command(name="annotate-gtf", desc="Annotate GTF gene regions (for tab-delimited text, BED, or BAM input)", doc="Note: Column indexes start at 1.", category="annotation")
 public class GTFAnnotate extends AbstractOutputCommand {
     
     private String filename=null;
@@ -177,7 +177,7 @@ public class GTFAnnotate extends AbstractOutputCommand {
     }
 
 
-    @Option(desc="Repeat can be within [value] bp of the genomic range (requires start and end columns)", name="within", defaultValue="0")
+    @Option(desc="Region can be within [value] bp of the genomic range (requires start and end columns)", name="within", defaultValue="0")
     public void setWithin(int val) {
         this.within = val;
     }
@@ -287,6 +287,7 @@ public class GTFAnnotate extends AbstractOutputCommand {
                 
                 List<GTFGene> annVals;
                 GenomeSpan genomeSpan = null;
+
                 if (regionCol > -1) {
                     String region = cols[regionCol];
                     genomeSpan = GenomeSpan.parse(region);
@@ -311,10 +312,18 @@ public class GTFAnnotate extends AbstractOutputCommand {
                     if (strandCol>-1) {
                         strand = Strand.parse(cols[strandCol]);
                     }
+                    
                     genomeSpan = new GenomeSpan(ref, start, end, strand);
                     annVals = ann.findAnnotation(genomeSpan);
                 }
 
+                if (annVals.size() == 0 && genomeSpan != null) {
+                    // look for anti-sense annotations
+                    GenomeSpan antiSpan = new GenomeSpan(genomeSpan.ref, genomeSpan.start, genomeSpan.end, genomeSpan.strand.getOpposite());
+                    annVals = ann.findAnnotation(antiSpan);                    
+                }
+
+                
                 String[] geneIds = new String[annVals.size()];
                 String[] geneNames = new String[annVals.size()];
                 String[] bioTypes = new String[annVals.size()];
@@ -329,7 +338,7 @@ public class GTFAnnotate extends AbstractOutputCommand {
                         // determine region annotation based on start/end of the region
                         GenicRegion start = ann.findGenicRegionForPos(genomeSpan.getStartPos(), gene.getGeneId());
                         GenicRegion end = ann.findGenicRegionForPos(genomeSpan.getEndPos(), gene.getGeneId());
-
+                        
                         if (start == end) {
                             regions[i] = start.toString();
                         } else {
@@ -351,6 +360,7 @@ public class GTFAnnotate extends AbstractOutputCommand {
                         regions[i] = "";
                     }
                 }
+
                 if (outputs.size()>0) {
                     for (String output: outputs) {
                         if (output.equals("biotype") && !ann.provides("biotype")) {

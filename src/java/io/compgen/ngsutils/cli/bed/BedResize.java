@@ -8,14 +8,13 @@ import io.compgen.cmdline.exceptions.CommandArgumentException;
 import io.compgen.cmdline.impl.AbstractOutputCommand;
 import io.compgen.common.IterUtils;
 import io.compgen.ngsutils.annotation.GenomeSpan;
-import io.compgen.ngsutils.bam.Strand;
 import io.compgen.ngsutils.bed.BedReader;
 import io.compgen.ngsutils.bed.BedRecord;
 
 import java.io.IOException;
 
 @Command(name="bed-resize", desc="Resize BED regions (extend or shrink)", category="bed")
-public class BedExtend extends AbstractOutputCommand {
+public class BedResize extends AbstractOutputCommand {
     
     private String filename = null;
     private int len5 = 0;
@@ -47,19 +46,11 @@ public class BedExtend extends AbstractOutputCommand {
         
         for (BedRecord record: IterUtils.wrap(BedReader.readFile(filename))) {
             GenomeSpan coord = record.getCoord();
-            int start = coord.start;
-            int end = coord.end;
             
-            if (coord.strand == Strand.PLUS || coord.strand == Strand.NONE) {
-                start = start - len5;
-                end = end + len3;
-            } else {
-                end = end + len5;
-                start = start - len3;
-            }
-
-            GenomeSpan newCoord = new GenomeSpan(coord.ref, start, end, coord.strand);
-            new BedRecord(newCoord, record.getName(), record.getScore(), record.getExtras()).write(out);
+            coord = coord.extend5(len5);
+            coord = coord.extend3(len3);
+            
+            new BedRecord(coord, record.getName(), record.getScore(), record.getExtras()).write(out);
         }
     }
 }

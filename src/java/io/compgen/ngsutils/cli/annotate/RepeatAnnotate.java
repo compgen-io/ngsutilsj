@@ -19,7 +19,7 @@ import io.compgen.ngsutils.bam.Strand;
 import java.io.IOException;
 import java.util.List;
 
-@Command(name="annotate-repeat", desc="Calculates Repeat masker annotations", doc="Note: Column indexes start at 1.", category="annotation")
+@Command(name="annotate-repeat", desc="Calculates Repeat masker annotations", doc="Note: Column indexes start at 1.", category="annotation", experimental=true)
 public class RepeatAnnotate extends AbstractOutputCommand {
     
     private String filename=null;

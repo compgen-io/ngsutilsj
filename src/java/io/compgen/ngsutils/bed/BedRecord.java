@@ -3,6 +3,7 @@ package io.compgen.ngsutils.bed;
 import io.compgen.common.StringUtils;
 import io.compgen.ngsutils.annotation.Annotation;
 import io.compgen.ngsutils.annotation.GenomeSpan;
+import io.compgen.ngsutils.bam.Strand;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -73,7 +74,13 @@ public class BedRecord implements Annotation {
                 }
                 outs.add(s);
             }
-            outs.add(coord.strand.toString());
+            
+            if (coord.strand != Strand.NONE) {
+                outs.add(coord.strand.toString());
+            } else {
+                // always need to output a valid strand...
+                outs.add(Strand.PLUS.toString());
+            }
         }
         
         if (extras != null) {

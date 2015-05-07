@@ -23,4 +23,14 @@ public enum Strand {
         }
         return NONE;
     }
+
+    public Strand getOpposite() {
+        if (this == PLUS) {
+            return MINUS;
+        }
+        if (this == MINUS) {
+            return PLUS;
+        }
+        return NONE;
+    }
 }

@@ -17,6 +17,7 @@ import io.compgen.ngsutils.annotation.GTFAnnotationSource.GTFGene;
 import io.compgen.ngsutils.annotation.GTFAnnotationSource.GTFTranscript;
 import io.compgen.ngsutils.annotation.GenomeAnnotation;
 import io.compgen.ngsutils.annotation.GenomeSpan;
+import io.compgen.ngsutils.bam.Strand;
 
 import java.io.File;
 import java.io.IOException;
@@ -34,6 +35,7 @@ public class GTFExport extends AbstractOutputCommand {
     private boolean exportGene = false;
     private boolean exportExon = false;
     private boolean exportIntron = false;
+    private boolean exportTSS = false;
     
     private boolean combine = false;
     
@@ -49,22 +51,27 @@ public class GTFExport extends AbstractOutputCommand {
 
     @Option(desc="Combine overlapping exons/introns ", name="combine")
     public void setCombine(boolean val) {
-        combine = true;
+        combine = val;
     }
 
     @Option(desc="Export whole gene region", name="genes")
     public void setGene(boolean val) {
-        exportGene = true;
+        exportGene = val;
+    }
+
+    @Option(desc="Export transcriptional start site", name="tss")
+    public void setTSS(boolean val) {
+        exportTSS = val;
     }
 
     @Option(desc="Export introns", name="introns")
     public void setIntron(boolean val) {
-        exportIntron = true;
+        exportIntron = val;
     }
 
     @Option(desc="Export exons", name="exons")
     public void setExon(boolean val) {
-        exportExon = true;
+        exportExon = val;
     }
 
 
@@ -82,6 +89,9 @@ public class GTFExport extends AbstractOutputCommand {
             exportCount++;
         }
         if (exportExon) {
+            exportCount++;
+        }
+        if (exportTSS) {
             exportCount++;
         }
         if (exportCount != 1) {
@@ -141,6 +151,38 @@ public class GTFExport extends AbstractOutputCommand {
                 writer.write(0);
                 writer.write(gene.getStrand().toString());
                 writer.eol();
+            }
+            
+            if (exportTSS) {
+                int lastStart = -1;
+                for (GTFTranscript txpt: gene.getTranscripts()) {
+                    if (txpt.getCdsStart() > 0) {
+                        if (txpt.getCdsStart() == lastStart) {
+                            continue;
+                        }
+                        if (gene.getStrand() == Strand.PLUS) {
+                            writer.write(gene.getRef());
+                            writer.write(txpt.getCdsStart());
+                            writer.write(txpt.getCdsStart()+3);
+                            writer.write(gene.getGeneName());
+                            writer.write(0);
+                            writer.write(gene.getStrand().toString());
+                            writer.eol();
+                        } else if (gene.getStrand() == Strand.MINUS) {
+                            writer.write(gene.getRef());
+                            writer.write(txpt.getCdsStart()-3);
+                            writer.write(txpt.getCdsStart());
+                            writer.write(gene.getGeneName());
+                            writer.write(0);
+                            writer.write(gene.getStrand().toString());
+                            writer.eol();
+                        } else {
+                            // this shouldn't happen...
+                        }
+                        
+                        lastStart = txpt.getCdsStart();
+                    }
+                }
             }
 
             if (exportExon) {

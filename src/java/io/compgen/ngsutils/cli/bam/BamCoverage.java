@@ -147,11 +147,11 @@ public class BamCoverage extends AbstractOutputCommand {
             }
             
             if (record.isBlank()) {
-//                System.err.println(record.ref+":"+record.pos+" -0-");
+//                System.err.println(bedRecord.ref+":"+bedRecord.pos+" -0-");
                 tally.incr(0);
             } else {
-//                if (record.getSampleCount(0) == 0) {
-//                    System.err.println(record.ref+":"+record.pos+" 0 C");
+//                if (bedRecord.getSampleCount(0) == 0) {
+//                    System.err.println(bedRecord.ref+":"+bedRecord.pos+" 0 C");
 //                }
                 tally.incr(record.getSampleCount(0));
             }

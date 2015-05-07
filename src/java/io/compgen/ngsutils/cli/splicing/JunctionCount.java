@@ -33,7 +33,7 @@ public class JunctionCount extends AbstractOutputCommand {
     
     private boolean editDistance = false;
     private boolean retainedIntrons = false;
-    private boolean splitReads = false;
+    private boolean separateReadCounts = false;
     private int minOverlap = 10;
 
     private Orientation orient = Orientation.UNSTRANDED;
@@ -84,9 +84,9 @@ public class JunctionCount extends AbstractOutputCommand {
         this.minOverlap = val;
     }
 
-    @Option(desc="Separate counts by read number (R1/R2) (default: false)", name="split-reads")
-    public void setSplitReads(boolean val) {
-        this.splitReads = val;
+    @Option(desc="Separate counts by read number (R1/R2) (default: false)", name="separate-reads")
+    public void setSeparateReadCounts(boolean val) {
+        this.separateReadCounts = val;
     }
 
     @Option(desc="Also report the average edit distance for a reads mapping to a junction (default: false)", name="edit-distance")
@@ -122,7 +122,7 @@ public class JunctionCount extends AbstractOutputCommand {
         if (editDistance) {
             writer.write_line("## counts: edit-distance (NM) ");
         }
-        if (splitReads) {
+        if (separateReadCounts) {
             writer.write_line("## counts: split-reads ");
         }
         if (retainedIntrons) {
@@ -130,7 +130,7 @@ public class JunctionCount extends AbstractOutputCommand {
         }
 
         writer.write("junction", "strand");
-        if (splitReads) {
+        if (separateReadCounts) {
             writer.write("readnum");
         }
         writer.write("count");
@@ -149,7 +149,7 @@ public class JunctionCount extends AbstractOutputCommand {
                 System.err.println("Finding junctions for: " + refRecord.getSequenceName());
             }
             
-            SortedMap<GenomeSpan, MappedReadCounter> counters = ReadUtils.findJunctions(reader, refRecord.getSequenceName(), 0, refRecord.getSequenceLength(), orient, minOverlap, editDistance ? "NM": null, splitReads);
+            SortedMap<GenomeSpan, MappedReadCounter> counters = ReadUtils.countJunctions(reader, refRecord.getSequenceName(), 0, refRecord.getSequenceLength(), orient, minOverlap, editDistance ? "NM": null, separateReadCounts);
 
             if (verbose) {
                 System.err.println("                found: " + counters.size());
@@ -160,7 +160,7 @@ public class JunctionCount extends AbstractOutputCommand {
             for (GenomeSpan junc: counters.keySet()) {
                 writer.write(junc.ref+":"+junc.start+"-"+junc.end);
                 writer.write(""+junc.strand);
-                if (splitReads) {
+                if (separateReadCounts) {
                     writer.write("R1");
                 }
                 writer.write(counters.get(junc).getCountR1());
@@ -169,10 +169,10 @@ public class JunctionCount extends AbstractOutputCommand {
                 }
                 writer.eol();
                 
-                if (splitReads) {
+                if (separateReadCounts) {
                     writer.write(junc.ref+":"+junc.start+"-"+junc.end);
                     writer.write(""+junc.strand);
-                    if (splitReads) {
+                    if (separateReadCounts) {
                         writer.write("R2");
                     }
                     writer.write(counters.get(junc).getCountR2());
@@ -194,7 +194,7 @@ public class JunctionCount extends AbstractOutputCommand {
                 }
 
                 for (GenomeSpan spliceSite: intronCache) {
-                    MappedReadCounter counter = new MappedReadCounter(editDistance ? "NM": null, splitReads);
+                    MappedReadCounter counter = new MappedReadCounter(editDistance ? "NM": null, separateReadCounts);
                     for (SAMRecord read: ReadUtils.findOverlappingReads(reader, spliceSite, orient, readLength, minOverlap)) {
                         counter.addRead(read);
                     }
@@ -204,7 +204,7 @@ public class JunctionCount extends AbstractOutputCommand {
 
                     writer.write(spliceSite.ref+":"+spliceSite.start+"-"+spliceSite.start);
                     writer.write(""+spliceSite.strand);
-                    if (splitReads) {
+                    if (separateReadCounts) {
                         writer.write("R1");
                     }
                     writer.write(counter.getCountR1());
@@ -213,10 +213,10 @@ public class JunctionCount extends AbstractOutputCommand {
                     }
                     writer.eol();
                 
-                    if (splitReads) {
+                    if (separateReadCounts) {
                         writer.write(spliceSite.ref+":"+spliceSite.start+"-"+spliceSite.start);
                         writer.write(""+spliceSite.strand);
-                        if (splitReads) {
+                        if (separateReadCounts) {
                             writer.write("R2");
                         }
                         writer.write(counter.getCountR2());

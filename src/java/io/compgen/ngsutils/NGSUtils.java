@@ -19,7 +19,8 @@ import io.compgen.ngsutils.cli.bam.BamToFastq;
 import io.compgen.ngsutils.cli.bam.BinCount;
 import io.compgen.ngsutils.cli.bam.PileupCli;
 import io.compgen.ngsutils.cli.bed.BedCleanScore;
-import io.compgen.ngsutils.cli.bed.BedExtend;
+import io.compgen.ngsutils.cli.bed.BedReduce;
+import io.compgen.ngsutils.cli.bed.BedResize;
 import io.compgen.ngsutils.cli.bed.BedToBed3;
 import io.compgen.ngsutils.cli.bed.BedToBed6;
 import io.compgen.ngsutils.cli.bed.BedToFasta;
@@ -51,7 +52,7 @@ public class NGSUtils {
                 .setHelpHeader("NGSUtilsJ - Data wrangling for NGS\n---------------------------------------")
                 .setDefaultUsage("Usage: ngsutilsj cmd [options]")
                 .setHelpFooter("http://compgen.io/ngsutilsj\n" + getVersion())
-                .setCategoryOrder(new String[] { "bam", "bed", "fasta", "fastq", "gtf", "splicing", "help"})
+                .setCategoryOrder(new String[] { "bam", "bed", "fasta", "fastq", "gtf", "annotation", "splicing", "help"})
                 .addCommand(License.class)
                 .addCommand(Help.class)
                 .addCommand(FastqToBam.class)
@@ -78,7 +79,8 @@ public class NGSUtils {
                 .addCommand(GTFAnnotate.class)
                 .addCommand(GTFExport.class)
                 .addCommand(FastaTag.class)
-                .addCommand(BedExtend.class)
+                .addCommand(BedResize.class)
+                .addCommand(BedReduce.class)
                 .addCommand(BedToFasta.class)
                 .addCommand(BedToBed3.class)
                 .addCommand(BedToBed6.class)

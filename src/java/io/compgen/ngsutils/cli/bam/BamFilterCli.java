@@ -24,6 +24,7 @@ import io.compgen.ngsutils.bam.filter.BamFilter;
 import io.compgen.ngsutils.bam.filter.BedExclude;
 import io.compgen.ngsutils.bam.filter.BedInclude;
 import io.compgen.ngsutils.bam.filter.FilterFlags;
+import io.compgen.ngsutils.bam.filter.JunctionWhitelist;
 import io.compgen.ngsutils.bam.filter.NullFilter;
 import io.compgen.ngsutils.bam.filter.PairedFilter;
 import io.compgen.ngsutils.bam.filter.RequiredFlags;
@@ -58,6 +59,8 @@ public class BamFilterCli extends AbstractCommand {
     private boolean bedIncludeRequireBoth = false;
     private boolean bedIncludeOnlyWithin = false;
 
+    private String junctionWhitelist = null;
+
     private boolean paired = false;
     private boolean unique = false;
     private boolean uniqueStart = false;
@@ -86,6 +89,11 @@ public class BamFilterCli extends AbstractCommand {
     @Option(desc="Force sanity checking of read pairing (simple - same chromosome, reversed orientation)", name="paired")
     public void setPaired(boolean val) {
         this.paired = val;
+    }
+
+    @Option(desc="Require junction-spanning reads to span one of these junctions", name="junction-whitelist", helpValue="fname")
+    public void setJunctionWhitelist(String junctionWhitelist) {
+        this.junctionWhitelist = junctionWhitelist;
     }
 
     @Option(desc="Exclude reads within BED regions", name="bed-exclude", helpValue="fname")
@@ -301,6 +309,13 @@ public class BamFilterCli extends AbstractCommand {
             ((BedExclude)parent).setRequireBothPairs(bedExcludeRequireBoth);
             if (verbose) {
                 System.err.println("BEDExclude: "+bedExclude);
+            }
+        }
+        
+        if (junctionWhitelist != null) {
+            parent = new JunctionWhitelist(parent, false, junctionWhitelist);
+            if (verbose) {
+                System.err.println("JuntionWhitelist: "+junctionWhitelist);
             }
         }
 

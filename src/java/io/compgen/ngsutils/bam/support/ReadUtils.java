@@ -36,7 +36,7 @@ public class ReadUtils {
         private Set<String> readsR1=new HashSet<String>();
         private Set<String> readsR2=null;
         
-        private boolean splitReads = false;
+        private boolean separateReadCounts = false;
         private String tagName = null;
         
         private int tagAccR1=0;
@@ -50,29 +50,29 @@ public class ReadUtils {
         public MappedReadCounter(boolean splitReads) {
             if (splitReads) {
                 readsR2=new HashSet<String>();
-                this.splitReads = splitReads;
+                this.separateReadCounts = splitReads;
             }
         }
         public MappedReadCounter(String tagName) {
             this.tagName = tagName.toUpperCase();
         }
 
-        public MappedReadCounter(String tagName, boolean splitReads) {
-            if (splitReads) {
+        public MappedReadCounter(String tagName, boolean separateReadCounts) {
+            if (separateReadCounts) {
                 readsR2=new HashSet<String>();
-                this.splitReads = splitReads;
+                this.separateReadCounts = separateReadCounts;
             }
             this.tagName = tagName.toUpperCase();
         }
 
         public void addRead(SAMRecord read) {
-            if (!splitReads || read.getFirstOfPairFlag() || !read.getReadPairedFlag()) {
+            if (!separateReadCounts || read.getFirstOfPairFlag() || !read.getReadPairedFlag()) {
                 readsR1.add(read.getReadName());
                 if (tagName != null) {
                     tagAccR1 += getTagValue(read);
                     tagCountR1 += 1;
                 }
-            } else if (splitReads && !read.getFirstOfPairFlag() && read.getReadPairedFlag()) {
+            } else if (separateReadCounts && !read.getFirstOfPairFlag() && read.getReadPairedFlag()) {
                 readsR2.add(read.getReadName());
                 if (tagName != null) {
                     tagAccR2 += getTagValue(read);
@@ -133,10 +133,15 @@ public class ReadUtils {
         if (read.getReadUnmappedFlag()) {
             return null;
         }
-                
+        
+        // if we don't know the orientation, treat it as ambiguous.
+        if (orient == null || orient == Orientation.UNSTRANDED) {
+            return Strand.NONE;
+        }
+        
         if (!read.getReadPairedFlag() || read.getFirstOfPairFlag()) {
             // unpaired or first read in a pair
-            if (orient == null || orient == Orientation.FR || orient == Orientation.UNSTRANDED) {
+            if (orient == Orientation.FR) {
                 if (read.getReadNegativeStrandFlag()) {
                     return Strand.MINUS;
                 } else {
@@ -151,7 +156,7 @@ public class ReadUtils {
             }
         } else {
             // paired end and second read...
-            if (orient == null || orient == Orientation.FR || orient == Orientation.UNSTRANDED) {
+            if (orient == Orientation.FR) {
                 // this assumes read1 and read2 are sequenced in opposite
                 if (read.getReadNegativeStrandFlag()) {
                     return Strand.PLUS;
@@ -293,10 +298,25 @@ public class ReadUtils {
     	return out;
     }
 
-    public static SortedMap<GenomeSpan, MappedReadCounter> findJunctions(SamReader reader, String ref, int start, int end, Orientation orient) {
-        return findJunctions(reader, ref, start, end, orient, 4, null, false);
+    public static SortedMap<GenomeSpan, MappedReadCounter> countJunctions(SamReader reader, String ref, int start, int end, Orientation orient) {
+        return countJunctions(reader, ref, start, end, orient, 4, null, false);
     }
-    public static SortedMap<GenomeSpan, MappedReadCounter> findJunctions(SamReader reader, String ref, int start, int end, Orientation orient, int minOverlap, String tallyTagName, boolean splitReads) {
+    
+    /**
+     * Given a SamReader, find all reads within a region (ref:start-end) that span a splice junction and tally the number of times
+     * each junction is spanned.
+     * 
+     * @param reader
+     * @param ref
+     * @param start
+     * @param end
+     * @param orient
+     * @param minOverlap
+     * @param tallyTagName
+     * @param separateReadCounts
+     * @return
+     */
+    public static SortedMap<GenomeSpan, MappedReadCounter> countJunctions(SamReader reader, String ref, int start, int end, Orientation orient, int minOverlap, String tallyTagName, boolean separateReadCounts) {
         SAMRecordIterator it = reader.query(ref, start, end, true);
         SortedMap<GenomeSpan, MappedReadCounter> counters = new TreeMap<GenomeSpan, MappedReadCounter>();
         
@@ -307,19 +327,13 @@ public class ReadUtils {
                 continue;
             }
            
-            if (read.getAlignmentBlocks().size() > 1) {
-                int last_end = -1;
-                for (GenomeSpan flank: ReadUtils.getFlankingRegions(read, orient, minOverlap)) {
-                    if (last_end != -1) {
-                        GenomeSpan junction = new GenomeSpan(read.getReferenceName(), last_end, flank.start, flank.strand);
-                        
-                        if (!counters.containsKey(junction)) {
-                            counters.put(junction, new MappedReadCounter(tallyTagName, splitReads));
-                        }
-                        
-                        counters.get(junction).addRead(read);
+            if (isJunctionSpanning(read)) {
+                for (GenomeSpan junction: getJunctionsForRead(read, orient, minOverlap)) {
+                    if (!counters.containsKey(junction)) {
+                        counters.put(junction, new MappedReadCounter(tallyTagName, separateReadCounts));
                     }
-                    last_end = flank.end;
+                    
+                    counters.get(junction).addRead(read);
                 }
             }
         }
@@ -327,6 +341,39 @@ public class ReadUtils {
         return counters;
     }
     
+    public static List<GenomeSpan> getJunctionsForRead(SAMRecord read, Orientation orient) {
+        return getJunctionsForRead(read, orient, 4);
+    }
+    
+    /**
+     * Return a GenomeSpan describing the splice junctions found for a particular read.
+     * 
+     * Example:
+     *
+     * ----[][][][][][][]-------------------[][][]---------------[][][][][][][]-----
+     *             XXXXXX-------------------XXXXXX---------------XXXX
+     * 
+     * Will return:
+     *                   *******************      ***************
+     * 
+     * @param read
+     * @param orient - The library orientation (RF, FR, Unstranded)
+     * @param minOverlap - junctions must have minOverlap bases on either side of the junction (used in getFlankingRegions)
+     * @return
+     */
+    public static List<GenomeSpan> getJunctionsForRead(SAMRecord read, Orientation orient, int minOverlap) {
+        List<GenomeSpan> junctions = new ArrayList<GenomeSpan>();
+        int last_end = -1;
+        for (GenomeSpan flank: ReadUtils.getFlankingRegions(read, orient, minOverlap)) {
+            if (last_end != -1) {
+                GenomeSpan junction = new GenomeSpan(read.getReferenceName(), last_end, flank.start, flank.strand);
+                junctions.add(junction);
+            }
+            last_end = flank.end;
+        }
+        return junctions;
+    }
+     
     private static Integer coerceTagValueInt(String tag, Object val) {
     	// from HTSJDK: https://github.com/samtools/htsjdk/blob/master/src/java/htsjdk/samtools/SAMRecord.java
     	
@@ -354,5 +401,15 @@ public class ReadUtils {
             return false;
         }
         return true;
+    }
+
+    public static boolean isJunctionSpanning(SAMRecord read) {
+        return read.getAlignmentBlocks().size() > 1;
+//        for (CigarElement el: read.getCigar().getCigarElements()) {
+//            if (el.getOperator() == CigarOperator.N) {
+//                return true;
+//            }
+//        }
+//        return false;
     }
 }

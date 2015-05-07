@@ -180,6 +180,7 @@ public class GenomeSpan implements Comparable<GenomeSpan> {
         result = prime * result + end;
         result = prime * result + ((ref == null) ? 0 : ref.hashCode());
         result = prime * result + start;
+        result = prime * result + ((strand == Strand.PLUS) ? ((strand == Strand.MINUS) ? 3 : 5) : 7);
         return result;
     }
 
@@ -194,6 +195,7 @@ public class GenomeSpan implements Comparable<GenomeSpan> {
         if (getClass() != obj.getClass()) {
             return false;
         }
+        
         GenomeSpan other = (GenomeSpan) obj;
         if (end != other.end) {
             return false;
@@ -206,6 +208,9 @@ public class GenomeSpan implements Comparable<GenomeSpan> {
             return false;
         }
         if (start != other.start) {
+            return false;
+        }
+        if (strand != other.strand) {
             return false;
         }
         return true;
@@ -282,4 +287,44 @@ public class GenomeSpan implements Comparable<GenomeSpan> {
         return new GenomeSpan(ref, end-1, end, strand);
     }
 
+    public GenomeSpan extend5(int len) {
+        int newstart = start;
+        int newend = end;
+        
+        if (strand == Strand.PLUS || strand == Strand.NONE) {
+            newstart = start - len;
+        } else {
+            newend = end + len;
+        }
+        return new GenomeSpan(ref, newstart, newend, strand);
+    }
+
+    public GenomeSpan extend3(int len) {
+        int newstart = start;
+        int newend = end;
+        
+        if (strand == Strand.PLUS || strand == Strand.NONE) {
+            newend = end + len;
+        } else {
+            newstart = start - len;
+        }
+        return new GenomeSpan(ref, newstart, newend, strand);
+    }
+
+    public GenomeSpan combine(GenomeSpan target) {
+        if (!ref.equals(target.ref)) {
+            return null;
+        }
+        
+        int newstart = Math.min(start, target.start);
+        int newend = Math.max(end,  target.end);
+        
+        Strand newstrand = strand;
+        
+        if (strand != target.strand) {
+            newstrand = Strand.NONE;
+        }
+        
+        return new GenomeSpan(ref, newstart, newend, newstrand);
+    }
 }
