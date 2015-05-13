@@ -11,17 +11,17 @@ import java.io.IOException;
 import java.io.InputStream;
 
 /**
- * Loads annotations from a RepeatMasker output
+ * Loads annotations from a BED file 
  * 
  * @author mbreese
  * 
  */
 
-public class BEDAnnotationSource extends AbstractAnnotationSource<BedRecord> {
-    public BEDAnnotationSource(String filename) throws FileNotFoundException, IOException {
+public class BedAnnotationSource extends AbstractAnnotationSource<BedRecord> {
+    public BedAnnotationSource(String filename) throws FileNotFoundException, IOException {
         loadFile(new FileInputStream(new File(filename)));
     }
-    public BEDAnnotationSource(InputStream is) throws FileNotFoundException, IOException {
+    public BedAnnotationSource(InputStream is) throws FileNotFoundException, IOException {
         loadFile(is);
     }
 

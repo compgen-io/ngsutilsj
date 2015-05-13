@@ -1,8 +1,6 @@
 package io.compgen.ngsutils.bed;
 
 import io.compgen.common.StringUtils;
-import io.compgen.ngsutils.annotation.Annotation;
-import io.compgen.ngsutils.annotation.GenomeSpan;
 import io.compgen.ngsutils.bam.Strand;
 
 import java.io.IOException;
@@ -10,27 +8,20 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-public class BedRecord implements Annotation {
-    final protected String name;
-    final protected double score;
-    final protected GenomeSpan coord;
-    final protected String[] extras;
+public class BedRecordCount extends BedRecord {
+    private int count = 0;
     
-    public BedRecord(GenomeSpan coord) {
-        this(coord, null, 0, null);
-    }
-    
-    public BedRecord(GenomeSpan coord, String name, double score) {
-        this(coord, name, score, null);
-    }
-    
-    public BedRecord(GenomeSpan coord, String name, double score, String[] extras) {
-        this.coord = coord;
-        this.name = name;
-        this.score = score;
-        this.extras = extras;
+    public BedRecordCount(BedRecord record) {
+        super(record.coord, record.name, record.score, record.extras);
     }
 
+    public int getCount() {
+        return count;
+    }
+    
+    public void incr() {
+        this.count++;
+    }
     @Override
     public String[] toStringArray() {
         String s = ""+score;
@@ -38,25 +29,10 @@ public class BedRecord implements Annotation {
             s = s.substring(0, s.length()-2);
         }
 
-        return new String[] { name, s };
+        return new String[] { name, s, ""+count };
     }
 
     @Override
-    public String toString() {
-        return name;
-    }
-    
-    public GenomeSpan getCoord() {
-        return coord;
-    }
-    
-    public String[] getExtras() {
-        return extras;
-    }
-    
-    public void write(OutputStream os) throws IOException {
-        write(os, false);
-    }
     public void write(OutputStream os, boolean forceScoreInt) throws IOException {
         List<String> outs = new ArrayList<String>();
         outs.add(coord.ref);
@@ -83,6 +59,8 @@ public class BedRecord implements Annotation {
             }
         }
         
+        outs.add(""+count);
+
         if (extras != null) {
             for (String extra:extras) {
                 outs.add(extra);
@@ -91,14 +69,6 @@ public class BedRecord implements Annotation {
 
         os.write((StringUtils.join("\t", outs) + "\n").getBytes());
     }
-
-    public double getScore() {
-        return score;
-    }
-
-    public String getName() {
-        return name;
-    }
-
+    
+    
 }
-

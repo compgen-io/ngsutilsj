@@ -12,11 +12,11 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class TestBEDAnnotation {
-    BEDAnnotationSource bed;
+    BedAnnotationSource bed;
     
     @Before
     public void setUp() throws Exception {
-        bed = new BEDAnnotationSource(getClass().getClassLoader().getResourceAsStream("io/compgen/ngsutils/annotation/test.bed"));
+        bed = new BedAnnotationSource(getClass().getClassLoader().getResourceAsStream("io/compgen/ngsutils/annotation/test.bed"));
     }
 
     @Test

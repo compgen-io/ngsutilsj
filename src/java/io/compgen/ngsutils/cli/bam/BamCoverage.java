@@ -8,7 +8,7 @@ import io.compgen.cmdline.exceptions.CommandArgumentException;
 import io.compgen.cmdline.impl.AbstractOutputCommand;
 import io.compgen.common.IterUtils;
 import io.compgen.common.TallyCounts;
-import io.compgen.ngsutils.annotation.BEDAnnotationSource;
+import io.compgen.ngsutils.annotation.BedAnnotationSource;
 import io.compgen.ngsutils.annotation.GenomeSpan;
 import io.compgen.ngsutils.bam.support.ReadUtils;
 import io.compgen.ngsutils.bed.BedRecord;
@@ -101,11 +101,11 @@ public class BamCoverage extends AbstractOutputCommand {
         pileup.setFlagFilter(filterFlags);
         pileup.setFlagRequired(requiredFlags);
 
-        BEDAnnotationSource bed = null;
+        BedAnnotationSource bed = null;
         
         if (bedFilename != null) {
             pileup.setBedFilename(bedFilename);
-            bed = new BEDAnnotationSource(bedFilename);
+            bed = new BedAnnotationSource(bedFilename);
         }
         
         Iterator<PileupRecord> it;

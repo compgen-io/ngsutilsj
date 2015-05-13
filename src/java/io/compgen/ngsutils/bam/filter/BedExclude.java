@@ -1,7 +1,7 @@
 package io.compgen.ngsutils.bam.filter;
 
 import htsjdk.samtools.SAMRecord;
-import io.compgen.ngsutils.annotation.BEDAnnotationSource;
+import io.compgen.ngsutils.annotation.BedAnnotationSource;
 import io.compgen.ngsutils.annotation.GenomeSpan;
 import io.compgen.ngsutils.bam.Orientation;
 
@@ -9,13 +9,13 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 
 public class BedExclude extends AbstractBamFilter {
-    final protected BEDAnnotationSource bed;
+    final protected BedAnnotationSource bed;
     final protected Orientation orient;
     protected boolean onlyWithin = false;
     
     public BedExclude(BamFilter parent, boolean verbose, String filename, Orientation orient) throws FileNotFoundException, IOException {
         super(parent, verbose);
-        this.bed = new BEDAnnotationSource(filename);
+        this.bed = new BedAnnotationSource(filename);
         this.orient = orient;
     }
     

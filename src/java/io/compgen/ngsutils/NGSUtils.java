@@ -19,6 +19,8 @@ import io.compgen.ngsutils.cli.bam.BamToFastq;
 import io.compgen.ngsutils.cli.bam.BinCount;
 import io.compgen.ngsutils.cli.bam.PileupCli;
 import io.compgen.ngsutils.cli.bed.BedCleanScore;
+import io.compgen.ngsutils.cli.bed.BedCount;
+import io.compgen.ngsutils.cli.bed.BedNearest;
 import io.compgen.ngsutils.cli.bed.BedReduce;
 import io.compgen.ngsutils.cli.bed.BedResize;
 import io.compgen.ngsutils.cli.bed.BedToBed3;
@@ -81,6 +83,8 @@ public class NGSUtils {
                 .addCommand(FastaTag.class)
                 .addCommand(BedResize.class)
                 .addCommand(BedReduce.class)
+                .addCommand(BedCount.class)
+                .addCommand(BedNearest.class)
                 .addCommand(BedToFasta.class)
                 .addCommand(BedToBed3.class)
                 .addCommand(BedToBed6.class)

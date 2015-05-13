@@ -13,17 +13,27 @@ import java.util.Iterator;
 
 public class BedReader {
     public static Iterator<BedRecord> readFile(String filename) throws IOException {
+        return readFile(filename, false);
+    }
+    public static Iterator<BedRecord> readFile(String filename, boolean ignoreStrand) throws IOException {
         if (filename.equals("-")) {
-            return readInputStream(System.in);
+            return readInputStream(System.in, ignoreStrand);
         }
-        return readFile(new File(filename));
+        return readFile(new File(filename), ignoreStrand);
     }
 
     public static Iterator<BedRecord> readFile(File file) throws IOException {
-        return readInputStream(new FileInputStream(file));
+        return readInputStream(new FileInputStream(file), false);
+    }
+
+    public static Iterator<BedRecord> readFile(File file, boolean ignoreStrand) throws IOException {
+        return readInputStream(new FileInputStream(file), ignoreStrand);
     }
 
     public static Iterator<BedRecord> readInputStream(final InputStream is) throws IOException {
+        return readInputStream(is, false);
+    }
+    public static Iterator<BedRecord> readInputStream(final InputStream is, final boolean ignoreStrand) throws IOException {
         return new Iterator<BedRecord>() {
             BedRecord next = null;
             boolean first = true;
@@ -63,7 +73,7 @@ public class BedReader {
                     String name = "";
                     double score = 0;
                     
-                    if (cols.length > 5) {
+                    if (!ignoreStrand && cols.length > 5) {
                         if (cols[5].equals("+")) {
                             strand = Strand.PLUS;
                         } else if (cols[5].equals("-")) {
