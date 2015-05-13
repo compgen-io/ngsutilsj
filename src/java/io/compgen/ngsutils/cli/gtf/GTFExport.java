@@ -49,7 +49,7 @@ public class GTFExport extends AbstractOutputCommand {
         this.whitelist = whitelist;
     }
 
-    @Option(desc="Combine overlapping exons/introns ", name="combine")
+    @Option(desc="Combine overlapping exons/introns. For TSS, export at most one TSS per gene. ", name="combine")
     public void setCombine(boolean val) {
         combine = val;
     }
@@ -154,33 +154,72 @@ public class GTFExport extends AbstractOutputCommand {
             }
             
             if (exportTSS) {
-                int lastStart = -1;
+                List<Integer> starts = new ArrayList<Integer>();
                 for (GTFTranscript txpt: gene.getTranscripts()) {
-                    if (txpt.getCdsStart() > 0) {
-                        if (txpt.getCdsStart() == lastStart) {
+                    if (gene.getStrand() == Strand.PLUS) {
+                        if (starts.contains(txpt.getStart())) {
                             continue;
                         }
-                        if (gene.getStrand() == Strand.PLUS) {
+                        starts.add(txpt.getStart());
+                        if (!combine) {
                             writer.write(gene.getRef());
-                            writer.write(txpt.getCdsStart());
-                            writer.write(txpt.getCdsStart()+3);
+                            writer.write(txpt.getStart());
+                            writer.write(txpt.getStart()+1);
                             writer.write(gene.getGeneName());
                             writer.write(0);
                             writer.write(gene.getStrand().toString());
                             writer.eol();
-                        } else if (gene.getStrand() == Strand.MINUS) {
-                            writer.write(gene.getRef());
-                            writer.write(txpt.getCdsStart()-3);
-                            writer.write(txpt.getCdsStart());
-                            writer.write(gene.getGeneName());
-                            writer.write(0);
-                            writer.write(gene.getStrand().toString());
-                            writer.eol();
-                        } else {
-                            // this shouldn't happen...
                         }
-                        
-                        lastStart = txpt.getCdsStart();
+                    } else if (gene.getStrand() == Strand.MINUS) {
+                        if (starts.contains(txpt.getEnd())) {
+                            continue;
+                        }
+                        starts.add(txpt.getEnd());
+
+                        if (!combine) {
+                            writer.write(gene.getRef());
+                            writer.write(txpt.getEnd()-1);
+                            writer.write(txpt.getEnd());
+                            writer.write(gene.getGeneName());
+                            writer.write(0);
+                            writer.write(gene.getStrand().toString());
+                            writer.eol();
+                        }
+                    } else {
+                    }
+                }
+                if (combine) {
+                    if (gene.getStrand() == Strand.PLUS) {
+                        int min = starts.get(0);
+                        for (Integer i: starts) {
+                            if (i < min) {
+                                min = i;
+                            }
+                        }
+                        writer.write(gene.getRef());
+                        writer.write(min);
+                        writer.write(min+1);
+                        writer.write(gene.getGeneName());
+                        writer.write(0);
+                        writer.write(gene.getStrand().toString());
+                        writer.eol();
+
+                    } else if (gene.getStrand() == Strand.MINUS) {
+                        int max = starts.get(0);
+                        for (Integer i: starts) {
+                            if (i > max) {
+                                max = i;
+                            }
+                        }
+
+                        writer.write(gene.getRef());
+                        writer.write(max-1);
+                        writer.write(max);
+                        writer.write(gene.getGeneName());
+                        writer.write(0);
+                        writer.write(gene.getStrand().toString());
+                        writer.eol();
+                    } else {
                     }
                 }
             }
