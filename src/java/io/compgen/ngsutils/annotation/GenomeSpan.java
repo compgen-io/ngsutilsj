@@ -327,4 +327,24 @@ public class GenomeSpan implements Comparable<GenomeSpan> {
         
         return new GenomeSpan(ref, newstart, newend, newstrand);
     }
+
+    public int size() {
+        return end - start;
+    }
+
+    public int distanceTo(GenomeSpan coord) throws BadReferenceException {
+        if (!ref.equals(coord.ref)) {
+            throw new BadReferenceException("References do not match!");
+        }
+        
+        if (start > coord.end) {
+            return -(start - coord.end);
+        }
+        
+        if (end < coord.start) {
+            return coord.start - end;
+        }
+        
+        return 0;
+    }
 }
