@@ -441,7 +441,7 @@ public class GTFAnnotationSource extends AbstractAnnotationSource<GTFGene> {
      * @param read
      * @return
      */
-    public GenicRegion findGenicRegion(SAMRecord read) {
+    public GenicRegion findGenicRegion(SAMRecord read, Orientation orient) {
         boolean isJunction = false;
         
         for (CigarElement op: read.getCigar().getCigarElements()) {
@@ -451,7 +451,8 @@ public class GTFAnnotationSource extends AbstractAnnotationSource<GTFGene> {
             }
         }
         
-        GenomeSpan readpos = GenomeSpan.getReadStartPos(read, Orientation.UNSTRANDED);        
+        // assume FR (we just want to get the first strand in F direction)
+        GenomeSpan readpos = GenomeSpan.getReadStartPos(read, orient); 
         GenicRegion geneReg = findGenicRegionForPos(readpos);
         
         if (isJunction && geneReg.isGene) {

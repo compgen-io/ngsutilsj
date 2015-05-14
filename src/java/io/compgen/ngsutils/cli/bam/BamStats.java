@@ -20,6 +20,7 @@ import io.compgen.common.progress.ProgressMessage;
 import io.compgen.common.progress.ProgressUtils;
 import io.compgen.ngsutils.annotation.AnnotatedRegionCounter;
 import io.compgen.ngsutils.annotation.GenicRegion;
+import io.compgen.ngsutils.bam.Orientation;
 import io.compgen.ngsutils.support.CloseableFinalizer;
 
 import java.io.File;
@@ -217,7 +218,7 @@ public class BamStats extends AbstractOutputCommand {
             if (geneRegionCounter != null) {
                 if (!read.getReadPairedFlag() || (!read.getSecondOfPairFlag() && read.getProperPairFlag() && !read.getDuplicateReadFlag() && !read.getReadFailsVendorQualityCheckFlag() && !read.getSupplementaryAlignmentFlag())) {
                     // We only profile the first read of a pair... and only proper pairs
-                    geneRegionCounter.addRead(read);
+                    geneRegionCounter.addRead(read, Orientation.FR);
                 }
             }
         }

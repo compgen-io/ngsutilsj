@@ -1,6 +1,7 @@
 package io.compgen.ngsutils.annotation;
 
 import htsjdk.samtools.SAMRecord;
+import io.compgen.ngsutils.bam.Orientation;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -19,8 +20,8 @@ public class AnnotatedRegionCounter {
         }
     }
     
-    public void addRead(SAMRecord read) {
-        GenicRegion reg = gtf.findGenicRegion(read);
+    public void addRead(SAMRecord read, Orientation orient) {
+        GenicRegion reg = gtf.findGenicRegion(read, orient);
         regionCounts.put(reg, regionCounts.get(reg) + 1);
         
     }
