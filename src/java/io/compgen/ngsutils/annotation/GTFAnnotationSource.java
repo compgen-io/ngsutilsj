@@ -11,6 +11,7 @@ import io.compgen.ngsutils.bam.Strand;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,7 +28,7 @@ import java.util.TreeSet;
  */
 public class GTFAnnotationSource extends AbstractAnnotationSource<GTFGene> {
 
-    public class GTFExon {
+    public class GTFExon implements Comparable<GTFExon> {
         final private GTFTranscript parent;
         final private int start;
         final private int end;
@@ -52,6 +53,21 @@ public class GTFAnnotationSource extends AbstractAnnotationSource<GTFGene> {
         
         public GenomeSpan toRegion() {
             return new GenomeSpan(parent.getParent().getRef(), start, end, parent.getParent().getStrand());
+        }
+
+        @Override
+        public int compareTo(GTFExon o) {
+            if (start < o.start) {
+                return -1;
+            } else if (start > o.start) {
+                return 1;
+            } else if (end < o.end) { 
+                return -1;
+            } else if (end > o.end) { 
+                return 1;
+            }
+            
+            return 0;
         }
     }
 
@@ -117,6 +133,7 @@ public class GTFAnnotationSource extends AbstractAnnotationSource<GTFGene> {
                 this.end = end;
             }
             exons.add(new GTFExon(this, start, end));
+            Collections.sort(exons);
         }
 
         public void addCDS(int start, int end) {
@@ -127,6 +144,7 @@ public class GTFAnnotationSource extends AbstractAnnotationSource<GTFGene> {
                 cdsEnd = end;
             }
             cds.add(new GTFExon(this, start, end));
+            Collections.sort(cds);
         }
 
         public int getStartCodon() {

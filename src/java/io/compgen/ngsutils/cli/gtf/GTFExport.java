@@ -26,6 +26,8 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 @Command(name="gtf-export", desc="Export gene annotations from a GTF file as BED regions", category="gtf")
 public class GTFExport extends AbstractOutputCommand {
@@ -283,7 +285,7 @@ public class GTFExport extends AbstractOutputCommand {
 
             if (exportIntron) {
                 if (!combine) {
-                    Set<GenomeSpan> introns = new HashSet<GenomeSpan>();
+                    SortedSet<GenomeSpan> introns = new TreeSet<GenomeSpan>();
                     for (GTFTranscript txpt:gene.getTranscripts()) {
                         int lastEnd = -1;
                         for (GTFExon exon:txpt.getExons()) {
