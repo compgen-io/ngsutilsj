@@ -32,11 +32,13 @@ public class GTFAnnotationSource extends AbstractAnnotationSource<GTFGene> {
         final private GTFTranscript parent;
         final private int start;
         final private int end;
+        final private String[] attributes; // just an array in { KEY1, VALUE1, KEY2, VALUE2 } order
 
-        public GTFExon(GTFTranscript parent, int start, int end) {
+        public GTFExon(GTFTranscript parent, int start, int end, String[] attributes) {
             this.parent = parent;
             this.start = start;
             this.end = end;
+            this.attributes = attributes;
         }
 
         public GTFTranscript getParent() {
@@ -55,6 +57,15 @@ public class GTFAnnotationSource extends AbstractAnnotationSource<GTFGene> {
             return new GenomeSpan(parent.getParent().getRef(), start, end, parent.getParent().getStrand());
         }
 
+        public String getAttribute(String key) {
+            for (int i=0; i<attributes.length-1; i++) {
+                if (attributes[i].equals(key)) {
+                    return attributes[i+1];
+                }
+            }
+            return null;
+        }
+        
         @Override
         public int compareTo(GTFExon o) {
             if (start < o.start) {
@@ -125,25 +136,25 @@ public class GTFAnnotationSource extends AbstractAnnotationSource<GTFGene> {
             return new GenomeSpan(parent.getRef(), start, end, parent.getStrand());
         }
 
-        public void addExon(int start, int end) {
+        public void addExon(int start, int end, String[] attributes) {
             if (this.start == -1 || this.start > start) {
                 this.start = start;
             }
             if (this.end == -1 || this.end < end) {
                 this.end = end;
             }
-            exons.add(new GTFExon(this, start, end));
+            exons.add(new GTFExon(this, start, end, attributes));
             Collections.sort(exons);
         }
 
-        public void addCDS(int start, int end) {
+        public void addCDS(int start, int end, String[] attributes) {
             if (cdsStart == -1 || cdsStart > start) {
                 cdsStart = start;
             }
             if (cdsEnd == -1 || cdsEnd < end) {
                 cdsEnd = end;
             }
-            cds.add(new GTFExon(this, start, end));
+            cds.add(new GTFExon(this, start, end, attributes));
             Collections.sort(cds);
         }
 
@@ -235,11 +246,11 @@ public class GTFAnnotationSource extends AbstractAnnotationSource<GTFGene> {
             return strand;
         }
 
-        public void addExon(String transcriptId, int start, int end) {
+        public void addExon(String transcriptId, int start, int end, String[] attributes) {
             if (!transcripts.containsKey(transcriptId)) {
                 transcripts.put(transcriptId, new GTFTranscript(this, transcriptId));
             }
-            transcripts.get(transcriptId).addExon(start, end);
+            transcripts.get(transcriptId).addExon(start, end, attributes);
             if (this.start == -1 || this.start > start) {
                 this.start = start;
             }
@@ -248,11 +259,11 @@ public class GTFAnnotationSource extends AbstractAnnotationSource<GTFGene> {
             }
         }
 
-        public void addCDS(String transcriptId, int start, int end) {
+        public void addCDS(String transcriptId, int start, int end, String[] attributes) {
             if (!transcripts.containsKey(transcriptId)) {
                 transcripts.put(transcriptId, new GTFTranscript(this, transcriptId));
             }
-            transcripts.get(transcriptId).addCDS(start, end);
+            transcripts.get(transcriptId).addCDS(start, end, attributes);
         }
 
         public List<GTFTranscript> getTranscripts() {
@@ -335,6 +346,7 @@ public class GTFAnnotationSource extends AbstractAnnotationSource<GTFGene> {
             String bioType = null;
 
             final String[] attrs = StringUtils.quotedSplit(cols[8], ';');
+            List<String> exonAttributes = new ArrayList<String>(); 
             for (final String attr : attrs) {
                 if (StringUtils.strip(attr).length() > 0) {
                     final String[] kv = StringUtils.strip(attr).split(" ", 2);
@@ -354,6 +366,9 @@ public class GTFAnnotationSource extends AbstractAnnotationSource<GTFGene> {
                     case "gene_biotype":
                         bioType = v;
                         break;
+                    default:
+                        exonAttributes.add(k);
+                        exonAttributes.add(v);
                     }
                 }
             }
@@ -373,11 +388,11 @@ public class GTFAnnotationSource extends AbstractAnnotationSource<GTFGene> {
 
             switch (recordType) {
             case "exon":
-                gene.addExon(transcriptId, start, end);
+                gene.addExon(transcriptId, start, end, exonAttributes.toArray(new String[exonAttributes.size()]));
                 break;
 
             case "CDS":
-                gene.addCDS(transcriptId, start, end);
+                gene.addCDS(transcriptId, start, end, exonAttributes.toArray(new String[exonAttributes.size()]));
                 break;
             }
         }

@@ -40,6 +40,7 @@ public class GTFExport extends AbstractOutputCommand {
     private boolean exportTSS = false;
     
     private boolean combine = false;
+//    private boolean useGeneId = false;
     
     @UnnamedArg(name = "FILE")
     public void setFilename(String filename) {
@@ -55,6 +56,11 @@ public class GTFExport extends AbstractOutputCommand {
     public void setCombine(boolean val) {
         combine = val;
     }
+//
+//    @Option(desc="Export gene/transcript ID instead of gene name", name="genes")
+//    public void setUseGeneId(boolean val) {
+//        useGeneId = val;
+//    }
 
     @Option(desc="Export whole gene region", name="genes")
     public void setGene(boolean val) {
@@ -149,7 +155,11 @@ public class GTFExport extends AbstractOutputCommand {
                 writer.write(gene.getRef());
                 writer.write(gene.getStart());
                 writer.write(gene.getEnd());
-                writer.write(gene.getGeneName());
+//                if (useGeneId) {
+//                    writer.write(gene.getGeneId());
+//                } else {
+                    writer.write(gene.getGeneName());
+//                }
                 writer.write(0);
                 writer.write(gene.getStrand().toString());
                 writer.eol();
@@ -167,7 +177,11 @@ public class GTFExport extends AbstractOutputCommand {
                             writer.write(gene.getRef());
                             writer.write(txpt.getStart());
                             writer.write(txpt.getStart()+1);
-                            writer.write(gene.getGeneName());
+//                            if (useGeneId) {
+//                                writer.write(gene.getGeneId()+"-"+txpt.getTranscriptId());
+//                            } else {
+                                writer.write(gene.getGeneName());
+//                            }
                             writer.write(0);
                             writer.write(gene.getStrand().toString());
                             writer.eol();
@@ -182,7 +196,11 @@ public class GTFExport extends AbstractOutputCommand {
                             writer.write(gene.getRef());
                             writer.write(txpt.getEnd()-1);
                             writer.write(txpt.getEnd());
-                            writer.write(gene.getGeneName());
+//                            if (useGeneId) {
+//                                writer.write(gene.getGeneId()+"-"+txpt.getTranscriptId());
+//                            } else {
+                                writer.write(gene.getGeneName());
+//                            }
                             writer.write(0);
                             writer.write(gene.getStrand().toString());
                             writer.eol();
@@ -201,7 +219,11 @@ public class GTFExport extends AbstractOutputCommand {
                         writer.write(gene.getRef());
                         writer.write(min);
                         writer.write(min+1);
-                        writer.write(gene.getGeneName());
+//                        if (useGeneId) {
+//                            writer.write(gene.getGeneId());
+//                        } else {
+                            writer.write(gene.getGeneName());
+//                        }
                         writer.write(0);
                         writer.write(gene.getStrand().toString());
                         writer.eol();
@@ -217,7 +239,11 @@ public class GTFExport extends AbstractOutputCommand {
                         writer.write(gene.getRef());
                         writer.write(max-1);
                         writer.write(max);
-                        writer.write(gene.getGeneName());
+//                        if (useGeneId) {
+//                            writer.write(gene.getGeneId());
+//                        } else {
+                            writer.write(gene.getGeneName());
+//                        }
                         writer.write(0);
                         writer.write(gene.getStrand().toString());
                         writer.eol();
@@ -230,9 +256,15 @@ public class GTFExport extends AbstractOutputCommand {
                 if (!combine) {
                     int i=1;
                     for (GenomeSpan exon:gene.getExonRegions()) {
+//                        String name = gene.getGeneName();
+//                        if (useGeneId) {
+//                            name = gene.getGeneId()+"-"+exon.getParent().getTranscriptId();
+//                        }
+                        
                         writer.write(exon.ref);
                         writer.write(exon.start);
                         writer.write(exon.end);
+                        
                         writer.write(gene.getGeneName()+"/exon-"+i);
                         writer.write(0);
                         writer.write(exon.strand.toString());
