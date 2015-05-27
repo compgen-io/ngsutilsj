@@ -10,7 +10,7 @@ import io.compgen.cmdline.annotation.Exec;
 import io.compgen.cmdline.annotation.Option;
 import io.compgen.cmdline.annotation.UnnamedArg;
 import io.compgen.cmdline.exceptions.CommandArgumentException;
-import io.compgen.cmdline.impl.AbstractOutputCommand;
+import io.compgen.cmdline.impl.AbstractCommand;
 import io.compgen.common.progress.FileChannelStats;
 import io.compgen.common.progress.ProgressMessage;
 import io.compgen.common.progress.ProgressUtils;
@@ -22,8 +22,8 @@ import java.io.IOException;
 import java.nio.channels.FileChannel;
 import java.util.Iterator;
 
-@Command(name="bam-check", desc="Checks a BAM file to make sure it is valid", category="bam", experimental=true)
-public class BamCheck extends AbstractOutputCommand {
+@Command(name="bam-check", desc="Checks a BAM file to make sure it is valid", category="bam")
+public class BamCheck extends AbstractCommand {
     private String filename = null;
     private boolean lenient = false;
     private boolean silent = false;

@@ -32,7 +32,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.TreeMap;
 
-@Command(name="bam-stats", desc="Stats about a BAM file and the library orientation", category="bam", experimental=true)
+@Command(name="bam-stats", desc="Stats about a BAM file and the library orientation", category="bam")
 public class BamStats extends AbstractOutputCommand {
     private String filename = null;
     private String gtfFilename = null;
