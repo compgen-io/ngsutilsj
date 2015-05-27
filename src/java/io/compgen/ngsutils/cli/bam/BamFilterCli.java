@@ -30,6 +30,7 @@ import io.compgen.ngsutils.bam.filter.PairedFilter;
 import io.compgen.ngsutils.bam.filter.RequiredFlags;
 import io.compgen.ngsutils.bam.filter.UniqueMapping;
 import io.compgen.ngsutils.bam.filter.UniqueStart;
+import io.compgen.ngsutils.bam.filter.Whitelist;
 import io.compgen.ngsutils.bam.support.ReadUtils;
 import io.compgen.ngsutils.support.CloseableFinalizer;
 
@@ -60,6 +61,8 @@ public class BamFilterCli extends AbstractCommand {
     private boolean bedIncludeOnlyWithin = false;
 
     private String junctionWhitelist = null;
+    private String whitelist = null;
+    private String failedFilename = null;
 
     private boolean paired = false;
     private boolean unique = false;
@@ -94,6 +97,15 @@ public class BamFilterCli extends AbstractCommand {
     @Option(desc="Require junction-spanning reads to span one of these junctions", name="junction-whitelist", helpValue="fname")
     public void setJunctionWhitelist(String junctionWhitelist) {
         this.junctionWhitelist = junctionWhitelist;
+    }
+    @Option(desc="Keep only read names from this whitelist", name="whitelist", helpValue="fname")
+    public void setWhitelist(String whitelist) {
+        this.whitelist = whitelist;
+    }
+
+    @Option(desc="Write failed reads to this file (BAM)", name="failed", helpValue="fname")
+    public void setFailedFilename(String failedFilename) {
+        this.failedFilename = failedFilename;
     }
 
     @Option(desc="Exclude reads within BED regions", name="bed-exclude", helpValue="fname")
@@ -252,6 +264,43 @@ public class BamFilterCli extends AbstractCommand {
             name = f.getName();
         }
 
+        SAMFileWriterFactory factory = new SAMFileWriterFactory();
+
+        String outFilename = filenames.get(1);
+        File outfile = null;
+        OutputStream outStream = null;
+        
+        if (outFilename.equals("-")) {
+            outStream = new BufferedOutputStream(System.out);
+        } else {
+            outfile = new File(outFilename);
+        }
+        
+        if (tmpDir != null) {
+            factory.setTempDirectory(new File(tmpDir));
+        } else if (outfile == null || outfile.getParent() == null) {
+            factory.setTempDirectory(new File(".").getCanonicalFile());
+        } else if (outfile!=null) {
+            factory.setTempDirectory(outfile.getParentFile());
+        }
+
+        SAMFileHeader header = reader.getFileHeader().clone();
+        SAMProgramRecord pg = NGSUtils.buildSAMProgramRecord("bam-filter", header);
+        List<SAMProgramRecord> pgRecords = new ArrayList<SAMProgramRecord>(header.getProgramRecords());
+        pgRecords.add(0, pg);
+        header.setProgramRecords(pgRecords);
+
+        SAMFileWriter out;
+        if (outfile != null) {
+            out = factory.makeBAMWriter(header, true, outfile);
+        } else {
+            out = factory.makeSAMWriter(header,  true,  outStream);
+        }
+
+        SAMFileWriter failedWriter = null;
+        if (failedFilename != null) {
+            failedWriter = factory.makeBAMWriter(header, true, new File(failedFilename));
+        }
         
         BamFilter parent = new NullFilter(ProgressUtils.getIterator(name, reader.iterator(), new FileChannelStats(channel), new ProgressMessage<SAMRecord>(){
             @Override
@@ -260,7 +309,7 @@ public class BamFilterCli extends AbstractCommand {
                     return current.getReadName();
                 }
                 return null;
-            }}, new CloseableFinalizer<SAMRecord>()));
+            }}, new CloseableFinalizer<SAMRecord>()), failedWriter);
         
         if (filterFlags > 0) {
             parent = new FilterFlags(parent, false, filterFlags);
@@ -319,37 +368,11 @@ public class BamFilterCli extends AbstractCommand {
             }
         }
 
-        SAMFileWriterFactory factory = new SAMFileWriterFactory();
-
-        String outFilename = filenames.get(1);
-        File outfile = null;
-        OutputStream outStream = null;
-        
-        if (outFilename.equals("-")) {
-            outStream = new BufferedOutputStream(System.out);
-        } else {
-            outfile = new File(outFilename);
-        }
-        
-        if (tmpDir != null) {
-            factory.setTempDirectory(new File(tmpDir));
-        } else if (outfile == null || outfile.getParent() == null) {
-            factory.setTempDirectory(new File(".").getCanonicalFile());
-        } else if (outfile!=null) {
-            factory.setTempDirectory(outfile.getParentFile());
-        }
-
-        SAMFileHeader header = reader.getFileHeader().clone();
-        SAMProgramRecord pg = NGSUtils.buildSAMProgramRecord("bam-filter", header);
-        List<SAMProgramRecord> pgRecords = new ArrayList<SAMProgramRecord>(header.getProgramRecords());
-        pgRecords.add(0, pg);
-        header.setProgramRecords(pgRecords);
-
-        SAMFileWriter out;
-        if (outfile != null) {
-            out = factory.makeBAMWriter(header, true, outfile);
-        } else {
-            out = factory.makeSAMWriter(header,  true,  outStream);
+        if (whitelist != null) {
+            parent = new Whitelist(parent, false, whitelist);
+            if (verbose) {
+                System.err.println("Whitelist: "+whitelist);
+            }
         }
 
         for (SAMRecord read: parent) {
@@ -363,6 +386,9 @@ public class BamFilterCli extends AbstractCommand {
         }
         reader.close();
         out.close();
+        if (failedWriter != null) {
+            failedWriter.close();
+        }
     }
     
     private void dumpStats(BamFilter filter) {

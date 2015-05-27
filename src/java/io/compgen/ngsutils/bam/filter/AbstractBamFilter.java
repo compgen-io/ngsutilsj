@@ -1,5 +1,6 @@
 package io.compgen.ngsutils.bam.filter;
 
+import htsjdk.samtools.SAMFileWriter;
 import htsjdk.samtools.SAMRecord;
 
 import java.util.ArrayDeque;
@@ -87,7 +88,8 @@ public abstract class AbstractBamFilter implements BamFilter, Iterable<SAMRecord
                     }
                 } else if (pairs.containsKey(nextRead.getReadName())) {
                     // we failed, if the pair also failed, reset and try again
-                    pairs.remove(nextRead.getReadName());
+                    failedRead(nextRead);
+                    failedRead(pairs.remove(nextRead.getReadName()));
                     nextRead = null;
                     removed++;
                     removed++;
@@ -103,10 +105,12 @@ public abstract class AbstractBamFilter implements BamFilter, Iterable<SAMRecord
                     nextRead = null;
                 }
             } else if (requireBothPairs && nextRead.getReadPairedFlag()) {
+
                 // keep pairs together, if one fails, both fail.
                 if (keptpairs.contains(nextRead.getReadName())) {
                     // our pair failed, so we fail.
                     keptpairs.remove(nextRead.getReadName());
+                    failedRead(nextRead);
                     nextRead = null;
                     removed++;
                     if (verbose) {
@@ -115,18 +119,17 @@ public abstract class AbstractBamFilter implements BamFilter, Iterable<SAMRecord
                 } else {
                     if (!keepRead(nextRead)) {
                         // we failed... so our pair must fail
+                        failedRead(nextRead);
+                        removed ++;
                         
                         if (pairs.containsKey(nextRead.getReadName())) {
                             // the pair passed already...
-                            removed ++;
-                            pairs.remove(nextRead.getReadName());
-                            
+                            failedRead(pairs.remove(nextRead.getReadName()));
                         } else {
                             // we are first, so prepare to fail the next one.
                             keptpairs.add(nextRead.getReadName());
-                            removed++;
                         }
-                        
+
                         nextRead = null;
                         if (verbose) {
                             System.err.println(" FAILED");
@@ -161,6 +164,7 @@ public abstract class AbstractBamFilter implements BamFilter, Iterable<SAMRecord
                     if (verbose) {
                         System.err.println(" REMOVED");
                     }
+                    failedRead(nextRead);
                     removed++;
                     nextRead = null;
                 } else {
@@ -219,4 +223,17 @@ public abstract class AbstractBamFilter implements BamFilter, Iterable<SAMRecord
         return removed;
     }
 
+    public SAMFileWriter getFailedWriter() {
+        if (parent != null) {
+            return parent.getFailedWriter();
+        }
+        return null;
+    }
+    
+    private void failedRead(SAMRecord read) {
+        if (getFailedWriter() != null && read != null) {
+            getFailedWriter().addAlignment(read);
+        }
+    }
+    
 }

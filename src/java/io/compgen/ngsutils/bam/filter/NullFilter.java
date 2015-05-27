@@ -1,5 +1,6 @@
 package io.compgen.ngsutils.bam.filter;
 
+import htsjdk.samtools.SAMFileWriter;
 import htsjdk.samtools.SAMRecord;
 
 import java.util.Iterator;
@@ -8,9 +9,12 @@ public class NullFilter implements BamFilter {
     private Iterator<SAMRecord> iterator;
     private long total = 0;
     private long removed = 0;
+    
+    private SAMFileWriter failedWriter;
 
-    public NullFilter(Iterator<SAMRecord> iterator) {
+    public NullFilter(Iterator<SAMRecord> iterator, SAMFileWriter failedWriter) {
         this.iterator = iterator;
+        this.failedWriter = failedWriter;
     }
 
     @Override
@@ -50,6 +54,11 @@ public class NullFilter implements BamFilter {
     @Override
     public BamFilter getParent() {
         return null;
+    }
+
+    @Override
+    public SAMFileWriter getFailedWriter() {
+        return failedWriter;
     }
 
 }
