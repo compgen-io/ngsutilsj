@@ -162,6 +162,11 @@ public class BinCount extends AbstractOutputCommand {
                 continue;
             }
             
+            if (read.getReadPairedFlag() && !read.getFirstOfPairFlag()) {
+                // only count the first of the pair...
+                continue;
+            }
+            
             counter.addRead(read);
         }
         
