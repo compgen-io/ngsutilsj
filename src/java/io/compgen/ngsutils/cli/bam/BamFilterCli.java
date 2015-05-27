@@ -54,11 +54,13 @@ public class BamFilterCli extends AbstractCommand {
     private boolean bedExcludeRequireOne = false;
     private boolean bedExcludeRequireBoth = false;
     private boolean bedExcludeOnlyWithin = false;
+    private boolean bedExcludeReadStartPos = false;
     
     private String bedIncludeFile = null;
     private boolean bedIncludeRequireOne = false;
     private boolean bedIncludeRequireBoth = false;
     private boolean bedIncludeOnlyWithin = false;
+    private boolean bedIncludeReadStartPos = false;
 
     private String junctionWhitelist = null;
     private String whitelist = null;
@@ -122,11 +124,16 @@ public class BamFilterCli extends AbstractCommand {
     public void setBEDExcludeRequireOne(boolean val) {
         this.bedExcludeRequireOne = val;
     }
+    @Option(desc="BED Exclude option: start-pos", name="bed-excl-start-pos")
+    public void setBEDExcludeReadStartPos(boolean val) {
+        this.bedExcludeReadStartPos = val;
+    }
 
     @Option(desc="BED Exclude option: require-both", name="bed-excl-require-both")
     public void setBEDExcludeRequireBoth(boolean val) {
         this.bedExcludeRequireBoth = val;
     }
+
     @Option(desc="Include reads within BED regions", name="bed-include", helpValue="fname")
     public void setBedIncludeFile(String bedIncludeFile) {
         this.bedIncludeFile = bedIncludeFile;
@@ -145,6 +152,10 @@ public class BamFilterCli extends AbstractCommand {
     @Option(desc="BED Include option: require-both", name="bed-incl-require-both")
     public void setBEDIncludeRemove(boolean val) {
         this.bedIncludeRequireBoth = val;
+    }
+    @Option(desc="BED Include option: start-pos", name="bed-incl-start-pos")
+    public void setBEDIncludeReadStartPos(boolean val) {
+        this.bedIncludeReadStartPos = val;
     }
 
     @Option(desc="Use lenient validation strategy", name="lenient")
@@ -347,6 +358,7 @@ public class BamFilterCli extends AbstractCommand {
             ((BedInclude)parent).setOnlyWithin(bedIncludeOnlyWithin);
             ((BedInclude)parent).setRequireOnePair(bedIncludeRequireOne);
             ((BedInclude)parent).setRequireBothPairs(bedIncludeRequireBoth);
+            ((BedInclude)parent).setReadStartPos(bedIncludeReadStartPos);
             if (verbose) {
                 System.err.println("BEDInclude: "+bedIncludeFile);
             }
@@ -356,6 +368,7 @@ public class BamFilterCli extends AbstractCommand {
             ((BedExclude)parent).setOnlyWithin(bedExcludeOnlyWithin);
             ((BedExclude)parent).setRequireOnePair(bedExcludeRequireOne);
             ((BedExclude)parent).setRequireBothPairs(bedExcludeRequireBoth);
+            ((BedExclude)parent).setReadStartPos(bedExcludeReadStartPos);
             if (verbose) {
                 System.err.println("BEDExclude: "+bedExclude);
             }

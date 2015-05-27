@@ -27,7 +27,7 @@ import java.io.IOException;
 import java.nio.channels.FileChannel;
 import java.util.Iterator;
 
-@Command(name="bam-bins", desc="Quickly count the number of reads that fall into bins (bins assigned based on 5' end of the read)", category="bam")
+@Command(name="bam-bins", desc="Quickly count the number of reads that fall into bins (bins assigned based on 5' end of the first read)", category="bam")
 public class BinCount extends AbstractOutputCommand {
     
     private String filename=null;

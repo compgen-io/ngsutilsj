@@ -237,7 +237,7 @@ public class BamCount extends AbstractOutputCommand {
                                 
                                 int startpos;
                                 if (ReadUtils.getFragmentEffectiveStrand(read, orient) == Strand.PLUS) {
-                                    startpos = read.getAlignmentStart();
+                                    startpos = read.getAlignmentStart()-1;
                                 } else {
                                     startpos = read.getAlignmentEnd();
                                 }

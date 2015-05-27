@@ -134,9 +134,13 @@ public class ReadUtils {
             return null;
         }
         
-        // if we don't know the orientation, treat it as ambiguous.
+        // if we don't know the orientation, treat it as-is.
         if (orient == null || orient == Orientation.UNSTRANDED) {
-            return Strand.NONE;
+            if (read.getReadNegativeStrandFlag()) {
+                return Strand.MINUS;
+            } else {
+                return Strand.PLUS;
+            }
         }
         
         if (!read.getReadPairedFlag() || read.getFirstOfPairFlag()) {
@@ -259,10 +263,29 @@ public class ReadUtils {
         return size;
     }
 
+    /** 
+     * Find reads that overlap a given genomic region
+     * @param reader
+     * @param pos
+     * @param orient
+     * @param readLength
+     * @param minOverlap
+     * @return
+     */
     public static List<SAMRecord> findOverlappingReads(SamReader reader, GenomeSpan pos, Orientation orient, int readLength, int minOverlap) {
         return findOverlappingReads(reader, pos, orient, readLength, minOverlap, false);
     }
 
+    /** 
+     * Find reads that overlap a given genomic region
+     * @param reader
+     * @param pos
+     * @param orient
+     * @param readLength
+     * @param minOverlap
+     * @param allowGaps
+     * @return
+     */
     public static List<SAMRecord> findOverlappingReads(SamReader reader, GenomeSpan pos, Orientation orient, int readLength, int minOverlap, boolean allowGaps) {
     	List<SAMRecord> out = new ArrayList<SAMRecord>();
 
