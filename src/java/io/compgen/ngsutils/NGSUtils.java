@@ -36,10 +36,6 @@ import io.compgen.ngsutils.cli.fastq.FastqSort;
 import io.compgen.ngsutils.cli.fastq.FastqSplit;
 import io.compgen.ngsutils.cli.fastq.FastqToBam;
 import io.compgen.ngsutils.cli.gtf.GTFExport;
-import io.compgen.ngsutils.cli.splicing.FastaJunctions;
-import io.compgen.ngsutils.cli.splicing.FindEvents;
-import io.compgen.ngsutils.cli.splicing.JunctionCount;
-import io.compgen.ngsutils.cli.splicing.JunctionDiffCli;
 
 import java.io.IOException;
 
@@ -73,10 +69,6 @@ public class NGSUtils {
                 .addCommand(BamFilterCli.class)
                 .addCommand(BamStats.class)
                 .addCommand(BamToBed.class)
-                .addCommand(JunctionCount.class)
-                .addCommand(FindEvents.class)
-                .addCommand(JunctionDiffCli.class)
-                .addCommand(FastaJunctions.class)
                 .addCommand(FastaSubseq.class)
                 .addCommand(PileupCli.class)
                 .addCommand(RepeatAnnotate.class)
