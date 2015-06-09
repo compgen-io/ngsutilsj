@@ -29,6 +29,8 @@
             includeantruntime="false"
             classpathref="classpath"
             debuglevel="lines,vars,source"
+            target="1.7"
+            source="1.7"
             >
             <compilerclasspath>
                 <fileset file="${blib.dir}/error_prone_ant-2.0.2-SNAPSHOT.jar"/>

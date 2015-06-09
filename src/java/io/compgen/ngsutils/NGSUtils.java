@@ -36,6 +36,7 @@ import io.compgen.ngsutils.cli.fastq.FastqSort;
 import io.compgen.ngsutils.cli.fastq.FastqSplit;
 import io.compgen.ngsutils.cli.fastq.FastqToBam;
 import io.compgen.ngsutils.cli.gtf.GTFExport;
+import io.compgen.ngsutils.support.stats.FisherCli;
 
 import java.io.IOException;
 
@@ -83,6 +84,7 @@ public class NGSUtils {
                 .addCommand(BedToBed3.class)
                 .addCommand(BedToBed6.class)
                 .addCommand(BedCleanScore.class)
+                .addCommand(FisherCli.class)
                 .findAndRun(args);
         } catch (Exception e) {
             e.printStackTrace();

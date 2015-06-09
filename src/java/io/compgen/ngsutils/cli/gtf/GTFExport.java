@@ -38,6 +38,7 @@ public class GTFExport extends AbstractOutputCommand {
     private boolean exportExon = false;
     private boolean exportIntron = false;
     private boolean exportTSS = false;
+    private boolean exportJunctions = false;
     
     private boolean combine = false;
 //    private boolean useGeneId = false;
@@ -65,6 +66,11 @@ public class GTFExport extends AbstractOutputCommand {
     @Option(desc="Export whole gene region", name="genes")
     public void setGene(boolean val) {
         exportGene = val;
+    }
+
+    @Option(desc="Export canonical splice junctions", name="junctions")
+    public void setJunctions(boolean val) {
+        exportJunctions = val;
     }
 
     @Option(desc="Export transcriptional start site", name="tss")
@@ -100,6 +106,9 @@ public class GTFExport extends AbstractOutputCommand {
             exportCount++;
         }
         if (exportTSS) {
+            exportCount++;
+        }
+        if (exportJunctions) {
             exportCount++;
         }
         if (exportCount != 1) {
@@ -163,6 +172,24 @@ public class GTFExport extends AbstractOutputCommand {
                 writer.write(0);
                 writer.write(gene.getStrand().toString());
                 writer.eol();
+            }
+            
+            if (exportJunctions) {
+                Set<String> junctions = new HashSet<String>();
+                for (GTFTranscript txpt: gene.getTranscripts()) {
+                    int lastpos = -1;
+                    for (GTFExon exon: txpt.getExons()) {
+                        if (lastpos > -1) {
+                            String junc = gene.getRef()+":"+lastpos+"-"+exon.getStart();
+                            if (!junctions.contains(junc)) {
+                                junctions.add(junc);
+                                writer.write(junc);
+                                writer.eol();
+                            }
+                        }
+                        lastpos = exon.getEnd();
+                    }
+                }
             }
             
             if (exportTSS) {

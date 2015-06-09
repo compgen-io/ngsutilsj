@@ -48,13 +48,10 @@ public class ReadUtils {
         }
 
         public MappedReadCounter(boolean splitReads) {
-            if (splitReads) {
-                readsR2=new HashSet<String>();
-                this.separateReadCounts = splitReads;
-            }
+            this(null, splitReads);
         }
         public MappedReadCounter(String tagName) {
-            this.tagName = tagName.toUpperCase();
+            this(tagName, false);
         }
 
         public MappedReadCounter(String tagName, boolean separateReadCounts) {
@@ -190,7 +187,7 @@ public class ReadUtils {
      * @param minOverlap - the minimum amount of flanking sequence there needs to be (default: 4bp).
      * @return
      */
-    public static List<GenomeSpan> getFlankingRegions(SAMRecord read, Orientation orient, int minOverlap) {
+    public static List<GenomeSpan> getJunctionFlankingRegions(SAMRecord read, Orientation orient, int minOverlap) {
         List<GenomeSpan> out = new ArrayList<GenomeSpan>();
         Strand strand = getFragmentEffectiveStrand(read, orient);
         
@@ -243,7 +240,7 @@ public class ReadUtils {
         return out;
     }
     public static List<GenomeSpan> getJunctionFlankingRegions(SAMRecord read, Orientation orient) {
-        return getFlankingRegions(read, orient, 4);
+        return getJunctionFlankingRegions(read, orient, 4);
     }
 
     
@@ -310,7 +307,7 @@ public class ReadUtils {
             	continue;
             }
             
-            for (GenomeSpan region: ReadUtils.getFlankingRegions(read, orient, minOverlap)) {
+            for (GenomeSpan region: ReadUtils.getJunctionFlankingRegions(read, orient, minOverlap)) {
             	if (region.start <= (pos.start - minOverlap) && region.end >= (pos.start + minOverlap)) {
             		out.add(read);
             		break;
@@ -321,13 +318,9 @@ public class ReadUtils {
     	return out;
     }
 
-    public static SortedMap<GenomeSpan, MappedReadCounter> countJunctions(SamReader reader, String ref, int start, int end, Orientation orient) {
-        return countJunctions(reader, ref, start, end, orient, 4, null, false);
-    }
-    
     /**
      * Given a SamReader, find all reads within a region (ref:start-end) that span a splice junction and tally the number of times
-     * each junction is spanned.
+     * each junction is spanned. Optionally tally the average values of "tallyTagName" tags (eg. NM).
      * 
      * @param reader
      * @param ref
@@ -339,7 +332,7 @@ public class ReadUtils {
      * @param separateReadCounts
      * @return
      */
-    public static SortedMap<GenomeSpan, MappedReadCounter> countJunctions(SamReader reader, String ref, int start, int end, Orientation orient, int minOverlap, String tallyTagName, boolean separateReadCounts) {
+    public static SortedMap<GenomeSpan, MappedReadCounter> countJunctions(SamReader reader, String ref, int start, int end, Orientation orient, int minOverlap, String tallyTagName) {
         SAMRecordIterator it = reader.query(ref, start, end, true);
         SortedMap<GenomeSpan, MappedReadCounter> counters = new TreeMap<GenomeSpan, MappedReadCounter>();
         
@@ -353,7 +346,7 @@ public class ReadUtils {
             if (isJunctionSpanning(read)) {
                 for (GenomeSpan junction: getJunctionsForRead(read, orient, minOverlap)) {
                     if (!counters.containsKey(junction)) {
-                        counters.put(junction, new MappedReadCounter(tallyTagName, separateReadCounts));
+                        counters.put(junction, new MappedReadCounter(tallyTagName));
                     }
                     
                     counters.get(junction).addRead(read);
@@ -387,7 +380,7 @@ public class ReadUtils {
     public static List<GenomeSpan> getJunctionsForRead(SAMRecord read, Orientation orient, int minOverlap) {
         List<GenomeSpan> junctions = new ArrayList<GenomeSpan>();
         int last_end = -1;
-        for (GenomeSpan flank: ReadUtils.getFlankingRegions(read, orient, minOverlap)) {
+        for (GenomeSpan flank: ReadUtils.getJunctionFlankingRegions(read, orient, minOverlap)) {
             if (last_end != -1) {
                 GenomeSpan junction = new GenomeSpan(read.getReferenceName(), last_end, flank.start, flank.strand);
                 junctions.add(junction);
@@ -427,12 +420,11 @@ public class ReadUtils {
     }
 
     public static boolean isJunctionSpanning(SAMRecord read) {
-        return read.getAlignmentBlocks().size() > 1;
-//        for (CigarElement el: read.getCigar().getCigarElements()) {
-//            if (el.getOperator() == CigarOperator.N) {
-//                return true;
-//            }
-//        }
-//        return false;
+        for (CigarElement el: read.getCigar().getCigarElements()) {
+            if (el.getOperator() == CigarOperator.N) {
+                return true;
+            }
+        }
+        return false;
     }
 }

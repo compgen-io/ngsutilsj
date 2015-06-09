@@ -5,6 +5,7 @@ import io.compgen.common.StringLineReader;
 import io.compgen.common.StringUtils;
 import io.compgen.ngsutils.annotation.GenomeSpan;
 import io.compgen.ngsutils.bam.Orientation;
+import io.compgen.ngsutils.bam.Strand;
 import io.compgen.ngsutils.bam.support.ReadUtils;
 
 import java.io.FileNotFoundException;
@@ -13,12 +14,12 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class JunctionWhitelist extends AbstractBamFilter {
-    final private Set<GenomeSpan> junctions = new HashSet<GenomeSpan>();
+    final private Set<String> junctions = new HashSet<String>();
     
     public JunctionWhitelist(BamFilter parent, boolean verbose, String filename) throws FileNotFoundException, IOException {
         super(parent, verbose);
         for (String s: new StringLineReader(filename)) {
-            junctions.add(GenomeSpan.parse(StringUtils.strip(s)));
+            junctions.add(StringUtils.strip(s));
         }
     }
     
@@ -27,11 +28,12 @@ public class JunctionWhitelist extends AbstractBamFilter {
         // Only filter out reads that are junction spanning
         if (ReadUtils.isJunctionSpanning(read)) {
             for (GenomeSpan junc: ReadUtils.getJunctionsForRead(read, Orientation.UNSTRANDED)) {
-                if (junctions.contains(junc)) {
-                    return true;
+//                System.out.println(read.getReadName() + " " + read.getReferenceName()+ " " + (read.getAlignmentStart()-1) +" " + read.getCigarString()+" " +junc.toString() + " " + (junctions.contains(junc.toString()) ? "PASS": "FAIL"));
+                if (!junctions.contains(junc.clone(Strand.NONE).toString())) {
+                    return false;
                 }
             }
-            return false;
+            return true;
         }
         return true;
     }
