@@ -52,7 +52,7 @@ public class NGSUtils {
                 .setHelpHeader("NGSUtilsJ - Data wrangling for NGS\n---------------------------------------")
                 .setDefaultUsage("Usage: ngsutilsj cmd [options]")
                 .setHelpFooter("http://compgen.io/ngsutilsj\n" + getVersion())
-                .setCategoryOrder(new String[] { "bam", "bed", "fasta", "fastq", "gtf", "annotation", "splicing", "help"})
+                .setCategoryOrder(new String[] { "bam", "bed", "fasta", "fastq", "gtf", "annotation", "help"})
                 .addCommand(License.class)
                 .addCommand(Help.class)
                 .addCommand(FastqToBam.class)
