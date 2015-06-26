@@ -48,7 +48,7 @@ public class BamStats extends AbstractOutputCommand {
         this.filename = filename;
     }
 
-    @Option(desc="Display reference counts even if they have no reads mapped to them", name="showUnmappedRef")
+    @Option(desc="Display reference counts even if they have no reads mapped to them", name="show-unmapped-ref")
     public void setShowUnmappedRef(boolean showUnmappedRef) {
         this.showUnmappedRef = showUnmappedRef;
     }
