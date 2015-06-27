@@ -21,6 +21,7 @@ import io.compgen.ngsutils.fastq.filter.SuffixQualFilter;
 import io.compgen.ngsutils.fastq.filter.WhitelistFilter;
 import io.compgen.ngsutils.fastq.filter.WildcardFilter;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -46,8 +47,16 @@ public class FastqFilterCli extends AbstractOutputCommand {
     public FastqFilterCli() {
     }
 
-    @UnnamedArg(name = "FILE")
-    public void setFilename(String filename) throws IOException {
+    @UnnamedArg(name = "FILE", defaultValue="-")
+    public void setFilename(String filename) throws CommandArgumentException {
+        if (filename == null) {
+            throw new CommandArgumentException("Missing file!");
+        }
+        if (!filename.equals("-")) {
+            if (!new File(filename).exists()) {
+                throw new CommandArgumentException("Missing file: "+filename);
+            }
+        }
         this.filename = filename;
     }
 

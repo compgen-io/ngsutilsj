@@ -48,7 +48,7 @@ public class Fastq {
     }
 
     public static FastqReader open(String filename, String password) throws IOException {
-        if (filename.equals("-")) {
+        if (filename == null || filename.equals("-")) {
             return open(System.in, password, null, "<stdin>");
         }
         File file = new File(filename);
