@@ -207,6 +207,8 @@ public class BamToFastq extends AbstractCommand {
         bfq.setComments(comments);
         bfq.setIncludeUnmapped(!onlyMapped);
         bfq.setIncludeMapped(!onlyUnmapped);
+        bfq.setDeduplicate(!onlyUnmapped); // if we only have unmapped, no need to deduplicate
+        
         
         String lastName = null;
         long i=0;

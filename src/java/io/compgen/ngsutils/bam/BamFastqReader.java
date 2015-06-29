@@ -203,19 +203,30 @@ public class BamFastqReader implements FastqReader {
                     
                     if (read.getReadPairedFlag()) {
                         if (first && !second && read.getFirstOfPairFlag() && (!deduplicate || !exported.contains(name))) {
+                            // export only first reads
                             buf.add(fq);
-                            exported.add(name);
+                            if (deduplicate) {
+                                
+                                exported.add(name);
+                            }
                         } else if (second && !first && read.getSecondOfPairFlag() && (!deduplicate || !exported.contains(name))) {
+                            // export only second reads
                             buf.add(fq);
-                            exported.add(name);
+                            if (deduplicate) {
+                                exported.add(name);
+                            }
                         } else if (first && second && (!deduplicate || !exported.contains(name))) {
+                            // export both
+
                             if (firstReads.containsKey(name) && read.getSecondOfPairFlag()) {
+                                // already found the first, this is the second
                                 buf.add(firstReads.remove(name));
                                 buf.add(fq);
                                 if (deduplicate) {
                                     exported.add(name);
                                 }
                             } else if (secondReads.containsKey(name) && read.getFirstOfPairFlag()) {
+                                // already found the second, this is the first
                                 buf.add(fq);
                                 buf.add(secondReads.remove(name));
                                 if (deduplicate) {
@@ -227,8 +238,12 @@ public class BamFastqReader implements FastqReader {
                                 secondReads.put(name, fq);
                             }
                         }
-                    } else {
+                    } else if (!deduplicate || !exported.contains(name)) {
+                        // export all unpaired reads
                         buf.add(fq);
+                        if (deduplicate) {
+                            exported.add(name);
+                        }
                     }
                 }
             }
