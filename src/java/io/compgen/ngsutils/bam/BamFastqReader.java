@@ -46,10 +46,14 @@ public class BamFastqReader implements FastqReader {
     
     // Should we keep track of what we've exported so that
     // we only export one read/pair 
-    private boolean deduplicate = false;
+    // Note: this increase the memory required to keep track of all read names 
+    private boolean deduplicate = true;
 
-    // include mapped reads in export (default false)
-    private boolean includeMapped = false;
+    // include mapped reads in export (default true)
+    private boolean includeMapped = true;
+
+    // include unmapped reads in export (default true)
+    private boolean includeUnmapped = true;
     
 
     public BamFastqReader(String filename) throws FileNotFoundException {
@@ -71,6 +75,12 @@ public class BamFastqReader implements FastqReader {
     public void setIncludeMapped(boolean val) {
         if (samIterator == null) {
             this.includeMapped = val;
+        }
+    }
+    
+    public void setIncludeUnmapped(boolean val) {
+        if (samIterator == null) {
+            this.includeUnmapped = val;
         }
     }
 
@@ -151,6 +161,16 @@ public class BamFastqReader implements FastqReader {
                     if (read.getDuplicateReadFlag()) {
                         // Skip flagged PCR duplicates
                         continue;
+                    }
+                    
+                    if (!includeUnmapped) {
+                        if (read.getReadUnmappedFlag()) {
+                            // read is unmapped, skip
+                            continue;
+                        } else if (read.getReadPairedFlag() && read.getMateUnmappedFlag()) {
+                            // read is paired and mate isn't mapped - skip
+                            continue;
+                        }
                     }
                     
                     if (!includeMapped) {

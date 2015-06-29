@@ -36,7 +36,8 @@ public class BamToFastq extends AbstractCommand {
     
     private boolean onlyFirst = false;
     private boolean onlySecond = false;
-    private boolean includeMapped = false;
+    private boolean onlyMapped = false;
+    private boolean onlyUnmapped = false;
     
     private boolean lenient = false;
     private boolean silent = false;
@@ -76,9 +77,14 @@ public class BamToFastq extends AbstractCommand {
         this.onlySecond = val;
     }
 
-    @Option(desc="Include mapped reads *may require more memory* (default: output only unmapped)", name="mapped")
-    public void setIncludeMapped(boolean val) {
-        this.includeMapped = val;
+    @Option(desc="Export only mapped reads", name="mapped")
+    public void setOnlyMapped(boolean val) {
+        this.onlyMapped = val;
+    }
+
+    @Option(desc="Export only unmapped reads", name="mapped")
+    public void setOnlyUnmapped(boolean val) {
+        this.onlyUnmapped = val;
     }
 
     @Option(desc="Use lenient validation strategy", name="lenient")
@@ -107,6 +113,10 @@ public class BamToFastq extends AbstractCommand {
 
         if (onlyFirst && onlySecond) {
             throw new CommandArgumentException("You can not use --first and --second at the same time!");
+        }
+
+        if (onlyMapped && onlyUnmapped) {
+            throw new CommandArgumentException("You can not use --mapped and --unmapped at the same time!");
         }
 
         if (split && (onlyFirst || onlySecond)) {
@@ -195,8 +205,8 @@ public class BamToFastq extends AbstractCommand {
         bfq.setFirst(!onlySecond);
         bfq.setSecond(!onlyFirst);
         bfq.setComments(comments);
-        bfq.setIncludeMapped(includeMapped);
-        bfq.setDeduplicate(includeMapped);
+        bfq.setIncludeUnmapped(!onlyMapped);
+        bfq.setIncludeMapped(!onlyUnmapped);
         
         String lastName = null;
         long i=0;
