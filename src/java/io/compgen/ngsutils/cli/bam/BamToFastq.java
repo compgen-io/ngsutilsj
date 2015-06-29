@@ -82,7 +82,7 @@ public class BamToFastq extends AbstractCommand {
         this.onlyMapped = val;
     }
 
-    @Option(desc="Export only unmapped reads", name="mapped")
+    @Option(desc="Export only unmapped reads", name="unmapped")
     public void setOnlyUnmapped(boolean val) {
         this.onlyUnmapped = val;
     }
