@@ -3,6 +3,7 @@ package io.compgen.ngsutils.cli.bam.count;
 import io.compgen.common.progress.ProgressStats;
 
 
+
 public class SpanSourceStats implements ProgressStats {
     private SpanSource source;
     

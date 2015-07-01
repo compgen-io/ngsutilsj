@@ -1,7 +1,7 @@
 package io.compgen.ngsutils.bam.filter;
 
-import io.compgen.ngsutils.bam.support.ReadUtils;
 import htsjdk.samtools.SAMRecord;
+import io.compgen.ngsutils.bam.support.ReadUtils;
 
 public class UniqueMapping extends AbstractBamFilter {
     
