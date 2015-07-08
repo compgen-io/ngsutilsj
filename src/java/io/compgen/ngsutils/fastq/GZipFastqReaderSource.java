@@ -13,7 +13,7 @@ public class GZipFastqReaderSource implements FastqReaderSource {
 
     @Override
     public FastqReader open(InputStream is, String password, FileChannel channel, String name) throws IOException {
-      return new FastqTextReader(new GzipCompressorInputStream(is), channel, name);
+      return new FastqTextReader(new GzipCompressorInputStream(is, true), channel, name);
     }
 
     @Override
