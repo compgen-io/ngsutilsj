@@ -30,6 +30,8 @@ import io.compgen.ngsutils.cli.bed.BedToFasta;
 import io.compgen.ngsutils.cli.fasta.FastaFilter;
 import io.compgen.ngsutils.cli.fasta.FastaSubseq;
 import io.compgen.ngsutils.cli.fasta.FastaTag;
+import io.compgen.ngsutils.cli.fasta.FastaWrap;
+import io.compgen.ngsutils.cli.fastq.FastqCheck;
 import io.compgen.ngsutils.cli.fastq.FastqFilterCli;
 import io.compgen.ngsutils.cli.fastq.FastqMerge;
 import io.compgen.ngsutils.cli.fastq.FastqSeparate;
@@ -59,6 +61,7 @@ public class NGSUtils {
                 .addCommand(FastqToBam.class)
                 .addCommand(FastqSort.class)
                 .addCommand(FastqMerge.class)
+                .addCommand(FastqCheck.class)
                 .addCommand(FastqSeparate.class)
                 .addCommand(FastqSplit.class)
                 .addCommand(FastqFilterCli.class)
@@ -78,6 +81,7 @@ public class NGSUtils {
                 .addCommand(GTFExport.class)
                 .addCommand(FastaTag.class)
                 .addCommand(FastaFilter.class)
+                .addCommand(FastaWrap.class)
                 .addCommand(BedResize.class)
                 .addCommand(BedReduce.class)
                 .addCommand(BedCount.class)
