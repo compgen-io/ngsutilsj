@@ -44,16 +44,27 @@ public class Fastq {
     }
     
     public static FastqReader open(String filename) throws IOException {
-        return open(filename, null);
+        return open(filename, null, false);
+    }
+
+    public static FastqReader open(String filename, boolean silent) throws IOException {
+        return open(filename, null, silent);
     }
 
     public static FastqReader open(String filename, String password) throws IOException {
+        return open(filename, null, false);
+    }
+    
+    public static FastqReader open(String filename, String password, boolean silent) throws IOException {
         if (filename == null || filename.equals("-")) {
             return open(System.in, password, null, "<stdin>");
         }
         File file = new File(filename);
         FileInputStream fis = new FileInputStream(file);
-        return open(fis, password, fis.getChannel(), file.getName());
+        if (!silent) {
+            return open(fis, password, fis.getChannel(), file.getName());
+        }
+        return open(fis, password, null, file.getName());
     }
 
     public static FastqReader open(InputStream is, String password, FileChannel channel, String name) throws IOException {
