@@ -28,6 +28,8 @@ import io.compgen.ngsutils.bam.filter.JunctionWhitelist;
 import io.compgen.ngsutils.bam.filter.NullFilter;
 import io.compgen.ngsutils.bam.filter.PairedFilter;
 import io.compgen.ngsutils.bam.filter.RequiredFlags;
+import io.compgen.ngsutils.bam.filter.TagMax;
+import io.compgen.ngsutils.bam.filter.TagMin;
 import io.compgen.ngsutils.bam.filter.UniqueMapping;
 import io.compgen.ngsutils.bam.filter.UniqueStart;
 import io.compgen.ngsutils.bam.filter.Whitelist;
@@ -41,7 +43,9 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Command(name="bam-filter", desc="Filters out reads based upon various criteria", category="bam")
 public class BamFilterCli extends AbstractCommand {
@@ -66,6 +70,9 @@ public class BamFilterCli extends AbstractCommand {
     private String whitelist = null;
     private String failedFilename = null;
 
+    private Map<String, Integer> minTagValues = null;
+    private Map<String, Integer> maxTagValues = null;
+    
     private boolean paired = false;
     private boolean unique = false;
     private boolean uniqueStart = false;
@@ -191,7 +198,7 @@ public class BamFilterCli extends AbstractCommand {
         }
     }
 
-    @Option(desc="Only keep reads that have one unique mapping", name="unique-mapping")
+    @Option(desc="Only keep reads that have one unique mapping (NH,IH tags, for MAPQ filter use --tag-max)", name="unique-mapping")
     public void setUniqueMapping(boolean val) {
         unique=val; 
         setMapped(true);
@@ -247,6 +254,31 @@ public class BamFilterCli extends AbstractCommand {
     public void setRequiredFlags(int flag) {
         requiredFlags |= flag; 
     }
+
+    @Option(desc="Minimum tag value (tag:val, ex: AS:100)", name="min-tag")
+    public void setMinTagValue(String val) {
+        if (minTagValues == null) {
+            minTagValues = new HashMap<String, Integer>();
+        }
+        
+        String key = val.split(":")[0];
+        Integer value = Integer.parseInt(val.split(":")[1]);
+        
+        minTagValues.put(key, value);
+    }
+
+    @Option(desc="Maximum tag value (tag:val, ex: NH:0 or MAPQ:0)", name="max-tag")
+    public void setMaxTagValue(String val) {
+        if (maxTagValues == null) {
+            maxTagValues = new HashMap<String, Integer>();
+        }
+        
+        String key = val.split(":")[0];
+        Integer value = Integer.parseInt(val.split(":")[1]);
+        
+        maxTagValues.put(key, value);
+    }
+
 
     @Exec
     public void exec() throws CommandArgumentException, IOException {
@@ -385,6 +417,34 @@ public class BamFilterCli extends AbstractCommand {
             parent = new Whitelist(parent, false, whitelist);
             if (verbose) {
                 System.err.println("Whitelist: "+whitelist);
+            }
+        }
+
+        if (minTagValues != null) {
+            parent = new TagMin(parent, false, minTagValues);
+            if (verbose) {
+                String outval = "";
+                for (String k:minTagValues.keySet()) {
+                    if (!outval.equals("")) {
+                        outval+=",";
+                    }
+                    outval += k+":"+minTagValues.get(k);
+                }
+                System.err.println("Tag min: "+outval);
+            }
+        }
+
+        if (maxTagValues != null) {
+            parent = new TagMax(parent, false, maxTagValues);
+            if (verbose) {
+                String outval = "";
+                for (String k:maxTagValues.keySet()) {
+                    if (!outval.equals("")) {
+                        outval+=",";
+                    }
+                    outval += k+":"+maxTagValues.get(k);
+                }
+                System.err.println("Tag max: "+outval);
             }
         }
 

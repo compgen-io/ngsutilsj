@@ -68,16 +68,20 @@ public class BamStats extends AbstractOutputCommand {
         this.gtfFilename = filename;
     }    
 
-    @Option(desc="Count tag value distribution (comma-delimited list, including type, e.g. NH:i,RG:Z)", name="tags")
+    @Option(desc="Count tag value distribution (comma-delimited list, including type, e.g. NH:i,RG:Z or the special MAPQ)", name="tags")
     public void setTags(String tags) throws CommandArgumentException {
         for (String k: tags.split(",")) {
-            String[] tag_type = k.trim().split(":");
-            if (tag_type[1].toUpperCase().equals("Z")) {
-                strTagCounts.put(tag_type[0], new TallyValues<String>());
-            } else if (tag_type[1].toUpperCase().equals("I")) {
-                numTagCounts.put(tag_type[0], new TallyCounts());
+            if (k.toUpperCase().equals("MAPQ")) {
+                numTagCounts.put("MAPQ", new TallyCounts());
             } else {
-                throw new CommandArgumentException("You must specify tags and their type (ex: NH:i)!");
+                String[] tag_type = k.trim().split(":");
+                if (tag_type[1].toUpperCase().equals("Z")) {
+                    strTagCounts.put(tag_type[0], new TallyValues<String>());
+                } else if (tag_type[1].toUpperCase().equals("I")) {
+                    numTagCounts.put(tag_type[0], new TallyCounts());
+                } else {
+                    throw new CommandArgumentException("You must specify tags and their type (ex: NH:i)!");
+                }
             }
         }
     }
@@ -196,7 +200,9 @@ public class BamStats extends AbstractOutputCommand {
             }
 
             for (String tag: numTagCounts.keySet()) {
-                if (read.getAttribute(tag) != null) { 
+                if (tag.equals("MAPQ")) {
+                    numTagCounts.get(tag).incr(read.getMappingQuality());
+                } else if (read.getAttribute(tag) != null) { 
                     numTagCounts.get(tag).incr(read.getIntegerAttribute(tag));
                 } else {
                     numTagCounts.get(tag).incrMissing();
