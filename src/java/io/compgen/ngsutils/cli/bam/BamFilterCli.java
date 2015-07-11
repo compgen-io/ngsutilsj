@@ -255,7 +255,7 @@ public class BamFilterCli extends AbstractCommand {
         requiredFlags |= flag; 
     }
 
-    @Option(desc="Minimum tag value (tag:val, ex: AS:100)", name="min-tag")
+    @Option(desc="Minimum tag value (tag:val, ex: AS:100)", name="tag-min")
     public void setMinTagValue(String val) {
         if (minTagValues == null) {
             minTagValues = new HashMap<String, Integer>();
@@ -267,7 +267,7 @@ public class BamFilterCli extends AbstractCommand {
         minTagValues.put(key, value);
     }
 
-    @Option(desc="Maximum tag value (tag:val, ex: NH:0 or MAPQ:0)", name="max-tag")
+    @Option(desc="Maximum tag value (tag:val, ex: NH:0 or MAPQ:0)", name="tag-max")
     public void setMaxTagValue(String val) {
         if (maxTagValues == null) {
             maxTagValues = new HashMap<String, Integer>();
