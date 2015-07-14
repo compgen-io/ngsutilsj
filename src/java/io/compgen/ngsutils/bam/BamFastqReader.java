@@ -45,10 +45,10 @@ public class BamFastqReader implements FastqReader {
     // Should we keep track of what we've exported so that
     // we only export one read/pair 
     // Note: this increase the memory required to keep track of all read names 
-    private boolean deduplicate = true;
+    private boolean deduplicate = false;
 
-    // include mapped reads in export (default true)
-    private boolean includeMapped = true;
+    // include mapped reads in export (default false - assume this is an unmapped BAM)
+    private boolean includeMapped = false;
 
     // include unmapped reads in export (default true)
     private boolean includeUnmapped = true;

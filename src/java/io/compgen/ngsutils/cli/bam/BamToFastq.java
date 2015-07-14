@@ -36,8 +36,8 @@ public class BamToFastq extends AbstractCommand {
     
     private boolean onlyFirst = false;
     private boolean onlySecond = false;
-    private boolean onlyMapped = false;
-    private boolean onlyUnmapped = false;
+    private boolean mapped = false;
+    private boolean unmapped = false;
     
     private boolean lenient = false;
     private boolean silent = false;
@@ -77,14 +77,14 @@ public class BamToFastq extends AbstractCommand {
         this.onlySecond = val;
     }
 
-    @Option(desc="Export only mapped reads", name="mapped")
-    public void setOnlyMapped(boolean val) {
-        this.onlyMapped = val;
+    @Option(desc="Export mapped reads (default to export only unmapped)", name="mapped")
+    public void setMapped(boolean val) {
+        this.mapped = val;
     }
 
-    @Option(desc="Export only unmapped reads", name="unmapped")
+    @Option(desc="Don't export unmapped reads", name="no-unmapped")
     public void setOnlyUnmapped(boolean val) {
-        this.onlyUnmapped = val;
+        this.unmapped = !val;
     }
 
     @Option(desc="Use lenient validation strategy", name="lenient")
@@ -115,8 +115,8 @@ public class BamToFastq extends AbstractCommand {
             throw new CommandArgumentException("You can not use --first and --second at the same time!");
         }
 
-        if (onlyMapped && onlyUnmapped) {
-            throw new CommandArgumentException("You can not use --mapped and --unmapped at the same time!");
+        if (!mapped && !unmapped) {
+            throw new CommandArgumentException("You aren't outputting any reads (--no-unmapped without --mapped)!");
         }
 
         if (split && (onlyFirst || onlySecond)) {
@@ -205,9 +205,9 @@ public class BamToFastq extends AbstractCommand {
         bfq.setFirst(!onlySecond);
         bfq.setSecond(!onlyFirst);
         bfq.setComments(comments);
-        bfq.setIncludeUnmapped(!onlyMapped);
-        bfq.setIncludeMapped(!onlyUnmapped);
-        bfq.setDeduplicate(!onlyUnmapped); // if we only have unmapped, no need to deduplicate
+        bfq.setIncludeUnmapped(unmapped);
+        bfq.setIncludeMapped(mapped);
+        bfq.setDeduplicate(mapped); // if we only have mapped reads, we need to deduplicate
         
         
         String lastName = null;
