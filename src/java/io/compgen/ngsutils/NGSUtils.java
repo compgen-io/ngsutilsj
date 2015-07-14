@@ -13,6 +13,7 @@ import io.compgen.ngsutils.cli.bam.BamCheck;
 import io.compgen.ngsutils.cli.bam.BamCount;
 import io.compgen.ngsutils.cli.bam.BamCoverage;
 import io.compgen.ngsutils.cli.bam.BamFilterCli;
+import io.compgen.ngsutils.cli.bam.BamReadGroup;
 import io.compgen.ngsutils.cli.bam.BamSampleReads;
 import io.compgen.ngsutils.cli.bam.BamStats;
 import io.compgen.ngsutils.cli.bam.BamToBed;
@@ -48,6 +49,7 @@ public class NGSUtils {
     
     public static void main(String[] args) {
         NGSUtils.args = StringUtils.join(" ", args);
+        
         SocketProgress.setHeader("NGSUtilsJ - " + NGSUtils.args);
         try {
             new MainBuilder()
@@ -72,6 +74,7 @@ public class NGSUtils {
                 .addCommand(BamCoverage.class)
                 .addCommand(BamToFastq.class)
                 .addCommand(BamFilterCli.class)
+                .addCommand(BamReadGroup.class)
                 .addCommand(BamStats.class)
                 .addCommand(BamToBed.class)
                 .addCommand(FastaSubseq.class)

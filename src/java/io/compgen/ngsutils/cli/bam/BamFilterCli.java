@@ -28,6 +28,8 @@ import io.compgen.ngsutils.bam.filter.JunctionWhitelist;
 import io.compgen.ngsutils.bam.filter.NullFilter;
 import io.compgen.ngsutils.bam.filter.PairedFilter;
 import io.compgen.ngsutils.bam.filter.RequiredFlags;
+import io.compgen.ngsutils.bam.filter.TagEq;
+import io.compgen.ngsutils.bam.filter.TagEqStr;
 import io.compgen.ngsutils.bam.filter.TagMax;
 import io.compgen.ngsutils.bam.filter.TagMin;
 import io.compgen.ngsutils.bam.filter.UniqueMapping;
@@ -72,6 +74,8 @@ public class BamFilterCli extends AbstractCommand {
 
     private Map<String, Integer> minTagValues = null;
     private Map<String, Integer> maxTagValues = null;
+    private Map<String, Integer> eqTagValues = null;
+    private Map<String, String> eqStrTagValues = null;
     
     private boolean paired = false;
     private boolean unique = false;
@@ -255,28 +259,58 @@ public class BamFilterCli extends AbstractCommand {
         requiredFlags |= flag; 
     }
 
-    @Option(desc="Minimum tag value (tag:val, ex: AS:100, MAPQ:1)", name="tag-min")
-    public void setMinTagValue(String val) {
+    @Option(desc="Minimum tag value (tag:val, ex: AS:100,MAPQ:1)", name="tag-min")
+    public void setMinTagValue(String vals) {
         if (minTagValues == null) {
             minTagValues = new HashMap<String, Integer>();
         }
-        
-        String key = val.split(":")[0];
-        Integer value = Integer.parseInt(val.split(":")[1]);
-        
-        minTagValues.put(key, value);
+        for (String val:vals.split(",")) {
+            String key = val.split(":")[0];
+            Integer value = Integer.parseInt(val.split(":")[1]);
+            
+            minTagValues.put(key, value);
+        }
     }
 
     @Option(desc="Maximum tag value (tag:val, ex: NH:0)", name="tag-max")
-    public void setMaxTagValue(String val) {
+    public void setMaxTagValue(String vals) {
         if (maxTagValues == null) {
             maxTagValues = new HashMap<String, Integer>();
         }
         
-        String key = val.split(":")[0];
-        Integer value = Integer.parseInt(val.split(":")[1]);
+        for (String val:vals.split(",")) {
+            String key = val.split(":")[0];
+            Integer value = Integer.parseInt(val.split(":")[1]);
+            
+            maxTagValues.put(key, value);
+        }
+    }
+
+    @Option(desc="Tag value equals (tag:val, ex: NH:0, int)", name="tag-eq")
+    public void setEqTagValue(String vals) {
+        if (eqTagValues == null) {
+            eqTagValues = new HashMap<String, Integer>();
+        }
         
-        maxTagValues.put(key, value);
+        for (String val:vals.split(",")) {
+            String key = val.split(":")[0];
+            Integer value = Integer.parseInt(val.split(":")[1]);
+            
+            eqTagValues.put(key, value);
+        }
+        
+    }
+
+    @Option(desc="Tag value equals (tag:val, ex: NH:0, string)", name="tag-eqstr")
+    public void setEqStringTagValue(String vals) {
+        if (eqStrTagValues == null) {
+            eqStrTagValues = new HashMap<String, String>();
+        }
+        
+        for (String val:vals.split(",")) {
+            String[] kv = val.split(":");
+            eqStrTagValues.put(kv[0], kv[1]);
+        }
     }
 
 
@@ -445,6 +479,34 @@ public class BamFilterCli extends AbstractCommand {
                     outval += k+":"+maxTagValues.get(k);
                 }
                 System.err.println("Tag max: "+outval);
+            }
+        }
+
+        if (eqTagValues != null) {
+            parent = new TagEq(parent, false, eqTagValues);
+            if (verbose) {
+                String outval = "";
+                for (String k:eqTagValues.keySet()) {
+                    if (!outval.equals("")) {
+                        outval+=",";
+                    }
+                    outval += k+":"+eqTagValues.get(k);
+                }
+                System.err.println("Tag eq (int): "+outval);
+            }
+        }
+
+        if (eqStrTagValues != null) {
+            parent = new TagEqStr(parent, false, eqStrTagValues);
+            if (verbose) {
+                String outval = "";
+                for (String k:eqStrTagValues.keySet()) {
+                    if (!outval.equals("")) {
+                        outval+=",";
+                    }
+                    outval += k+":"+eqStrTagValues.get(k);
+                }
+                System.err.println("Tag eq (string): "+outval);
             }
         }
 
