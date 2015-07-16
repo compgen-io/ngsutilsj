@@ -72,8 +72,15 @@ public class Fastq {
         
         for (FastqReaderSource source: sources) {
             peek.resetPeek();
+            try{
             if (source.autodetect(peek)) {
                 return source.open(peek, password, channel, name);
+            }
+            } catch (IOException e) {
+                System.err.println(e.getMessage());
+                e.printStackTrace(System.err);
+                peek.close();
+                throw e;
             }
         }
         peek.close();
