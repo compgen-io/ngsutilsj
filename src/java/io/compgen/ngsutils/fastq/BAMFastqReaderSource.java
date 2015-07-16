@@ -71,7 +71,7 @@ public class BAMFastqReaderSource implements FastqReaderSource {
                     }
                     pos = magic.length;
                     
-                    System.err.println("Peeking cdata: " + cDataSize + " +8");
+//                    System.err.println("Peeking cdata: " + cDataSize + " +8");
                     byte[] cdata = peek.peek(cDataSize + 8); // cDataSize + 4 bytes for CRC + 4 bytes for ISIZE
                     for (int i=0; i<cdata.length; i++) {
                         blockdata[pos + i] = cdata[i];
