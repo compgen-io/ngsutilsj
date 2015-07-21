@@ -9,6 +9,7 @@ import io.compgen.common.StringUtils;
 import io.compgen.common.progress.SocketProgress;
 import io.compgen.ngsutils.cli.annotate.GTFAnnotate;
 import io.compgen.ngsutils.cli.annotate.RepeatAnnotate;
+import io.compgen.ngsutils.cli.bam.BamBest;
 import io.compgen.ngsutils.cli.bam.BamCheck;
 import io.compgen.ngsutils.cli.bam.BamCount;
 import io.compgen.ngsutils.cli.bam.BamCoverage;
@@ -68,6 +69,7 @@ public class NGSUtils {
                 .addCommand(FastqSplit.class)
                 .addCommand(FastqFilterCli.class)
                 .addCommand(BinCount.class)
+                .addCommand(BamBest.class)
                 .addCommand(BamCheck.class)
                 .addCommand(BamCount.class)
                 .addCommand(BamSampleReads.class)
