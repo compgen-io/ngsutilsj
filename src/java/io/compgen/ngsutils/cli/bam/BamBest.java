@@ -25,7 +25,9 @@ import io.compgen.ngsutils.support.CloseableFinalizer;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -124,10 +126,13 @@ public class BamBest extends AbstractCommand {
     private String[] inputs = null;
     private String[] outputs = null;
     private OrderedTag[] tags = null;
+    private String statsFilename = null;
+    
     private boolean lenient = false;
     private boolean silent = false;
     private boolean allowOrphans = false;
     private boolean unsorted = false;
+    private boolean noTies = false;
 
     @UnnamedArg(name = "input1 input2 {...} -- output1 {output2 ...}")
     public void setInputOutputs(String[] vals) throws CommandArgumentException {
@@ -174,7 +179,10 @@ public class BamBest extends AbstractCommand {
             }
         }
     }
-
+    @Option(desc = "Write output stats to a file", name="stats", helpValue="fname")
+    public void setStatsFile(String statsFilename) {
+        this.statsFilename=statsFilename;
+    }
     @Option(desc = "Which tags/attributes to use to determine the best input (comma-delimited, +/- determine order)", name="tags", defaultValue="AS+,NM-")
     public void setTags(String vals) {
         String[] ar = vals.split(",");
@@ -190,6 +198,11 @@ public class BamBest extends AbstractCommand {
         this.unmapped = unmapped;
     }
     **/
+
+    @Option(desc = "Drop all reads where the best source cannot be determined", name="no-ties")
+    public void setNoTies(boolean noTies) {
+        this.noTies = noTies;
+    }
 
     @Option(desc = "Force output to be flagged as unsorted", name="unsorted")
     public void setUnsorted(boolean unsorted) {
@@ -227,7 +240,8 @@ public class BamBest extends AbstractCommand {
         SamReader[] readers = new SamReader[inputs.length];
         FileChannel channel = null;
         
-        final int[] inputCounts = new int[inputs.length];
+        final int[] inputCounts = new int[inputs.length+1];
+        int unmapped = 0;
 
         List<Iterator<SAMRecord>> iterators = new ArrayList<Iterator<SAMRecord>>();
 
@@ -254,6 +268,7 @@ public class BamBest extends AbstractCommand {
                               }
                               s+= inputs[i]+":"+inputCounts[i];
                           }
+                          s+= ", ties:" +inputCounts[inputs.length];
                           return s;
                       }}, new CloseableFinalizer<SAMRecord>()));
                 } else {
@@ -298,6 +313,7 @@ public class BamBest extends AbstractCommand {
             int bestIdx = -1;
             OrderedTagValues bestValues = null;
             List<SAMRecord> bestList = null;
+            boolean tie = false;
             
             int idx = -1;
             for (Iterator<SAMRecord> it: iterators) {
@@ -317,10 +333,14 @@ public class BamBest extends AbstractCommand {
                             if (verbose) {
                                 System.err.print(tagValues);
                             }
-                            if (bestValues == null || tagValues.compareTo(bestValues) < 0) { // ties go to the first input
+                            int compareToVal = tagValues.compareTo(bestValues);
+                            if (bestValues == null || compareToVal < 0) { // ties go to the first input
                                 bestIdx = idx;
                                 bestValues = tagValues;
                                 bestList = curList;
+                                tie = false;
+                            } else if (compareToVal == 0) {
+                                tie = true;
                             }
                         }
                         if (verbose) {
@@ -371,26 +391,52 @@ public class BamBest extends AbstractCommand {
                 }
             }
 
-            if (bestIdx > -1) {
+            if (tie) {
+                inputCounts[inputs.length]++;
+            } else if (bestIdx > -1) {
                 inputCounts[bestIdx]++;
+            } else {
+                unmapped++;
             }
 
             if (verbose) {
-                if (bestIdx > -1) {
-                    System.err.println("best: "+inputs[bestIdx]);
+                if (tie) {
+                    System.err.println("best: tie / "+inputs[bestIdx]);
                 } else {
-                    System.err.println("best: unmapped");
+                    if (bestIdx > -1) {
+                        System.err.println("best: "+inputs[bestIdx]);
+                    } else {
+                        System.err.println("best: unmapped");
+                    }
                 }
                 System.err.println();
             }
 
-            if (bestList!=null && bestIdx < writers.length) {
+            if (!(tie && noTies) && bestList!=null && bestIdx < writers.length) {
                 for (SAMRecord read: bestList) {
                     writers[bestIdx].addAlignment(read);
                 }
             }
             
             buffer = newBuffer;
+        }
+        
+        if (statsFilename != null) {
+            PrintStream stats = new PrintStream(new FileOutputStream(statsFilename));
+            for (int i=0; i<inputs.length; i++) {
+                stats.println(inputs[i]+"\t"+inputCounts[i]);
+            }
+
+            stats.println("ambiguous\t"+inputCounts[inputs.length]);
+            stats.println("unmapped\t"+unmapped);
+            stats.close();
+        } else {
+            for (int i=0; i<inputs.length; i++) {
+                System.err.println(inputs[i]+"\t"+inputCounts[i]);
+            }
+
+            System.err.println("ambiguous\t"+inputCounts[inputs.length]);
+            System.err.println("unmapped\t"+unmapped);
         }
         
         for (SamReader reader:readers) {
