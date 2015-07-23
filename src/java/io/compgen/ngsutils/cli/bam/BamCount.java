@@ -21,20 +21,24 @@ import io.compgen.ngsutils.bam.Strand;
 import io.compgen.ngsutils.bam.support.ReadUtils;
 import io.compgen.ngsutils.cli.bam.count.BedSpans;
 import io.compgen.ngsutils.cli.bam.count.BinSpans;
+import io.compgen.ngsutils.cli.bam.count.GTFSpans;
 import io.compgen.ngsutils.cli.bam.count.Span;
 import io.compgen.ngsutils.cli.bam.count.SpanSource;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
-@Command(name="bam-count", desc="Counts the number of reads within a BED region or by bins (--bed or --bins required)", category="bam")
+@Command(name="bam-count", desc="Counts the number of reads for genes (GTF), within a BED region, or by bins (--gtf, --bed, or --bins required)", category="bam")
 public class BamCount extends AbstractOutputCommand {
     
     private String samFilename=null;
+
     private String bedFilename=null;
-    
+    private String gtfFilename=null;
     private int binSize = 0;
     
     private boolean contained = false;
@@ -60,7 +64,12 @@ public class BamCount extends AbstractOutputCommand {
         this.binSize = binSize;
     }
 
-    @Option(desc="Count reads within BED regions", name="bed")
+    @Option(desc="Count reads for genes (GTF model)", name="gtf", helpValue="fname")
+    public void setGTFFile(String gtfFilename) {
+        this.gtfFilename = gtfFilename;
+    }
+
+    @Option(desc="Count reads within BED regions", name="bed", helpValue="fname")
     public void setBedFile(String bedFilename) {
         this.bedFilename = bedFilename;
     }
@@ -75,7 +84,7 @@ public class BamCount extends AbstractOutputCommand {
         this.silent = silent;
     }
 
-    @Option(desc="Only count uniquely mapped reads", name="unique")
+    @Option(desc="Only count uniquely mapped reads (requires NH or IH tags)", name="unique")
     public void setUnique(boolean unique) {
         this.unique = unique;
     }
@@ -128,8 +137,19 @@ public class BamCount extends AbstractOutputCommand {
 
     @Exec
     public void exec() throws CommandArgumentException, IOException {
-        if (binSize > 0 && bedFilename != null) {
-            throw new CommandArgumentException("You can't specify both a bin-size and a BED file!");
+        int sources = 0;
+        
+        if (binSize > 0) {
+            sources++;
+        }
+        if (bedFilename != null) {
+            sources++;
+        } 
+        if (gtfFilename != null) {
+            sources++;
+        }
+        if (sources != 1) {
+            throw new CommandArgumentException("You must specify one of --bins, --bed, or --gtf!");
         }
         
         SamReaderFactory readerFactory = SamReaderFactory.makeDefault();
@@ -157,6 +177,10 @@ public class BamCount extends AbstractOutputCommand {
             writer.write_line("## source: bed " + bedFilename);
             spanSource = new BedSpans(bedFilename);
             name = bedFilename;
+        } else if (gtfFilename != null) {
+            writer.write_line("## source: gtf " + gtfFilename);
+            spanSource = new GTFSpans(gtfFilename);
+            name = gtfFilename;
         } else { // TODO: add a GTF span source 
             reader.close();
             writer.close();
@@ -317,5 +341,42 @@ public class BamCount extends AbstractOutputCommand {
 
         writer.close();
         reader.close();
+    }
+    
+    protected int calcTranscriptSize(int[] starts, int[] ends) {
+        List<Integer[]> intervals = new ArrayList<Integer[]>();
+
+        for (int i=0; i<starts.length; i++) {
+            boolean found = false;
+            
+            for (Integer[] interval: intervals) {
+                int qstart = interval[0];
+                int qend = interval[1];
+                
+                if (
+                    (qstart < starts[i] && starts[i] < qend) || 
+                    (qstart < ends[i] && ends[i] < qend) ||
+                    (starts[i] < qstart && qstart < ends[i]) || 
+                    (starts[i] < qend && qend < ends[i]) 
+                    ) {
+                    found = true;
+                    interval[0] = Math.min(qstart, starts[i]);
+                    interval[1] = Math.max(qend, ends[i]);
+                    break;
+                }
+                
+            }
+            
+            if (!found) {
+                intervals.add(new Integer[] { starts[i], ends[i]});
+            }
+        }
+        
+        int acc = 0;
+        for (Integer[] interval: intervals) {
+            acc += (interval[1] - interval[0]);
+        }
+        
+        return acc;
     }
 }

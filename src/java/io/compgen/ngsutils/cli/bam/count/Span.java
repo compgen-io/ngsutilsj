@@ -18,11 +18,7 @@ public class Span {
     }
 
     public Span(String refName, int start, int end, Strand strand, String[] fields) {
-        this.refName = refName;
-        this.starts = new int[] { start };
-        this.ends = new int[] { end };
-        this.strand = strand;
-        this.fields = fields;
+        this(refName, new int[] { start }, new int[] { end }, strand, fields);
     }
 
     public String getRefName() {

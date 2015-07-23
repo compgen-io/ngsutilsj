@@ -191,6 +191,7 @@ public class GTFAnnotationSource extends AbstractAnnotationSource<GTFGene> {
         final private String geneId;
         final private String geneName;
         final private String bioType;
+        final private String status;
 
         private int start = -1;
         private int end = -1;
@@ -198,24 +199,25 @@ public class GTFAnnotationSource extends AbstractAnnotationSource<GTFGene> {
 
         private final Map<String, GTFTranscript> transcripts = new HashMap<String, GTFTranscript>();
 
-        public GTFGene(GenomeSpan coord, String geneId, String geneName, String ref, Strand strand) {
-            this.geneId = geneId;
-            this.geneName = geneName;
-            bioType = null;
-            this.strand = strand;
-            this.ref = ref;
-        }
+//        public GTFGene(GenomeSpan coord, String geneId, String geneName, String ref, Strand strand) {
+//            this.geneId = geneId;
+//            this.geneName = geneName;
+//            bioType = null;
+//            this.strand = strand;
+//            this.ref = ref;
+//        }
 
-        public GTFGene(String geneId, String geneName, String ref, Strand strand, String bioType) {
+        public GTFGene(String geneId, String geneName, String ref, Strand strand, String bioType, String status) {
             this.geneId = geneId;
             this.geneName = geneName;
-            this.bioType = bioType;
-            this.strand = strand;
             this.ref = ref;
+            this.strand = strand;
+            this.bioType = bioType;
+            this.status = status;
         }
 
         public String toString() {
-            return "geneId:" + geneId+ " geneName:" + geneName + " bioType:" + bioType + " " + ref + strand + ":" + start + "-" + end;
+            return "geneId:" + geneId+ " geneName:" + geneName + " bioType:" + bioType + " "  + " status:" + status + " " + ref + strand + ":" + start + "-" + end;
         }
         
         public String getRef() {
@@ -232,6 +234,10 @@ public class GTFAnnotationSource extends AbstractAnnotationSource<GTFGene> {
 
         public String getBioType() {
             return bioType;
+        }
+
+        public String getStatus() {
+            return status;
         }
 
         public int getStart() {
@@ -293,24 +299,31 @@ public class GTFAnnotationSource extends AbstractAnnotationSource<GTFGene> {
         
         @Override
         public String[] toStringArray() {
-            if (bioType == null) {
+            if (bioType == null && status == null) {
                 return new String[] { geneId, geneName };
-            } else {
+            } else if (bioType == null) {
+                return new String[] { geneId, geneName, status };
+            } else if (status == null) {
                 return new String[] { geneId, geneName, bioType };
+            } else {
+                return new String[] { geneId, geneName, bioType, status };
             }
         }
 
         public GenomeSpan getCoord() {
             return new GenomeSpan(ref, start, end, strand);
         }
-
     }
 
     final private boolean hasBioType;
+    final private boolean hasStatus;
 
     public GTFAnnotationSource(String filename) throws NumberFormatException, IOException {
         final Map<String, GTFGene> cache = new HashMap<String, GTFGene>();
+        
         boolean hasBioType = false;
+        boolean hasStatus = false;
+        
         String lastChrom = null;
         for (final String line : new StringLineReader(filename)) {
             if (line.charAt(0) == '#') {
@@ -344,6 +357,7 @@ public class GTFAnnotationSource extends AbstractAnnotationSource<GTFGene> {
             String transcriptId = "";
             String geneName = "";
             String bioType = null;
+            String status = null;
 
             final String[] attrs = StringUtils.quotedSplit(cols[8], ';');
             List<String> exonAttributes = new ArrayList<String>(); 
@@ -363,8 +377,12 @@ public class GTFAnnotationSource extends AbstractAnnotationSource<GTFGene> {
                     case "transcript_id":
                         transcriptId = v;
                         break;
+                    case "gene_type":
                     case "gene_biotype":
                         bioType = v;
+                        break;
+                    case "gene_status":
+                        status = v;
                         break;
                     default:
                         exonAttributes.add(k);
@@ -377,12 +395,16 @@ public class GTFAnnotationSource extends AbstractAnnotationSource<GTFGene> {
                 hasBioType = true;
             }
 
+            if (hasStatus == false && status!=null && !status.equals("")) {
+                hasStatus = true;
+            }
+
             final GTFGene gene;
             if (cache.containsKey(geneId)) {
                 gene = cache.get(geneId);
             } else {
 //                System.err.println("Adding gene: "+geneId+" ("+geneName+", "+ chrom +")");
-                gene = new GTFGene(geneId, geneName, chrom, strand, bioType);
+                gene = new GTFGene(geneId, geneName, chrom, strand, bioType, status);
                 cache.put(geneId, gene);
             }
 
@@ -405,12 +427,17 @@ public class GTFAnnotationSource extends AbstractAnnotationSource<GTFGene> {
         }
 
         this.hasBioType = hasBioType;
+        this.hasStatus = hasStatus;
     }
 
     @Override
     public String[] getAnnotationNames() {
-        if (hasBioType) {
+        if (hasBioType && hasStatus) {
+            return new String[] { "gene_id", "gene_name", "start", "end", "strand", "biotype", "status" };
+        } else if (hasBioType) {
             return new String[] { "gene_id", "gene_name", "start", "end", "strand", "biotype" };
+        } else if (hasStatus) {
+            return new String[] { "gene_id", "gene_name", "start", "end", "strand", "status" };
         } else {
             return new String[] { "gene_id", "gene_name", "start", "end", "strand" };
         }
