@@ -22,7 +22,7 @@ public class GTFSpans  implements SpanSource {
     
     public GTFSpans(String filename) throws IOException {
         if (TTY.isattyStdErr()) {
-            System.err.print("Loading GTF annotations: "+filename+"... ");
+            System.err.print("Loading GTF annotation: "+filename+"... ");
         }
         gtf = new GTFAnnotationSource(filename);
         if (TTY.isattyStdErr()) {
