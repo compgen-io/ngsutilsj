@@ -303,6 +303,19 @@ public class StatUtils {
 
     }
 
+    public static double log2(double val) {
+        return Math.log(val) / log2Factor;
+    }
+    
+    public static double[] log2(double[] vals) {
+        double[] out = new double[vals.length];
+        for (int i=0; i<vals.length; i++) {
+            out[i] = log2(vals[i]);
+        }
+        return out;
+    }
+
+    
     public static double log2(int val) {
         return Math.log(val) / log2Factor;
     }
@@ -342,4 +355,27 @@ public class StatUtils {
         }
     }
 
+//    public static class Trendline {
+//        public final double slope;
+//        public final double intercept;
+//        public final double mse;
+//        public final double rsquare;
+//        
+//        public Trendline(double slope, double intercept, double mse, double rsquare) {
+//            this.slope = slope;
+//            this.intercept = intercept;
+//            this.mse = mse;
+//            this.rsquare = rsquare;
+//        }
+//    }
+//    
+//    public static Trendline linearRegression(double[] x, double[] y) {
+//        SimpleRegression reg = new SimpleRegression();
+//        for (int i=0; i<x.length; i++) {
+//            reg.addData(x[i], y[i]);
+//        }
+//        
+//        return new Trendline(reg.getSlope(), reg.getIntercept(), reg.getMeanSquareError(), reg.getRSquare());
+//    }
+//    
 }
