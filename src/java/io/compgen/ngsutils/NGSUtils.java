@@ -40,6 +40,7 @@ import io.compgen.ngsutils.cli.fastq.FastqSeparate;
 import io.compgen.ngsutils.cli.fastq.FastqSort;
 import io.compgen.ngsutils.cli.fastq.FastqSplit;
 import io.compgen.ngsutils.cli.fastq.FastqToBam;
+import io.compgen.ngsutils.cli.fastq.FastqToFasta;
 import io.compgen.ngsutils.cli.gtf.GTFExport;
 import io.compgen.ngsutils.support.stats.FisherCli;
 
@@ -62,6 +63,7 @@ public class NGSUtils {
                 .addCommand(License.class)
                 .addCommand(Help.class)
                 .addCommand(FastqToBam.class)
+                .addCommand(FastqToFasta.class)
                 .addCommand(FastqSort.class)
                 .addCommand(FastqMerge.class)
                 .addCommand(FastqCheck.class)
