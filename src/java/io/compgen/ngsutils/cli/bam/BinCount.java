@@ -139,7 +139,11 @@ public class BinCount extends AbstractOutputCommand {
         BinCounter counter = new BinCounter(orient, binSize, stranded, showAll, new BinCounterExporter() {
             @Override
             public void writeBin(String ref, int start, int end, Strand strand, int count) {
-                writer.write(ref, ""+start, ""+end, strand.toString(), ""+count);
+                if (stranded) {
+                    writer.write(ref, ""+start, ""+end, strand.toString(), ""+count);
+                } else {
+                    writer.write(ref, ""+start, ""+end, ""+count);
+                }
                 try {
                     writer.eol();
                 } catch (IOException e) {
