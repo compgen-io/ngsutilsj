@@ -47,7 +47,7 @@ public class FastqTextReader implements FastqReader {
 	
 	@Override
 	public Iterator<FastqRead> iterator() {
-		nextRead = FastqRead.read(in);
+		nextRead = nextRead();
 		
 		Iterator<FastqRead> it = new Iterator<FastqRead>() {
             @Override
@@ -61,7 +61,7 @@ public class FastqTextReader implements FastqReader {
                     throw new NoSuchElementException();
                 }
                 FastqRead old = nextRead;
-                nextRead = FastqRead.read(in);
+                nextRead = nextRead();
                 return old;
             }
 
@@ -80,6 +80,59 @@ public class FastqTextReader implements FastqReader {
                     return current.getName();
                 }});
 	}
+	
+    protected FastqRead nextRead() {
+        try {
+            String name = in.readLine();
+            if (name == null) {
+                return null;
+            }
+            name = name.substring(1); // strip the @
+            String comment = null;
+            if (name.indexOf(' ') > -1) {
+                comment = name.substring(name.indexOf(' ') + 1);
+                name = name.substring(0, name.indexOf(' '));
+            }
+            
+            String seq = in.readLine();
+            if (seq == null) {
+                return null;
+            }
+
+            String plus = in.readLine();
+            if (plus == null) {
+                return null;
+            }
+
+            // The seq block may be wrapped (it rarely is, but it's possible)
+            
+            while (plus.charAt(0) != '+') {
+                seq += plus;
+                plus = in.readLine();
+                if (plus == null) {
+                    return null;
+                }
+            }
+            
+            String qual = in.readLine();
+            if (qual == null) {
+                return null;
+            }
+
+            // The qual block must be the same length as the seq
+            while (qual.length() < seq.length())
+            {
+                String buf = in.readLine();
+                if (buf == null) {
+                    return null;
+                }
+                qual += buf;
+            }   
+            return new FastqRead(name, seq, qual, comment);
+        } catch (Exception e) {
+            return null;
+        }
+    }   
 
    public void close() throws IOException {
         in.close();

@@ -1,6 +1,5 @@
 package io.compgen.ngsutils.fastq;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.OutputStream;
 
@@ -40,34 +39,10 @@ public class FastqRead {
 		return qual;
 	}
 	
-	static public FastqRead read(BufferedReader in) {
-		try {
-			String name = in.readLine();
-			if (name == null) {
-				return null;
-			}
-			name = name.substring(1); // strip the @
-			String comment = null;
-			if (name.indexOf(' ') > -1) {
-                comment = name.substring(name.indexOf(' ') + 1);
-				name = name.substring(0, name.indexOf(' '));
-			}
-			String seq = in.readLine();
-			if (seq == null) {
-				return null;
-			}
-			in.readLine();
-			String qual = in.readLine();
-			if (qual == null) {
-				return null;
-			}
-			return new FastqRead(name, seq, qual, comment);
-		} catch (Exception e) {
-			return null;
-		}
-	}	
-	
 	public void write(OutputStream out) throws IOException {
+	    // technically the seq and qual can be wrapped, but it's rarely used and not recommended.
+	    // so, that's not implemented here.
+	    
 		String rec;
 		if (comment != null) {
 			rec = "@"+name+" "+comment+"\n"+seq+"\n+\n"+qual+"\n";
@@ -76,9 +51,12 @@ public class FastqRead {
 		}
 		out.write(rec.getBytes());
 	}
+
+	// needed to reset name of a read if there is a pair flag (/1, /2)
     public void setName(String name) {
         this.name = name;
     }
+    // needed to reset name of a read if there is a pair flag (/1, /2)
     public void setComment(String comment) {
         this.comment = comment;
     }

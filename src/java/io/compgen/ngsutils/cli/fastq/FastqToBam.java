@@ -27,7 +27,7 @@ import java.io.OutputStream;
 import java.nio.channels.FileChannel;
 import java.util.List;
 
-@Command(name = "fastq-bam", desc = "Converts a FASTQ file (or two paired files) into an unmapped BAM file", category="fastq")
+@Command(name = "fastq-tobam", desc = "Converts a FASTQ file (or two paired files) into an unmapped BAM file", category="fastq")
 public class FastqToBam extends AbstractCommand {
     private String[] filenames = null;
 	private String outputFilename = null;
