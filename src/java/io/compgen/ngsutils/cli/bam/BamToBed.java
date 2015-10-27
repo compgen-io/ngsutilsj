@@ -11,6 +11,8 @@ import io.compgen.cmdline.annotation.Option;
 import io.compgen.cmdline.annotation.UnnamedArg;
 import io.compgen.cmdline.exceptions.CommandArgumentException;
 import io.compgen.cmdline.impl.AbstractOutputCommand;
+import io.compgen.common.StringLineReader;
+import io.compgen.common.StringUtils;
 import io.compgen.common.TabWriter;
 import io.compgen.common.progress.FileChannelStats;
 import io.compgen.common.progress.ProgressMessage;
@@ -22,7 +24,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Set;
 
 @Command(name="bam-tobed", desc="Writes read positions to a BED6 file", category="bam", experimental=true, 
 doc="The mapped position of a read is writen to a 6 column BED file.\n" 
@@ -34,6 +38,8 @@ public class BamToBed extends AbstractOutputCommand {
     private boolean lenient = false;
     private boolean silent = false;
     private boolean includeUnmapped = false;
+
+    private String whitelist = null;
 
     @UnnamedArg(name = "FILE")
     public void setFilename(String filename) {
@@ -55,11 +61,25 @@ public class BamToBed extends AbstractOutputCommand {
         this.silent = silent;
     }    
 
+    @Option(desc="Keep only read names from this whitelist", name="whitelist", helpValue="fname")
+    public void setWhitelist(String whitelist) {
+        this.whitelist = whitelist;
+    }
+
     @Exec
     public void exec() throws IOException, CommandArgumentException {
         if (filename == null) {
             throw new CommandArgumentException("You must specify an input BAM filename!");
         }
+
+        Set<String> whitelistReadNames = null;
+        if (whitelist != null) {
+            whitelistReadNames = new HashSet<String>();
+            for (String s: new StringLineReader(whitelist)) {
+                whitelistReadNames.add(StringUtils.strip(s));
+            }
+        }
+
         SamReaderFactory readerFactory = SamReaderFactory.makeDefault();
         if (lenient) {
             readerFactory.validationStringency(ValidationStringency.LENIENT);
@@ -102,6 +122,10 @@ public class BamToBed extends AbstractOutputCommand {
             }
             
             if (read.isSecondaryOrSupplementary() || (read.getReadPairedFlag() && !read.getFirstOfPairFlag())) {
+                continue;
+            }
+            
+            if (whitelistReadNames != null && !whitelistReadNames.contains(read.getReadName())) {
                 continue;
             }
             
