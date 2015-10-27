@@ -27,6 +27,8 @@ import io.compgen.ngsutils.bam.filter.FilterFlags;
 import io.compgen.ngsutils.bam.filter.JunctionWhitelist;
 import io.compgen.ngsutils.bam.filter.NullFilter;
 import io.compgen.ngsutils.bam.filter.PairedFilter;
+import io.compgen.ngsutils.bam.filter.RefExclude;
+import io.compgen.ngsutils.bam.filter.RefInclude;
 import io.compgen.ngsutils.bam.filter.RequiredFlags;
 import io.compgen.ngsutils.bam.filter.TagEq;
 import io.compgen.ngsutils.bam.filter.TagEqStr;
@@ -71,6 +73,8 @@ public class BamFilterCli extends AbstractCommand {
     private String junctionWhitelist = null;
     private String whitelist = null;
     private String failedFilename = null;
+    private String excludeRefs = null;
+    private String includeRefs = null;
 
     private Map<String, Integer> minTagValues = null;
     private Map<String, Integer> maxTagValues = null;
@@ -111,6 +115,16 @@ public class BamFilterCli extends AbstractCommand {
     public void setJunctionWhitelist(String junctionWhitelist) {
         this.junctionWhitelist = junctionWhitelist;
     }
+    @Option(desc="Remove reads mapping to these references (comma-delimited)", name="ref-exclude", helpValue="ref")
+    public void excludeRefs(String excludeRefs) {
+        this.excludeRefs = excludeRefs;
+    }
+
+    @Option(desc="Keep only reads mapping to these references (comma-delimited)", name="ref-include", helpValue="ref")
+    public void includeRefs(String includeRefs) {
+        this.includeRefs = includeRefs;
+    }
+
     @Option(desc="Keep only read names from this whitelist", name="whitelist", helpValue="fname")
     public void setWhitelist(String whitelist) {
         this.whitelist = whitelist;
@@ -439,7 +453,18 @@ public class BamFilterCli extends AbstractCommand {
                 System.err.println("BEDExclude: "+bedExclude);
             }
         }
-        
+        if (includeRefs!=null) {
+            parent = new RefInclude(parent, false, includeRefs);
+            if (verbose) {
+                System.err.println("RefInclude: "+includeRefs);
+            }
+        }
+        if (excludeRefs!=null) {
+            parent = new RefExclude(parent, false, excludeRefs);
+            if (verbose) {
+                System.err.println("RefExclude: "+excludeRefs);
+            }
+        }
         if (junctionWhitelist != null) {
             parent = new JunctionWhitelist(parent, false, junctionWhitelist);
             if (verbose) {
