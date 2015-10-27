@@ -40,6 +40,8 @@ public class GTFExport extends AbstractOutputCommand {
     private boolean exportIntron = false;
     private boolean exportTSS = false;
     private boolean exportJunctions = false;
+    private boolean exportDonors = false;
+    private boolean exportAcceptors = false;
     
     private boolean combine = false;
 //    private boolean useGeneId = false;
@@ -69,7 +71,17 @@ public class GTFExport extends AbstractOutputCommand {
         exportGene = val;
     }
 
-    @Option(desc="Export canonical splice junctions", name="junctions")
+    @Option(desc="Export splice junction donor sites", name="donors")
+    public void setDonors(boolean val) {
+        exportDonors = val;
+    }
+
+    @Option(desc="Export splice junction acceptor sites", name="acceptors")
+    public void setAcceptors(boolean val) {
+        exportAcceptors = val;
+    }
+
+    @Option(desc="Export annotated splice junctions", name="junctions")
     public void setJunctions(boolean val) {
         exportJunctions = val;
     }
@@ -110,6 +122,12 @@ public class GTFExport extends AbstractOutputCommand {
             exportCount++;
         }
         if (exportJunctions) {
+            exportCount++;
+        }
+        if (exportDonors) {
+            exportCount++;
+        }
+        if (exportAcceptors) {
             exportCount++;
         }
         if (exportCount != 1) {
@@ -192,6 +210,55 @@ public class GTFExport extends AbstractOutputCommand {
                     }
                 }
             }
+            
+            if (exportDonors) {
+                Set<Integer> outs = new HashSet<Integer>();
+                for (GTFTranscript txpt: gene.getTranscripts()) {
+                    List<GTFExon> exons = txpt.getExons();
+                    if (gene.getStrand().equals(Strand.PLUS)) {
+                        for (GTFExon exon: exons.subList(0,exons.size()-1)) {
+                            if (!outs.contains(exon.getEnd())) {
+                                outs.add(exon.getEnd());
+                                writer.write(gene.getRef(), ""+exon.getEnd(), ""+(exon.getEnd()+1), gene.getGeneName(), "0", ""+gene.getStrand());
+                                writer.eol();
+                            }
+                        }
+                    } else {
+                        for (GTFExon exon: exons.subList(1,exons.size())) {
+                            if (!outs.contains(exon.getStart())) {
+                                outs.add(exon.getStart());
+                                writer.write(gene.getRef(), ""+(exon.getStart()-1), ""+exon.getStart(), gene.getGeneName(), "0", ""+gene.getStrand());
+                                writer.eol();
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (exportAcceptors) {
+                Set<Integer> outs = new HashSet<Integer>();
+                for (GTFTranscript txpt: gene.getTranscripts()) {
+                    List<GTFExon> exons = txpt.getExons();
+                    if (gene.getStrand().equals(Strand.PLUS)) {
+                        for (GTFExon exon: exons.subList(1,exons.size())) {
+                            if (!outs.contains(exon.getStart())) {
+                                outs.add(exon.getStart());
+                                writer.write(gene.getRef(), ""+(exon.getStart()-1), ""+exon.getStart(), gene.getGeneName(), "0", ""+gene.getStrand());
+                                writer.eol();
+                            }
+                        }
+                    } else {
+                        for (GTFExon exon: exons.subList(0,exons.size()-1)) {
+                            if (!outs.contains(exon.getEnd())) {
+                                outs.add(exon.getEnd());
+                                writer.write(gene.getRef(), ""+exon.getEnd(), ""+(exon.getEnd()+1), gene.getGeneName(), "0", ""+gene.getStrand());
+                                writer.eol();
+                            }
+                        }
+                    }
+                }
+            }
+
             
             if (exportTSS) {
                 List<Integer> starts = new ArrayList<Integer>();
