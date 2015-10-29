@@ -40,10 +40,11 @@ public class FastqCheck extends AbstractCommand {
 	    }
 	    
 	    if (count == -1) {
+	        System.out.println("ERROR");
 	        System.exit(1);
 	    }
 	    
-	    System.out.println(count+" reads found.");
+	    System.out.println("OK " + count + " reads found.");
 	}
 
 	protected boolean checkPaired(FastqRead read1, FastqRead read2) {
