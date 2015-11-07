@@ -20,12 +20,12 @@ public class BinSpans implements SpanSource {
     }
 
     @Override
-    public Iterator<Span> iterator() {
+    public Iterator<SpanGroup> iterator() {
         pos = 0;
-        return new Iterator<Span>() {
+        return new Iterator<SpanGroup>() {
             int currentSeq = 0;
             int currentPos = 0;
-            Span next = null;
+            SpanGroup next = null;
             @Override
             public boolean hasNext() {
                 if (currentSeq < seqdict.size()) {
@@ -35,10 +35,10 @@ public class BinSpans implements SpanSource {
             }
 
             @Override
-            public Span next() {
+            public SpanGroup next() {
                 pos ++;
                 if (next != null) {
-                    Span tmp = next;
+                    SpanGroup tmp = next;
                     next = null;
                     return tmp;
                 }
@@ -55,10 +55,10 @@ public class BinSpans implements SpanSource {
                 }
                 
                 if (orient == Orientation.UNSTRANDED) {
-                    return new Span(ref, start, end, Strand.NONE, new String[] { ref, Integer.toString(start), Integer.toString(end), Strand.NONE.toString()});
+                    return new SpanGroup(ref, Strand.NONE, new String[] { ref, Integer.toString(start), Integer.toString(end), Strand.NONE.toString()}, start, end);
                 } else {
-                    next = new Span(ref, start, end, Strand.MINUS, new String[] { ref, Integer.toString(start), Integer.toString(end), Strand.MINUS.toString()});
-                    return new Span(ref, start, end, Strand.PLUS, new String[] { ref, Integer.toString(start), Integer.toString(end), Strand.PLUS.toString()});
+                    next = new SpanGroup(ref, Strand.MINUS, new String[] { ref, Integer.toString(start), Integer.toString(end), Strand.MINUS.toString()}, start, end);
+                    return new SpanGroup(ref, Strand.PLUS, new String[] { ref, Integer.toString(start), Integer.toString(end), Strand.PLUS.toString()}, start, end);
                 }
             }
 

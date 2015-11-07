@@ -9,7 +9,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class BedSpans extends AbstractLineReader<Span> implements SpanSource {
+public class BedSpans extends AbstractLineReader<SpanGroup> implements SpanSource {
     private int numCols;
     
     public BedSpans(String filename) throws IOException {
@@ -42,13 +42,13 @@ public class BedSpans extends AbstractLineReader<Span> implements SpanSource {
         return -1;
     }
     
-    public Span convertLine(String line) {
+    public SpanGroup convertLine(String line) {
         String[] cols = line.split("\\t", -1);
-        Span span;
+        SpanGroup span;
         if (cols.length > 3) {
-            span = new Span(cols[0], Integer.parseInt(cols[1]), Integer.parseInt(cols[2]), Strand.parse(cols[5]), cols);
+            span = new SpanGroup(cols[0], Strand.parse(cols[5]), cols, Integer.parseInt(cols[1]), Integer.parseInt(cols[2]));
         } else {
-            span = new Span(cols[0], Integer.parseInt(cols[1]), Integer.parseInt(cols[2]), Strand.NONE, cols);
+            span = new SpanGroup(cols[0], Strand.NONE, cols, Integer.parseInt(cols[1]), Integer.parseInt(cols[2]));
         }
         return span;
     }

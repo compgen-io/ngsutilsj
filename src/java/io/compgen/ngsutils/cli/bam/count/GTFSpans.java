@@ -1,6 +1,5 @@
 package io.compgen.ngsutils.cli.bam.count;
 
-import io.compgen.common.IterUtils;
 import io.compgen.common.IterUtils.MapFunc;
 import io.compgen.common.StringUtils;
 import io.compgen.common.TTY;
@@ -11,9 +10,7 @@ import io.compgen.ngsutils.annotation.GTFAnnotationSource.GTFTranscript;
 import io.compgen.ngsutils.annotation.GenomeAnnotation;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 
 public class GTFSpans  implements SpanSource {
     private final GTFAnnotationSource gtf;
@@ -55,10 +52,10 @@ public class GTFSpans  implements SpanSource {
     }
 
     @Override
-    public Iterator<Span> iterator() {
+    public Iterator<SpanGroup> iterator() {
         pos = 0;
         size = gtf.size();
-        return new Iterator<Span>() {
+        return new Iterator<SpanGroup>() {
             Iterator<GenomeAnnotation<GTFGene>> it = gtf.iterator();
             @Override
             public boolean hasNext() {
@@ -66,7 +63,7 @@ public class GTFSpans  implements SpanSource {
             }
 
             @Override
-            public Span next() {
+            public SpanGroup next() {
                 pos++;
                 GenomeAnnotation<GTFGene> ann = it.next();
                 GTFGene gene = ann.getValue();
@@ -119,15 +116,12 @@ public class GTFSpans  implements SpanSource {
                             gene.getStrand().toString() };
                 }
 
-                List<Integer> starts = new ArrayList<Integer>(); 
-                List<Integer> ends = new ArrayList<Integer>(); 
-                
+                SpanGroup group = new SpanGroup(gene.getRef(), gene.getStrand(), fields);
                 for (GTFExon exon: gene.getExons()) {
-                    starts.add(exon.getStart());
-                    ends.add(exon.getEnd());
+                    group.addSpan(exon.getStart(), exon.getEnd());
                 }
-                
-                return new Span(gene.getRef(), IterUtils.intListToArray(starts), IterUtils.intListToArray(ends), gene.getStrand(), fields);
+
+                return group;
             }
 
             @Override

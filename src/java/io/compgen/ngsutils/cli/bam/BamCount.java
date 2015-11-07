@@ -16,13 +16,14 @@ import io.compgen.common.TabWriter;
 import io.compgen.common.progress.IncrementingStats;
 import io.compgen.common.progress.ProgressUtils;
 import io.compgen.ngsutils.NGSUtils;
+import io.compgen.ngsutils.annotation.GenomeSpan;
 import io.compgen.ngsutils.bam.Orientation;
 import io.compgen.ngsutils.bam.Strand;
 import io.compgen.ngsutils.bam.support.ReadUtils;
 import io.compgen.ngsutils.cli.bam.count.BedSpans;
 import io.compgen.ngsutils.cli.bam.count.BinSpans;
 import io.compgen.ngsutils.cli.bam.count.GTFSpans;
-import io.compgen.ngsutils.cli.bam.count.Span;
+import io.compgen.ngsutils.cli.bam.count.SpanGroup;
 import io.compgen.ngsutils.cli.bam.count.SpanSource;
 
 import java.io.File;
@@ -223,10 +224,10 @@ public class BamCount extends AbstractOutputCommand {
         
         int spanCount = 0;
         
-        for (Span span: IterUtils.wrap(ProgressUtils.getIterator(name, spanSource.iterator(), new IncrementingStats(spanSource.size())))) {
+        for (SpanGroup spanGroup: IterUtils.wrap(ProgressUtils.getIterator(name, spanSource.iterator(), new IncrementingStats(spanSource.size())))) {
             spanCount ++;
             if (verbose && spanCount % 1000 == 0) {
-                System.err.println("[" +spanCount + "]" + span.getRefName()+":"+span.getStarts()[0]);
+                System.err.println("[" +spanCount + "]" + spanGroup.getRefName()+":"+spanGroup.getStart());
                 System.err.flush();
             }
             
@@ -238,12 +239,11 @@ public class BamCount extends AbstractOutputCommand {
             int inverted_count = 0;
             
             Set<String> reads = new HashSet<String>();
-            
-            for (int i = 0; i < span.getStarts().length; i++) {            
-                // spans are 0-based, reader query is 1-based
-                int spanStart = span.getStarts()[i]+1;
-                int spanEnd = span.getEnds()[i];
-                SAMRecordIterator it = reader.query(span.getRefName(), spanStart, spanEnd, contained);
+
+            for (GenomeSpan span: spanGroup) {
+                int spanStart = span.start+1;
+                int spanEnd = span.end;
+                SAMRecordIterator it = reader.query(spanGroup.getRefName(), spanStart, spanEnd, contained);
                 while (it.hasNext()) {
                     SAMRecord read = it.next();
 
@@ -253,7 +253,7 @@ public class BamCount extends AbstractOutputCommand {
                     }
 
                     if (!reads.contains(read.getReadName())) {
-                        if (span.getStrand() == Strand.NONE || orient == Orientation.UNSTRANDED || (ReadUtils.getFragmentEffectiveStrand(read, orient) == span.getStrand())) {
+                        if (spanGroup.getStrand() == Strand.NONE || orient == Orientation.UNSTRANDED || (ReadUtils.getFragmentEffectiveStrand(read, orient) == spanGroup.getStrand())) {
                             if (startOnly) {                                
                                 if (read.getReadPairedFlag() && read.getSecondOfPairFlag()) {
                                     continue;
@@ -266,14 +266,15 @@ public class BamCount extends AbstractOutputCommand {
                                     startpos = read.getAlignmentEnd();
                                 }
                                 
-                                if (!span.within(span.getRefName(), startpos)) {
+                                if (!span.contains(new GenomeSpan(spanGroup.getRefName(), startpos))) {
                                     continue;
                                 }
+                                
                             }
                             
                             boolean inspan = false;
-                            for (int j=0; j< read.getReadLength(); j++) {
-                                int refpos = read.getReferencePositionAtReadPosition(j);
+                            for (int j=1; j<=read.getReadLength(); j++) {
+                                int refpos = read.getReferencePositionAtReadPosition(j) - 1;
                                 if (spanStart <=  refpos && refpos < spanEnd) {
                                     inspan=true;
                                     break;
@@ -315,7 +316,7 @@ public class BamCount extends AbstractOutputCommand {
                 it.close();
             }
 
-            writer.write(span.getFields());
+            writer.write(spanGroup.getFields());
             writer.write(count);
             if (proper) {
                 writer.write(proper_count);
