@@ -2,6 +2,7 @@ package io.compgen.ngsutils.annotation;
 
 import htsjdk.samtools.AlignmentBlock;
 import htsjdk.samtools.SAMRecord;
+import io.compgen.common.StringUtils;
 import io.compgen.ngsutils.bam.Orientation;
 import io.compgen.ngsutils.bam.Strand;
 import io.compgen.ngsutils.bam.support.ReadUtils;
@@ -219,7 +220,7 @@ public class GenomeSpan implements Comparable<GenomeSpan> {
     @Override
     public int compareTo(GenomeSpan o) {
         if (!ref.equals(o.ref)) {
-            return ref.compareTo(o.ref);
+            return StringUtils.naturalCompare(ref, o.ref);
         }
 
         if (start < o.start) {
