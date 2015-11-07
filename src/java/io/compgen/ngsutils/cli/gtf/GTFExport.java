@@ -39,6 +39,7 @@ public class GTFExport extends AbstractOutputCommand {
     private boolean exportExon = false;
     private boolean exportIntron = false;
     private boolean exportTSS = false;
+    private boolean exportTLSS = false;
     private boolean exportJunctions = false;
     private boolean exportDonors = false;
     private boolean exportAcceptors = false;
@@ -91,6 +92,11 @@ public class GTFExport extends AbstractOutputCommand {
         exportTSS = val;
     }
 
+    @Option(desc="Export translational stop site (3' UTR)", name="tlss")
+    public void setTLSS(boolean val) {
+        exportTLSS = val;
+    }
+
     @Option(desc="Export introns", name="introns")
     public void setIntron(boolean val) {
         exportIntron = val;
@@ -119,6 +125,9 @@ public class GTFExport extends AbstractOutputCommand {
             exportCount++;
         }
         if (exportTSS) {
+            exportCount++;
+        }
+        if (exportTLSS) {
             exportCount++;
         }
         if (exportJunctions) {
@@ -347,6 +356,67 @@ public class GTFExport extends AbstractOutputCommand {
                 }
             }
 
+            if (exportTLSS) {
+                List<Integer> stops = new ArrayList<Integer>();
+                for (GTFTranscript txpt: gene.getTranscripts()) {
+                    if (!txpt.hasCDS() || gene.getStrand() == Strand.NONE) {
+                        continue;
+                    }
+
+                    if (gene.getStrand().equals(Strand.PLUS) && txpt.getStopCodon() >= txpt.getEnd()) {
+                        // require some amount of UTR... (likely an odd transcript)
+                        continue;
+                    } else if (gene.getStrand().equals(Strand.MINUS) && txpt.getStopCodon() <= txpt.getStart()) {
+                        // require some amount of UTR... (likely an odd transcript)
+                        continue;
+                    }
+                    
+                    // getStopCodon already does the plus/minus switch
+                    if (stops.contains(txpt.getStopCodon())) {
+                        continue;
+                    }
+                    stops.add(txpt.getStopCodon());
+                    if (!combine) {
+                        writer.write(gene.getRef());
+                        writer.write(txpt.getStopCodon());
+                        writer.write(txpt.getStopCodon()+3);
+                        writer.write(gene.getGeneName());
+                        writer.write(0);
+                        writer.write(gene.getStrand().toString());
+                        writer.eol();
+                    }
+                }
+                if (combine) {
+                    int val = -1;
+                    if (gene.getStrand() == Strand.PLUS) {
+                        val = stops.get(0);
+                        for (Integer i: stops) {
+                            if (i > val) {
+                                val = i;
+                            }
+                        }
+                    } else if (gene.getStrand() == Strand.MINUS) {
+                        val = stops.get(0);
+                        for (Integer i: stops) {
+                            if (i < val) {
+                                val = i;
+                            }
+                        }
+                    }
+                    
+                    if (val > -1) {
+                        writer.write(gene.getRef());
+                        writer.write(val);
+                        writer.write(val+3);
+                        writer.write(gene.getGeneName());
+                        writer.write(0);
+                        writer.write(gene.getStrand().toString());
+                        writer.eol();
+                    }
+                }
+            }
+
+            
             if (exportExon) {
                 if (!combine) {
                     int i=1;
