@@ -21,6 +21,7 @@ public class FastqSeparate extends AbstractCommand {
 	
     private String outfile1 = null;
     private String outfile2 = null;
+    private boolean quiet = false;
     
 	public FastqSeparate() {
 	}
@@ -29,6 +30,11 @@ public class FastqSeparate extends AbstractCommand {
 	public void setFilename(String filename) throws IOException {
 	    this.filename = filename;
 	}
+
+    @Option(desc="Quiet output", charName="q")
+    public void setQuiet(boolean val) {
+        this.quiet = val;
+    }
 
     @Option(desc="Export read 1 to this file (use - for stdout)", name="read1", required=false)
     public void setReadOne(String outfile1) {
@@ -69,7 +75,7 @@ public class FastqSeparate extends AbstractCommand {
             out2 = FileUtils.openOutputStream(outfile2);
 		}
 
-	    FastqReader reader = Fastq.open(filename);
+	    FastqReader reader = Fastq.open(filename, quiet);
 		
 		Counter counter = new Counter();
 		boolean isRead1 = true;
