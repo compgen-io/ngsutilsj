@@ -79,7 +79,8 @@ public class FastaFilter extends AbstractOutputCommand {
 
         String buffer = "";
         
-        for (String line: IterUtils.wrap(new StringLineReader(filename).progress(new ProgressMessage<String>(){
+        StringLineReader reader = new StringLineReader(filename);
+        for (String line: IterUtils.wrap(reader.progress(new ProgressMessage<String>(){
                 @Override
                 public String msg(String s) {
                     return current[0];
@@ -122,5 +123,6 @@ public class FastaFilter extends AbstractOutputCommand {
         if (!buffer.equals("")) {
             out.write((buffer+"\n").getBytes());
         }
+        reader.close();
     }
 }
