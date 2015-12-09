@@ -38,7 +38,7 @@ import java.util.List;
          category="bam",
          doc="If you have mapped reads to two separate references, this command will determine, \n"
                  + "for each read, which reference they mapped best to. This can be useful for mapping \n"
-                 + "RNA across splice-junctions with a non-splice aware aligner, or if you have a sample \n"
+                 + "RNA across splice-junctions with a splicing naive aligner, or if you have a sample \n"
                  + "that contains DNA derived from  organisms (e.g. xenografts, metagenomics).\n"
                  + "\n"
                  + "Files do not have to be name-sorted, but they must be in the same order. For reads \n"
@@ -192,7 +192,7 @@ public class BamBest extends AbstractCommand {
         }
     }
 
-    /** TODO: Add option for outputting unmapped files
+    /** TODO: Add option for outputting unmapped files??
     @Option(desc = "Write unmapped reads to this file", name="unmapped")
     public void setUnmapped(String unmapped) {
         this.unmapped = unmapped;
