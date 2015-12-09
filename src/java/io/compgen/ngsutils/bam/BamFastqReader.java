@@ -208,7 +208,6 @@ public class BamFastqReader implements FastqReader {
                             // export only first reads
                             buf.add(fq);
                             if (deduplicate) {
-                                
                                 exported.add(name);
                             }
                         } else if (second && !first && read.getSecondOfPairFlag() && (!deduplicate || !exported.contains(name))) {

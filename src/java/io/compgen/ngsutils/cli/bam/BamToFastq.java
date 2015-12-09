@@ -39,6 +39,9 @@ public class BamToFastq extends AbstractCommand {
     private boolean mapped = false;
     private boolean unmapped = false;
     
+    private boolean readNameSorted = false;
+    private boolean singleEnded = true;
+    
     private boolean lenient = false;
     private boolean silent = false;
 
@@ -55,6 +58,16 @@ public class BamToFastq extends AbstractCommand {
     @Option(desc="Force overwriting output", name="force")
     public void setForce(boolean val) {
         this.force = val;
+    }
+
+    @Option(desc="Input file is sorted by read-name (more memory efficient for exporting mapped reads)", name="name-sorted")
+    public void setReadNameSorted(boolean val) {
+        this.readNameSorted = val;
+    }
+
+    @Option(desc="Input file is single-end", name="single")
+    public void setSingleEnded(boolean val) {
+        this.singleEnded = val;
     }
 
     @Option(desc="Compress output", name="gz")
@@ -207,17 +220,35 @@ public class BamToFastq extends AbstractCommand {
         bfq.setComments(comments);
         bfq.setIncludeUnmapped(unmapped);
         bfq.setIncludeMapped(mapped);
-        bfq.setDeduplicate(mapped); // if we only have mapped reads, we need to deduplicate
+        if (!readNameSorted) {
+            bfq.setDeduplicate(mapped); // if we only have mapped reads, we need to deduplicate
+        } else {
+            bfq.setDeduplicate(false);
+        }
         
         
         String lastName = null;
         long i=0;
+        int readCount = 0;
         for (FastqRead read: bfq) {
             if (verbose) {
                 i++;
                 if (i % 100000 == 0) {
                     System.err.println("Read: " + i);
                 }
+            }
+
+            if (read.getName().equals(lastName)) {
+                if (singleEnded) {
+                    continue;
+                } else {
+                    readCount++;
+                    if (readCount > 2) {
+                        continue;
+                    }
+                }
+            } else {
+                readCount = 1;
             }
             
             if (split && read.getName().equals(lastName)) {
