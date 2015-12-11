@@ -27,7 +27,7 @@ import java.io.OutputStream;
 import java.nio.channels.FileChannel;
 import java.util.List;
 
-@Command(name = "fastq-tobam", desc = "Converts a FASTQ file (or two paired files) into an unmapped BAM file", category="fastq")
+@Command(name = "fastq-tobam", desc = "Converts a FASTQ file (or two paired files) into an unmapped BAM file", category="fastq", doc="Note: Interleaved FASTQ files are auto-detected.")
 public class FastqToBam extends AbstractCommand {
     private String[] filenames = null;
 	private String outputFilename = null;
@@ -41,7 +41,7 @@ public class FastqToBam extends AbstractCommand {
 	public FastqToBam() {
 	}
 
-    @UnnamedArg(name="FILE1 FILE2")
+    @UnnamedArg(name="FILE1 [FILE2]")
     public void setFilenames(List<String> files) throws IOException {
         if (files.size() == 2) {
             this.filenames = new String[2];
@@ -95,7 +95,7 @@ public class FastqToBam extends AbstractCommand {
         this.comments = val;
     }
     
-    @Option(desc="Write temporary files here", name="tmpdir")
+    @Option(desc="Write temporary files here", name="tmpdir", charName="T")
     public void setTmpDir(String tmpDir) {
         this.tmpDir = tmpDir;
     }
@@ -182,25 +182,80 @@ public class FastqToBam extends AbstractCommand {
 
         long i = 0;
         if (readers.length == 1) {
+            FastqRead lastRead = null;
 	        for (FastqRead read : readers[0]) {
 	            if (verbose) {
 	                i++;
 	                if (i % 100000 == 0) {
 	                    System.err.println("Read: " + i);
 	                }
-	                
-	            }
-	            SAMRecord record = new SAMRecord(header);
-	            record.setReadPairedFlag(false);
-	            record.setReadUnmappedFlag(true);
-	            record.setReadName(read.getName());
-	            record.setReadString(read.getSeq());
-	            record.setBaseQualityString(read.getQual());
-	            
-	            if (comments && read.getComment() != null) {
-	                record.setAttribute("CO", read.getComment());
 	            }
 	            
+	            if (lastRead == null) {
+	                lastRead = read;
+	                continue;
+	            }
+	            
+	            if (lastRead.getName().equals(read.getName())) {
+                    SAMRecord record1 = new SAMRecord(header);
+                    record1.setReadPairedFlag(true);
+                    record1.setFirstOfPairFlag(true);
+                    record1.setSecondOfPairFlag(false);
+                    record1.setReadUnmappedFlag(true);
+                    record1.setMateUnmappedFlag(true);
+                    record1.setReadName(lastRead.getName());
+                    record1.setReadString(lastRead.getSeq());
+                    record1.setBaseQualityString(lastRead.getQual());
+                    
+                    if (comments && lastRead.getComment() != null) {
+                        record1.setAttribute("CO", lastRead.getComment());
+                    }
+                    
+                    SAMRecord record2 = new SAMRecord(header);
+    	            record2.setReadPairedFlag(true);
+                    record2.setFirstOfPairFlag(false);
+                    record2.setSecondOfPairFlag(true);
+                    record2.setReadUnmappedFlag(true);
+                    record2.setMateUnmappedFlag(true);
+    	            record2.setReadName(read.getName());
+    	            record2.setReadString(read.getSeq());
+    	            record2.setBaseQualityString(read.getQual());
+    	            
+    	            if (comments && read.getComment() != null) {
+    	                record2.setAttribute("CO", read.getComment());
+    	            }
+    	            
+                    out.addAlignment(record1);
+                    out.addAlignment(record2);
+                    lastRead = null;
+	            } else {
+                    SAMRecord record = new SAMRecord(header);
+                    record.setReadPairedFlag(false);
+                    record.setReadUnmappedFlag(true);
+                    record.setReadName(lastRead.getName());
+                    record.setReadString(lastRead.getSeq());
+                    record.setBaseQualityString(lastRead.getQual());
+                    
+                    if (comments && lastRead.getComment() != null) {
+                        record.setAttribute("CO", lastRead.getComment());
+                    }
+                    
+                    out.addAlignment(record);
+                    lastRead = read;
+	            }
+	        }
+	        if (lastRead != null) {
+                SAMRecord record = new SAMRecord(header);
+                record.setReadPairedFlag(false);
+                record.setReadUnmappedFlag(true);
+                record.setReadName(lastRead.getName());
+                record.setReadString(lastRead.getSeq());
+                record.setBaseQualityString(lastRead.getQual());
+                
+                if (comments && lastRead.getComment() != null) {
+                    record.setAttribute("CO", lastRead.getComment());
+                }
+                
                 out.addAlignment(record);
 	        }
         } else if (serial) {

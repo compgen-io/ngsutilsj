@@ -321,7 +321,7 @@ public class BamBest extends AbstractCommand {
                 List<SAMRecord> curList = new ArrayList<SAMRecord>();
 
                 // pop the val for this reader from the buffer
-                if (buffer != null) {
+                if (buffer != null && buffer.size()>0) {
                     SAMRecord read = buffer.remove(0);
                     if (read != null) {
                         if (verbose) {
@@ -471,7 +471,12 @@ public class BamBest extends AbstractCommand {
             if (tags[i].name.equals("MAPQ")) {
                 values[i] = read.getMappingQuality();
             } else {
-                values[i] = read.getIntegerAttribute(tags[i].name);
+                Integer val = read.getIntegerAttribute(tags[i].name);
+                if (val != null) {
+                    values[i] = val;
+                } else {
+                    values[i] = -1;
+                }
             }
         }
         return new OrderedTagValues(tags, values);

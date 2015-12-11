@@ -30,6 +30,7 @@ import io.compgen.ngsutils.cli.bed.BedToBed3;
 import io.compgen.ngsutils.cli.bed.BedToBed6;
 import io.compgen.ngsutils.cli.bed.BedToFasta;
 import io.compgen.ngsutils.cli.fasta.FastaFilter;
+import io.compgen.ngsutils.cli.fasta.FastaGenerateReads;
 import io.compgen.ngsutils.cli.fasta.FastaNames;
 import io.compgen.ngsutils.cli.fasta.FastaSubseq;
 import io.compgen.ngsutils.cli.fasta.FastaTag;
@@ -89,6 +90,7 @@ public class NGSUtils {
                 .addCommand(GTFExport.class)
                 .addCommand(FastaTag.class)
                 .addCommand(FastaNames.class)
+                .addCommand(FastaGenerateReads.class)
                 .addCommand(FastaFilter.class)
                 .addCommand(FastaWrap.class)
                 .addCommand(BedResize.class)

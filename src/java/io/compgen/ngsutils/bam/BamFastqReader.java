@@ -1,5 +1,6 @@
 package io.compgen.ngsutils.bam;
 
+import htsjdk.samtools.SAMReadGroupRecord;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordIterator;
 import htsjdk.samtools.SamInputResource;
@@ -34,6 +35,7 @@ public class BamFastqReader implements FastqReader {
 
     private SamReader reader = null;
     private String name = null;
+    private String readGroup = null;
     private boolean comments = true;
     
     private boolean first = true;
@@ -84,6 +86,10 @@ public class BamFastqReader implements FastqReader {
             this.deduplicate = val;
         }
     }
+
+    public void setReadGroup(String readGroup) {
+        this.readGroup=readGroup;        
+    }    
 
     public void setIncludeMapped(boolean val) {
         if (samIterator == null) {
@@ -181,6 +187,13 @@ public class BamFastqReader implements FastqReader {
                             continue;
                         } else if (read.getReadPairedFlag() && !read.getMateUnmappedFlag()) {
                             // read is paired and pair is mapped - skip
+                            continue;
+                        }
+                    }
+                    
+                    if (readGroup != null) {
+                        SAMReadGroupRecord rg = read.getReadGroup();
+                        if (rg == null || !rg.getId().equals(readGroup)) {
                             continue;
                         }
                     }
@@ -290,5 +303,5 @@ public class BamFastqReader implements FastqReader {
         if (reader != null) {
             reader.close();
         }
-    }    
+    }
 }

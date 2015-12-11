@@ -28,6 +28,7 @@ public class BamToFastq extends AbstractCommand {
     
     private String filename=null;
     private String outTemplate=null;
+    private String readGroup=null;
 
     private boolean split = false;
     private boolean compress = false;
@@ -40,7 +41,7 @@ public class BamToFastq extends AbstractCommand {
     private boolean unmapped = false;
     
     private boolean readNameSorted = false;
-    private boolean singleEnded = true;
+    private boolean singleEnded = false;
     
     private boolean lenient = false;
     private boolean silent = false;
@@ -53,6 +54,11 @@ public class BamToFastq extends AbstractCommand {
     @Option(desc="Output filename template (default: stdout)", name="out")
     public void setOutTemplate(String outTemplate) {
         this.outTemplate = outTemplate;
+    }
+
+    @Option(desc="Export only this read group (ID)", name="rg")
+    public void setReadGroup(String readGroup) {
+        this.readGroup = readGroup;
     }
 
     @Option(desc="Force overwriting output", name="force")
@@ -213,6 +219,9 @@ public class BamToFastq extends AbstractCommand {
         }
 
         BamFastqReader bfq = new BamFastqReader(filename);
+        if (readGroup != null) {
+            bfq.setReadGroup(readGroup);
+        }
         bfq.setLenient(lenient);
         bfq.setSilent(silent);
         bfq.setFirst(!onlySecond);
