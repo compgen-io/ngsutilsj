@@ -298,108 +298,125 @@ public class BamBest extends AbstractCommand {
             }
         }
         
-        List<SAMRecord> buffer = null;
+        SAMRecord[] buffer = new SAMRecord[iterators.size()];
         
+        // Pre-load the buffer with one read
         boolean hasNext = true;
+        int i = 0;
         for (Iterator<SAMRecord> it: iterators) {
             if (!it.hasNext()) {
                 hasNext = false;
+            } else {
+                buffer[i++] = it.next();
             }
         }
-
-        while (hasNext || !(isListEmpty(buffer))) {
-            List<SAMRecord> newBuffer = new ArrayList<SAMRecord>();
+        
+        while (hasNext) {
             String currentReadName = null;
             int bestIdx = -1;
             OrderedTagValues bestValues = null;
             List<SAMRecord> bestList = null;
             boolean tie = false;
             
-            int idx = -1;
+            int idx = 0;
             for (Iterator<SAMRecord> it: iterators) {
-                idx++;
-                List<SAMRecord> curList = new ArrayList<SAMRecord>();
-
-                // pop the val for this reader from the buffer
-                if (buffer != null && buffer.size()>0) {
-                    SAMRecord read = buffer.remove(0);
-                    if (read != null) {
-                        if (verbose) {
-                            System.err.print(read.getReadName()+"\t"+inputs[idx]+"*\t"+"");
-                        }
-                        if (keepRead(read)) {
-                            curList.add(read);
-                            OrderedTagValues tagValues = extractTagValues(read);
-                            if (verbose) {
-                                System.err.print(tagValues);
-                            }
-                            int compareToVal = tagValues.compareTo(bestValues);
-                            if (bestValues == null || compareToVal < 0) { // ties go to the first input
-                                bestIdx = idx;
-                                bestValues = tagValues;
-                                bestList = curList;
-                                tie = false;
-                            } else if (compareToVal == 0) {
-                                tie = true;
-                            }
-                        }
-                        if (verbose) {
-                            System.err.println();
-                        }
+                if (currentReadName == null) {
+                    currentReadName = buffer[idx].getReadName();
+                    if (verbose) {
+                        System.err.println(currentReadName);
                     }
+                } else if (!buffer[idx].getReadName().equals(currentReadName)) {
+                    System.err.println("Read name mismatch!");
+                    System.err.println("Expected: " + currentReadName);
+                    System.err.println("Got     : " + buffer[idx].getReadName());
+                    System.err.println("Input   : " + inputs[idx]);
+                    System.exit(1);
                 }
+                if (verbose) {
+                    System.err.println(inputs[idx]);
+                }
+                List<SAMRecord> curList = new ArrayList<SAMRecord>();
+                curList.add(buffer[idx]);
+                buffer[idx] = null;
                 
                 while (it.hasNext()) {
-                    SAMRecord read = it.next();
-                    
-                    if (read!=null) {
-
-                        if (currentReadName == null) {
-                            currentReadName = read.getReadName();
-                        } 
-                        if (currentReadName.equals(read.getReadName())) {
-                            if (keepRead(read)) {
-                                if (verbose) {
-                                    System.err.print(read.getReadName()+"\t"+inputs[idx]+"\t"+"");
-                                }
-                                curList.add(read);
-                                OrderedTagValues tagValues = extractTagValues(read);
-                                if (verbose) {
-                                    System.err.print(tagValues);
-                                }
-                                if (bestValues == null || tagValues.compareTo(bestValues) < 0) {
-                                    bestIdx = idx;
-                                    bestValues = tagValues;
-                                    bestList = curList;
-                                }
-                                if (verbose) {
-                                    System.err.println();
-                                }
-                            }
-                        } else {
-                            newBuffer.add(read);
-                            break;
-                        }
-                    } else {
-                        newBuffer.add(null);
+                    SAMRecord next = it.next();
+                    if (next == null) {
+                        hasNext = false;
                         break;
                     }
+                    if (!next.getReadName().equals(currentReadName)) {
+                        buffer[idx] = next;
+                        break;
+                    }
+                    
+                    curList.add(next);
                 }
                 
-                if (!it.hasNext()) {
-                    hasNext = false;
+                for (SAMRecord read: curList) {
+                    if (verbose) {
+                        System.err.print(read.getReadName()+"\t"+inputs[idx]+"*\t"+"");
+                    }
+                    if (!keepRead(read)) {
+                        if (verbose) {
+                            System.err.println("  -- unmapped");
+                        }
+                        continue;
+                    }
+
+                    OrderedTagValues tagValues = extractTagValues(read);
+                    if (verbose) {
+                        System.err.print(tagValues);
+                    }
+                    
+                    // if bestValues is null, this returns -1
+                    int compareToVal = tagValues.compareTo(bestValues);
+                    
+                    if (compareToVal < 0) {
+                        bestIdx = idx;
+                        bestValues = tagValues;
+                        bestList = curList;
+                        tie = false;
+                        if (verbose) {
+                            System.err.print(" *best*");
+                        }
+                    } else if (compareToVal == 0) {
+                        // tie goes to the first input
+                        // check to see that we aren't in the same as the bestIdx, 
+                        // if we have paired reads, they can have the same scores.
+                        if (bestIdx != idx) {
+                            tie = true;
+                            if (verbose) {
+                                System.err.print(" // tie");
+                            }
+                        }
+                    }
+                    if (verbose) {
+                        System.err.println();
+                    }
                 }
+                idx++;
             }
+                
 
             if (tie) {
                 inputCounts[inputs.length]++;
+                if (!noTies) {
+                    for (SAMRecord read: bestList) {
+                        writers[bestIdx].addAlignment(read);
+                    }
+                }
             } else if (bestIdx > -1) {
                 inputCounts[bestIdx]++;
+                for (SAMRecord read: bestList) {
+                    writers[bestIdx].addAlignment(read);
+                }
             } else {
                 unmapped++;
             }
 
             if (verbose) {
+                System.err.print(currentReadName+" => ");
                 if (tie) {
                     System.err.println("best: tie / "+inputs[bestIdx]);
                 } else {
@@ -409,21 +426,12 @@ public class BamBest extends AbstractCommand {
                         System.err.println("best: unmapped");
                     }
                 }
-                System.err.println();
             }
-
-            if (!(tie && noTies) && bestList!=null && bestIdx < writers.length) {
-                for (SAMRecord read: bestList) {
-                    writers[bestIdx].addAlignment(read);
-                }
-            }
-            
-            buffer = newBuffer;
         }
         
         if (statsFilename != null) {
             PrintStream stats = new PrintStream(new FileOutputStream(statsFilename));
-            for (int i=0; i<inputs.length; i++) {
+            for (i=0; i<inputs.length; i++) {
                 stats.println(inputs[i]+"\t"+inputCounts[i]);
             }
 
@@ -431,7 +439,7 @@ public class BamBest extends AbstractCommand {
             stats.println("unmapped\t"+unmapped);
             stats.close();
         } else {
-            for (int i=0; i<inputs.length; i++) {
+            for (i=0; i<inputs.length; i++) {
                 System.err.println(inputs[i]+"\t"+inputCounts[i]);
             }
 
