@@ -172,22 +172,26 @@ public class BamFastqReader implements FastqReader {
                     }
                     
                     if (!includeUnmapped) {
-                        if (read.getReadUnmappedFlag()) {
-                            // read is unmapped, skip
-                            continue;
-                        } else if (read.getReadPairedFlag() && read.getMateUnmappedFlag()) {
-                            // read is paired and mate isn't mapped - skip
-                            continue;
+                        // don't include unmapped reads
+                        if (read.getReadPairedFlag()) {
+                            // if paired, both reads need to be unmapped to skip
+                            if (read.getReadUnmappedFlag() && read.getMateUnmappedFlag()) {
+                                continue;
+                            }
+                        } else if (read.getReadUnmappedFlag()) {
+                            continue;                            
                         }
                     }
                     
                     if (!includeMapped) {
-                        if (!read.getReadUnmappedFlag()) {
-                            // read is mapped - skip
-                            continue;
-                        } else if (read.getReadPairedFlag() && !read.getMateUnmappedFlag()) {
-                            // read is paired and pair is mapped - skip
-                            continue;
+                        // don't include mapped reads
+                        if (read.getReadPairedFlag()) {
+                            // if paired, both reads need to be mapped to skip
+                            if (!read.getReadUnmappedFlag() && !read.getMateUnmappedFlag()) {
+                                continue;
+                            }
+                        } else if (!read.getReadUnmappedFlag()) {
+                            continue;                            
                         }
                     }
                     
