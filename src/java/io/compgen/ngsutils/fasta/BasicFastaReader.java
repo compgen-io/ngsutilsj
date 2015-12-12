@@ -100,6 +100,9 @@ public class BasicFastaReader extends FastaReader {
                     break;
                 }
                 String line = it.next();
+                if (line == null || line.equals("") || line.trim().length() == 0) {
+                    continue;
+                }
                 if (line.charAt(0) == '>') {
                     nextNameLine = line;
                 } else {
