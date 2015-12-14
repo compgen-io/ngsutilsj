@@ -21,6 +21,7 @@ import io.compgen.common.progress.ProgressUtils;
 import io.compgen.ngsutils.annotation.AnnotatedRegionCounter;
 import io.compgen.ngsutils.annotation.GenicRegion;
 import io.compgen.ngsutils.bam.Orientation;
+import io.compgen.ngsutils.bam.support.ReadUtils;
 import io.compgen.ngsutils.support.CloseableFinalizer;
 
 import java.io.File;
@@ -38,6 +39,7 @@ public class BamStats extends AbstractOutputCommand {
     private String gtfFilename = null;
     private boolean lenient = false;
     private boolean silent = false;
+    private boolean unique = false;
     private boolean showUnmappedRef = false;
 
     private Map<String,TallyCounts> numTagCounts = new HashMap<String,TallyCounts>();
@@ -51,6 +53,11 @@ public class BamStats extends AbstractOutputCommand {
     @Option(desc="Display reference counts even if they have no reads mapped to them", name="show-unmapped-ref")
     public void setShowUnmappedRef(boolean showUnmappedRef) {
         this.showUnmappedRef = showUnmappedRef;
+    }
+
+    @Option(desc="Use only unique reads in GTF summary", name="unique")
+    public void setUnique(boolean unique) {
+        this.unique = unique;
     }
 
     @Option(desc="Use lenient validation strategy", name="lenient")
@@ -122,6 +129,7 @@ public class BamStats extends AbstractOutputCommand {
         long total = 0;
         long mapped = 0;
         long unmapped = 0;
+        long multiple = 0;
         
         Map<Integer, String> flags = new TreeMap<Integer, String>();
         flags.put(0x1  , "Multiple fragments");
@@ -186,6 +194,14 @@ public class BamStats extends AbstractOutputCommand {
             
             if (!read.getReadUnmappedFlag()) {
                 mapped++;
+                if (!ReadUtils.isReadUniquelyMapped(read)) {
+                    multiple++;
+                    if (unique) {
+                        // For the remaining summary, skip all non-uniquely mapped reads
+                        continue;
+                    }
+                }
+                
             } else {
                 unmapped++;
                 continue;                
@@ -223,6 +239,7 @@ public class BamStats extends AbstractOutputCommand {
             
             if (geneRegionCounter != null) {
                 if (!read.getReadPairedFlag() || (!read.getSecondOfPairFlag() && read.getProperPairFlag() && !read.getDuplicateReadFlag() && !read.getReadFailsVendorQualityCheckFlag() && !read.getSupplementaryAlignmentFlag())) {
+                    
                     // We only profile the first read of a pair... and only proper pairs
                     geneRegionCounter.addRead(read, Orientation.FR);
                 }
@@ -233,6 +250,8 @@ public class BamStats extends AbstractOutputCommand {
         println("Total-reads:\t" + total);
         println("Mapped-reads:\t" + mapped);
         println("Unmapped-reads:\t" + unmapped);
+        println("Multiple-mapped-reads:\t" + multiple);
+        println("Uniquely-mapped-reads:\t" + (mapped - multiple));
 
         if (paired) {
             println();
