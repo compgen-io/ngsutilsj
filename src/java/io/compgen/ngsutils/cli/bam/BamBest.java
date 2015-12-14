@@ -338,18 +338,16 @@ public class BamBest extends AbstractCommand {
                 List<SAMRecord> curList = new ArrayList<SAMRecord>();
                 curList.add(buffer[idx]);
                 buffer[idx] = null;
-                
+
                 while (it.hasNext()) {
                     SAMRecord next = it.next();
-                    if (next == null) {
-                        hasNext = false;
-                        break;
-                    }
                     if (!next.getReadName().equals(currentReadName)) {
                         buffer[idx] = next;
                         break;
                     }
-                    
+                    if (!it.hasNext()) {
+                        hasNext = false;
+                    }
                     curList.add(next);
                 }
                 
