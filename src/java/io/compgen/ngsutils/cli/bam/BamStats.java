@@ -15,6 +15,7 @@ import io.compgen.cmdline.impl.AbstractOutputCommand;
 import io.compgen.common.StringUtils;
 import io.compgen.common.TallyCounts;
 import io.compgen.common.TallyValues;
+import io.compgen.common.io.PassthruInputStream;
 import io.compgen.common.progress.FileChannelStats;
 import io.compgen.common.progress.ProgressMessage;
 import io.compgen.common.progress.ProgressUtils;
@@ -27,6 +28,7 @@ import io.compgen.ngsutils.support.CloseableFinalizer;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.channels.FileChannel;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -40,6 +42,7 @@ public class BamStats extends AbstractOutputCommand {
     private boolean lenient = false;
     private boolean silent = false;
     private boolean unique = false;
+    private boolean pipe = false;
     private boolean showUnmappedRef = false;
 
     private Map<String,TallyCounts> numTagCounts = new HashMap<String,TallyCounts>();
@@ -53,6 +56,11 @@ public class BamStats extends AbstractOutputCommand {
     @Option(desc="Display reference counts even if they have no reads mapped to them", name="show-unmapped-ref")
     public void setShowUnmappedRef(boolean showUnmappedRef) {
         this.showUnmappedRef = showUnmappedRef;
+    }
+
+    @Option(desc="Pipe input BAM file to stdout", name="pipe")
+    public void setPipe(boolean pipe) {
+        this.pipe = pipe;
     }
 
     @Option(desc="Use only unique reads in GTF summary", name="unique")
@@ -112,20 +120,28 @@ public class BamStats extends AbstractOutputCommand {
             readerFactory.validationStringency(ValidationStringency.SILENT);
         }
 
+        InputStream is = null;
         SamReader reader = null;
         String name;
         FileChannel channel = null;
+        
         if (filename.equals("-")) {
-            reader = readerFactory.open(SamInputResource.of(System.in));
+            is = System.in;
             name = "<stdin>";
         } else {
             File f = new File(filename);
-            FileInputStream fis = new FileInputStream(f);
-            channel = fis.getChannel();
-            reader = readerFactory.open(SamInputResource.of(fis));
+            is = new FileInputStream(f);
+            channel = ((FileInputStream)is).getChannel();
             name = f.getName();
         }
 
+        if (pipe) {
+            is = new PassthruInputStream(is, System.out);
+        }
+
+        reader = readerFactory.open(SamInputResource.of(is));
+
+        
         long total = 0;
         long mapped = 0;
         long unmapped = 0;
@@ -245,6 +261,7 @@ public class BamStats extends AbstractOutputCommand {
                 }
             }
         }
+        
         reader.close();
 
         println("Total-reads:\t" + total);
