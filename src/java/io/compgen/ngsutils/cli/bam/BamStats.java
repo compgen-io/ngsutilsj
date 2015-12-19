@@ -106,7 +106,10 @@ public class BamStats extends AbstractOutputCommand {
         if (filename == null) {
             throw new CommandArgumentException("You must specify an input BAM filename!");
         }
-        
+        if (out == System.out && pipe) {
+            throw new CommandArgumentException("You can't write the report and pipe input both to stdout!");
+        }
+
         AnnotatedRegionCounter geneRegionCounter = null;
         
         if (gtfFilename != null) {

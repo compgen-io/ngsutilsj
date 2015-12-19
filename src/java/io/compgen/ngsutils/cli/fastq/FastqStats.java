@@ -24,7 +24,6 @@ import java.util.List;
 @Command(name = "fastq-stats", desc = "Statistics about a FASTQ file", category="fastq")
 public class FastqStats extends AbstractOutputCommand {
     private String filename = null;
-    private String outputFilename = null;
     private boolean pipe = false;
     private boolean intab = false;
 
@@ -47,8 +46,8 @@ public class FastqStats extends AbstractOutputCommand {
             throw new CommandArgumentException("You must supply a FASTQ file.");
         }
 
-        if ((outputFilename==null || outputFilename.equals("-")) && pipe) {
-            throw new CommandArgumentException("You can't write the report and redirect input both to stdout!");
+        if (out == System.out && pipe) {
+            throw new CommandArgumentException("You can't write the report and pipe input both to stdout!");
         }
 
         InputStream is = null;
