@@ -240,6 +240,37 @@ public class FastqStats extends AbstractOutputCommand {
         }
         
         println();
+        println("base-qual-dist-read1\tmin\t5%\t25%\t50%\t75%\t95%\tmax");
+        for (int i=0; i<baseQual1.size(); i++) {
+            printtab(i+1);
+            printtab(baseQual1.get(i).getMin());
+            printtab(baseQual1.get(i).getQuantile(0.05));
+            printtab(baseQual1.get(i).getQuantile(0.25));
+            printtab(baseQual1.get(i).getQuantile(0.50));
+            printtab(baseQual1.get(i).getQuantile(0.75));
+            printtab(baseQual1.get(i).getQuantile(0.95));
+            printtab(baseQual1.get(i).getMax());
+            println();
+        }
+        if (interleaved) {
+            println();
+            println("base-qual-dist-read2\tmin\t5%\t25%\t50%\t75%\t95%\tmax");
+            for (int i=0; i<baseQual2.size(); i++) {
+                printtab(i+1);
+                printtab(baseQual2.get(i).getMin());
+                printtab(baseQual2.get(i).getQuantile(0.05));
+                printtab(baseQual2.get(i).getQuantile(0.25));
+                printtab(baseQual2.get(i).getQuantile(0.50));
+                printtab(baseQual2.get(i).getQuantile(0.75));
+                printtab(baseQual2.get(i).getQuantile(0.95));
+                printtab(baseQual2.get(i).getMax());
+                println();
+            }
+        }
+        
+
+        
+        println();
         println("gc-pct-read1\tcount");
         for (int i=readGC1.getMin(); i<=readGC1.getMax(); i++) {
             printtab(i);
