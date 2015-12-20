@@ -175,6 +175,7 @@ public class FastqStats extends AbstractOutputCommand {
             }
             
         }
+        reader.close();
 
         println("Fragment-count:\t"+fragmentCount);
         println("Interleaved:\t"+(interleaved?"yes":"no"));
@@ -271,7 +272,6 @@ public class FastqStats extends AbstractOutputCommand {
                 println();
             }
         }        
-        close();
     }
     
 
