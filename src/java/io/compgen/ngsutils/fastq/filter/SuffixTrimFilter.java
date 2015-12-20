@@ -2,16 +2,16 @@ package io.compgen.ngsutils.fastq.filter;
 
 import io.compgen.ngsutils.fastq.FastqRead;
 
-public class PrefixTrimFilter extends AbstractSingleReadFilter {
+public class SuffixTrimFilter extends AbstractSingleReadFilter {
 	private int removeSize;
-	public PrefixTrimFilter(Iterable<FastqRead> parent, boolean verbose, int removeSize) throws FilteringException {
+	public SuffixTrimFilter(Iterable<FastqRead> parent, boolean verbose, int removeSize) throws FilteringException {
 		super(parent, verbose);
 		if (removeSize < 0) {
 			throw new FilteringException("Number of bases to remove must be greated than zero!");
 		}
 		this.removeSize = removeSize;
         if (verbose) {
-            System.err.println("["+this.getClass().getSimpleName()+"] Removing: " + removeSize + "bases from 5' end of reads");
+            System.err.println("["+this.getClass().getSimpleName()+"] Removing: " + removeSize + "bases from 3' end of reads");
         }
 		
 	}
@@ -23,17 +23,13 @@ public class PrefixTrimFilter extends AbstractSingleReadFilter {
 		String qual = read.getQual();
 		String comment = read.getComment();
 		
-		if (seq.length() != qual.length()) {
-			throw new FilteringException("You cannot use the PrefixTrimFilter with color-space files!");
-		}
-		
-		seq = seq.substring(removeSize);
-		qual = qual.substring(removeSize);
+		seq = seq.substring(0,seq.length()-removeSize);
+		qual = qual.substring(0,seq.length()-removeSize);
 		if (qual.length() > 0) {
 			if (comment == null) {
-				comment = "#prefix";
+				comment = "#suffix";
 			} else {
-				comment = comment + " #prefix";
+				comment = comment + " #suffix";
 			}
 			
 			return new FastqRead(name, seq, qual, comment);

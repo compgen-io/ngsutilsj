@@ -3,12 +3,12 @@ package io.compgen.ngsutils.fastq.filter;
 import io.compgen.ngsutils.fastq.FastqRead;
 
 public class SuffixQualFilter extends AbstractSingleReadFilter {
-	private char qualval;
-	public SuffixQualFilter(Iterable<FastqRead> parent, boolean verbose, char qualval) {
+	private int minqual;
+	public SuffixQualFilter(Iterable<FastqRead> parent, boolean verbose, int minqual) {
 		super(parent, verbose);
-		this.qualval = qualval;
+		this.minqual = minqual;
         if (verbose) {
-            System.err.println("["+this.getClass().getSimpleName()+"] Removing calls with a quality PHRED score of: " + qualval);
+            System.err.println("["+this.getClass().getSimpleName()+"] Removing calls with a quality PHRED score less than: " + minqual);
         }
 	}
 	@Override
@@ -19,7 +19,7 @@ public class SuffixQualFilter extends AbstractSingleReadFilter {
 		String comment = read.getComment();
 		
 		int removed = 0;
-		while (qual.length() > 0 && qual.charAt(qual.length()-1) == qualval) {
+		while (qual.length() > 0 && (qual.charAt(qual.length()-1) - 33) < minqual) {
 			qual = qual.substring(0, qual.length() - 1);
 			removed++;
 		}

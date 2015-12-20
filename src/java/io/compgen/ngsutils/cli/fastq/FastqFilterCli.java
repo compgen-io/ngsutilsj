@@ -13,11 +13,12 @@ import io.compgen.ngsutils.fastq.filter.BlacklistFilter;
 import io.compgen.ngsutils.fastq.filter.FastqFilter;
 import io.compgen.ngsutils.fastq.filter.FilteringException;
 import io.compgen.ngsutils.fastq.filter.PairedFilter;
-import io.compgen.ngsutils.fastq.filter.PrefixFilter;
 import io.compgen.ngsutils.fastq.filter.PrefixQualFilter;
+import io.compgen.ngsutils.fastq.filter.PrefixTrimFilter;
 import io.compgen.ngsutils.fastq.filter.SeqTrimFilter;
 import io.compgen.ngsutils.fastq.filter.SizeFilter;
 import io.compgen.ngsutils.fastq.filter.SuffixQualFilter;
+import io.compgen.ngsutils.fastq.filter.SuffixTrimFilter;
 import io.compgen.ngsutils.fastq.filter.WhitelistFilter;
 import io.compgen.ngsutils.fastq.filter.WildcardFilter;
 
@@ -29,9 +30,10 @@ import java.util.List;
 @Command(name = "fastq-filter", desc = "Filters reads from a FASTQ file.", category="fastq")
 public class FastqFilterCli extends AbstractOutputCommand {
     private boolean paired = false;
-    private String suffixQuality = null;
-    private String prefixQuality = null;
+    private int suffixQuality = -1;
+    private int prefixQuality = -1;
     private int prefixTrimLength = -1;
+    private int suffixTrimLength = -1;
     private int minimumSize = -1;
     private int maxWildcard = -1;
     
@@ -65,42 +67,47 @@ public class FastqFilterCli extends AbstractOutputCommand {
         this.trimSeq = trimSeq;
     }
 
-    @Option(desc="Sequence trim minimum overlap (default: 4)", name="trim-overlap", defaultValue="4")
+    @Option(desc="Sequence trim minimum overlap", name="trim-overlap", defaultValue="4")
     public void setTrimMinOverlap(int trimMinOverlap) {
         this.trimMinOverlap = trimMinOverlap;
     }
 
-    @Option(desc="Sequence trim minimum percent match (default: 0.9)", name="trim-pct", defaultValue="0.9")
+    @Option(desc="Sequence trim minimum percent match", name="trim-pct", defaultValue="0.9")
     public void setTrimMinPctMatch(double trimMinPctMatch) {
         this.trimMinPctMatch = trimMinPctMatch;
     }
     
-    @Option(desc="Paired filter (for interleaved files) (Default: not used)", name="paired")
+    @Option(desc="Paired filter (for interleaved files) (default: not used)", name="paired")
     public void setPaired(boolean paired) {
         this.paired = paired;
     }
 
-    @Option(desc="Suffix quality filter (B-trim, use '#' for Illumina) (Default:'')", name="suffixqual")
-    public void setSuffixQualityFilter(String suffixQuality) {
+    @Option(desc="Suffix quality filter (minimum quality)", name="suffixqual", defaultValue="3")
+    public void setSuffixQualityFilter(int suffixQuality) {
         this.suffixQuality = suffixQuality;
     }
 
-    @Option(desc="Prefix quality filter (B-trim, use '#' for Illumina) (Default:'')", name="prefixqual")
-    public void setPrefixQualityFilter(String prefixQuality) {
+    @Option(desc="Prefix quality filter (minimum quality)", name="prefixqual", defaultValue="3")
+    public void setPrefixQualityFilter(int prefixQuality) {
         this.prefixQuality = prefixQuality;
     }
 
-    @Option(desc="Prefix trim length (Default: 0)", name="prefixtrim", defaultValue = "0")
+    @Option(desc="Prefix fixed-base trim length", name="prefixtrim", defaultValue = "0")
     public void setPrefixTrimLength(int prefixTrimLength) {
         this.prefixTrimLength = prefixTrimLength;
     }
 
-    @Option(desc="Minimum read length (Default: 35)", name="size", defaultValue = "35")
+    @Option(desc="Suffix fixed-base trim length", name="suffixtrim", defaultValue = "0")
+    public void setSufffixTrimLength(int suffixTrimLength) {
+        this.suffixTrimLength = suffixTrimLength;
+    }
+
+    @Option(desc="Minimum read length", name="size", defaultValue = "35")
     public void setMinimumSize(int minimumSize) {
         this.minimumSize = minimumSize;
     }
 
-    @Option(desc="Maximum wildcard calls (Default: 2)", name="wildcard", defaultValue = "2")
+    @Option(desc="Maximum wildcard calls (-1 to disable)", name="wildcard", defaultValue = "2")
     public void setMaxWildcard(int maxWildcard) {
         this.maxWildcard = maxWildcard;
     }
@@ -130,26 +137,41 @@ public class FastqFilterCli extends AbstractOutputCommand {
         final List<FastqFilter> filters = new ArrayList<FastqFilter>();
         Iterable<FastqRead> parent = reader;
 
-        if (maxWildcard > 0) {
+        if (whitelist!=null) {
+            parent = new WhitelistFilter(parent, verbose, whitelist);
+            filters.add((FastqFilter) parent);
+        }
+
+        if (blacklist!=null) {
+            parent = new BlacklistFilter(parent, verbose, blacklist);
+            filters.add((FastqFilter) parent);
+        }
+
+        if (prefixTrimLength > 0) {
+            parent = new PrefixTrimFilter(parent, verbose, prefixTrimLength);
+            filters.add((FastqFilter) parent);
+        }
+
+        if (suffixTrimLength > 0) {
+            parent = new SuffixTrimFilter(parent, verbose, suffixTrimLength);
+            filters.add((FastqFilter) parent);
+        }
+
+        if (suffixQuality > 0) {
+            parent = new SuffixQualFilter(parent, verbose, suffixQuality);
+            filters.add((FastqFilter) parent);
+        }
+
+        if (prefixQuality > 0) {
+            parent = new PrefixQualFilter(parent, verbose, prefixQuality);
+            filters.add((FastqFilter) parent);
+        }
+
+        if (maxWildcard > -1) {
             parent = new WildcardFilter(parent, verbose, maxWildcard);
             filters.add((FastqFilter) parent);
         }
         
-        if (prefixTrimLength > 0) {
-            parent = new PrefixFilter(parent, verbose, prefixTrimLength);
-            filters.add((FastqFilter) parent);
-        }
-
-        if (suffixQuality != null) {
-            parent = new SuffixQualFilter(parent, verbose, suffixQuality.charAt(0));
-            filters.add((FastqFilter) parent);
-        }
-
-        if (prefixQuality != null) {
-            parent = new PrefixQualFilter(parent, verbose, prefixQuality.charAt(0));
-            filters.add((FastqFilter) parent);
-        }
-
         if (trimSeq != null) {
             parent = new SeqTrimFilter(parent, verbose, trimSeq, trimMinOverlap, trimMinPctMatch);
             filters.add((FastqFilter) parent);            
@@ -162,16 +184,6 @@ public class FastqFilterCli extends AbstractOutputCommand {
 
         if (paired) {
             parent = new PairedFilter(parent, verbose);
-            filters.add((FastqFilter) parent);
-        }
-
-        if (whitelist!=null) {
-            parent = new WhitelistFilter(parent, verbose, whitelist);
-            filters.add((FastqFilter) parent);
-        }
-
-        if (blacklist!=null) {
-            parent = new BlacklistFilter(parent, verbose, blacklist);
             filters.add((FastqFilter) parent);
         }
 
