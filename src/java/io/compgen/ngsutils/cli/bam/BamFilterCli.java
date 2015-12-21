@@ -216,7 +216,7 @@ public class BamFilterCli extends AbstractCommand {
         }
     }
 
-    @Option(desc="Only keep reads that have one unique mapping (NH,IH tags, for MAPQ filter use --tag-max)", name="unique-mapping")
+    @Option(desc="Only keep reads that have one unique mapping (NH==1 | IH==1 | MAPQ >0)", name="unique-mapping")
     public void setUniqueMapping(boolean val) {
         unique=val; 
         setMapped(true);
@@ -393,14 +393,21 @@ public class BamFilterCli extends AbstractCommand {
             failedWriter = factory.makeBAMWriter(header, true, new File(failedFilename));
         }
         
-        BamFilter parent = new NullFilter(ProgressUtils.getIterator(name, reader.iterator(), new FileChannelStats(channel), new ProgressMessage<SAMRecord>(){
-            @Override
-            public String msg(SAMRecord current) {
-                if (current != null) {
-                    return current.getReadName();
-                }
-                return null;
-            }}, new CloseableFinalizer<SAMRecord>()), failedWriter);
+        BamFilter parent;
+        if (channel == null) {
+            parent = new NullFilter(reader.iterator(), failedWriter);
+
+        } else {
+            parent = new NullFilter(ProgressUtils.getIterator(name, reader.iterator(), new FileChannelStats(channel), new ProgressMessage<SAMRecord>(){
+                @Override
+                public String msg(SAMRecord current) {
+                    if (current != null) {
+                        return current.getReadName();
+                    }
+                    return null;
+                }}, new CloseableFinalizer<SAMRecord>()), failedWriter);            
+        }
+        
         
         if (filterFlags > 0) {
             parent = new FilterFlags(parent, false, filterFlags);

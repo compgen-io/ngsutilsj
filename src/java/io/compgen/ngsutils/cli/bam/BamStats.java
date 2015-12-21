@@ -12,6 +12,7 @@ import io.compgen.cmdline.annotation.Option;
 import io.compgen.cmdline.annotation.UnnamedArg;
 import io.compgen.cmdline.exceptions.CommandArgumentException;
 import io.compgen.cmdline.impl.AbstractOutputCommand;
+import io.compgen.common.IterUtils;
 import io.compgen.common.StringUtils;
 import io.compgen.common.TallyCounts;
 import io.compgen.common.TallyValues;
@@ -186,18 +187,22 @@ public class BamStats extends AbstractOutputCommand {
         TallyCounts insertSizeCounter = new TallyCounts();
         boolean paired = false;
         
-        Iterator<SAMRecord> it = ProgressUtils.getIterator(name, reader.iterator(), (channel == null)? null : new FileChannelStats(channel), 
-            new ProgressMessage<SAMRecord>() {
-                long i = 0;
-                @Override
-                public String msg(SAMRecord current) {
-                    i++;
-                    return i+" "+current.getReadName();
-                }
-            }, new CloseableFinalizer<SAMRecord>(){});
+        Iterator<SAMRecord> it;
+        if (channel == null) {
+            it = reader.iterator(); 
+        } else {
+            it = ProgressUtils.getIterator(name, reader.iterator(), (channel == null)? null : new FileChannelStats(channel), 
+                new ProgressMessage<SAMRecord>() {
+                    long i = 0;
+                    @Override
+                    public String msg(SAMRecord current) {
+                        i++;
+                        return i+" "+current.getReadName();
+                    }
+                }, new CloseableFinalizer<SAMRecord>(){});
+        }
 
-        while (it.hasNext()) {
-            SAMRecord read = it.next();
+        for (SAMRecord read: IterUtils.wrap(it)) {
             if (read.getReadPairedFlag() && read.getSecondOfPairFlag()) {
                 // We only profile the first read of a pair...
                 continue;
