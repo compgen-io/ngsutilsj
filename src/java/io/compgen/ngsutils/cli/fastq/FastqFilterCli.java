@@ -23,7 +23,9 @@ import io.compgen.ngsutils.fastq.filter.WhitelistFilter;
 import io.compgen.ngsutils.fastq.filter.WildcardFilter;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -38,6 +40,8 @@ public class FastqFilterCli extends AbstractOutputCommand {
     private int maxWildcard = -1;
     
     private String trimSeq = null;
+    private String trimSeq1 = null;
+    private String trimSeq2 = null;
     private int trimMinOverlap = 4;
     private double trimMinPctMatch = 0.9;
     
@@ -45,6 +49,7 @@ public class FastqFilterCli extends AbstractOutputCommand {
     private String blacklist = null;
 
     private String filename;
+    private String summaryFilename=null;
     
     public FastqFilterCli() {
     }
@@ -62,12 +67,27 @@ public class FastqFilterCli extends AbstractOutputCommand {
         this.filename = filename;
     }
 
-    @Option(desc="Sequence trim filter (adapters) (Default: not used)", name="trim-seq")
+    @Option(desc="Write summary of filters to file", name="summary", helpValue="fname")
+    public void setSummaryFilename(String summaryFilename) {
+        this.summaryFilename = summaryFilename;
+    }
+
+    @Option(desc="Sequence trim filter (adapters, all reads) (Default: not used)", name="trim-seq")
     public void setTrimSeq(String trimSeq) {
         this.trimSeq = trimSeq;
     }
 
-    @Option(desc="Sequence trim minimum overlap", name="trim-overlap", defaultValue="4")
+    @Option(desc="Sequence trim filter (adapters, read 1) (Default: not used)", name="trim-seq1")
+    public void setTrimSeq1(String trimSeq1) {
+        this.trimSeq1 = trimSeq1;
+    }
+
+    @Option(desc="Sequence trim filter (adapters, read 2) (Default: not used)", name="trim-seq2")
+    public void setTrimSeq2(String trimSeq2) {
+        this.trimSeq2 = trimSeq2;
+    }
+
+    @Option(desc="Sequence trim minimum overlap", name="trim-overlap", defaultValue="6")
     public void setTrimMinOverlap(int trimMinOverlap) {
         this.trimMinOverlap = trimMinOverlap;
     }
@@ -167,14 +187,24 @@ public class FastqFilterCli extends AbstractOutputCommand {
             filters.add((FastqFilter) parent);
         }
 
+        if (trimSeq != null) {
+            parent = new SeqTrimFilter(parent, verbose, trimSeq1, trimMinOverlap, trimMinPctMatch, -1);
+            filters.add((FastqFilter) parent);            
+        }
+        
+        if (trimSeq1 != null) {
+            parent = new SeqTrimFilter(parent, verbose, trimSeq1, trimMinOverlap, trimMinPctMatch, 1 );
+            filters.add((FastqFilter) parent);            
+        }
+        
+        if (trimSeq2 != null) {
+            parent = new SeqTrimFilter(parent, verbose, trimSeq2, trimMinOverlap, trimMinPctMatch, 2);
+            filters.add((FastqFilter) parent);            
+        }
+        
         if (maxWildcard > -1) {
             parent = new WildcardFilter(parent, verbose, maxWildcard);
             filters.add((FastqFilter) parent);
-        }
-        
-        if (trimSeq != null) {
-            parent = new SeqTrimFilter(parent, verbose, trimSeq, trimMinOverlap, trimMinPctMatch);
-            filters.add((FastqFilter) parent);            
         }
         
         if (minimumSize > 0) {
@@ -210,6 +240,17 @@ public class FastqFilterCli extends AbstractOutputCommand {
                         + "\t" + iter.getAltered() + "\t" + iter.getRemoved());
             }
         }
+
+        if (summaryFilename != null) {
+            PrintStream os = new PrintStream(new FileOutputStream(summaryFilename));
+            os.println("Filter\tTotal\tAltered\tRemoved");
+            for (final FastqFilter iter : filters) {
+                os.println(iter.getClass().getSimpleName() + "\t" + iter.getTotal()
+                        + "\t" + iter.getAltered() + "\t" + iter.getRemoved());
+            }
+            os.close();
+        }
+        
         close();
     }
 }

@@ -5,31 +5,28 @@ import io.compgen.ngsutils.fastq.FastqRead;
 
 public class SeqTrimFilter extends AbstractSingleReadFilter {
     final private int minOverlap;
-    final private double minPct;
-    final private int readNum;
+    final private int readNum; // -1 = all reads, 1 = first read, 2 = second read
 	final private String trimSeq;
 	private String lastName=null;
+	final private int[] threshold;
 
     public SeqTrimFilter(Iterable<FastqRead> parent, boolean verbose, String trimSeq, int minOverlap, double minPct, int readNum) {
         super(parent, verbose);
         this.trimSeq = trimSeq.toUpperCase();
         this.minOverlap = minOverlap;
-        this.minPct = minPct;
         this.readNum = readNum;
         if (verbose) {
             System.err.println("["+this.getClass().getSimpleName()+"] Removing: " + this.trimSeq + " from 3' end of reads with an overlap of at least:" + minOverlap+ " with a minimum match pct: "+ minPct);
         }
+        
+        this.threshold = new int[trimSeq.length()+1];
+        for (int i=minOverlap; i<=trimSeq.length(); i++) {
+            threshold[i] = (int) Math.ceil(i * minPct);
+        }
     }
 
     public SeqTrimFilter(Iterable<FastqRead> parent, boolean verbose, String trimSeq, int minOverlap, double minPct) {
-        super(parent, verbose);
-        this.trimSeq = trimSeq.toUpperCase();
-        this.minOverlap = minOverlap;
-        this.minPct = minPct;
-        this.readNum = 0;
-        if (verbose) {
-            System.err.println("["+this.getClass().getSimpleName()+"] Removing: " + this.trimSeq + " from 3' end of reads with an overlap of at least:" + minOverlap+ " with a minimum match pct: "+ minPct);
-        }
+        this(parent, verbose, trimSeq, minOverlap, minPct, -1);
     }
 
 	@Override
@@ -40,22 +37,23 @@ public class SeqTrimFilter extends AbstractSingleReadFilter {
 	    }
 	    lastName = read.getName();
 	    
-	    if (this.readNum != 0 && this.readNum != readNum) {
+	    if (this.readNum > 0 && this.readNum != readNum) {
 	        return read;
 	    }
 	    
 	    int i = minOverlap;
 	    while (i < read.getSeq().length()) {
+	        int thres = threshold[Math.min(i, trimSeq.length())];
 	        String subseq = StringUtils.sliceRight(read.getSeq(), -i);
 	        if (verbose) {
 	            System.err.print("["+this.getClass().getSimpleName()+"] checking: " + subseq);
 	        }
 	        int matches = StringUtils.matchCount(trimSeq, subseq);
             if (verbose) {
-                System.err.println(" matches:" + matches+" pct:" + ((double)matches/i));
+                System.err.println(" matches:" + matches+" min:" + thres);
             }
 	        
-	        if (((double)matches/i) > minPct) {
+	        if (matches >= thres) {
 	            if (verbose) {
 	                System.err.println("    remaining seq:" + (read.getSeq().length()-i));
 	            }
@@ -64,9 +62,17 @@ public class SeqTrimFilter extends AbstractSingleReadFilter {
                     String newqual = read.getQual().substring(0, read.getQual().length() - i);
                     String comment = read.getComment();
                     if (comment == null) {
-                        comment = "#trimseq";
+                        if (this.readNum > 0) {
+                            comment = "#trimseq"+this.readNum;
+                        } else {
+                            comment = "#trimseq";
+                        }
                     } else {
-                        comment += " #trimseq";
+                        if (this.readNum > 0) {
+                            comment += " #trimseq"+this.readNum;
+                        } else {
+                            comment += " #trimseq";
+                        }
                     }
 	                return new FastqRead(read.getName(), newseq, newqual, comment);
 	            } else{
