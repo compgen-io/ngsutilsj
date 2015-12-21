@@ -154,6 +154,9 @@ public class FastqStats extends AbstractOutputCommand {
                     if (baseFreq2.size() <= i) {
                         baseFreq2.add(new TallyValues<Character>());
                     }
+                    
+                    baseFreq2.get(i).incr(upper.charAt(i));
+
                     if (upper.charAt(i) == 'G' || upper.charAt(i) == 'C') {
                         gc++;
                     }
