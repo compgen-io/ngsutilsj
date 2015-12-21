@@ -216,7 +216,7 @@ public class BamFilterCli extends AbstractCommand {
         }
     }
 
-    @Option(desc="Only keep reads that have one unique mapping (NH==1 | IH==1 | MAPQ >0)", name="unique-mapping")
+    @Option(desc="Only keep reads that have one unique mapping (NH==1|IH==1|MAPQ>0)", name="unique-mapping")
     public void setUniqueMapping(boolean val) {
         unique=val; 
         setMapped(true);
