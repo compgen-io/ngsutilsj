@@ -35,7 +35,7 @@ public class SuffixQualFilter extends AbstractSingleReadFilter {
     			}
 		    }
 			
-			return new FastqRead(name, seq, qual, comment);
+            return new FastqRead(name, seq, qual, comment);
 		}
 		
 		return null;
