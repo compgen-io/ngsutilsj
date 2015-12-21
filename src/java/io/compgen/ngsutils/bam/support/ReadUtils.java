@@ -416,7 +416,7 @@ public class ReadUtils {
         if (mappings != null && mappings > 1) {
             return false;
         }
-        return true;
+        return read.getMappingQuality() > 0;
     }
 
     public static boolean isJunctionSpanning(SAMRecord read) {
