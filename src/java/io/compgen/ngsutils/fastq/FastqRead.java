@@ -9,22 +9,19 @@ public class FastqRead {
 	private String seq;
 	private String qual;
 	
-	public FastqRead(String name, String seq, String qual) {
-		this.name = name;
-		this.comment = null;
-		this.seq = seq.toUpperCase();
-		this.qual = qual;		
-	}
-	public FastqRead(String name, String seq, String qual, String comment) {
-		this.name = name;
-		if (comment != null && !comment.equals("")) {
-			this.comment = comment;
-		} else {
-			this.comment = null;
-		}
-		this.seq = seq.toUpperCase();
-		this.qual = qual;
-	}
+    public FastqRead(String name, String seq, String qual) {
+        this(name, seq, qual, null);
+    }
+    public FastqRead(String name, String seq, String qual, String comment) {
+        this.name = name;
+        if (comment != null && !comment.equals("")) {
+            this.comment = comment;
+        } else {
+            this.comment = null;
+        }
+        this.seq = seq.toUpperCase();
+        this.qual = qual;
+    }
 
 	public String getName() {
 		return name;
