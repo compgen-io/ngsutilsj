@@ -410,11 +410,12 @@ public class ReadUtils {
 
     public static boolean isReadUniquelyMapped(SAMRecord read) {
         Integer mappings = read.getIntegerAttribute("NH");
-        if (mappings == null || mappings < 0) {
-            mappings = read.getIntegerAttribute("IH");
+        if (mappings != null) {
+            return (mappings == 1);
         }
-        if (mappings != null && mappings > 1) {
-            return false;
+        mappings = read.getIntegerAttribute("IH");
+        if (mappings != null) {
+            return (mappings == 1);
         }
         return read.getMappingQuality() != 0;
     }
