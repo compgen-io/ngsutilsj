@@ -122,7 +122,7 @@ public class FastqFilterCli extends AbstractOutputCommand {
         this.suffixTrimLength = suffixTrimLength;
     }
 
-    @Option(desc="Minimum read length", name="size", defaultValue = "35")
+    @Option(desc="Minimum read length", name="size", defaultValue = "50")
     public void setMinimumSize(int minimumSize) {
         this.minimumSize = minimumSize;
     }
