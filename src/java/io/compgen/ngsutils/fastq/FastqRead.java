@@ -2,12 +2,16 @@ package io.compgen.ngsutils.fastq;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.HashMap;
+import java.util.Map;
 
 public class FastqRead {
 	private String name;
 	private String comment;
 	private String seq;
 	private String qual;
+	
+	private Map<String, String> attributes = null;
 	
     public FastqRead(String name, String seq, String qual) {
         this(name, seq, qual, null);
@@ -35,7 +39,21 @@ public class FastqRead {
 	public String getQual() {
 		return qual;
 	}
-	
+
+	public void setAttribute(String key, String value) {
+	    if (attributes == null) {
+	        attributes = new HashMap<String, String>();
+	    }
+	    attributes.put(key, value);
+	}
+
+    public String getAttribute(String key) {
+        if (attributes == null) {
+            return null;
+        }
+        return attributes.get(key);
+    }
+
 	public void write(OutputStream out) throws IOException {
 	    // technically the seq and qual can be wrapped, but it's rarely used and not recommended.
 	    // so, that's not implemented here.

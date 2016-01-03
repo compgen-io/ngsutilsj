@@ -35,7 +35,6 @@ public class BamFastqReader implements FastqReader {
 
     private SamReader reader = null;
     private String name = null;
-    private String readGroup = null;
     private boolean comments = true;
     
     private boolean first = true;
@@ -86,10 +85,6 @@ public class BamFastqReader implements FastqReader {
             this.deduplicate = val;
         }
     }
-
-    public void setReadGroup(String readGroup) {
-        this.readGroup=readGroup;        
-    }    
 
     public void setIncludeMapped(boolean val) {
         if (samIterator == null) {
@@ -195,12 +190,6 @@ public class BamFastqReader implements FastqReader {
                         }
                     }
                     
-                    if (readGroup != null) {
-                        SAMReadGroupRecord rg = read.getReadGroup();
-                        if (rg == null || !rg.getId().equals(readGroup)) {
-                            continue;
-                        }
-                    }
 
                     String name = read.getReadName();
                     String seq;
@@ -219,6 +208,12 @@ public class BamFastqReader implements FastqReader {
                     }
   
                     FastqRead fq = new FastqRead(name, seq, qual, comment);
+                    
+                    SAMReadGroupRecord rg = read.getReadGroup();
+                    if (rg != null) {
+                        fq.setAttribute("RGID", rg.getId());
+                    }
+                    
                     
                     if (read.getReadPairedFlag()) {
                         if (first && !second && read.getFirstOfPairFlag() && (!deduplicate || !exported.contains(name))) {

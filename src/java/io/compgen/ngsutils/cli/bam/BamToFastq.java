@@ -14,6 +14,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.zip.GZIPOutputStream;
 
 /**
@@ -30,6 +32,7 @@ public class BamToFastq extends AbstractCommand {
     private String outTemplate=null;
     private String readGroup=null;
 
+    private boolean allReadGroups = false;
     private boolean split = false;
     private boolean compress = false;
     private boolean force = false;
@@ -38,7 +41,7 @@ public class BamToFastq extends AbstractCommand {
     private boolean onlyFirst = false;
     private boolean onlySecond = false;
     private boolean mapped = false;
-    private boolean unmapped = false;
+    private boolean unmapped = true;
     
     private boolean readNameSorted = false;
     private boolean singleEnded = false;
@@ -51,9 +54,14 @@ public class BamToFastq extends AbstractCommand {
         this.filename = filename;
     }
 
-    @Option(desc="Output filename template (default: stdout)", name="out")
+    @Option(desc="Output filename template (default: stdout)", name="out", helpValue="templ")
     public void setOutTemplate(String outTemplate) {
         this.outTemplate = outTemplate;
+    }
+
+    @Option(desc="Export all read-groups (must specify --out, read-group will be appended to output template)", name="all-rg")
+    public void setAllReadGroups(boolean allReadGroups) {
+        this.allReadGroups = allReadGroups;
     }
 
     @Option(desc="Export only this read group (ID)", name="rg")
@@ -86,12 +94,12 @@ public class BamToFastq extends AbstractCommand {
         this.split = val;
     }
 
-    @Option(desc="Ouput only first reads (default: output both)", name="first")
+    @Option(desc="Output only first reads (default: output both)", name="first")
     public void setFirst(boolean val) {
         this.onlyFirst = val;
     }
 
-    @Option(desc="Ouput only second reads (default: output both)", name="second")
+    @Option(desc="Output only second reads (default: output both)", name="second")
     public void setSecond(boolean val) {
         this.onlySecond = val;
     }
@@ -130,12 +138,16 @@ public class BamToFastq extends AbstractCommand {
             throw new CommandArgumentException("You cannot have split output to stdout!");
         }
 
+        if ((outTemplate == null || outTemplate.equals("-")) && allReadGroups) {
+            throw new CommandArgumentException("Exporting all read groups to stdout is not supported!");
+        }
+
         if (onlyFirst && onlySecond) {
             throw new CommandArgumentException("You can not use --first and --second at the same time!");
         }
 
         if (!mapped && !unmapped) {
-            throw new CommandArgumentException("You aren't outputting any reads (--no-unmapped without --mapped)!");
+            throw new CommandArgumentException("You aren't outputting any reads (--no-unmapped set but --mapped not set)!");
         }
 
         if (split && (onlyFirst || onlySecond)) {
@@ -143,85 +155,32 @@ public class BamToFastq extends AbstractCommand {
         }
         
         OutputStream[] outs;
+        Map<String, OutputStream> rgOuts = null;
         if (outTemplate==null || outTemplate.equals("-")) {
             outs = new OutputStream[] { new BufferedOutputStream(System.out) };
             if (verbose) {
                 System.err.println("Output: stdout");
             }
-        } else if (outTemplate != null && (onlyFirst || onlySecond)) {
-            String outFilename;
-            if (compress) {
-                if (onlyFirst) { 
-                    outFilename = outTemplate+"_R1.fastq.gz";
-                } else {
-                    outFilename = outTemplate+"_R2.fastq.gz";
-                }
-            } else {
-                if (onlyFirst) { 
-                    outFilename = outTemplate+"_R1.fastq";
-                } else {
-                    outFilename = outTemplate+"_R2.fastq";
-                }
-            }
-            if (new File(outFilename).exists() && !force) {
-                throw new CommandArgumentException("Output file: "+ outFilename+" exists! Use --force to overwrite!");
-            }
-            if (verbose) {
-                System.err.println("Output: " + outFilename);
-            }
-            if (compress) {
-                outs = new OutputStream[] { new GZIPOutputStream(new FileOutputStream(outFilename)) };
-            } else {
-                outs = new OutputStream[] { new BufferedOutputStream(new FileOutputStream(outFilename)) };
-            }
-        } else if (outTemplate != null && split) {
-            String[] outFilenames;
-            if (compress) {
-                outFilenames = new String[] { outTemplate+"_R1.fastq.gz", outTemplate+"_R2.fastq.gz" };
-            } else {
-                outFilenames = new String[] {outTemplate+"_R1.fastq", outTemplate+"_R2.fastq"};
-            }
-            for (String outFilename: outFilenames) {
-                if (new File(outFilename).exists() && !force) {
-                    throw new CommandArgumentException("Output file: "+ outFilename+" exists! Use --force to overwrite!");
-                }
-                if (verbose) {
-                    System.err.println("Output: " + outFilename);
-                }
-            }
-
-            outs = new OutputStream[2];
-            if (compress) {
-                outs[0] = new GZIPOutputStream(new FileOutputStream(outFilenames[0]));
-                outs[1] = new GZIPOutputStream(new FileOutputStream(outFilenames[1]));                
-            } else {
-                outs[0] = new BufferedOutputStream(new FileOutputStream(outFilenames[0]));
-                outs[1] = new BufferedOutputStream(new FileOutputStream(outFilenames[1]));                
-            }
+        } else if (allReadGroups) {
+            outs = null;
+            rgOuts = new HashMap<String, OutputStream>();
         } else {
-            String outFilename;
-            if (compress) {
-                outFilename = outTemplate+".fastq.gz";
+            if (onlyFirst) {
+                outs = new OutputStream[] { buildOutputStream(true, false, null) }; 
+            } else if (onlySecond) {
+                outs = new OutputStream[] { buildOutputStream(false, true, null) };
+            } else if (split) {
+                outs = new OutputStream[] { 
+                        buildOutputStream(true, false, null), 
+                        buildOutputStream(false, true, null) 
+                        };
             } else {
-                outFilename = outTemplate+".fastq";
-            }
-            if (new File(outFilename).exists() && !force) {
-                throw new CommandArgumentException("Output file: "+ outFilename+" exists! Use --force to overwrite!");
-            }
-            if (verbose) {
-                System.err.println("Output: " + outFilename);
-            }
-            if (compress) {
-                outs = new OutputStream[] { new GZIPOutputStream(new FileOutputStream(outFilename)) };
-            } else {
-                outs = new OutputStream[] { new BufferedOutputStream(new FileOutputStream(outFilename)) };
+                outs = new OutputStream[] { buildOutputStream(true, true, null) };
             }
         }
+
 
         BamFastqReader bfq = new BamFastqReader(filename);
-        if (readGroup != null) {
-            bfq.setReadGroup(readGroup);
-        }
         bfq.setLenient(lenient);
         bfq.setSilent(silent);
         bfq.setFirst(!onlySecond);
@@ -240,6 +199,9 @@ public class BamToFastq extends AbstractCommand {
         long i=0;
         int readCount = 0;
         for (FastqRead read: bfq) {
+            if (readGroup != null && !readGroup.equals(read.getAttribute("RGID"))) {
+                continue;
+            }
             if (verbose) {
                 i++;
                 if (i % 100000 == 0) {
@@ -259,19 +221,95 @@ public class BamToFastq extends AbstractCommand {
             } else {
                 readCount = 1;
             }
-            
-            if (split && read.getName().equals(lastName)) {
+
+            if (allReadGroups) {
+                OutputStream out = null;
+                if (split) {
+                    if (read.getName().equals(lastName)) {
+                        String key = read.getAttribute("RGID")+"_R2";
+                        
+                        if (!rgOuts.containsKey(key)) {
+                            out = buildOutputStream(false, true, read.getAttribute("RGID"));
+                            rgOuts.put(key,  out);
+                        } else {
+                            out = rgOuts.get(key);
+                        }
+                    } else {
+                        String key = read.getAttribute("RGID")+"_R1";
+                        
+                        if (!rgOuts.containsKey(key)) {
+                            out = buildOutputStream(true, false, read.getAttribute("RGID"));
+                            rgOuts.put(key,  out);
+                        } else {
+                            out = rgOuts.get(key);
+                        }
+                    }
+                } else {
+                    String key = read.getAttribute("RGID");
+                    
+                    if (!rgOuts.containsKey(key)) {
+                        out = buildOutputStream(true, true, read.getAttribute("RGID"));
+                        rgOuts.put(key,  out);
+                    } else {
+                        out = rgOuts.get(key);
+                    }
+                }
+                read.write(out);
+                
+            } else if (split && read.getName().equals(lastName)) {
                 read.write(outs[1]);
-                lastName = null;
             } else {
                 read.write(outs[0]);
-                lastName = read.getName();
             }
+            lastName = read.getName();
         }
         bfq.close();
-        
-        for (OutputStream out: outs) {
-            out.close();
+
+        if (outs != null) {
+            for (OutputStream out: outs) {
+                out.close();
+            }
+        } else {
+            for (OutputStream out: rgOuts.values()) {
+                out.close();
+            }
         }
+        
     }    
+
+    private OutputStream buildOutputStream(boolean read1, boolean read2, String readGroup) throws CommandArgumentException, IOException {
+        String outFilename = outTemplate;
+        
+        if (readGroup != null) {
+            outFilename += "_RG"+readGroup;
+        }
+        
+        if (read1 && !read2) {
+            outFilename += "_R1";
+        } else if (read2 && !read1) {
+            outFilename += "_R2";
+        }
+        
+        if (compress) {
+            outFilename += ".fastq.gz";
+        } else {
+            outFilename += ".fastq";
+        }
+        
+        if (new File(outFilename).exists() && !force) {
+            throw new CommandArgumentException("Output file: "+ outFilename+" exists! Use --force to overwrite!");
+        }
+
+        if (verbose) {
+            System.err.println("Output: " + outFilename);
+        }
+
+        if (compress) {
+            return new GZIPOutputStream(new FileOutputStream(outFilename));
+        } else {
+            return new BufferedOutputStream(new FileOutputStream(outFilename));
+        }
+
+    }
+    
 }
