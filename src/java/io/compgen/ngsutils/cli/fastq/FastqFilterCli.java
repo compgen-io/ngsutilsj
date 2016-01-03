@@ -42,7 +42,7 @@ public class FastqFilterCli extends AbstractOutputCommand {
     private String trimSeq = null;
     private String trimSeq1 = null;
     private String trimSeq2 = null;
-    private int trimMinOverlap = 4;
+    private int trimMinOverlap = 6;
     private double trimMinPctMatch = 0.9;
     
     private String whitelist = null;
@@ -72,17 +72,25 @@ public class FastqFilterCli extends AbstractOutputCommand {
         this.summaryFilename = summaryFilename;
     }
 
-    @Option(desc="Sequence trim filter (adapters, all reads) (Default: not used)", name="trim-seq")
+    @Option(desc="Sequence trim filter using default Illumina R1/R2 adapters", name="trim-illumina")
+    public void setTrimIllumina(boolean trimIllumina) {
+        if (trimIllumina) {
+            this.trimSeq1 = "AGATCGGAAGAGCACACGTC";
+            this.trimSeq2 = "AGATCGGAAGAGCGTCGTGT";
+        }
+    }
+
+    @Option(desc="Sequence trim filter (adapters, all reads)", name="trim-seq")
     public void setTrimSeq(String trimSeq) {
         this.trimSeq = trimSeq;
     }
 
-    @Option(desc="Sequence trim filter (adapters, read 1) (Default: not used)", name="trim-seq1")
+    @Option(desc="Sequence trim filter (adapters, read 1)", name="trim-seq1")
     public void setTrimSeq1(String trimSeq1) {
         this.trimSeq1 = trimSeq1;
     }
 
-    @Option(desc="Sequence trim filter (adapters, read 2) (Default: not used)", name="trim-seq2")
+    @Option(desc="Sequence trim filter (adapters, read 2)", name="trim-seq2")
     public void setTrimSeq2(String trimSeq2) {
         this.trimSeq2 = trimSeq2;
     }
@@ -102,42 +110,42 @@ public class FastqFilterCli extends AbstractOutputCommand {
         this.paired = paired;
     }
 
-    @Option(desc="Suffix quality filter (minimum quality)", name="suffixqual", defaultValue="3")
+    @Option(desc="Suffix quality filter (minimum quality)", name="suffixqual")
     public void setSuffixQualityFilter(int suffixQuality) {
         this.suffixQuality = suffixQuality;
     }
 
-    @Option(desc="Prefix quality filter (minimum quality)", name="prefixqual", defaultValue="3")
+    @Option(desc="Prefix quality filter (minimum quality)", name="prefixqual")
     public void setPrefixQualityFilter(int prefixQuality) {
         this.prefixQuality = prefixQuality;
     }
 
-    @Option(desc="Prefix fixed-base trim length", name="prefixtrim", defaultValue = "0")
+    @Option(desc="Prefix fixed-base trim length", name="prefixtrim")
     public void setPrefixTrimLength(int prefixTrimLength) {
         this.prefixTrimLength = prefixTrimLength;
     }
 
-    @Option(desc="Suffix fixed-base trim length", name="suffixtrim", defaultValue = "0")
+    @Option(desc="Suffix fixed-base trim length", name="suffixtrim")
     public void setSufffixTrimLength(int suffixTrimLength) {
         this.suffixTrimLength = suffixTrimLength;
     }
 
-    @Option(desc="Minimum read length", name="size", defaultValue = "50")
+    @Option(desc="Minimum read length", name="size")
     public void setMinimumSize(int minimumSize) {
         this.minimumSize = minimumSize;
     }
 
-    @Option(desc="Maximum wildcard calls (-1 to disable)", name="wildcard", defaultValue = "2")
+    @Option(desc="Maximum wildcard calls (-1 to disable)", name="wildcard")
     public void setMaxWildcard(int maxWildcard) {
         this.maxWildcard = maxWildcard;
     }
 
-    @Option(desc="Blacklist filename (read names)", name="blacklist")
+    @Option(desc="Blacklist filename (text file, one read name per line)", name="blacklist")
     public void setBlacklist(String blacklist) {
         this.blacklist = blacklist;
     }
 
-    @Option(desc="Whitelist filename (read names)", name="whitelist")
+    @Option(desc="Whitelist filename (text file, one read name per line)", name="whitelist")
     public void setWhitelist(String whitelist) {
         this.whitelist = whitelist;
     }
