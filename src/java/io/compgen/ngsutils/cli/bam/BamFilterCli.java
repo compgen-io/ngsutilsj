@@ -92,7 +92,7 @@ public class BamFilterCli extends AbstractCommand {
     private int requiredFlags = 0;
     
     private Orientation orient = Orientation.UNSTRANDED;
-    
+
     @UnnamedArg(name = "INFILE OUTFILE")
     public void setFilename(List<String> filenames) throws CommandArgumentException {
         if (filenames.size() != 2) {
@@ -327,7 +327,6 @@ public class BamFilterCli extends AbstractCommand {
         }
     }
 
-
     @Exec
     public void exec() throws CommandArgumentException, IOException {
         if (filenames == null || filenames.size()!=2) {
@@ -407,7 +406,6 @@ public class BamFilterCli extends AbstractCommand {
                     return null;
                 }}, new CloseableFinalizer<SAMRecord>()), failedWriter);            
         }
-        
         
         if (filterFlags > 0) {
             parent = new FilterFlags(parent, false, filterFlags);
