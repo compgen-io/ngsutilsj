@@ -26,7 +26,11 @@ public class FastqStats extends AbstractOutputCommand {
     private String filename = null;
     private boolean pipe = false;
     private boolean intab = false;
+    private boolean calcAdapter = false;
 
+    private String adapterIllumina = "AGATCGGAAGAG";  // From Universal Adapters, usable on first and second reads
+    
+    
     public FastqStats() {
     }
 
@@ -38,6 +42,11 @@ public class FastqStats extends AbstractOutputCommand {
     @Option(desc="Pipe input file to stdout (for streaming)", name="pipe")
     public void setRedirectInput(boolean pipe) {
         this.pipe = pipe;
+    }
+
+    @Option(desc="Calculate adapter pos (Illumina adapters)", name="adapters")
+    public void setCalcAdapter(boolean calcAdapter) {
+        this.calcAdapter =calcAdapter;
     }
 
     @Exec
@@ -75,6 +84,8 @@ public class FastqStats extends AbstractOutputCommand {
         int readnum = 1;
         
         long fragmentCount = 0;
+        int maxlen1 = 0;
+        int maxlen2 = 0;
         
         TallyCounts readLength1 = new TallyCounts();
         TallyCounts readLength2 = new TallyCounts();
@@ -88,9 +99,12 @@ public class FastqStats extends AbstractOutputCommand {
         List<TallyCounts> baseQual1 = new ArrayList<TallyCounts>();;
         List<TallyCounts> baseQual2 = new ArrayList<TallyCounts>();;
         
+        TallyCounts adapterPos1 = new TallyCounts();
+        TallyCounts adapterPos2 = new TallyCounts();
+        
         TallyCounts medianQvals1 = new TallyCounts();
         TallyCounts medianQvals2 = new TallyCounts();
-
+        
         FastqReader reader = Fastq.open(is, null, channel, name);
 
         for (FastqRead read: reader) {
@@ -110,6 +124,9 @@ public class FastqStats extends AbstractOutputCommand {
             if (readnum == 1) {
                 // read length
                 readLength1.incr(read.getQual().length());
+                if (read.getQual().length() > maxlen1) {
+                    maxlen1 = read.getQual().length();
+                }
 
                 // GC % over the read
                 int gc = 0;
@@ -141,9 +158,21 @@ public class FastqStats extends AbstractOutputCommand {
                     
                 medianQvals1.incr((int)readQvals.getMedian());
                 
+                if (calcAdapter) {
+                    for (int i=0; i<upper.length()-adapterIllumina.length(); i++ ) {
+                        if (upper.substring(i, i+adapterIllumina.length()).equals(adapterIllumina)) {
+                            adapterPos1.incr(i);
+                            break;
+                        }
+                    }
+                }
+                
             } else {
                 // read length
                 readLength2.incr(read.getQual().length());
+                if (read.getQual().length() > maxlen2) {
+                    maxlen2 = read.getQual().length();
+                }
 
                 // GC % over the read
                 int gc = 0;
@@ -175,6 +204,14 @@ public class FastqStats extends AbstractOutputCommand {
 
                 medianQvals2.incr((int)readQvals.getMedian());
 
+                if (calcAdapter) {
+                    for (int i=0; i<upper.length()-adapterIllumina.length(); i++ ) {
+                        if (upper.substring(i, i+adapterIllumina.length()).equals(adapterIllumina)) {
+                            adapterPos2.incr(i);
+                            break;
+                        }
+                    }
+                }
             }
             
         }
@@ -306,6 +343,25 @@ public class FastqStats extends AbstractOutputCommand {
                 println();
             }
         }        
+
+        if (calcAdapter) {
+            println();
+            println("adapter-counts-at-pos-read1\tcount");
+            for (int i=0; i<=maxlen1; i++) {
+                printtab(i+1);
+                printtab(adapterPos1.getCount(i));
+                println();
+            }
+            if (interleaved) {
+                println();
+                println("adapter-counts-at-pos-read2\tcount");
+                for (int i=0; i<=maxlen2; i++) {
+                    printtab(i+1);
+                    printtab(adapterPos2.getCount(i));
+                    println();
+                }
+            }
+        }
     }
     
 
