@@ -16,6 +16,7 @@ import io.compgen.ngsutils.cli.bam.BamCoverage;
 import io.compgen.ngsutils.cli.bam.BamFilterCli;
 import io.compgen.ngsutils.cli.bam.BamReadGroup;
 import io.compgen.ngsutils.cli.bam.BamSampleReads;
+import io.compgen.ngsutils.cli.bam.BamSplit;
 import io.compgen.ngsutils.cli.bam.BamStats;
 import io.compgen.ngsutils.cli.bam.BamToBed;
 import io.compgen.ngsutils.cli.bam.BamToFastq;
@@ -78,6 +79,7 @@ public class NGSUtils {
                 .addCommand(FastqFilterCli.class)
                 .addCommand(BinCount.class)
                 .addCommand(BamBest.class)
+                .addCommand(BamSplit.class)
                 .addCommand(BamCheck.class)
                 .addCommand(BamCount.class)
                 .addCommand(BamSampleReads.class)
