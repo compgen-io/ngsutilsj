@@ -6,6 +6,7 @@ import htsjdk.samtools.SAMFileWriter;
 import htsjdk.samtools.SAMFileWriterFactory;
 import htsjdk.samtools.SAMProgramRecord;
 import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.SamInputResource;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
@@ -38,6 +39,7 @@ public class BamSplit extends AbstractCommand {
     private boolean lenient = false;
     private boolean silent = false;
     private boolean byRef = false;
+    private boolean unmapped = false;
     private int readCount = -1;
     private String outTemplate = null;
 
@@ -49,6 +51,11 @@ public class BamSplit extends AbstractCommand {
     @Option(desc = "Split by reference (chromosome)", name="by-ref")
     public void setByRef(boolean byRef) {
         this.byRef = byRef;
+    }
+
+    @Option(desc = "Include unmapped reads in the output", name="unmapped")
+    public void setUnmapped(boolean unmapped) {
+        this.unmapped = unmapped;
     }
 
     @Option(desc = "Split into chunks with N reads", name="read-count", helpValue="N")
@@ -129,17 +136,26 @@ public class BamSplit extends AbstractCommand {
         int chunk = 0;
 
         Map<String, SAMFileWriter> refWriters = new HashMap<String, SAMFileWriter>();
+        if (byRef) {
+            for (SAMSequenceRecord ref: header.getSequenceDictionary().getSequences()) {
+                refWriters.put(ref.getSequenceName(), factory.makeBAMWriter(header, true, new File(outTemplate+"."+ref.getSequenceName()+".bam")));
+            }
+            if (unmapped) {
+                refWriters.put("UNMAPPED", factory.makeBAMWriter(header, true, new File(outTemplate+"."+"UNMAPPED"+".bam")));
+            }
+        }
+
         
         while (it.hasNext()) {
             SAMRecord read = it.next();
+            if (read.getReadUnmappedFlag() && !unmapped) {
+                continue;
+            }
             
             if (byRef) {
                 String ref = read.getReferenceName();
-                if (ref == null) {
+                if (ref == null || read.getReadUnmappedFlag()) {
                     ref = "UNMAPPED";                    
-                }
-                if (!refWriters.containsKey(ref)) {
-                    refWriters.put(ref, factory.makeBAMWriter(header, true, new File(outTemplate+"."+ref+".bam")));
                 }
                 refWriters.get(ref).addAlignment(read);
                 lastRef = read.getReferenceName();
