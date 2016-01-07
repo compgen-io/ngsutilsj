@@ -158,7 +158,13 @@ public class BamSplit extends AbstractCommand {
                     ref = "UNMAPPED";                    
                 }
                 refWriters.get(ref).addAlignment(read);
-                lastRef = read.getReferenceName();
+                if (header.getSortOrder() == SortOrder.coordinate) {
+                    if (lastRef != null && !ref.equals(lastRef)) {
+                        refWriters.get(lastRef).close();
+                        refWriters.remove(lastRef);
+                    }
+                    lastRef = read.getReferenceName();
+                }
             } else {
                 if (out == null) {
                     chunk++;
