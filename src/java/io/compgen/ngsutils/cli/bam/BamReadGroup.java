@@ -138,7 +138,7 @@ public class BamReadGroup extends AbstractCommand {
         }
 
         SAMFileHeader header = reader.getFileHeader().clone();
-        SAMProgramRecord pg = NGSUtils.buildSAMProgramRecord("bam-readgroup-RG-"+readGroupID, header);
+        SAMProgramRecord pg = NGSUtils.buildSAMProgramRecord("bam-readgroup", header);
         List<SAMProgramRecord> pgRecords = new ArrayList<SAMProgramRecord>(header.getProgramRecords());
         pgRecords.add(0, pg);
         header.setProgramRecords(pgRecords);
