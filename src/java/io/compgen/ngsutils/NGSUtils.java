@@ -31,6 +31,7 @@ import io.compgen.ngsutils.cli.bed.BedToBed3;
 import io.compgen.ngsutils.cli.bed.BedToBed6;
 import io.compgen.ngsutils.cli.bed.BedToFasta;
 import io.compgen.ngsutils.cli.fasta.FastaFilter;
+import io.compgen.ngsutils.cli.fasta.FastaGC;
 import io.compgen.ngsutils.cli.fasta.FastaGenerateReads;
 import io.compgen.ngsutils.cli.fasta.FastaMask;
 import io.compgen.ngsutils.cli.fasta.FastaNames;
@@ -97,6 +98,7 @@ public class NGSUtils {
                 .addCommand(FastaTag.class)
                 .addCommand(FastaNames.class)
                 .addCommand(FastaGenerateReads.class)
+                .addCommand(FastaGC.class)
                 .addCommand(FastaSplit.class)
                 .addCommand(FastaMask.class)
                 .addCommand(FastaFilter.class)

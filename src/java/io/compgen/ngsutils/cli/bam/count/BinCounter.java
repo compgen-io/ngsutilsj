@@ -60,8 +60,9 @@ public class BinCounter {
                 count = plus.get(curBin);
                 plus.remove(curBin);
             }
-            if (includeEmpty || count > 0) {
-                callback.writeBin(refName, curBin * binSize, (curBin + 1) * binSize, Strand.PLUS, count);
+            if (includeEmpty || count > 0) {                
+                int binEnd = Math.min((curBin + 1) * binSize, refLength);
+                callback.writeBin(refName, curBin * binSize, binEnd, Strand.PLUS, count);
             }
             count = 0;
             if (stranded) {
@@ -70,7 +71,8 @@ public class BinCounter {
                     minus.remove(curBin);
                 }
                 if (includeEmpty || count > 0) {
-                    callback.writeBin(refName, curBin * binSize, (curBin + 1) * binSize, Strand.MINUS, count);
+                    int binEnd = Math.min((curBin + 1) * binSize, refLength);
+                    callback.writeBin(refName, curBin * binSize, binEnd, Strand.MINUS, count);
                 }
             }
             curBin++;
@@ -95,7 +97,8 @@ public class BinCounter {
                 plus.remove(curBin);
             }
             if (includeEmpty || count > 0) {
-                callback.writeBin(refName, curBin * binSize, (curBin + 1) * binSize, Strand.PLUS, count);
+                int binEnd = Math.min((curBin + 1) * binSize, refLength);
+                callback.writeBin(refName, curBin * binSize, binEnd, Strand.PLUS, count);
             }
             if (stranded) {
                 count = 0;
@@ -104,7 +107,8 @@ public class BinCounter {
                     minus.remove(curBin);
                 }
                 if (includeEmpty || count > 0) {
-                    callback.writeBin(refName, curBin * binSize, (curBin + 1) * binSize, Strand.MINUS, count);
+                    int binEnd = Math.min((curBin + 1) * binSize, refLength);
+                    callback.writeBin(refName, curBin * binSize, binEnd, Strand.MINUS, count);
                 }
             }
             curBin++;
@@ -120,7 +124,8 @@ public class BinCounter {
 //                    System.err.println("flushing plus bin: "+bin);
                 }
                 if (includeEmpty || count > 0) {
-                    callback.writeBin(refName, bin * binSize, (bin + 1) * binSize, Strand.PLUS, count);
+                    int binEnd = Math.min((curBin + 1) * binSize, refLength);
+                    callback.writeBin(refName, bin * binSize, binEnd, Strand.PLUS, count);
                 }
             }
         }
@@ -139,7 +144,8 @@ public class BinCounter {
     //                    System.err.println("flushing minus bin: "+bin);
                     }
                     if (includeEmpty || count > 0) {
-                        callback.writeBin(refName, bin * binSize, (bin + 1) * binSize, Strand.MINUS, count);
+                        int binEnd = Math.min((curBin + 1) * binSize, refLength);
+                        callback.writeBin(refName, bin * binSize, binEnd, Strand.MINUS, count);
                     }
                 }
             }

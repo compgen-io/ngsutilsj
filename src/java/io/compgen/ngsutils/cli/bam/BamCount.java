@@ -52,7 +52,11 @@ public class BamCount extends AbstractOutputCommand {
     private boolean unique = false;
     
     private boolean startOnly = false;
-    
+
+    // TODO: Add these
+    //private int filterFlags = 0;
+    //private int requiredFlags = 0;
+
     private Orientation orient = Orientation.UNSTRANDED;
     
     @UnnamedArg(name = "FILE")

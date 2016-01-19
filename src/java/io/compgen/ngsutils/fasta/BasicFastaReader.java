@@ -17,6 +17,9 @@ public class BasicFastaReader extends FastaReader {
     }
 
     @Override
+    /*
+     * This is a *really* bad idea for a genome-sized file. Best to use the IndexedFastaFile version!
+     */
     public String fetchSequence(String ref, int start, int end) throws IOException {
         if (closed) {
             throw new IOException("FastaReader closed");

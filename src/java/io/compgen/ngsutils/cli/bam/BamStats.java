@@ -1,5 +1,6 @@
 package io.compgen.ngsutils.cli.bam;
 
+import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.SamInputResource;
@@ -35,6 +36,10 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.TreeMap;
+
+
+// TODO: Add % bases >= Q30
+// TODO: Add effective coverage (based on # of bases, and reference size)
 
 @Command(name="bam-stats", desc="Stats about a BAM file and the library orientation", category="bam")
 public class BamStats extends AbstractOutputCommand {
@@ -179,9 +184,12 @@ public class BamStats extends AbstractOutputCommand {
         flagCounts.put(0x400, 0);
         flagCounts.put(0x800, 0);
         
+        long refTotalLength = 0;
+        
         Map<String, Integer> refCounts = new HashMap<String, Integer>();
         for (SAMSequenceRecord ref: reader.getFileHeader().getSequenceDictionary().getSequences()) {
             refCounts.put(ref.getSequenceName(), 0);
+            refTotalLength += ref.getSequenceLength();
         }
         
         TallyCounts insertSizeCounter = new TallyCounts();
@@ -202,7 +210,39 @@ public class BamStats extends AbstractOutputCommand {
                 }, new CloseableFinalizer<SAMRecord>(){});
         }
 
+        long totalBases = 0;
+        long q30Bases = 0;
+        boolean hasGaps = false;
+        
         for (SAMRecord read: IterUtils.wrap(it)) {
+            if (!read.getReadUnmappedFlag() && (ReadUtils.isReadUniquelyMapped(read) || !unique)) {
+                int i = 0;
+                for (CigarElement el: read.getCigar().getCigarElements()) {
+                    switch (el.getOperator()) {
+                    case M:
+                    case X:
+                    case EQ:
+                    case I:
+                        for (int j=0; j < el.getLength(); j++) {
+                            byte q = read.getBaseQualities()[i+j];
+                            if (q >= 30) {
+                                q30Bases++;
+                            }
+                        }
+                        totalBases += el.getLength();
+                    case S:
+                        i += el.getLength();
+                        break;
+                    case N:
+                        hasGaps = true;
+                        break;
+                    default:
+                    
+                    }
+                }
+            }
+            
+            
             if (read.getReadPairedFlag() && read.getSecondOfPairFlag()) {
                 // We only profile the first read of a pair...
                 continue;
@@ -277,7 +317,13 @@ public class BamStats extends AbstractOutputCommand {
         println("Unmapped-reads:\t" + unmapped);
         println("Multiple-mapped-reads:\t" + multiple);
         println("Uniquely-mapped-reads:\t" + (mapped - multiple));
-
+        println("Total-bases:\t" + totalBases);
+        println("Ref-length:\t" + refTotalLength);
+        println("Q30-pct:\t" + String.format("%.2f", 100.0 * q30Bases / totalBases) + "%");
+        if (!hasGaps) {
+            // if we have gaps, this is RNAseq and coverage is not a meaningful measure.
+            println("Effective-depth:\t" + String.format("%.2f", ((double) totalBases) / refTotalLength) + "X");
+        }
         if (paired) {
             println();
             println("Average insert size: "+String.format("%.2f", insertSizeCounter.getMean()));

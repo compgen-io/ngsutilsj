@@ -244,10 +244,10 @@ public class ReadUtils {
     }
 
     
-    public static int getReadLength(SamReader reader) {
-    	return getReadLength(reader, 10000);
+    public static int getSamReadLength(SamReader reader) {
+    	return getSamReadLength(reader, 10000);
     }
-    public static int getReadLength(SamReader reader, int recordsToScan) {
+    public static int getSamReadLength(SamReader reader, int recordsToScan) {
     	int i = 0;
     	int size = 0;
         SAMRecordIterator it = reader.iterator();

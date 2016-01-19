@@ -42,6 +42,10 @@ public class BinCount extends AbstractOutputCommand {
     
     private Orientation orient = Orientation.UNSTRANDED;
     
+    // TODO: Add these
+    //private int filterFlags = 0;
+    //private int requiredFlags = 0;
+
     @UnnamedArg(name = "FILE")
     public void setFilename(String filename) {
         this.filename = filename;
