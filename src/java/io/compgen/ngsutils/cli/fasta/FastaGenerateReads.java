@@ -97,7 +97,7 @@ public class FastaGenerateReads extends AbstractOutputCommand {
                     }
                     
                     if (count < maxWildcard) {
-                        out.write((">"+current[0]+":"+pos+"-"+(pos+readLength)+"\n").getBytes());
+                        out.write(("@"+current[0]+":"+pos+"-"+(pos+readLength)+"\n").getBytes());
                         out.write(read.getBytes());
                         out.write(("\n+\n"+qual+"\n").getBytes());
                     }
