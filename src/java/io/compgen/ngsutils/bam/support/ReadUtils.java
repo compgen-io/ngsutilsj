@@ -428,4 +428,24 @@ public class ReadUtils {
         }
         return false;
     }
+
+    public static boolean isDiscordant(SAMRecord read, int maxDist) {
+        if (read.getReferenceIndex() != read.getMateReferenceIndex()) {
+            return true;
+        }
+        
+        if (read.getReadNegativeStrandFlag() && read.getMateNegativeStrandFlag()) {
+            return true;
+        }
+        
+        if (!read.getReadNegativeStrandFlag() && !read.getMateNegativeStrandFlag()) {
+            return true;
+        }
+        
+        if (Math.abs(read.getAlignmentEnd() - read.getMateAlignmentStart()) > maxDist) {
+            return true;
+        }
+        
+        return false;
+    }
 }
