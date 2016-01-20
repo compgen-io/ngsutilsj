@@ -16,7 +16,7 @@ import java.io.IOException;
 public class FastaGenerateReads extends AbstractOutputCommand {
     private String filename = null;
     private int readLength = 100;
-    private int windowStep = 50;
+    private int windowStep = 1;
     private int maxWildcard = 2;
     private char qualScore = 30+33;
 
@@ -25,7 +25,7 @@ public class FastaGenerateReads extends AbstractOutputCommand {
         this.readLength = readLength;
     }
 
-    @Option(name="step", charName="s", desc="Step (offset)", defaultValue="50")
+    @Option(name="step", charName="s", desc="Step (offset)", defaultValue="1")
     public void setWindowStep(int windowStep) {
         this.windowStep = windowStep;
     }
