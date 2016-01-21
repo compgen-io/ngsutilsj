@@ -430,6 +430,9 @@ public class ReadUtils {
     }
 
     public static boolean isDiscordant(SAMRecord read, int maxDist) {
+        return isDiscordant(read, maxDist, true);
+    }
+    public static boolean isDiscordant(SAMRecord read, int maxDist, boolean includeIntraChrom) {
         if (read.getReferenceIndex() != read.getMateReferenceIndex()) {
             return true;
         }
@@ -442,7 +445,7 @@ public class ReadUtils {
             return true;
         }
         
-        if (Math.abs(read.getAlignmentEnd() - read.getMateAlignmentStart()) > maxDist) {
+        if (includeIntraChrom && Math.abs(read.getAlignmentEnd() - read.getMateAlignmentStart()) > maxDist) {
             return true;
         }
         

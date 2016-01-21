@@ -38,11 +38,13 @@ public class BamDiscord extends AbstractCommand {
     private boolean lenient = false;
     private boolean silent = false;
 
-    private int intraChromDistance = 5000;
+    private int intraChromDistance = 10000;
     
     private String concordFilename = null;
     private String discordFilename = null;
     private String tmpDir = null;
+    
+    private boolean noIntraChrom = false;
     
     @UnnamedArg(name = "FILE")
     public void setFilename(String filename) {
@@ -64,17 +66,22 @@ public class BamDiscord extends AbstractCommand {
         this.tmpDir = tmpDir;
     }
 
-    @Option(desc = "Maximum intra-chromasomal distance", name="dist", defaultValue="50")
+    @Option(desc = "Maximum intra-chromosomal distance", name="dist", defaultValue="10000")
     public void setIntraChromDistance(int intraChromDistance) {
         this.intraChromDistance = intraChromDistance;
     }    
 
-    @Option(desc = "Discordant read output BAM", name="discord")
+    @Option(desc = "No intra-chromosomal discordant reads (in proper orientation)", name="no-intrachrom")
+    public void setNoIntraChrom(boolean noIntraChrom) {
+        this.noIntraChrom = noIntraChrom;
+    }    
+
+    @Option(desc = "Discordant read output BAM", name="discord", helpValue="fname")
     public void setDiscordFilename(String discordFilename) {
         this.discordFilename = discordFilename;
     }    
 
-    @Option(desc = "Concordant read output BAM", name="concord")
+    @Option(desc = "Concordant read output BAM", name="concord", helpValue="fname")
     public void setConcordFilename(String concordFilename) {
         this.concordFilename = concordFilename;
     }    
@@ -193,7 +200,7 @@ public class BamDiscord extends AbstractCommand {
             totalCount++;
             SAMRecord read = it.next();
             
-            if (ReadUtils.isDiscordant(read, intraChromDistance)) {
+            if (ReadUtils.isDiscordant(read, intraChromDistance, !noIntraChrom)) {
                 discordCount++;
                 if (discord != null) {
                     discord.addAlignment(read);
