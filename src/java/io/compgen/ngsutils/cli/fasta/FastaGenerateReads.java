@@ -17,7 +17,7 @@ public class FastaGenerateReads extends AbstractOutputCommand {
     private String filename = null;
     private int readLength = 100;
     private int windowStep = 1;
-    private int maxWildcard = 2;
+    private int maxWildcard = 0;
     private char qualScore = 30+33;
 
     @Option(name="read-length", charName="l", desc="Read length", defaultValue="100")
@@ -30,7 +30,7 @@ public class FastaGenerateReads extends AbstractOutputCommand {
         this.windowStep = windowStep;
     }
 
-    @Option(name="wildcard", desc="Max number of wildcard bases (N)", defaultValue="2")
+    @Option(name="wildcard", desc="Max number of wildcard bases (N)", defaultValue="0")
     public void setMaxWildcard(int maxWildcard) {
         this.maxWildcard = maxWildcard;
     }
@@ -96,7 +96,7 @@ public class FastaGenerateReads extends AbstractOutputCommand {
                         }
                     }
                     
-                    if (count < maxWildcard) {
+                    if (count <= maxWildcard) {
                         out.write(("@"+current[0]+":"+pos+"-"+(pos+readLength)+"\n").getBytes());
                         out.write(read.getBytes());
                         out.write(("\n+\n"+qual+"\n").getBytes());
