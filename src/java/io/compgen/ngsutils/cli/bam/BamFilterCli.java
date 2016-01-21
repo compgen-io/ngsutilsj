@@ -26,7 +26,7 @@ import io.compgen.ngsutils.bam.filter.BedInclude;
 import io.compgen.ngsutils.bam.filter.FilterFlags;
 import io.compgen.ngsutils.bam.filter.JunctionWhitelist;
 import io.compgen.ngsutils.bam.filter.NullFilter;
-import io.compgen.ngsutils.bam.filter.PairedFilter;
+import io.compgen.ngsutils.bam.filter.PairingSanityFilter;
 import io.compgen.ngsutils.bam.filter.RefExclude;
 import io.compgen.ngsutils.bam.filter.RefInclude;
 import io.compgen.ngsutils.bam.filter.RequiredFlags;
@@ -81,7 +81,7 @@ public class BamFilterCli extends AbstractCommand {
     private Map<String, Integer> eqTagValues = null;
     private Map<String, String> eqStrTagValues = null;
     
-    private boolean paired = false;
+    private boolean pairRef = false;
     private boolean unique = false;
     private boolean uniqueStart = false;
     
@@ -106,9 +106,9 @@ public class BamFilterCli extends AbstractCommand {
         this.tmpDir = tmpDir;
     }
 
-    @Option(desc="Force sanity checking of read pairing (simple - same chromosome, reversed orientation)", name="paired")
-    public void setPaired(boolean val) {
-        this.paired = val;
+    @Option(desc="Force sanity checking of read pairing (simple - same chromosome, reversed orientation)", name="sane-pairs")
+    public void setPairRef(boolean val) {
+        this.pairRef = val;
     }
 
     @Option(desc="Require junction-spanning reads to span one of these junctions", name="junction-whitelist", helpValue="fname")
@@ -432,10 +432,10 @@ public class BamFilterCli extends AbstractCommand {
                 System.err.println("Unique-start");
             }
         }
-        if (paired) {
-            parent = new PairedFilter(parent, false);
+        if (pairRef) {
+            parent = new PairingSanityFilter(parent, false);
             if (verbose) {
-                System.err.println("Paired");
+                System.err.println("Paired-Ref");
             }
         }
         if (bedIncludeFile!=null) {

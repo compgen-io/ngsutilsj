@@ -6,10 +6,10 @@ import htsjdk.samtools.SAMRecord;
 /**
  * Makes sure reads are in reversed orientations and on the same chromosome. 
  */
-public class PairedFilter extends AbstractBamFilter {
+public class PairingSanityFilter extends AbstractBamFilter {
     protected int flags = 0;
     
-    public PairedFilter(BamFilter parent, boolean verbose) {
+    public PairingSanityFilter(BamFilter parent, boolean verbose) {
         super(parent, verbose);
     }
     
