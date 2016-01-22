@@ -7,12 +7,9 @@ public class FilterFlags extends AbstractBamFilter {
     
     public FilterFlags(BamFilter parent, boolean verbose, int flags) {
         super(parent, verbose);
+        this.flags = flags;
     }
 
-    public void addFlag(int flag) {
-        this.flags |= flag;
-    }
-    
     @Override
     public boolean keepRead(SAMRecord read) {
         return ((read.getFlags() & flags) == 0);
