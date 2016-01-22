@@ -242,21 +242,21 @@ public class BamFilterCli extends AbstractCommand {
         }
     }
 
-    @Option(desc="No secondary mappings", name="nosecondary")
+    @Option(desc="No secondary mappings", name="no-secondary")
     public void setNoSecondary(boolean val) {
         if (val) {
-            filterFlags |= ReadUtils.SUPPLEMENTARY_ALIGNMENT_FLAG;
+            filterFlags |= ReadUtils.NOT_PRIMARY_ALIGNMENT_FLAG;
         }
     }
 
-    @Option(desc="No PCR duplicates", name="nopcrdup")
+    @Option(desc="No PCR duplicates", name="no-pcrdup")
     public void setNoPCRDuplicates(boolean val) {
         if (val) {
             filterFlags |= ReadUtils.DUPLICATE_READ_FLAG;
         }
     }
 
-    @Option(desc="No QC failures", name="noqcfail")
+    @Option(desc="No QC failures", name="no-qcfail")
     public void setNoQCFail(boolean val) {
         if (val) {
             filterFlags |= ReadUtils.READ_FAILS_VENDOR_QUALITY_CHECK_FLAG;
