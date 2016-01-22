@@ -96,6 +96,10 @@ public class BamDiscord extends AbstractCommand {
             throw new CommandArgumentException("You must specify --discord or --concord (or both)!");
         }
         
+        if (concordFilename != null && concordFilename.equals("-") && discordFilename != null && discordFilename.equals("-")) {
+            throw new CommandArgumentException("You cannot write both --discord and --concord to stdout (-)!");
+        }
+        
         SamReaderFactory readerFactory = SamReaderFactory.makeDefault();
         if (lenient) {
             readerFactory.validationStringency(ValidationStringency.LENIENT);
