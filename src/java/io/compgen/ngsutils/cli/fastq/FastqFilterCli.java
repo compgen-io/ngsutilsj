@@ -12,6 +12,7 @@ import io.compgen.ngsutils.fastq.FastqReader;
 import io.compgen.ngsutils.fastq.filter.BlacklistFilter;
 import io.compgen.ngsutils.fastq.filter.FastqFilter;
 import io.compgen.ngsutils.fastq.filter.FilteringException;
+import io.compgen.ngsutils.fastq.filter.NameSubstring;
 import io.compgen.ngsutils.fastq.filter.PairedFilter;
 import io.compgen.ngsutils.fastq.filter.PrefixQualFilter;
 import io.compgen.ngsutils.fastq.filter.PrefixTrimFilter;
@@ -47,6 +48,8 @@ public class FastqFilterCli extends AbstractOutputCommand {
     
     private String whitelist = null;
     private String blacklist = null;
+    
+    private String nameSubstr = null;
 
     private String filename;
     private String summaryFilename=null;
@@ -70,6 +73,11 @@ public class FastqFilterCli extends AbstractOutputCommand {
     @Option(desc="Write summary of filters to file", name="summary", helpValue="fname")
     public void setSummaryFilename(String summaryFilename) {
         this.summaryFilename = summaryFilename;
+    }
+
+    @Option(desc="Read name contains this substring (e.g. flowcell/lane ID)", name="substr", helpValue="val")
+    public void setNameSubstr(String nameSubstr) {
+        this.nameSubstr = nameSubstr;
     }
 
     @Option(desc="Sequence trim filter using default Illumina R1/R2 adapters", name="trim-illumina")
@@ -164,6 +172,11 @@ public class FastqFilterCli extends AbstractOutputCommand {
 
         final List<FastqFilter> filters = new ArrayList<FastqFilter>();
         Iterable<FastqRead> parent = reader;
+
+        if (nameSubstr!=null) {
+            parent = new NameSubstring(parent, verbose, nameSubstr);
+            filters.add((FastqFilter) parent);
+        }
 
         if (whitelist!=null) {
             parent = new WhitelistFilter(parent, verbose, whitelist);
