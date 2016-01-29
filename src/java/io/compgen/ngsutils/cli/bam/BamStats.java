@@ -1,6 +1,7 @@
 package io.compgen.ngsutils.cli.bam;
 
 import htsjdk.samtools.CigarElement;
+import htsjdk.samtools.SAMReadGroupRecord;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.SamInputResource;
@@ -45,6 +46,7 @@ import java.util.TreeMap;
 public class BamStats extends AbstractOutputCommand {
     private String filename = null;
     private String gtfFilename = null;
+    private String rgid = null;
     private boolean lenient = false;
     private boolean silent = false;
     private boolean unique = false;
@@ -87,6 +89,11 @@ public class BamStats extends AbstractOutputCommand {
     @Option(desc="GTF annotation file (note: library-orientation will be automatically determined)", name="gtf")
     public void setGTFFilename(String filename) {
         this.gtfFilename = filename;
+    }    
+
+    @Option(desc="Only use read group id", name="rgid")
+    public void setRGID(String rgid) {
+        this.rgid = rgid;
     }    
 
     @Option(desc="Count tag value distribution (comma-delimited list, including type, e.g. NH:i,RG:Z or the special MAPQ)", name="tags")
@@ -149,7 +156,6 @@ public class BamStats extends AbstractOutputCommand {
         }
 
         reader = readerFactory.open(SamInputResource.of(is));
-
         
         long total = 0;
         long mapped = 0;
@@ -215,6 +221,12 @@ public class BamStats extends AbstractOutputCommand {
         boolean hasGaps = false;
         
         for (SAMRecord read: IterUtils.wrap(it)) {
+            if (rgid != null) {
+                SAMReadGroupRecord rg = read.getReadGroup();
+                if (rg == null || !rg.getId().equals(rgid)) {
+                    continue;
+                }
+            }
             if (!read.getReadUnmappedFlag() && (ReadUtils.isReadUniquelyMapped(read) || !unique)) {
                 int i = 0;
                 for (CigarElement el: read.getCigar().getCigarElements()) {
@@ -224,9 +236,11 @@ public class BamStats extends AbstractOutputCommand {
                     case EQ:
                     case I:
                         for (int j=0; j < el.getLength(); j++) {
-                            byte q = read.getBaseQualities()[i+j];
-                            if (q >= 30) {
-                                q30Bases++;
+                            if (read.getBaseQualities().length > (i + j)) {
+                                byte q = read.getBaseQualities()[i+j];
+                                if (q >= 30) {
+                                    q30Bases++;
+                                }
                             }
                         }
                         totalBases += el.getLength();
