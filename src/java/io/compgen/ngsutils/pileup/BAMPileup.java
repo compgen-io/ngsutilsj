@@ -39,7 +39,7 @@ public class BAMPileup {
         List<String> cmd = new ArrayList<String>();
         cmd.add("samtools");
         cmd.add("mpileup");
-        
+        cmd.add("-O");
         if (minMappingQual > -1) {
             cmd.add("-q");
             cmd.add(""+minMappingQual);

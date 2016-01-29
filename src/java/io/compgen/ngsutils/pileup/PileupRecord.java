@@ -32,14 +32,16 @@ public class PileupRecord {
 		public final String call;
 		public final int qual;
 		public final boolean plusStrand;
+		public final int readPos; // Note: this is always relative to the + strand position of the read, regardless of if the read is on the plus or minus strand.
 		
-		public PileupBaseCall(PileupBaseCallOp op, String call, int qual) {
-		    this(op, call, qual, "");
+		public PileupBaseCall(PileupBaseCallOp op, String call, int qual, int readPos) {
+		    this(op, call, qual, "", readPos);
 		}
 
-        public PileupBaseCall(PileupBaseCallOp op, String call, int qual, String refBase) {
+        public PileupBaseCall(PileupBaseCallOp op, String call, int qual, String refBase, int readPos) {
             this.op = op;
             this.qual = qual;
+            this.readPos = readPos;
             
             if (op == PileupBaseCallOp.Match) {
                 if (call.equals(".")) {
@@ -93,7 +95,7 @@ public class PileupRecord {
 		
 		PileupRecord record = new PileupRecord(ref, pos, refBase);
 		
-		for (int i=3; i<cols.length; i+=3) {
+		for (int i=3; i<cols.length; i+=4) {
 			int coverage = Integer.parseInt(cols[i]);
 			if (coverage == 0) {
 	            record.addSampleRecord(coverage, null);
@@ -102,13 +104,30 @@ public class PileupRecord {
 			List<PileupBaseCall> calls = new ArrayList<PileupBaseCall>();
 			int qual_idx = 0;
 			
+			String[] readPosSpl = cols[i+3].split(",");
+			int[] readPos = new int[readPosSpl.length];
+			for (int j=0; j<readPosSpl.length; j++) {
+			    readPos[j] = Integer.parseInt(readPosSpl[j]);
+			}
+			
 			for (int j=0; j<cols[i+1].length(); j++) {
 				char base = cols[i+1].charAt(j);
 
 				if (base == '^') {
-					j++;
-				} else if (base == '*' || base == '$') {
-					// no op
+					j++; // skip the mapping quality for the read?
+				} else if (base == '$') {
+				    // no op, end of a read.
+				} else if (base == '*' || base == '>' || base == '<') {
+				    // < or > is a "refskip" (N CIGAR op)
+
+				    // * is a deletion (in a padded sequence - unsure about what this means...)
+				    // htslib:  @field  is_del     1 iff the base on the padded read is a deletion
+				    // The deletion was indicated in a prior line??? 
+				    // (-1A in one line, * in the next to keep order of reads fixed?)
+				     
+				    // the read pos is set for this, but not otherwise needed
+                    qual_idx++;
+				    
 				} else if (base == '+' || base == '-') {
 					String intbuf = "";
 					j++;
@@ -121,14 +140,14 @@ public class PileupRecord {
 					String indel = cols[i+1].substring(j, j+indelLen);
 
 					if (base == '+') {
-						calls.add(record.new PileupBaseCall(PileupBaseCallOp.Ins, indel, -1));
+						calls.add(record.new PileupBaseCall(PileupBaseCallOp.Ins, indel, -1, readPos[qual_idx-1]));
 					} else {
-						calls.add(record.new PileupBaseCall(PileupBaseCallOp.Del, indel, -1));
+						calls.add(record.new PileupBaseCall(PileupBaseCallOp.Del, indel, -1, readPos[qual_idx-1]));
 					}
 					
 					j += indelLen-1;
 				} else {
-					calls.add(record.new PileupBaseCall(PileupBaseCallOp.Match, ""+base, cols[i+2].charAt(qual_idx)-33, refBase));
+					calls.add(record.new PileupBaseCall(PileupBaseCallOp.Match, ""+base, cols[i+2].charAt(qual_idx)-33, refBase, readPos[qual_idx]));
 					qual_idx++;
 				}
 			}
