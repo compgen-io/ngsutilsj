@@ -49,7 +49,8 @@ public class FastqFilterCli extends AbstractOutputCommand {
     private String whitelist = null;
     private String blacklist = null;
     
-    private String nameSubstr = null;
+    private String nameSubstr1 = null;
+    private String nameSubstr2 = null;
 
     private String filename;
     private String summaryFilename=null;
@@ -76,8 +77,13 @@ public class FastqFilterCli extends AbstractOutputCommand {
     }
 
     @Option(desc="Read name contains this substring (e.g. flowcell/lane ID)", name="substr", helpValue="val")
-    public void setNameSubstr(String nameSubstr) {
-        this.nameSubstr = nameSubstr;
+    public void setNameSubstr1(String nameSubstr1) {
+        this.nameSubstr1 = nameSubstr1;
+    }
+
+    @Option(desc="Read name contains this secondary substring (e.g. barcode)", name="substr2", helpValue="val")
+    public void setNameSubstr2(String nameSubstr2) {
+        this.nameSubstr2 = nameSubstr2;
     }
 
     @Option(desc="Sequence trim filter using default Illumina R1/R2 adapters", name="trim-illumina")
@@ -173,8 +179,12 @@ public class FastqFilterCli extends AbstractOutputCommand {
         final List<FastqFilter> filters = new ArrayList<FastqFilter>();
         Iterable<FastqRead> parent = reader;
 
-        if (nameSubstr!=null) {
-            parent = new NameSubstring(parent, verbose, nameSubstr);
+        if (nameSubstr1!=null) {
+            if (nameSubstr2!=null) {
+                parent = new NameSubstring(parent, verbose, nameSubstr1, nameSubstr2);
+            } else {
+                parent = new NameSubstring(parent, verbose, nameSubstr1);
+            }
             filters.add((FastqFilter) parent);
         }
 
