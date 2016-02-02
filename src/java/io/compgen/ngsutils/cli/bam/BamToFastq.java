@@ -41,7 +41,7 @@ public class BamToFastq extends AbstractCommand {
     private boolean onlyFirst = false;
     private boolean onlySecond = false;
     private boolean mapped = false;
-    private boolean unmapped = true;
+    private boolean unmapped = false;
     
     private boolean readNameSorted = false;
     private boolean singleEnded = false;
@@ -104,14 +104,14 @@ public class BamToFastq extends AbstractCommand {
         this.onlySecond = val;
     }
 
-    @Option(desc="Export mapped reads (default to export only unmapped)", name="mapped")
+    @Option(desc="Export mapped reads", name="mapped")
     public void setMapped(boolean val) {
         this.mapped = val;
     }
 
-    @Option(desc="Don't export unmapped reads", name="no-unmapped")
-    public void setOnlyUnmapped(boolean val) {
-        this.unmapped = !val;
+    @Option(desc="Export unmapped reads", name="unmapped")
+    public void setUnmapped(boolean val) {
+        this.unmapped = val;
     }
 
     @Option(desc="Use lenient validation strategy", name="lenient")
@@ -147,7 +147,7 @@ public class BamToFastq extends AbstractCommand {
         }
 
         if (!mapped && !unmapped) {
-            throw new CommandArgumentException("You aren't outputting any reads (--no-unmapped set but --mapped not set)!");
+            throw new CommandArgumentException("You aren't outputting any reads (--unmapped or --mapped (or both) must be set)!");
         }
 
         if (split && (onlyFirst || onlySecond)) {
