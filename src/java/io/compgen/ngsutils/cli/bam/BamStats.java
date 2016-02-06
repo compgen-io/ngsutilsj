@@ -340,7 +340,7 @@ public class BamStats extends AbstractOutputCommand {
         }
         if (paired) {
             println();
-            println("Average insert size: "+String.format("%.2f", insertSizeCounter.getMean()));
+            println("Average insert size:\t"+String.format("%.2f", insertSizeCounter.getMean()));
         }
 
         println();
