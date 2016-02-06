@@ -24,6 +24,9 @@ public class FastaMask extends AbstractOutputCommand {
         public final int start;
         public final int end;
 
+        public MaskRegion(String ref) {
+            this(ref, -1, -1);
+        }
         public MaskRegion(String ref, int start, int end) {
             this.ref = ref;
             this.start = start;
@@ -36,6 +39,10 @@ public class FastaMask extends AbstractOutputCommand {
         }
         
         public boolean containsPos(int pos) {
+            if (start == -1 && end == -1) {
+                return true;
+            }
+            
             if (start <= pos && pos < end) {
                 return true;
             }
@@ -56,7 +63,7 @@ public class FastaMask extends AbstractOutputCommand {
     private String bedFilename = null;
     private boolean lowercase = false;
     
-    @Option(desc="Region to mask (ex: ref:start-end, 1-based)", name="region")
+    @Option(desc="Region to mask (ex: ref:start-end, 1-based; or just 'ref' to mask entire sequence)", name="region")
     public void setRegion(String region) {
         this.region = region;
     }    
@@ -89,14 +96,20 @@ public class FastaMask extends AbstractOutputCommand {
         Map<String, List<MaskRegion>> masks = new HashMap<String, List<MaskRegion>>();
         
         if (region != null) {
-            String[] spl = region.split(":");
-            String[] startend = spl[1].split("-");
-            int start = Integer.parseInt(startend[0])-1;
-            int end = Integer.parseInt(startend[1]);
-            
-            List<MaskRegion> list = new ArrayList<MaskRegion>();
-            list.add(new MaskRegion(spl[0], start, end));
-            masks.put(spl[0], list);
+            if (region.contains(":")) {
+                String[] spl = region.split(":");
+                String[] startend = spl[1].split("-");
+                int start = Integer.parseInt(startend[0])-1;
+                int end = Integer.parseInt(startend[1]);
+                
+                List<MaskRegion> list = new ArrayList<MaskRegion>();
+                list.add(new MaskRegion(spl[0], start, end));
+                masks.put(spl[0], list);
+            } else {
+                List<MaskRegion> list = new ArrayList<MaskRegion>();
+                list.add(new MaskRegion(region));
+                masks.put(region, list);
+            }
         } else {
             StringLineReader bedReader = new StringLineReader(bedFilename);
             for (String line: IterUtils.wrap(bedReader.iterator())) {
