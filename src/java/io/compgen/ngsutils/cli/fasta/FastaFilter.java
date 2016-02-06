@@ -43,7 +43,7 @@ public class FastaFilter extends AbstractOutputCommand {
         this.wrap = wrap;
     }
 
-    @Option(name="exclude", desc="Exclude only these sequences (comma-delimited values or filename)", helpValue="val")
+    @Option(name="exclude", desc="Exclude these sequences (comma-delimited values or filename)", helpValue="val")
     public void setExclude(String fname) throws IOException {
         this.exclude = new HashSet<String>();
         if (new File(fname).exists()) {
