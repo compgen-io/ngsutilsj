@@ -61,4 +61,14 @@ public class NullFilter implements BamFilter {
         return failedWriter;
     }
 
+    @Override
+    public void setPairedKeep() {
+        // NOOP        
+    }
+
+    @Override
+    public void setPairedRemove() {
+        // NOOP        
+    }
+
 }

@@ -5,18 +5,17 @@ import htsjdk.samtools.SAMRecord;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
 
 public abstract class AbstractBamFilter implements BamFilter, Iterable<SAMRecord> {
     protected BamFilter parent;
     protected boolean verbose; 
     
-    protected boolean requireOnePair = false; // if one member of a pair is kept, keep the other one too.
-    protected boolean requireBothPairs = false; // if one member of a pair fails, toss the other one too.
+//    protected boolean requireOnePair = false; // if one member of a pair is kept, keep the other one too.
+//    protected boolean requireBothPairs = false; // if one member of a pair fails, toss the other one too.
+    
+    protected boolean pairedKeep = false;
+    protected boolean pairedRemove = false;
     
     protected boolean isfirst = true;
     protected long total = 0;
@@ -30,136 +29,90 @@ public abstract class AbstractBamFilter implements BamFilter, Iterable<SAMRecord
     public abstract boolean keepRead(SAMRecord read);
     
     protected SAMRecord nextRead = null;
-    protected Map<String, SAMRecord> pairs = new HashMap<String, SAMRecord>();
-    protected Set<String> keptpairs = new HashSet<String>();
-    protected Deque<SAMRecord> goodBuffer = new ArrayDeque<SAMRecord>();
+//    protected Map<String, SAMRecord> pairs = new HashMap<String, SAMRecord>();
+//    protected Set<String> keptpairs = new HashSet<String>();
+    protected Deque<SAMRecord> goodBuffer = new ArrayDeque<SAMRecord>();;
+    protected SAMRecord nextNextRead = null;
     
     public BamFilter getParent() {
         return parent;
     }
     
     protected void checkNext() {
-        if (goodBuffer.size()>0) {
-            nextRead = goodBuffer.removeFirst();
-            return;
-        }
-        while (nextRead == null) {
-            // need to do this hasNext() check to notify parent that we might be done...
-            // (this is needed for a progress meter to get notified)
-            if (parent.hasNext()) {
-                nextRead = parent.next();
-            }
-            if (nextRead == null) {
-                break;
-            }
-            
-            if (verbose) {
-                System.err.print("["+this.getClass().getSimpleName()+"] checking read: " + nextRead.getReadName());
-            }
-            
-            if (requireOnePair && nextRead.getReadPairedFlag()) {
-                // we will keep pairs together. if one passes, both pass.
-                if (keptpairs.contains(nextRead.getReadName())) {
-                    // we already kept the first member, so this one passes by default.
-                    keptpairs.remove(nextRead.getReadName());
-                    total++;
-                    if (verbose) {
-                        System.err.println(" KEPT-BY-PAIR");
-                    }
-                } else if (keepRead(nextRead)) {
-                    // either this is the first, or the last one failed, but this one passed.
-                    total++;
-                    if (verbose) {
-                        System.err.println(" OK");
-                    }
-
-                    // look for the pair
-                    if (pairs.containsKey(nextRead.getReadName())) {
-                        // the pair exists, so we need to add them both to the good buffer.
-                        total++;
-                        goodBuffer.add(pairs.get(nextRead.getReadName()));
-                        pairs.remove(nextRead.getReadName());
-                        goodBuffer.add(nextRead);
-                        nextRead = null;
-                        break;
-                    } else {
-                        // the pair wasn't found, so this is the first read. just return it.
-                        keptpairs.add(nextRead.getReadName());
-                    }
-                } else if (pairs.containsKey(nextRead.getReadName())) {
-                    // we failed, if the pair also failed, reset and try again
-                    failedRead(nextRead);
-                    failedRead(pairs.remove(nextRead.getReadName()));
-                    nextRead = null;
-                    removed++;
-                    removed++;
-                    if (verbose) {
-                        System.err.println(" REMOVED");
-                    }
-                } else {
-                    // we failed, and we are the first one to fail... so, maybe the pair will save us
-                    pairs.put(nextRead.getReadName(), nextRead);
-                    if (verbose) {
-                        System.err.println(" FAILED-PENDING");
-                    }
-                    nextRead = null;
+        if (pairedKeep || pairedRemove) {
+            while (nextRead == null) {
+                if (goodBuffer.size()>0) {
+                    nextRead = goodBuffer.removeFirst();
+                    return;
                 }
-            } else if (requireBothPairs && nextRead.getReadPairedFlag()) {
-
-                // keep pairs together, if one fails, both fail.
-                if (keptpairs.contains(nextRead.getReadName())) {
-                    // our pair failed, so we fail.
-                    keptpairs.remove(nextRead.getReadName());
-                    failedRead(nextRead);
-                    nextRead = null;
-                    removed++;
-                    if (verbose) {
-                        System.err.println(" PAIR-FAILED");
-                    }
-                } else {
-                    if (!keepRead(nextRead)) {
-                        // we failed... so our pair must fail
-                        failedRead(nextRead);
-                        removed ++;
                         
-                        if (pairs.containsKey(nextRead.getReadName())) {
-                            // the pair passed already...
-                            failedRead(pairs.remove(nextRead.getReadName()));
-                        } else {
-                            // we are first, so prepare to fail the next one.
-                            keptpairs.add(nextRead.getReadName());
-                        }
+                if (nextNextRead == null && parent.hasNext()) {
+                    nextNextRead = parent.next();
+                }
+                if (nextNextRead == null) {
+                    return;
+                }
 
-                        nextRead = null;
-                        if (verbose) {
-                            System.err.println(" FAILED");
-                        }
-                    } else if (pairs.containsKey(nextRead.getReadName())) {
-                        // we passed... and the prior one passed too!
-                        total++;
-                        total++;
-    
-                        goodBuffer.add(pairs.get(nextRead.getReadName()));
-                        pairs.remove(nextRead.getReadName());
-                        goodBuffer.add(nextRead);
-                        nextRead = null;
-    
-                        if (verbose) {
-                            System.err.println(" PAIR-PASSED");
-                        }
-                        break;                    
+                goodBuffer.add(nextNextRead);
+                
+                while (parent.hasNext()) {
+                    SAMRecord curRead = parent.next();
+                    if (curRead.getReadName().equals(nextNextRead.getReadName())) {
+                        goodBuffer.add(curRead);
                     } else {
-                        // we passed, but we are first so we have to wait for the next one
-                        pairs.put(nextRead.getReadName(), nextRead);
-                        nextRead = null;
-                        if (verbose) {
-                            System.err.println(" PASSED-PENDING");
+                        nextNextRead = curRead;
+                        break;
+                    }
+                }
+
+                boolean failed = false;
+                boolean passed = false;
+                for (SAMRecord read: goodBuffer) {
+                    if (keepRead(read)) {
+                        passed = true;
+                    } else {
+                        failed = true;
+                    }
+                }
+                
+                if (pairedKeep) {
+                    if (!passed) {
+                        for (SAMRecord read: goodBuffer) {
+                            failedRead(read);
+                        }
+                        goodBuffer.clear();
+                    }
+                } else if (pairedRemove) {
+                    if (failed) {
+                        for (SAMRecord read: goodBuffer) {
+                            failedRead(read);
                         }
                     }
                 }
-            } else {
-                // pairs are handled separately... this means that the proper paired flag could be wrong.
+                
+                if (nextRead == null && goodBuffer.size()>0) {
+                    nextRead = goodBuffer.removeFirst();
+                    return;
+                }
+            }
+        } else {
+            while (nextRead == null) {
+                // need to do this hasNext() check to notify parent that we might be done...
+                // (this is needed for a progress meter to get notified)
+    
+                if (parent.hasNext()) {
+                    nextRead = parent.next();
+                }
+                if (nextRead == null) {
+                    break;
+                }
+                
+                if (verbose) {
+                    System.err.print("["+this.getClass().getSimpleName()+"] checking read: " + nextRead.getReadName());
+                }
+    
                 total++;
+                
                 if (!keepRead(nextRead)) {
                     if (verbose) {
                         System.err.println(" REMOVED");
@@ -174,18 +127,6 @@ public abstract class AbstractBamFilter implements BamFilter, Iterable<SAMRecord
                 }
             }
         }
-        if (nextRead == null && goodBuffer.size()>0) {
-            nextRead = goodBuffer.removeFirst();
-            return;
-        }
-    }
-    
-    public void setRequireOnePair(boolean val) {
-        this.requireOnePair = val;
-    }
-
-    public void setRequireBothPairs(boolean val) {
-        this.requireBothPairs = val;
     }
 
     public boolean hasNext() {
@@ -236,4 +177,24 @@ public abstract class AbstractBamFilter implements BamFilter, Iterable<SAMRecord
         }
     }
     
+    @Override
+    public void setPairedKeep() {
+        this.pairedKeep = true;
+        this.pairedRemove = false;
+        
+        if (parent != null) {
+            parent.setPairedKeep();
+        }
+    }
+
+    @Override
+    public void setPairedRemove() {
+        this.pairedKeep = false;
+        this.pairedRemove = true;
+
+        if (parent != null) {
+            parent.setPairedRemove();
+        }
+    }
+
 }

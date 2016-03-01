@@ -11,4 +11,6 @@ public interface BamFilter extends Iterator<SAMRecord>, Iterable<SAMRecord> {
     public abstract long getRemoved();
     public BamFilter getParent();
     public SAMFileWriter getFailedWriter();
+    public abstract void setPairedKeep();
+    public abstract void setPairedRemove();
 }
