@@ -11,6 +11,34 @@ import java.util.Set;
 import java.util.TreeMap;
 
 public class FindDuplicateReads {
+    public abstract static class ScoringMethod {
+
+        abstract double[] calcScore(SAMRecord read);
+        
+        public static final ScoringMethod SUM_OF_QUALS = new ScoringMethod () {
+            @Override
+            public double[] calcScore(SAMRecord read) {
+                int acc = 0;
+                for (int i:read.getBaseQualities()) {
+                    acc += i;
+                }
+                return new double[]{acc};
+            }        
+        };
+               
+        public static final ScoringMethod MAPQ_AS = new ScoringMethod () {
+            @Override
+            public double[] calcScore(SAMRecord read) {
+                int as = 0;
+                try {
+                    as = read.getIntegerAttribute("AS");
+                } finally {}
+                return new double[]{read.getMappingQuality(), as};
+            }        
+        };
+        
+    }
+
     private SAMFileWriter writer = null;
     private SAMFileWriter failedWriter = null;
     private boolean removeDuplicates = false;
@@ -28,6 +56,8 @@ public class FindDuplicateReads {
     private Map<Integer, List<SAMRecord>> buffer = new TreeMap<Integer, List<SAMRecord>>();
     private int curRefIdx = -1;
     private int curRefPos = -1;
+    
+    private ScoringMethod method = ScoringMethod.SUM_OF_QUALS;
     
     public FindDuplicateReads(SAMFileWriter writer, boolean removeDuplicates, SAMFileWriter failedWriter) {
         this.writer = writer;
@@ -94,6 +124,14 @@ public class FindDuplicateReads {
         // else - silently drop
     }
 
+    public void setScoringMethodSumOfQuals() {
+        method = ScoringMethod.SUM_OF_QUALS;
+    }
+    
+    public void setScoringMethodMapQ() {
+        method = ScoringMethod.MAPQ_AS;
+    }
+    
     public void close() {
         flushBuffer();
     }
@@ -155,26 +193,16 @@ public class FindDuplicateReads {
     
     private void findDuplicates(List<SAMRecord> list) {
         // duplicate start/tlen, find the best MAPQ, and keep that one.
-        int bestMAPQ = -1;
-        int bestAS = -1;
         int bestIdx = -1;
+        double[] bestScores = null;
         
         for (int i=0; i<list.size(); i++) {
             SAMRecord read = list.get(i);
-            Integer asTag = read.getIntegerAttribute("AS");
-
-            if (read.getMappingQuality() > bestMAPQ) {
-                bestMAPQ = read.getMappingQuality();
+            double[] scores = method.calcScore(read);
+            
+            if (compareScores(scores, bestScores) < 0) {
                 bestIdx = i;
-                
-                if (asTag != null) {
-                    bestAS = asTag;
-                }
-            } else if (read.getMappingQuality() == bestMAPQ) {
-                if (asTag != null && asTag > bestAS) {
-                    bestAS = asTag;
-                    bestIdx = i;
-                }
+                bestScores = scores;
             }
         }
        
@@ -205,4 +233,20 @@ public class FindDuplicateReads {
         return unmapped;
     }
     
+    protected int compareScores(double[] one, double[] two) {
+        if (one == null && two != null) { 
+            return 1;
+        }
+        if (one != null && two == null) { 
+            return -1;
+        }
+        for (int i=0; i<one.length && i<two.length; i++) {
+            if (one[i] < two[i]) {
+                return -1;
+            } else if (one[i] > two[i]) {
+                return 1;
+            }
+        }
+        return 0;
+    }
 }

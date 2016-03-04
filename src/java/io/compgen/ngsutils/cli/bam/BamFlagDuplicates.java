@@ -46,6 +46,7 @@ public class BamFlagDuplicates extends AbstractCommand {
     private boolean remove = false;
     private String failedFilename = null;
     private String tmpDir = null;
+    private boolean scoreMapQ = false;
     
     @UnnamedArg(name = "INFILE OUTFILE")
     public void setFilename(List<String> filenames) throws CommandArgumentException {
@@ -74,6 +75,13 @@ public class BamFlagDuplicates extends AbstractCommand {
     @Option(desc = "Use lenient validation strategy", name="lenient")
     public void setLenient(boolean lenient) {
         this.lenient = lenient;
+    }
+
+    @Option(desc = "Use MAPQ/AS scores to determine best read (default: sum-of-quals)", name="score-mapq")
+    public void setScoreMethodMapQAS(boolean val) {
+        if (val) {
+            this.scoreMapQ  = true;
+        }
     }
 
     @Option(desc = "Use silent validation strategy", name="silent")
@@ -118,7 +126,7 @@ public class BamFlagDuplicates extends AbstractCommand {
         
         
         SAMFileHeader header = reader.getFileHeader().clone();
-        SAMProgramRecord pg = NGSUtils.buildSAMProgramRecord("bam-dup", header);
+        SAMProgramRecord pg = NGSUtils.buildSAMProgramRecord("bam-dups", header);
         List<SAMProgramRecord> pgRecords = new ArrayList<SAMProgramRecord>(header.getProgramRecords());
         pgRecords.add(0, pg);
         header.setProgramRecords(pgRecords);
@@ -157,6 +165,9 @@ public class BamFlagDuplicates extends AbstractCommand {
 
 
         final FindDuplicateReads dups = new FindDuplicateReads(out, remove, failedWriter);
+        if (scoreMapQ) {
+            dups.setScoringMethodMapQ();
+        }
         final Counter counter = new Counter();
         
         Iterator<SAMRecord> it = ProgressUtils.getIterator(name, reader.iterator(), (channel == null)? null : new FileChannelStats(channel), new ProgressMessage<SAMRecord>() {
