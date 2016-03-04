@@ -52,6 +52,7 @@ public class BamStats extends AbstractOutputCommand {
     private boolean unique = false;
     private boolean pipe = false;
     private boolean showUnmappedRef = false;
+    private boolean calcInsert = false;
 
     private Map<String,TallyCounts> numTagCounts = new HashMap<String,TallyCounts>();
     private Map<String,TallyValues<String>> strTagCounts = new HashMap<String,TallyValues<String>>();
@@ -69,6 +70,11 @@ public class BamStats extends AbstractOutputCommand {
     @Option(desc="Pipe input BAM file to stdout", name="pipe")
     public void setPipe(boolean pipe) {
         this.pipe = pipe;
+    }
+
+    @Option(desc="Calculate ave. insert size", name="calc-insert")
+    public void setCalcInsert(boolean calcInsert) {
+        this.calcInsert = calcInsert;
     }
 
     @Option(desc="Use only unique reads in GTF summary", name="unique")
@@ -227,7 +233,7 @@ public class BamStats extends AbstractOutputCommand {
                     continue;
                 }
             }
-            if (!read.getReadUnmappedFlag() && (ReadUtils.isReadUniquelyMapped(read) || !unique)) {
+            if (!read.getDuplicateReadFlag() && !read.getReadUnmappedFlag() && (ReadUtils.isReadUniquelyMapped(read) || !unique)) {
                 int i = 0;
                 for (CigarElement el: read.getCigar().getCigarElements()) {
                     switch (el.getOperator()) {
@@ -249,6 +255,10 @@ public class BamStats extends AbstractOutputCommand {
                         break;
                     case N:
                         hasGaps = true;
+                        if (calcInsert) {
+                            System.err.println("Warning: Gapped alignments found - not calculating insert-size.");
+                            calcInsert = false;
+                        }
                         break;
                     default:
                     
@@ -268,6 +278,11 @@ public class BamStats extends AbstractOutputCommand {
                 if ((read.getFlags() & flag) > 0) {
                     flagCounts.put(flag, flagCounts.get(flag) + 1);
                 }
+            }
+            
+            if (read.getDuplicateReadFlag()) {
+                // skip all duplicates from here on out.
+                continue;
             }
             
             if (!read.getReadUnmappedFlag()) {
@@ -303,13 +318,11 @@ public class BamStats extends AbstractOutputCommand {
                 }
             }
 
-            if (read.getReadPairedFlag()) {
+            if (calcInsert && read.getReadPairedFlag()) {
                 paired = true; 
                 if (read.getProperPairFlag() && read.getReferenceIndex().equals(read.getMateReferenceIndex())) {
-                    if (read.getInferredInsertSize() < 2000) {
-                        // limit to something reasonable - RNAseq can skew this horribly.
-                        insertSizeCounter.incr(Math.abs(read.getInferredInsertSize()));
-                    }
+                    // limit to something reasonable - RNAseq can skew this horribly.
+                    insertSizeCounter.incr(Math.abs(read.getInferredInsertSize()));
                 }
             }
             
@@ -338,7 +351,7 @@ public class BamStats extends AbstractOutputCommand {
             // if we have gaps, this is RNAseq and coverage is not a meaningful measure.
             println("Effective-depth:\t" + String.format("%.2f", ((double) totalBases) / refTotalLength) + "X");
         }
-        if (paired) {
+        if (paired && calcInsert) {
             println();
             println("Average insert size:\t"+String.format("%.2f", insertSizeCounter.getMean()));
         }
