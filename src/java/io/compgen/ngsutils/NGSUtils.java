@@ -61,7 +61,7 @@ public class NGSUtils {
     public static void main(String[] args) {
         NGSUtils.args = StringUtils.join(" ", args);
         
-        SocketProgress.setHeader("NGSUtilsJ - " + NGSUtils.args);
+        SocketProgress.setHeader("ngsutilsj - " + NGSUtils.args);
         try {
             new MainBuilder()
                 .setProgName("ngsutilsj")
