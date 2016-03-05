@@ -107,7 +107,7 @@ public class BamClean extends AbstractCommand {
         if (outfile != null) {
             writer = factory.makeBAMWriter(header, true, outfile);
         } else {
-            writer = factory.makeSAMWriter(header,  true,  outStream);
+            writer = factory.makeBAMWriter(header,  true,  outStream);
         }
         
 

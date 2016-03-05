@@ -155,14 +155,13 @@ public class BamFlagDuplicates extends AbstractCommand {
         if (outfile != null) {
             out = factory.makeBAMWriter(header, true, outfile);
         } else {
-            out = factory.makeSAMWriter(header,  true,  outStream);
+            out = factory.makeBAMWriter(header,  true,  outStream);
         }
 
         SAMFileWriter failedWriter = null;
         if (failedFilename != null) {
             failedWriter = factory.makeBAMWriter(header, true, new File(failedFilename));
         }
-
 
         final FindDuplicateReads dups = new FindDuplicateReads(out, remove, failedWriter);
         if (scoreMapQ) {

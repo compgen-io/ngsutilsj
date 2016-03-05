@@ -153,7 +153,7 @@ public class BamDiscord extends AbstractCommand {
             if (outfile != null) {
                 concord = factory.makeBAMWriter(header, true, outfile);
             } else {
-                concord = factory.makeSAMWriter(header,  true,  outStream);
+                concord = factory.makeBAMWriter(header,  true,  outStream);
             }
         }
         
@@ -186,7 +186,7 @@ public class BamDiscord extends AbstractCommand {
             if (outfile != null) {
                 discord = factory.makeBAMWriter(header, true, outfile);
             } else {
-                discord = factory.makeSAMWriter(header,  true,  outStream);
+                discord = factory.makeBAMWriter(header,  true,  outStream);
             }
         }
 

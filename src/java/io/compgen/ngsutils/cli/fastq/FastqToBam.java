@@ -164,7 +164,7 @@ public class FastqToBam extends AbstractCommand {
             if (verbose) {
                 System.err.println("Output: stdout");
             }
-            out = factory.makeSAMWriter(header,  true,  outStream);
+            out = factory.makeBAMWriter(header,  true,  outStream);
         }
         
         FastqReader[] readers = new FastqReader[filenames.length];

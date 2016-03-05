@@ -417,7 +417,7 @@ public class BamFilterCli extends AbstractCommand {
         if (outfile != null) {
             out = factory.makeBAMWriter(header, true, outfile);
         } else {
-            out = factory.makeSAMWriter(header, true, outStream);
+            out = factory.makeBAMWriter(header, true, outStream);
         }
 
         SAMFileWriter failedWriter = null;
