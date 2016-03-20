@@ -41,7 +41,7 @@ public class BedReduce extends AbstractOutputCommand {
         this.extend = extend;
     }
     
-    @Option(charName="c", desc="Score should be the count of merged regions, not the sum of scores (default)")
+    @Option(charName="c", desc="Score should be the count of merged regions (default: the sum of scores)")
     public void setScoreIsCount(boolean scoreIsCount) {
         this.scoreIsCount = scoreIsCount;
     }
