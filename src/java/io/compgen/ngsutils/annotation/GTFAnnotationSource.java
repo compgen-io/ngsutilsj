@@ -272,8 +272,21 @@ public class GTFAnnotationSource extends AbstractAnnotationSource<GTFGene> {
             transcripts.get(transcriptId).addCDS(start, end, attributes);
         }
 
+        public List<GTFTranscript> getTranscripts(boolean codingOnly) {
+            if (!codingOnly) {
+                return new ArrayList<GTFTranscript>(transcripts.values());
+            } else {
+                List<GTFTranscript> codingTranscripts = new ArrayList<GTFTranscript>();
+                for (GTFTranscript t: transcripts.values()) {
+                    if (t.hasCDS()) {
+                        codingTranscripts.add(t);
+                    }
+                }
+                return codingTranscripts;
+            }
+        }
         public List<GTFTranscript> getTranscripts() {
-            return new ArrayList<GTFTranscript>(transcripts.values());
+            return getTranscripts(false);
         }
 
         public List<GTFExon> getExons() {
@@ -286,14 +299,19 @@ public class GTFAnnotationSource extends AbstractAnnotationSource<GTFGene> {
             return new ArrayList<GTFExon>(exons.values());
         }
 
-        public List<GenomeSpan> getExonRegions() {
+        public List<GenomeSpan> getExonRegions(boolean codingOnly) {
             SortedSet<GenomeSpan> exons = new TreeSet<GenomeSpan>();
             for (GTFTranscript t:transcripts.values()){
-                for (GTFExon ex: t.getExons()) {
-                    exons.add(ex.toRegion());
+                if (!codingOnly || t.hasCDS()) {
+                    for (GTFExon ex: t.getExons()) {
+                        exons.add(ex.toRegion());
+                    }
                 }
             }
             return new ArrayList<GenomeSpan>(exons);
+        }
+        public List<GenomeSpan> getExonRegions() {
+            return getExonRegions(false);
         }
 
         
@@ -313,6 +331,7 @@ public class GTFAnnotationSource extends AbstractAnnotationSource<GTFGene> {
         public GenomeSpan getCoord() {
             return new GenomeSpan(ref, start, end, strand);
         }
+
     }
 
     final private boolean hasBioType;
