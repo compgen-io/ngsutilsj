@@ -90,9 +90,23 @@ public class BamCheck extends AbstractCommand {
                 return i+" "+current.getReadName() + " "+setOne.size()+"/"+setTwo.size()+"/"+goodReads.size();
             }}, new CloseableFinalizer<SAMRecord>());
         long i = 0;
+        SAMRecord lastRead = null;
+        int error = 0;
         while (it.hasNext()) {
             i++;
             SAMRecord read = it.next();
+            
+            if (read.getReadName() == null) {
+                System.err.println("\nERROR: Read-name empty - bad file? (last good read: "+lastRead.getReadName()+" "+lastRead.getReferenceName()+":"+lastRead.getAlignmentStart()+")");
+                error++;
+            }
+            
+            lastRead = read;
+            
+            if (read.getBaseQualities().length != read.getReadBases().length) {
+                System.err.println("\nERROR: Base calls / quality length mismatch: "+read.getReadName()+")");
+                error++;
+            }
             
             if (read.getReadPairedFlag() && mates) {
                 String readname = read.getReadName();
@@ -120,15 +134,23 @@ public class BamCheck extends AbstractCommand {
             }
         }
         reader.close();
-        System.err.println("Successfully read: "+i+" records.");
         if (mates) {
             System.err.println("Reads with missing mates: "+ (setOne.size()+setTwo.size()));
             if (setOne.size() > 0) {
                 Iterator<String> it2 = setOne.iterator();
                 for (int j=0; j<10 && setOne.size() > j; j++) {
                     System.err.println("Example read: "+it2.next());
+                    error++;
                 }
             }
         }
+        
+        if (error>0) {
+            System.err.println("File had errors!");
+            System.err.println("Total reads: "+i);
+            System.err.println("Errors: "+error);
+            System.exit(1);
+        }
+        System.err.println("Successfully read "+i+" records.");
     }
 }
