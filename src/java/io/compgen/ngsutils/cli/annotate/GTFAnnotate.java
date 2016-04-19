@@ -342,7 +342,7 @@ public class GTFAnnotate extends AbstractOutputCommand {
                         if (start == end) {
                             regions[i] = start.toString();
                         } else {
-                            if (start.isExon != end.isExon) {
+                            if (start.isExon != end.isExon && start != GenicRegion.INTERGENIC && end != GenicRegion.INTERGENIC) {
                                 if (start.isSense) {
                                     regions[i] = GenicRegion.JUNCTION.toString();
                                 } else {
