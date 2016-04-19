@@ -8,6 +8,7 @@ import io.compgen.cmdline.annotation.UnnamedArg;
 import io.compgen.cmdline.exceptions.CommandArgumentException;
 import io.compgen.cmdline.impl.AbstractOutputCommand;
 import io.compgen.common.IterUtils;
+import io.compgen.common.Pair;
 import io.compgen.common.StringLineReader;
 import io.compgen.common.StringUtils;
 import io.compgen.common.TabWriter;
@@ -40,6 +41,8 @@ public class GTFExport extends AbstractOutputCommand {
     private boolean exportIntron = false;
     private boolean codingOnly = false;
     
+    private boolean exportUTR3 = false;
+    private boolean exportUTR5 = false;
     private boolean exportTSS = false;
     private boolean exportTLSS = false;
     private boolean exportJunctions = false;
@@ -98,10 +101,21 @@ public class GTFExport extends AbstractOutputCommand {
         exportTSS = val;
     }
 
-    @Option(desc="Export translational stop site (3' UTR)", name="tlss")
+    @Option(desc="Export translational stop site", name="tlss")
     public void setTLSS(boolean val) {
         exportTLSS = val;
     }
+
+    @Option(desc="Export 5' UTR", name="utr5")
+    public void setUTR5(boolean val) {
+        exportUTR5 = val;
+    }
+
+    @Option(desc="Export 3' UTR", name="utr3")
+    public void setUTR3(boolean val) {
+        exportUTR3 = val;
+    }
+
 
     @Option(desc="Export introns", name="introns")
     public void setIntron(boolean val) {
@@ -143,6 +157,12 @@ public class GTFExport extends AbstractOutputCommand {
             exportCount++;
         }
         if (exportAcceptors) {
+            exportCount++;
+        }
+        if (exportUTR5) {
+            exportCount++;
+        }
+        if (exportUTR3) {
             exportCount++;
         }
         if (exportCount != 1) {
@@ -434,6 +454,141 @@ public class GTFExport extends AbstractOutputCommand {
                     }
                 }
             }
+
+            if (exportUTR3) {
+                Set<Pair<Integer, Integer>> utrs = new HashSet<Pair<Integer, Integer>>();
+                for (GTFTranscript txpt: gene.getTranscripts(codingOnly)) {
+                    if (!txpt.hasCDS() || gene.getStrand() == Strand.NONE) {
+                        continue;
+                    }
+
+                    if (gene.getStrand().equals(Strand.PLUS) && txpt.getStopCodon() >= txpt.getEnd()) {
+                        // require some amount of UTR... (likely an odd transcript)
+                        continue;
+                    } else if (gene.getStrand().equals(Strand.MINUS) && txpt.getStopCodon() <= txpt.getStart()) {
+                        // require some amount of UTR... (likely an odd transcript)
+                        continue;
+                    }
+                    
+                    Pair<Integer, Integer> utr = null;
+                    
+                    if (gene.getStrand().equals(Strand.PLUS)) {
+                        utr = new Pair<Integer, Integer>(txpt.getCdsEnd(), txpt.getEnd());
+                    } else if (gene.getStrand().equals(Strand.MINUS)) {
+                        utr = new Pair<Integer, Integer>(txpt.getStart(), txpt.getCdsStart());
+                    } else {
+                        // should never happen
+                        continue;
+                    }
+                    
+                    if (utrs.contains(utr)) {
+                        continue;
+                    }
+                    
+                    utrs.add(utr);
+
+                    if (!combine) {
+                        writer.write(gene.getRef());
+                        writer.write(utr.one);
+                        writer.write(utr.two);
+                        writer.write(gene.getGeneName()+"/"+txpt.getTranscriptId());
+                        writer.write(0);
+                        writer.write(gene.getStrand().toString());
+                        writer.eol();
+                    }
+                }
+                if (combine) {
+                    int min = -1;
+                    int max = -1;
+                    
+                    for (Pair<Integer, Integer> utr: utrs) {
+                        if (min == -1 || utr.one < min) {
+                            min = utr.one;
+                        }
+                        if (max == -1 || utr.two > max) {
+                            max = utr.two;
+                        }
+                    }
+                    
+                    if (min > -1 && max > -1) {
+                        writer.write(gene.getRef());
+                        writer.write(min);
+                        writer.write(max);
+                        writer.write(gene.getGeneName());
+                        writer.write(0);
+                        writer.write(gene.getStrand().toString());
+                        writer.eol();
+                    }
+                }
+            }
+            if (exportUTR5) {
+                Set<Pair<Integer, Integer>> utrs = new HashSet<Pair<Integer, Integer>>();
+                for (GTFTranscript txpt: gene.getTranscripts(codingOnly)) {
+                    if (!txpt.hasCDS() || gene.getStrand() == Strand.NONE) {
+                        continue;
+                    }
+
+                    if (gene.getStrand().equals(Strand.PLUS) && txpt.getStopCodon() >= txpt.getEnd()) {
+                        // require some amount of UTR... (likely an odd transcript)
+                        continue;
+                    } else if (gene.getStrand().equals(Strand.MINUS) && txpt.getStopCodon() <= txpt.getStart()) {
+                        // require some amount of UTR... (likely an odd transcript)
+                        continue;
+                    }
+                    
+                    Pair<Integer, Integer> utr = null;
+                    
+                    if (gene.getStrand().equals(Strand.MINUS)) {
+                        utr = new Pair<Integer, Integer>(txpt.getCdsEnd(), txpt.getEnd());
+                    } else if (gene.getStrand().equals(Strand.PLUS)) {
+                        utr = new Pair<Integer, Integer>(txpt.getStart(), txpt.getCdsStart());
+                    } else {
+                        // should never happen
+                        continue;
+                    }
+                    
+                    if (utrs.contains(utr)) {
+                        continue;
+                    }
+                    
+                    utrs.add(utr);
+
+                    if (!combine) {
+                        writer.write(gene.getRef());
+                        writer.write(utr.one);
+                        writer.write(utr.two);
+                        writer.write(gene.getGeneName());
+                        writer.write(0);
+                        writer.write(gene.getStrand().toString());
+                        writer.eol();
+                    }
+                }
+                if (combine) {
+                    int min = -1;
+                    int max = -1;
+                    
+                    for (Pair<Integer, Integer> utr: utrs) {
+                        if (min == -1 || utr.one < min) {
+                            min = utr.one;
+                        }
+                        if (max == -1 || utr.two > max) {
+                            max = utr.two;
+                        }
+                    }
+                    
+                    if (min > -1 && max > -1) {
+                        writer.write(gene.getRef());
+                        writer.write(min);
+                        writer.write(max);
+                        writer.write(gene.getGeneName());
+                        writer.write(0);
+                        writer.write(gene.getStrand().toString());
+                        writer.eol();
+                    }
+                }
+            }
+
+            
 
             
             if (exportExon) {
