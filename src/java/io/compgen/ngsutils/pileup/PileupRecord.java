@@ -13,7 +13,9 @@ public class PileupRecord {
 	}
 
 	public enum PileupBaseCallOp {
-		Match, Del, Ins
+		Match, // Match, mismatch, eq, variant (M=X) 
+		Del,   // D
+		Ins    // I
 	}
 	
 	public class PileupBaseCall {
