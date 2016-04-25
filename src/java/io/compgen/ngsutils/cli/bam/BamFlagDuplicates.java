@@ -46,6 +46,8 @@ public class BamFlagDuplicates extends AbstractCommand {
     private boolean remove = false;
     private String failedFilename = null;
     private String tmpDir = null;
+    private String tagName = null;
+    private String tagValue = null;
     private boolean scoreMapQ = false;
     
     @UnnamedArg(name = "INFILE OUTFILE")
@@ -65,6 +67,20 @@ public class BamFlagDuplicates extends AbstractCommand {
     public void setRemovedFile(String failedFilename) {
         this.failedFilename = failedFilename;
         this.remove = true;
+    }
+
+    @Option(desc = "Attribute tag to add to duplicates (format: XX:Z:Value)", name="tag")
+    public void setTagAttribute(String tagAttribute) throws CommandArgumentException {
+        if (tagAttribute != null) {
+            String[] vals = tagAttribute.split(":");
+            if (vals.length != 3) {
+                throw new CommandArgumentException("Invalid argument: --tag " + tagAttribute);
+            }
+
+            tagName = vals[0]+":"+vals[1];
+            tagValue = vals[2];
+
+        }
     }
 
     @Option(desc = "Remove duplicate reads (default is to flag them only)", name="rm")
@@ -163,7 +179,7 @@ public class BamFlagDuplicates extends AbstractCommand {
             failedWriter = factory.makeBAMWriter(header, true, new File(failedFilename));
         }
 
-        final FindDuplicateReads dups = new FindDuplicateReads(out, remove, failedWriter);
+        final FindDuplicateReads dups = new FindDuplicateReads(out, remove, failedWriter, tagName, tagValue);
         if (scoreMapQ) {
             dups.setScoringMethodMapQ();
         }

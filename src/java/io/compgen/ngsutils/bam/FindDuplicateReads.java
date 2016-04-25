@@ -57,16 +57,21 @@ public class FindDuplicateReads {
     private int curRefIdx = -1;
     private int curRefPos = -1;
     
+    private String tagAttributeName = null;
+    private String tagAttributeValue = null;
+    
     private ScoringMethod method = ScoringMethod.SUM_OF_QUALS;
     
-    public FindDuplicateReads(SAMFileWriter writer, boolean removeDuplicates, SAMFileWriter failedWriter) {
+    public FindDuplicateReads(SAMFileWriter writer, boolean removeDuplicates, SAMFileWriter failedWriter, String tagAttributeName, String tagAttributeValue) {
         this.writer = writer;
         this.removeDuplicates = removeDuplicates;
         this.failedWriter = failedWriter;
+        this.tagAttributeName = tagAttributeName;
+        this.tagAttributeValue = tagAttributeValue;
     }
 
     public FindDuplicateReads(SAMFileWriter writer, boolean removeDuplicates) {
-        this(writer, removeDuplicates, null);
+        this(writer, removeDuplicates, null, null, null);
     }
 
     public void addRead(SAMRecord read) {
@@ -116,9 +121,15 @@ public class FindDuplicateReads {
         duplicateReads++;
         if (failedWriter != null) {
             read.setDuplicateReadFlag(true);
+            if (tagAttributeName != null) {
+                read.setAttribute(tagAttributeName, tagAttributeValue);
+            }
             failedWriter.addAlignment(read);
         } else if (!removeDuplicates) {
             read.setDuplicateReadFlag(true);
+            if (tagAttributeName != null) {
+                read.setAttribute(tagAttributeName, tagAttributeValue);
+            }
             writer.addAlignment(read);
         }
         // else - silently drop
