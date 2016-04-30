@@ -280,6 +280,16 @@ public class BamBest extends AbstractCommand {
         // setup outputs
         SAMFileWriterFactory factory = new SAMFileWriterFactory();
         SAMFileWriter[] writers = new SAMFileWriter[outputs.length];
+
+// TODO: Fix tmp outputs...
+//        if (tmpDir != null) {
+//            factory.setTempDirectory(new File(tmpDir));
+//        } else if (outfile == null || outfile.getParent() == null) {
+//            factory.setTempDirectory(new File(".").getCanonicalFile());
+//        } else if (outfile != null) {
+//            factory.setTempDirectory(outfile.getParentFile());
+//        }
+
         
         for (int i=0; i<outputs.length; i++) {
             SAMFileHeader header = readers[i].getFileHeader().clone();
@@ -379,7 +389,7 @@ public class BamBest extends AbstractCommand {
                             System.err.print(" *best*");
                         }
                     } else if (compareToVal == 0) {
-                        // tie goes to the first input
+                        // tie goes to the first input, so we don't reset bestIdx
                         // check to see that we aren't in the same as the bestIdx, 
                         // if we have paired reads, they can have the same scores.
                         if (bestIdx != idx) {
@@ -395,19 +405,22 @@ public class BamBest extends AbstractCommand {
                 }
                 idx++;
             }
-                
 
             if (tie) {
                 inputCounts[inputs.length]++;
                 if (!noTies) {
-                    for (SAMRecord read: bestList) {
-                        writers[bestIdx].addAlignment(read);
+                    if (writers.length > bestIdx) {
+                        for (SAMRecord read: bestList) {
+                            writers[bestIdx].addAlignment(read);
+                        }
                     }
                 }
             } else if (bestIdx > -1) {
                 inputCounts[bestIdx]++;
-                for (SAMRecord read: bestList) {
-                    writers[bestIdx].addAlignment(read);
+                if (writers.length > bestIdx) {
+                    for (SAMRecord read: bestList) {
+                        writers[bestIdx].addAlignment(read);
+                    }
                 }
             } else {
                 unmapped++;
