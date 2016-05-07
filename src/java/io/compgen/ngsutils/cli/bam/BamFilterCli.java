@@ -19,7 +19,6 @@ import io.compgen.cmdline.impl.AbstractCommand;
 import io.compgen.common.progress.FileChannelStats;
 import io.compgen.common.progress.ProgressMessage;
 import io.compgen.common.progress.ProgressUtils;
-import io.compgen.ngsutils.NGSUtils;
 import io.compgen.ngsutils.bam.Orientation;
 import io.compgen.ngsutils.bam.filter.BamFilter;
 import io.compgen.ngsutils.bam.filter.BedExclude;
@@ -38,6 +37,7 @@ import io.compgen.ngsutils.bam.filter.TagMin;
 import io.compgen.ngsutils.bam.filter.UniqueMapping;
 import io.compgen.ngsutils.bam.filter.UniqueStart;
 import io.compgen.ngsutils.bam.filter.Whitelist;
+import io.compgen.ngsutils.bam.support.BamHeaderUtils;
 import io.compgen.ngsutils.bam.support.ReadUtils;
 import io.compgen.ngsutils.support.CloseableFinalizer;
 
@@ -407,7 +407,7 @@ public class BamFilterCli extends AbstractCommand {
         }
 
         final SAMFileHeader header = reader.getFileHeader().clone();
-        final SAMProgramRecord pg = NGSUtils.buildSAMProgramRecord("bam-filter", header);
+        final SAMProgramRecord pg = BamHeaderUtils.buildSAMProgramRecord("bam-filter", header);
         final List<SAMProgramRecord> pgRecords = new ArrayList<SAMProgramRecord>(
                 header.getProgramRecords());
         pgRecords.add(0, pg);

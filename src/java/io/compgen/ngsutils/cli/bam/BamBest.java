@@ -19,7 +19,7 @@ import io.compgen.cmdline.impl.AbstractCommand;
 import io.compgen.common.progress.FileChannelStats;
 import io.compgen.common.progress.ProgressMessage;
 import io.compgen.common.progress.ProgressUtils;
-import io.compgen.ngsutils.NGSUtils;
+import io.compgen.ngsutils.bam.support.BamHeaderUtils;
 import io.compgen.ngsutils.support.CloseableFinalizer;
 
 import java.io.BufferedOutputStream;
@@ -296,7 +296,7 @@ public class BamBest extends AbstractCommand {
             if (unsorted) {
                 header.setSortOrder(SortOrder.unsorted);
             }
-            SAMProgramRecord pg = NGSUtils.buildSAMProgramRecord("bam-best", header);
+            SAMProgramRecord pg = BamHeaderUtils.buildSAMProgramRecord("bam-best", header);
             List<SAMProgramRecord> pgRecords = new ArrayList<SAMProgramRecord>(header.getProgramRecords());
             pgRecords.add(0, pg);
             header.setProgramRecords(pgRecords);

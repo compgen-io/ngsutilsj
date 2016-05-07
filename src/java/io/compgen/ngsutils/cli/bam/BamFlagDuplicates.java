@@ -20,8 +20,8 @@ import io.compgen.common.Counter;
 import io.compgen.common.progress.FileChannelStats;
 import io.compgen.common.progress.ProgressMessage;
 import io.compgen.common.progress.ProgressUtils;
-import io.compgen.ngsutils.NGSUtils;
 import io.compgen.ngsutils.bam.FindDuplicateReads;
+import io.compgen.ngsutils.bam.support.BamHeaderUtils;
 import io.compgen.ngsutils.support.CloseableFinalizer;
 
 import java.io.BufferedOutputStream;
@@ -142,7 +142,7 @@ public class BamFlagDuplicates extends AbstractCommand {
         
         
         SAMFileHeader header = reader.getFileHeader().clone();
-        SAMProgramRecord pg = NGSUtils.buildSAMProgramRecord("bam-dups", header);
+        SAMProgramRecord pg = BamHeaderUtils.buildSAMProgramRecord("bam-dups", header);
         List<SAMProgramRecord> pgRecords = new ArrayList<SAMProgramRecord>(header.getProgramRecords());
         pgRecords.add(0, pg);
         header.setProgramRecords(pgRecords);

@@ -1,7 +1,5 @@
 package io.compgen.ngsutils;
 
-import htsjdk.samtools.SAMFileHeader;
-import htsjdk.samtools.SAMProgramRecord;
 import io.compgen.cmdline.Help;
 import io.compgen.cmdline.License;
 import io.compgen.cmdline.MainBuilder;
@@ -11,6 +9,7 @@ import io.compgen.ngsutils.cli.annotate.GTFAnnotate;
 import io.compgen.ngsutils.cli.annotate.RepeatAnnotate;
 import io.compgen.ngsutils.cli.bam.BamBest;
 import io.compgen.ngsutils.cli.bam.BamCheck;
+import io.compgen.ngsutils.cli.bam.BamConcat;
 import io.compgen.ngsutils.cli.bam.BamCount;
 import io.compgen.ngsutils.cli.bam.BamCoverage;
 import io.compgen.ngsutils.cli.bam.BamDiscord;
@@ -116,6 +115,7 @@ public class NGSUtils {
                 .addCommand(BedToBed6.class)
                 .addCommand(BedCleanScore.class)
                 .addCommand(FisherCli.class)
+                .addCommand(BamConcat.class)
                 .findAndRun(args);
         } catch (Exception e) {
             e.printStackTrace();
@@ -136,41 +136,4 @@ public class NGSUtils {
 	public static String getArgs() {
 	    return args;
 	}
-	
-	public static SAMProgramRecord buildSAMProgramRecord(String prog) {
-        return buildSAMProgramRecord(prog, null);
-    }
-    public static SAMProgramRecord buildSAMProgramRecord(String prog, SAMFileHeader header) {
-        String pgTemplate = "ngsutilsj:" + prog + "-";
-        String pgID = pgTemplate;
-        boolean found = true;
-        int i = 0;
-        
-        SAMProgramRecord mostRecent = null;
-        
-        while (found) {
-            found = false;
-            i++;
-            pgID = pgTemplate + i;
-            if (header!=null) {
-                for (SAMProgramRecord record: header.getProgramRecords()) {
-                    if (mostRecent == null) {
-                        mostRecent = record;
-                    }
-                    if (record.getId().equals(pgID)) {
-                        found = true;
-                    }
-                }
-            }
-        }
-        
-        SAMProgramRecord programRecord = new SAMProgramRecord(pgID);
-        programRecord.setProgramName("ngsutilsj:"+prog);
-        programRecord.setProgramVersion(NGSUtils.getVersion());
-        programRecord.setCommandLine("ngsutilsj " + NGSUtils.getArgs());
-        if (mostRecent!=null) {
-            programRecord.setPreviousProgramGroupId(mostRecent.getId());
-        }
-        return programRecord;
-    }
 }

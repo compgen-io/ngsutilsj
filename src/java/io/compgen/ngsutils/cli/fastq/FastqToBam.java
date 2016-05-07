@@ -14,7 +14,7 @@ import io.compgen.cmdline.exceptions.CommandArgumentException;
 import io.compgen.cmdline.impl.AbstractCommand;
 import io.compgen.common.IterUtils;
 import io.compgen.common.IterUtils.EachPair;
-import io.compgen.ngsutils.NGSUtils;
+import io.compgen.ngsutils.bam.support.BamHeaderUtils;
 import io.compgen.ngsutils.fastq.Fastq;
 import io.compgen.ngsutils.fastq.FastqRead;
 import io.compgen.ngsutils.fastq.FastqReader;
@@ -151,7 +151,7 @@ public class FastqToBam extends AbstractCommand {
 
         final SAMFileHeader header = new SAMFileHeader();
         header.setSortOrder(SortOrder.unsorted);
-        SAMProgramRecord pg = NGSUtils.buildSAMProgramRecord("fastq-bam");
+        SAMProgramRecord pg = BamHeaderUtils.buildSAMProgramRecord("fastq-bam");
         header.addProgramRecord(pg);
 
         final SAMFileWriter out;
