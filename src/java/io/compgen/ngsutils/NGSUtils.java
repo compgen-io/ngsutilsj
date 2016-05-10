@@ -42,6 +42,7 @@ import io.compgen.ngsutils.cli.fasta.FastaTag;
 import io.compgen.ngsutils.cli.fasta.FastaWrap;
 import io.compgen.ngsutils.cli.fastq.FastqCheck;
 import io.compgen.ngsutils.cli.fastq.FastqFilterCli;
+import io.compgen.ngsutils.cli.fastq.FastqKmer;
 import io.compgen.ngsutils.cli.fastq.FastqMerge;
 import io.compgen.ngsutils.cli.fastq.FastqSeparate;
 import io.compgen.ngsutils.cli.fastq.FastqSort;
@@ -116,6 +117,7 @@ public class NGSUtils {
                 .addCommand(BedCleanScore.class)
                 .addCommand(FisherCli.class)
                 .addCommand(BamConcat.class)
+                .addCommand(FastqKmer.class)
                 .findAndRun(args);
         } catch (Exception e) {
             e.printStackTrace();
