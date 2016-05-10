@@ -183,11 +183,16 @@ public class FastqSort extends AbstractOutputCommand {
 			}
 		});
 
+		String suffix = ".tmp";
+		if (!noCompressTemp) {
+		    suffix = ".gz"; 
+		}
+		
 		File temp;
 		if (tmpdir == null) {
-			temp = Files.createTempFile(".fastqSort", ".gz").toFile();
+			temp = Files.createTempFile(".fastqSort", suffix).toFile();
 		} else {
-			temp = Files.createTempFile(tmpdir.toPath(), ".fastqSort", ".gz").toFile();
+			temp = Files.createTempFile(tmpdir.toPath(), ".fastqSort", suffix).toFile();
 		}
 		temp.setReadable(true, true);
 		temp.setWritable(true, true);
