@@ -190,13 +190,13 @@ public class FastqSort extends AbstractOutputCommand {
 		
 		File temp;
 		if (tmpdir == null) {
-			temp = Files.createTempFile(".fastqSort", suffix).toFile();
+			temp = Files.createTempFile(".fastq-sort-", suffix).toFile();
 		} else {
-			temp = Files.createTempFile(tmpdir.toPath(), ".fastqSort", suffix).toFile();
+			temp = Files.createTempFile(tmpdir.toPath(), ".fastq-sort-", suffix).toFile();
 		}
 		temp.setReadable(true, true);
 		temp.setWritable(true, true);
-		temp.setExecutable(false, true);
+		temp.setExecutable(false, false);
 		tempFiles.add(temp.getAbsolutePath());
 		temp.deleteOnExit();
 
