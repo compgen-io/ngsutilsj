@@ -186,10 +186,10 @@ public class BamCount extends AbstractOutputCommand {
             writer.write_line("## source: gtf " + gtfFilename);
             spanSource = new GTFSpans(gtfFilename);
             name = gtfFilename;
-        } else { // TODO: add a GTF span source 
+        } else {
             reader.close();
             writer.close();
-            throw new CommandArgumentException("You must specify either a bin-size or a BED file!");
+            throw new CommandArgumentException("You must specify either a bin-size, a BED file, or a GTF file!");
         }
 
         writer.write_line("## counts: number of reads ");
@@ -227,12 +227,17 @@ public class BamCount extends AbstractOutputCommand {
 
         
         int spanCount = 0;
+        boolean missingReferences = false;
         
         for (SpanGroup spanGroup: IterUtils.wrap(ProgressUtils.getIterator(name, spanSource.iterator(), new IncrementingStats(spanSource.size())))) {
             spanCount ++;
             if (verbose && spanCount % 1000 == 0) {
                 System.err.println("[" +spanCount + "]" + spanGroup.getRefName()+":"+spanGroup.getStart());
                 System.err.flush();
+            }
+            if (reader.getFileHeader().getSequence(spanGroup.getRefName()) == null) {
+                missingReferences = true;
+                continue;
             }
             
             int count = 0;
@@ -245,6 +250,7 @@ public class BamCount extends AbstractOutputCommand {
             Set<String> reads = new HashSet<String>();
 
             for (GenomeSpan span: spanGroup) {
+                
                 int spanStart = span.start+1;
                 int spanEnd = span.end;
                 SAMRecordIterator it = reader.query(spanGroup.getRefName(), spanStart, spanEnd, contained);
@@ -346,6 +352,9 @@ public class BamCount extends AbstractOutputCommand {
 
         writer.close();
         reader.close();
+        if (missingReferences) {
+            System.err.println("WARNING: Some references/chromosomes in the GTF file were not found in the BAM file");
+        }
     }
     
     protected int calcTranscriptSize(int[] starts, int[] ends) {
