@@ -19,6 +19,25 @@ public class PileupRecord {
 	}
 	
 	public class PileupBaseCall {
+        public boolean matches(String q) {
+            if (q.charAt(0) == '+') { 
+                if (op != PileupBaseCallOp.Ins) {
+                    return false;
+                }
+                q = q.substring(1);
+            }
+            if (q.charAt(0) == '-') { 
+                if (op != PileupBaseCallOp.Del) {
+                    return false;
+                }
+                q = q.substring(1);
+            }
+            
+            if (!call.equals(q)) {
+                return false;
+            }
+            return true;
+        }
 		@Override
 		public String toString() {
             if (op == PileupBaseCallOp.Ins) {
