@@ -106,7 +106,10 @@ public class PileupRecord {
 	
 	private List<PileupSampleRecord> records = new ArrayList<PileupSampleRecord>();
 	
-	public static PileupRecord parse(String line) {
+    public static PileupRecord parse(String line) {
+        return parse(line, 0);
+    }
+    public static PileupRecord parse(String line, int minBaseQual) {
 //		System.err.println(StringUtils.strip(line));
 		String[] cols = StringUtils.strip(line).split("\t");
 		
@@ -160,6 +163,7 @@ public class PileupRecord {
 					int indelLen = Integer.parseInt(intbuf);
 					String indel = cols[i+1].substring(j, j+indelLen);
 
+					// always add indels (no good qual scores avail)
 					if (base == '+') {
 						calls.add(record.new PileupBaseCall(PileupBaseCallOp.Ins, indel, -1, readPos[qual_idx-1]));
 					} else {
@@ -168,7 +172,9 @@ public class PileupRecord {
 					
 					j += indelLen-1;
 				} else {
-					calls.add(record.new PileupBaseCall(PileupBaseCallOp.Match, ""+base, cols[i+2].charAt(qual_idx)-33, refBase, readPos[qual_idx]));
+				    if (cols[i+2].charAt(qual_idx)-33 > minBaseQual) {
+				        calls.add(record.new PileupBaseCall(PileupBaseCallOp.Match, ""+base, cols[i+2].charAt(qual_idx)-33, refBase, readPos[qual_idx]));
+				    }
 					qual_idx++;
 				}
 			}

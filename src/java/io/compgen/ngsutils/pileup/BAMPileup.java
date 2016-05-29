@@ -44,11 +44,15 @@ public class BAMPileup {
             cmd.add("-q");
             cmd.add(""+minMappingQual);
         }
+
+//      This needs to be done so that we get all the calls, qual, and pos info.
         
-        if (minBaseQual > -1) {
-            cmd.add("-Q");
-            cmd.add(""+minBaseQual);
-        }
+        cmd.add("-Q 0");
+        
+//        if (minBaseQual > -1) {
+//            cmd.add("-Q");
+//            cmd.add(""+minBaseQual);
+//        }
         
         if (filterFlags > -1) {
             cmd.add("--ff");
@@ -96,7 +100,7 @@ public class BAMPileup {
             throw new RuntimeException("Cannot start samtools mpileup! " + e.getMessage());
         }
         InputStream bis = new BufferedInputStream(proc.getInputStream());
-        PileupReader reader = new PileupReader(bis);
+        PileupReader reader = new PileupReader(bis, minBaseQual);
         
         new Thread(new Runnable() {
             @Override
