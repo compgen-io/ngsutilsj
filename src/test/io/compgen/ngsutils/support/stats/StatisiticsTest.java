@@ -16,23 +16,23 @@ public class StatisiticsTest {
         assertEquals("0.001346", new DecimalFormat("0.000000").format(StatUtils.fisherExact(1,9,11,3)));
 
     }
-    @Test
-    public void testPpois() {
-        assertEquals("0.01831564", new DecimalFormat("0.00000000").format(StatUtils.ppois(0,4)));
-        assertEquals("0.09157819", new DecimalFormat("0.00000000").format(StatUtils.ppois(1,4)));
-        assertEquals("0.2381033", new DecimalFormat("0.0000000").format(StatUtils.ppois(2,4)));
-        assertEquals("0.4334701", new DecimalFormat("0.0000000").format(StatUtils.ppois(3,4)));
-        assertEquals("0.6288369", new DecimalFormat("0.0000000").format(StatUtils.ppois(4,4)));
-    }
-
-    @Test
-    public void testDpois() {
-        assertEquals("0.01831564", new DecimalFormat("0.00000000").format(StatUtils.dpois(0,4)));
-        assertEquals("0.07326256", new DecimalFormat("0.00000000").format(StatUtils.dpois(1,4)));
-        assertEquals("0.1465251", new DecimalFormat("0.0000000").format(StatUtils.dpois(2,4)));
-        assertEquals("0.1953668", new DecimalFormat("0.0000000").format(StatUtils.dpois(3,4)));
-        assertEquals("0.1953668", new DecimalFormat("0.0000000").format(StatUtils.dpois(4,4)));
-    }
+//    @Test
+//    public void testPpois() {
+//        assertEquals("0.01831564", new DecimalFormat("0.00000000").format(StatUtils.ppois(0,4)));
+//        assertEquals("0.09157819", new DecimalFormat("0.00000000").format(StatUtils.ppois(1,4)));
+//        assertEquals("0.2381033", new DecimalFormat("0.0000000").format(StatUtils.ppois(2,4)));
+//        assertEquals("0.4334701", new DecimalFormat("0.0000000").format(StatUtils.ppois(3,4)));
+//        assertEquals("0.6288369", new DecimalFormat("0.0000000").format(StatUtils.ppois(4,4)));
+//    }
+//
+//    @Test
+//    public void testDpois() {
+//        assertEquals("0.01831564", new DecimalFormat("0.00000000").format(StatUtils.dpois(0,4)));
+//        assertEquals("0.07326256", new DecimalFormat("0.00000000").format(StatUtils.dpois(1,4)));
+//        assertEquals("0.1465251", new DecimalFormat("0.0000000").format(StatUtils.dpois(2,4)));
+//        assertEquals("0.1953668", new DecimalFormat("0.0000000").format(StatUtils.dpois(3,4)));
+//        assertEquals("0.1953668", new DecimalFormat("0.0000000").format(StatUtils.dpois(4,4)));
+//    }
 
     @Test
     public void testFactorial() {

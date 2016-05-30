@@ -8,8 +8,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.commons.math3.distribution.PoissonDistribution;
-
 public class StatUtils {
     
     public static final double log2Factor = Math.log(2);
@@ -45,24 +43,24 @@ public class StatUtils {
         return (AB * CD * AC * BD) / (Afact * Bfact * Cfact * Dfact * Nfact);
     }
     
-    public static double poissonMean(int lambda, int n, float mu) {
-        return ppois(n, (int) Math.floor(lambda*mu));
-    }
+//    public static double poissonMean(int lambda, int n, float mu) {
+//        return ppois(n, (int) Math.floor(lambda*mu));
+//    }
 
-    public static double dpois(int x, int lambda) {
-        return new PoissonDistribution(lambda).probability(x);
-        //return (Math.pow(lambda, x) / CombinatoricsUtils.factorialDouble(x)) * Math.exp(-1*lambda); 
-    }
+//    public static double dpois(int x, int lambda) {
+//        return new PoissonDistribution(lambda).probability(x);
+//        //return (Math.pow(lambda, x) / CombinatoricsUtils.factorialDouble(x)) * Math.exp(-1*lambda); 
+//    }
 
-    public static double ppois(int x, int lambda) {
-        return new PoissonDistribution(lambda).cumulativeProbability(x);
-//        double acc = 0.0;
-//        for (int i=0; i<=x; i++) {
-//            acc += (Math.pow(lambda, i) / CombinatoricsUtils.factorialDouble(i)); 
-//        }
-//        return acc * Math.exp(-lambda);
-    }
-
+//    public static double ppois(int x, int lambda) {
+//        return new PoissonDistribution(lambda).cumulativeProbability(x);
+////        double acc = 0.0;
+////        for (int i=0; i<=x; i++) {
+////            acc += (Math.pow(lambda, i) / CombinatoricsUtils.factorialDouble(i)); 
+////        }
+////        return acc * Math.exp(-lambda);
+//    }
+//
     /* Use CombinatoricsUtils.factorial instead
     private static Map<Integer, Long> factorialMemoize = new HashMap<Integer, Long> ();
     public static long factorial(int n) {
@@ -263,6 +261,13 @@ public class StatUtils {
         return out;
     }
  
+    /**
+     * Are the values in the double[] arrays equal (within a given delta) 
+     * @param one
+     * @param two
+     * @param delta
+     * @return
+     */
     public static boolean deltaEquals(double[] one, double[] two, double delta) {
         if (one.length != two.length) {
             return false;
@@ -355,6 +360,65 @@ public class StatUtils {
         }
     }
 
+    
+    public static long sum(int[] vals) {
+        long acc = 0;
+        for (int i=0; i< vals.length; i++) {
+            acc += vals[i];
+        }
+        return acc;
+    }
+
+    public static class MeanStdDev {
+        public final double mean;
+        public final double stddev;
+        
+        private MeanStdDev(double mean, double stddev) {
+            this.mean = mean;
+            this.stddev = stddev;
+        }
+    }
+
+    public static MeanStdDev calcMeanStdDev(double[] vals) {
+        double acc = 0.0;
+        int count = 0;
+        for (int i=0; i< vals.length; i++) {
+            acc += vals[i];
+            count += 1;
+        }
+        
+        double mean = acc / count;
+        
+        acc = 0.0;
+        for (int i=0; i< vals.length; i++) {
+            acc += Math.pow(vals[i]-mean, 2);
+        }
+
+        return new MeanStdDev(mean, Math.sqrt(acc * 1/(count - 1)));
+    }
+
+    public static MeanStdDev calcMeanStdDev(int[] vals) {
+        long acc = 0;
+        int count = 0;
+        for (int i=0; i< vals.length; i++) {
+            acc += vals[i];
+            count += 1;
+        }
+        
+        double mean = ((double)acc) / count;
+        
+        acc = 0;
+        for (int i=0; i< vals.length; i++) {
+            acc += Math.pow(vals[i]-mean, 2);
+        }
+
+        return new MeanStdDev(mean, Math.sqrt(acc * 1/(count - 1)));
+    }
+
+    
+
+    
+    
 //    public static class Trendline {
 //        public final double slope;
 //        public final double intercept;
