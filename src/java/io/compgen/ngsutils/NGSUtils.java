@@ -42,7 +42,6 @@ import io.compgen.ngsutils.cli.fasta.FastaTag;
 import io.compgen.ngsutils.cli.fasta.FastaWrap;
 import io.compgen.ngsutils.cli.fastq.FastqCheck;
 import io.compgen.ngsutils.cli.fastq.FastqFilterCli;
-import io.compgen.ngsutils.cli.fastq.FastqKmer;
 import io.compgen.ngsutils.cli.fastq.FastqMerge;
 import io.compgen.ngsutils.cli.fastq.FastqSeparate;
 import io.compgen.ngsutils.cli.fastq.FastqSort;
@@ -51,6 +50,9 @@ import io.compgen.ngsutils.cli.fastq.FastqStats;
 import io.compgen.ngsutils.cli.fastq.FastqToBam;
 import io.compgen.ngsutils.cli.fastq.FastqToFasta;
 import io.compgen.ngsutils.cli.gtf.GTFExport;
+import io.compgen.ngsutils.cli.kmer.FastaKmer;
+import io.compgen.ngsutils.cli.kmer.FastqKmer;
+import io.compgen.ngsutils.cli.kmer.KmerMerge;
 import io.compgen.ngsutils.support.stats.FisherCli;
 
 import java.io.IOException;
@@ -68,7 +70,7 @@ public class NGSUtils {
                 .setHelpHeader("NGSUtilsJ - Data wrangling for NGS\n---------------------------------------")
                 .setDefaultUsage("Usage: ngsutilsj cmd [options]")
                 .setHelpFooter("http://compgen.io/ngsutilsj\n" + getVersion())
-                .setCategoryOrder(new String[] { "bam", "bed", "fasta", "fastq", "gtf", "annotation", "help"})
+                .setCategoryOrder(new String[] { "bam", "bed", "fasta", "fastq", "gtf", "annotation", "kmer", "help"})
                 .addCommand(License.class)
                 .addCommand(Help.class)
                 .addCommand(FastqToBam.class)
@@ -118,6 +120,8 @@ public class NGSUtils {
                 .addCommand(FisherCli.class)
                 .addCommand(BamConcat.class)
                 .addCommand(FastqKmer.class)
+                .addCommand(FastaKmer.class)
+                .addCommand(KmerMerge.class)
                 .findAndRun(args);
         } catch (Exception e) {
             e.printStackTrace();
