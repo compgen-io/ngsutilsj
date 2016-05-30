@@ -11,7 +11,7 @@ import java.util.Iterator;
 import java.util.List;
 
 public class BAMPileup {
-    private final String bamFilename;
+    private final String[] filenames;
     private String refFilename = null;
     private String bedFilename = null;
 
@@ -23,8 +23,8 @@ public class BAMPileup {
     private boolean disableBAQ = true;
     private boolean extendedBAQ = false;
     
-    public BAMPileup(String bamFilename) {
-        this.bamFilename = bamFilename;
+    public BAMPileup(String... filenames) {
+        this.filenames = filenames;
     }
    
     public Iterator<PileupRecord> pileup() {
@@ -54,12 +54,12 @@ public class BAMPileup {
 //            cmd.add(""+minBaseQual);
 //        }
         
-        if (filterFlags > -1) {
+        if (filterFlags > 0) {
             cmd.add("--ff");
             cmd.add(""+filterFlags);
         }
         
-        if (requiredFlags > -1) {
+        if (requiredFlags > 0) {
             cmd.add("--rf");
             cmd.add(""+requiredFlags);
         }
@@ -87,7 +87,9 @@ public class BAMPileup {
             cmd.add(region.ref+":"+(region.start+1)+"-"+region.end);
         }
 
-        cmd.add(bamFilename);
+        for (String f: filenames) {
+            cmd.add(f);
+        }
         return cmd;
     }
     
