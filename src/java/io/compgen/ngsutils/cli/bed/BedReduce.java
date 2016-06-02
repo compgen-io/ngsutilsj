@@ -35,6 +35,7 @@ public class BedReduce extends AbstractOutputCommand {
     private int extend = 0;
     private boolean scoreIsCount = false;
     private boolean noStrand = false;
+    private boolean rename = false;
     
     @Option(name="extend", desc="Extend a regions N bases in both directions to find an overlap.")
     public void setExtend(int extend) {
@@ -44,6 +45,11 @@ public class BedReduce extends AbstractOutputCommand {
     @Option(charName="c", desc="Score should be the count of merged regions (default: the sum of scores)")
     public void setScoreIsCount(boolean scoreIsCount) {
         this.scoreIsCount = scoreIsCount;
+    }
+
+    @Option(name="rename", desc="Automatically rename the bed regions region_1, region_2, etc...")
+    public void setRename(boolean rename) {
+        this.rename = rename;
     }
 
     @Option(name="ns", desc="Ignore strand when merging regions")
@@ -113,8 +119,17 @@ public class BedReduce extends AbstractOutputCommand {
             }
         }
         
+        int i=1;
         for (GenomeSpan coord: records.keySet()) {
-            records.get(coord).write(out);
+            BedRecord rec;
+            if (rename) {
+                BedRecord tmp = records.get(coord);
+                rec = new BedRecord(tmp.getCoord(), "region_"+i, tmp.getScore(), tmp.getExtras());
+            } else {
+                rec = records.get(coord);
+            }
+            rec.write(out);
+            i++;
         }
     }
     
