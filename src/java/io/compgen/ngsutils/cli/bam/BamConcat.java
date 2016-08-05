@@ -102,11 +102,37 @@ public class BamConcat extends AbstractCommand {
         }
         
         SamReader[] readers = new SamReader[inputNames.length];
+        List<Iterator<SAMRecord>> iterators = new ArrayList<Iterator<SAMRecord>>();
         
         // setup outputs
         SAMFileWriterFactory factory = new SAMFileWriterFactory();
         SAMFileWriter writer = null;
 
+        final int[] inputCounts = new int[1]; // used for progress report - needs an array to be final
+        for (int i=0; i<inputNames.length; i++) {
+            Iterator<SAMRecord> it = null;
+            inputCounts[0] = 0;
+            if (inputNames[i].equals("-")) {
+                readers[i] = readerFactory.open(SamInputResource.of(System.in));
+                it = readers[i].iterator();
+            } else { 
+                File f = new File(inputNames[i]);
+                FileInputStream fis = new FileInputStream(f);
+                readers[i] = readerFactory.open(SamInputResource.of(fis));
+                FileChannel channel = fis.getChannel();
+
+                final int idx = i;
+                
+                it = ProgressUtils.getIterator(inputNames[i], readers[i].iterator(), (channel == null)? null : new FileChannelStats(channel), new ProgressMessage<SAMRecord>() {
+                  @Override
+                  public String msg(SAMRecord current) {
+                      return inputNames[idx]+":"+inputCounts[0];
+                  }}, new CloseableFinalizer<SAMRecord>());
+            }
+            iterators.add(it);
+        }
+
+        
         SAMFileHeader header = readers[0].getFileHeader().clone();
         header.setSortOrder(SortOrder.unsorted);
 
@@ -184,27 +210,8 @@ public class BamConcat extends AbstractCommand {
         }
         
         long total = 0;
-        final int[] inputCounts = new int[1];
         for (int i=0; i<inputNames.length; i++) {
-            Iterator<SAMRecord> it = null;
-            inputCounts[0] = 0;
-            if (inputNames[i].equals("-")) {
-                readers[i] = readerFactory.open(SamInputResource.of(System.in));
-                it = readers[i].iterator();
-            } else { 
-                File f = new File(inputNames[i]);
-                FileInputStream fis = new FileInputStream(f);
-                readers[i] = readerFactory.open(SamInputResource.of(fis));
-                FileChannel channel = fis.getChannel();
-
-                final int idx = i;
-                
-                it = ProgressUtils.getIterator(inputNames[i], readers[i].iterator(), (channel == null)? null : new FileChannelStats(channel), new ProgressMessage<SAMRecord>() {
-                  @Override
-                  public String msg(SAMRecord current) {
-                      return inputNames[idx]+":"+inputCounts[0];
-                  }}, new CloseableFinalizer<SAMRecord>());
-            }
+            Iterator<SAMRecord> it = iterators.get(i);
 
             while (it.hasNext()) {
                 SAMRecord read = it.next();

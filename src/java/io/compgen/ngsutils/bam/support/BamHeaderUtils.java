@@ -1,12 +1,12 @@
 package io.compgen.ngsutils.bam.support;
 
-import java.util.List;
-import java.util.Map.Entry;
-
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMProgramRecord;
 import htsjdk.samtools.SAMReadGroupRecord;
 import io.compgen.ngsutils.NGSUtils;
+
+import java.util.List;
+import java.util.Map.Entry;
 
 public class BamHeaderUtils {
 

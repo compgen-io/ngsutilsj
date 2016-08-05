@@ -1,9 +1,12 @@
 package io.compgen.ngsutils.pileup;
 
+import htsjdk.samtools.util.CloseableIterator;
 import io.compgen.common.StringUtils;
 import io.compgen.ngsutils.annotation.GenomeSpan;
 
 import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -27,7 +30,7 @@ public class BAMPileup {
         this.filenames = filenames;
     }
    
-    public Iterator<PileupRecord> pileup() {
+    public Iterator<PileupRecord> pileup() throws IOException {
         return pileup(null);
     }
 
@@ -93,37 +96,65 @@ public class BAMPileup {
         return cmd;
     }
     
-    public Iterator<PileupRecord> pileup(GenomeSpan region) {
+    public CloseableIterator<PileupRecord> pileup(GenomeSpan region) throws IOException {
         final ProcessBuilder pb = new ProcessBuilder(getCommand(region));
+
+        final File tmp = File.createTempFile(".ngsutilsj-pileupreader-", ".txt", new File("."));
+        tmp.deleteOnExit();
+        pb.redirectOutput(tmp);
+        
         final Process proc;
         try {
             proc = pb.start();
         } catch (IOException e) {
             throw new RuntimeException("Cannot start samtools mpileup! " + e.getMessage());
         }
-        InputStream bis = new BufferedInputStream(proc.getInputStream());
-        PileupReader reader = new PileupReader(bis, minBaseQual);
+
+        try {
+            proc.waitFor();
+            proc.getErrorStream().close();
+            proc.getInputStream().close();
+            proc.getOutputStream().close();
+            if (proc.exitValue()!=0) {
+                throw new RuntimeException("Error running: "+ StringUtils.join(" ", pb.command()));
+            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        proc.destroy();
         
-        new Thread(new Runnable() {
+        InputStream bis = new BufferedInputStream(new FileInputStream(tmp));
+        final PileupReader reader = new PileupReader(bis, minBaseQual);
+        
+        return new CloseableIterator<PileupRecord>(){
+            Iterator<PileupRecord> it = reader.iterator();
             @Override
-            public void run() {
+            public boolean hasNext() {
+                return it.hasNext();
+            }
+
+            @Override
+            public PileupRecord next() {
+                return it.next();
+            }
+
+            @Override
+            public void remove() {
+                it.remove();
+            }
+
+            @Override
+            public void close() {
                 try {
-                    proc.waitFor();
-                    proc.getErrorStream().close();
-                    proc.getInputStream().close();
-                    proc.getOutputStream().close();
-                    if (proc.exitValue()!=0) {
-                        throw new RuntimeException("Error running: "+ StringUtils.join(" ", pb.command()));
-                    }
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    reader.close();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-                proc.destroy();
-            }}).start();
-        
-        return reader.iterator();
+                tmp.delete();
+                
+            }};
     }
 
     public void setMinMappingQual(int minMappingQual) {
