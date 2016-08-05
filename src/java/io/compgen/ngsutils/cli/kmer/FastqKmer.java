@@ -19,8 +19,10 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.zip.GZIPOutputStream;
 
 @Command(name="kmer-fastq", desc="Splits FASTQ reads into k-mers and counts them", category="kmer", experimental=true)
@@ -34,10 +36,20 @@ public class FastqKmer extends AbstractOutputCommand {
     private boolean revcomp = false;
     private boolean wildcard = false;
 
+    // TODO: Write output stats to a file (# reads, # unique kmers, # removed due to wildcards)
+    private String statsFilename = null;
+    
 	private File tmpdir = null;
 
 	private List<File> tempFiles = new ArrayList<File>();
+	
+	// We will write results out asynchronously, but allow only one
+	// output thread at a time. Also wait to submit a new job until
+	// the old one is done - why? Memory. Only store two full KmerCount
+	// objects: (1) reading and (1) writing
+	
 	private ExecutorService threadPool = Executors.newSingleThreadExecutor();
+	private Future<Void> futureVal = null;
 
 	public FastqKmer(){
 	}
@@ -53,7 +65,7 @@ public class FastqKmer extends AbstractOutputCommand {
     }
 
 	@UnnamedArg(name="FILE1...")
-	public void setFilenames(String[] filenames) throws IOException {
+	public void setFilenames(String[] filenames) {
 	    this.filenames = filenames;
 	}
 
@@ -79,7 +91,7 @@ public class FastqKmer extends AbstractOutputCommand {
 	}
 
     @Exec
-	public void exec() throws IOException, CommandArgumentException {
+	public void exec() throws IOException, CommandArgumentException, InterruptedException {
         if (filenames == null) {
             throw new CommandArgumentException("You must supply at least one FASTQ file to count.");
         }
@@ -163,25 +175,28 @@ public class FastqKmer extends AbstractOutputCommand {
         return temp;
     }
     
-	private File writeTemp(final KmerCounter counter) throws IOException {
-	    final File temp = newTempFile();
+	private File writeTemp(final KmerCounter counter) throws IOException, InterruptedException {
+        if (futureVal != null) {
+            while (!futureVal.isDone()) {
+                System.err.println("\n\nWaiting for prior write to finish...\n");
+                Thread.sleep(1000);
+            }
+        }
+
+        final File temp = newTempFile();
 		System.err.println("\n\n"+temp.getAbsolutePath()+"\n");
 
 		final OutputStream tmpOut = new GZIPOutputStream(new FileOutputStream(temp));
-
-		threadPool.execute(new Runnable() {
+		futureVal = threadPool.submit(new Callable<Void>() {
             @Override
-            public void run() {
-                try {
-                    counter.write(tmpOut, false);
-                    tmpOut.flush();
-                    tmpOut.close();
-                    counter.clear();
-                } catch (IOException e) {
-                }
+            public Void call() throws Exception {
+                counter.write(tmpOut, false);
+                tmpOut.flush();
+                tmpOut.close();
+                counter.clear();
+                return null;
             }});
 		
-		return temp;
-		
+		return temp;	
 	}
 }

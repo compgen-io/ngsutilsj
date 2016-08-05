@@ -6,7 +6,6 @@ import io.compgen.cmdline.annotation.Option;
 import io.compgen.cmdline.annotation.UnnamedArg;
 import io.compgen.cmdline.exceptions.CommandArgumentException;
 import io.compgen.cmdline.impl.AbstractOutputCommand;
-import io.compgen.common.StringUtils;
 import io.compgen.ngsutils.kmer.KmerLineReader;
 import io.compgen.ngsutils.kmer.KmerRecord;
 

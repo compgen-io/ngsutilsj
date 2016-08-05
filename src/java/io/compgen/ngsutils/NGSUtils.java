@@ -3,6 +3,8 @@ package io.compgen.ngsutils;
 import io.compgen.cmdline.Help;
 import io.compgen.cmdline.License;
 import io.compgen.cmdline.MainBuilder;
+import io.compgen.cmdline.exceptions.MissingCommandException;
+import io.compgen.cmdline.exceptions.UnknownArgumentException;
 import io.compgen.common.StringUtils;
 import io.compgen.common.progress.SocketProgress;
 import io.compgen.ngsutils.cli.annotate.GTFAnnotate;
@@ -50,8 +52,9 @@ import io.compgen.ngsutils.cli.fastq.FastqStats;
 import io.compgen.ngsutils.cli.fastq.FastqToBam;
 import io.compgen.ngsutils.cli.fastq.FastqToFasta;
 import io.compgen.ngsutils.cli.gtf.GTFExport;
-import io.compgen.ngsutils.cli.kmer.FastaKmer;
+import io.compgen.ngsutils.cli.gtf.GeneExport;
 import io.compgen.ngsutils.cli.kmer.FastqKmer;
+import io.compgen.ngsutils.cli.kmer.KmerDiff;
 import io.compgen.ngsutils.cli.kmer.KmerMerge;
 import io.compgen.ngsutils.support.stats.FisherCli;
 
@@ -64,65 +67,75 @@ public class NGSUtils {
         NGSUtils.args = StringUtils.join(" ", args);
         
         SocketProgress.setHeader("ngsutilsj - " + NGSUtils.args);
+        MainBuilder main = new MainBuilder()
+            .setProgName("ngsutilsj")
+            .setHelpHeader("ngsutilsj - Data wrangling for NGS\n---------------------------------------")
+            .setDefaultUsage("Usage: ngsutilsj cmd [options]")
+            .setHelpFooter("http://compgen.io/ngsutilsj\n" + getVersion())
+            .setCategoryOrder(new String[] { "bam", "bed", "fasta", "fastq", "gtf", "annotation", "kmer", "help"})
+            .addCommand(License.class)
+            .addCommand(Help.class)
+            .addCommand(FastqToBam.class)
+            .addCommand(FastqToFasta.class)
+            .addCommand(FastqSort.class)
+            .addCommand(FastqMerge.class)
+            .addCommand(FastqCheck.class)
+            .addCommand(FastqSeparate.class)
+            .addCommand(FastqSplit.class)
+            .addCommand(FastqStats.class)
+            .addCommand(FastqFilterCli.class)
+            .addCommand(BinCount.class)
+            .addCommand(BamBest.class)
+            .addCommand(BamFlagDuplicates.class)
+            .addCommand(BamSplit.class)
+            .addCommand(BamCheck.class)
+            .addCommand(BamCount.class)
+            .addCommand(BamDiscord.class)
+            .addCommand(BamSampleReads.class)
+            .addCommand(BamCoverage.class)
+            .addCommand(BamToFastq.class)
+            .addCommand(BamFilterCli.class)
+            .addCommand(BamReadGroup.class)
+            .addCommand(BamStats.class)
+            .addCommand(BamToBed.class)
+            .addCommand(FastaSubseq.class)
+            .addCommand(PileupCli.class)
+            .addCommand(RepeatAnnotate.class)
+            .addCommand(GTFAnnotate.class)
+            .addCommand(GTFExport.class)
+            .addCommand(FastaTag.class)
+            .addCommand(FastaNames.class)
+            .addCommand(FastaGenerateReads.class)
+            .addCommand(FastaGC.class)
+            .addCommand(FastaSplit.class)
+            .addCommand(FastaMask.class)
+            .addCommand(FastaFilter.class)
+            .addCommand(FastaWrap.class)
+            .addCommand(BedResize.class)
+            .addCommand(BedReduce.class)
+            .addCommand(BedCount.class)
+            .addCommand(BedNearest.class)
+            .addCommand(BedToFasta.class)
+            .addCommand(BedToBed3.class)
+            .addCommand(BedToBed6.class)
+            .addCommand(BedCleanScore.class)
+            .addCommand(FisherCli.class)
+            .addCommand(BamConcat.class)
+            .addCommand(FastqKmer.class)
+            .addCommand(KmerMerge.class)
+            .addCommand(KmerDiff.class)
+            .addCommand(GeneExport.class);
+
         try {
-            new MainBuilder()
-                .setProgName("ngsutilsj")
-                .setHelpHeader("NGSUtilsJ - Data wrangling for NGS\n---------------------------------------")
-                .setDefaultUsage("Usage: ngsutilsj cmd [options]")
-                .setHelpFooter("http://compgen.io/ngsutilsj\n" + getVersion())
-                .setCategoryOrder(new String[] { "bam", "bed", "fasta", "fastq", "gtf", "annotation", "kmer", "help"})
-                .addCommand(License.class)
-                .addCommand(Help.class)
-                .addCommand(FastqToBam.class)
-                .addCommand(FastqToFasta.class)
-                .addCommand(FastqSort.class)
-                .addCommand(FastqMerge.class)
-                .addCommand(FastqCheck.class)
-                .addCommand(FastqSeparate.class)
-                .addCommand(FastqSplit.class)
-                .addCommand(FastqStats.class)
-                .addCommand(FastqFilterCli.class)
-                .addCommand(BinCount.class)
-                .addCommand(BamBest.class)
-                .addCommand(BamFlagDuplicates.class)
-                .addCommand(BamSplit.class)
-                .addCommand(BamCheck.class)
-                .addCommand(BamCount.class)
-                .addCommand(BamDiscord.class)
-                .addCommand(BamSampleReads.class)
-                .addCommand(BamCoverage.class)
-                .addCommand(BamToFastq.class)
-                .addCommand(BamFilterCli.class)
-                .addCommand(BamReadGroup.class)
-                .addCommand(BamStats.class)
-                .addCommand(BamToBed.class)
-                .addCommand(FastaSubseq.class)
-                .addCommand(PileupCli.class)
-                .addCommand(RepeatAnnotate.class)
-                .addCommand(GTFAnnotate.class)
-                .addCommand(GTFExport.class)
-                .addCommand(FastaTag.class)
-                .addCommand(FastaNames.class)
-                .addCommand(FastaGenerateReads.class)
-                .addCommand(FastaGC.class)
-                .addCommand(FastaSplit.class)
-                .addCommand(FastaMask.class)
-                .addCommand(FastaFilter.class)
-                .addCommand(FastaWrap.class)
-                .addCommand(BedResize.class)
-                .addCommand(BedReduce.class)
-                .addCommand(BedCount.class)
-                .addCommand(BedNearest.class)
-                .addCommand(BedToFasta.class)
-                .addCommand(BedToBed3.class)
-                .addCommand(BedToBed6.class)
-                .addCommand(BedCleanScore.class)
-                .addCommand(FisherCli.class)
-                .addCommand(BamConcat.class)
-                .addCommand(FastqKmer.class)
-                .addCommand(FastaKmer.class)
-                .addCommand(KmerMerge.class)
-                .findAndRun(args);
+                main.findAndRun(args);
+        } catch (UnknownArgumentException e) {
+            System.err.println("ERROR: " + e.getMessage());
+            System.err.println();
+            System.exit(1);
+            try {
+                main.showCommandHelp(e.clazz);
+            } catch (MissingCommandException e1) {
+            }
         } catch (Exception e) {
             e.printStackTrace();
             System.exit(1);
