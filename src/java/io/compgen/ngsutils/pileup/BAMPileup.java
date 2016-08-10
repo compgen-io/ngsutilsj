@@ -26,11 +26,17 @@ public class BAMPileup {
     private boolean disableBAQ = true;
     private boolean extendedBAQ = false;
     
+    private String tmpPath = null;
+    
     public BAMPileup(String... filenames) {
         this.filenames = filenames;
     }
    
-    public Iterator<PileupRecord> pileup() throws IOException {
+    public void setTempPath(String tmpPath) {
+        this.tmpPath = tmpPath;
+    }
+    
+    public CloseableIterator<PileupRecord> pileup() throws IOException {
         return pileup(null);
     }
 
@@ -97,9 +103,72 @@ public class BAMPileup {
     }
     
     public CloseableIterator<PileupRecord> pileup(GenomeSpan region) throws IOException {
+        
+        if (tmpPath != null) {
+            return tmpPathPileup(region);
+        } else {
+        
+        final ProcessBuilder pb = new ProcessBuilder(getCommand(region));
+        final Process proc;
+        try {
+            proc = pb.start();
+        } catch (IOException e) {
+            throw new RuntimeException("Cannot start samtools mpileup! " + e.getMessage());
+        }
+        InputStream bis = new BufferedInputStream(proc.getInputStream());
+        final PileupReader reader = new PileupReader(bis, minBaseQual);
+        
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    proc.waitFor();
+                    proc.getErrorStream().close();
+                    proc.getInputStream().close();
+                    proc.getOutputStream().close();
+                    if (proc.exitValue()!=0) {
+                        throw new RuntimeException("Error running: "+ StringUtils.join(" ", pb.command()));
+                    }
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                proc.destroy();
+            }}).start();
+
+        return new CloseableIterator<PileupRecord>(){
+            Iterator<PileupRecord> it = reader.iterator();
+            @Override
+            public boolean hasNext() {
+                return it.hasNext();
+            }
+
+            @Override
+            public PileupRecord next() {
+                return it.next();
+            }
+
+            @Override
+            public void remove() {
+                it.remove();
+            }
+
+            @Override
+            public void close() {
+                try {
+                    reader.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }};
+        }
+    }
+
+    private CloseableIterator<PileupRecord> tmpPathPileup(GenomeSpan region) throws IOException {
         final ProcessBuilder pb = new ProcessBuilder(getCommand(region));
 
-        final File tmp = File.createTempFile(".ngsutilsj-pileupreader-", ".txt", new File("."));
+        final File tmp = File.createTempFile(".ngsutilsj-pileupreader-", ".txt", new File(tmpPath));
         tmp.deleteOnExit();
         pb.redirectOutput(tmp);
         
@@ -155,8 +224,10 @@ public class BAMPileup {
                 tmp.delete();
                 
             }};
-    }
 
+    }
+    
+    
     public void setMinMappingQual(int minMappingQual) {
         this.minMappingQual = minMappingQual;
     }
