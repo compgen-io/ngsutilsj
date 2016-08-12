@@ -15,7 +15,8 @@ public class PileupRecord {
 	public enum PileupBaseCallOp {
 		Match, // Match, mismatch, eq, variant (M=X) 
 		Del,   // D
-		Ins    // I
+		Ins,   // I
+		Gap    // N (> or <)
 	}
 	
 	public class PileupBaseCall {
@@ -32,6 +33,14 @@ public class PileupRecord {
                 }
                 q = q.substring(1);
             }
+
+            if (q.charAt(0) == '<' || q.charAt(0) == '>') { 
+                if (op != PileupBaseCallOp.Ins) {
+                    return false;
+                }
+                q = q.substring(1);
+            }
+
             
             if (!call.equals(q)) {
                 return false;
@@ -45,6 +54,9 @@ public class PileupRecord {
             }
             if (op == PileupBaseCallOp.Del) {
                 return "-"+call;
+            }
+            if (op == PileupBaseCallOp.Gap) {
+                return plusStrand ? ">": "<";  // not sure which is which
             }
             return call;
 		}
@@ -79,6 +91,9 @@ public class PileupRecord {
                         this.plusStrand = false;
                     }                    
                 }
+            } else if (op == PileupBaseCallOp.Gap) {
+                this.call = "";
+                this.plusStrand = call.equals(">");
             } else {
                 this.call = call.toUpperCase();
                 if (call.toUpperCase().equals(call)) {
@@ -107,9 +122,9 @@ public class PileupRecord {
 	private List<PileupSampleRecord> records = new ArrayList<PileupSampleRecord>();
 	
     public static PileupRecord parse(String line) {
-        return parse(line, 0);
+        return parse(line, 0, false);
     }
-    public static PileupRecord parse(String line, int minBaseQual) {
+    public static PileupRecord parse(String line, int minBaseQual, boolean nogaps) {
 //		System.err.println(StringUtils.strip(line));
 		String[] cols = StringUtils.strip(line).split("\t");
 		
@@ -141,9 +156,7 @@ public class PileupRecord {
 					j++; // skip the mapping quality for the read?
 				} else if (base == '$') {
 				    // no op, end of a read.
-				} else if (base == '*' || base == '>' || base == '<') {
-				    // < or > is a "refskip" (N CIGAR op)
-
+				} else if (base == '*') {
 				    // * is a deletion (in a padded sequence - unsure about what this means...)
 				    // htslib:  @field  is_del     1 iff the base on the padded read is a deletion
 				    // The deletion was indicated in a prior line??? 
@@ -171,6 +184,14 @@ public class PileupRecord {
 					}
 					
 					j += indelLen-1;
+                } else if (base == '>' || base == '<') {
+                    // < or > is a "refskip" (N CIGAR op)
+                    if (cols[i+2].charAt(qual_idx)-33 > minBaseQual) {
+                        if (!nogaps) {
+                            calls.add(record.new PileupBaseCall(PileupBaseCallOp.Gap, ""+base, cols[i+2].charAt(qual_idx)-33, refBase, readPos[qual_idx]));
+                        }
+                    }
+                    qual_idx++;
 				} else {
 				    if (cols[i+2].charAt(qual_idx)-33 > minBaseQual) {
 				        calls.add(record.new PileupBaseCall(PileupBaseCallOp.Match, ""+base, cols[i+2].charAt(qual_idx)-33, refBase, readPos[qual_idx]));

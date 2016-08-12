@@ -7,20 +7,29 @@ import java.io.InputStream;
 
 public class PileupReader extends AbstractLineReader<PileupRecord>{
     private final int minBaseQual;
+    private final boolean nogaps;
+    
 	public PileupReader(String fname) throws IOException {
-		this(fname,0);
+		this(fname,0, false);
 	}
 	public PileupReader(InputStream is) {
-		this(is,0);
+		this(is,0, false);
 	}
-
     public PileupReader(InputStream is, int minBaseQual) {
-        super(is);
-        this.minBaseQual = minBaseQual;
+        this(is, minBaseQual, false);
     }
     public PileupReader(String fname, int minBaseQual) throws IOException {
+        this(fname, minBaseQual, false);
+    }
+    public PileupReader(InputStream is, int minBaseQual, boolean nogaps) {
+        super(is);
+        this.minBaseQual = minBaseQual;
+        this.nogaps = nogaps;
+    }
+    public PileupReader(String fname, int minBaseQual, boolean nogaps) throws IOException {
         super(fname);
         this.minBaseQual = minBaseQual;
+        this.nogaps = nogaps;
     }
     @Override
 	protected PileupRecord convertLine(String line) {
@@ -28,7 +37,7 @@ public class PileupReader extends AbstractLineReader<PileupRecord>{
 			return null;
 		}
 		try {
-            return PileupRecord.parse(line, minBaseQual);
+            return PileupRecord.parse(line, minBaseQual, nogaps);
 		} catch (Exception e) {
 			System.err.println(line);
 			e.printStackTrace();

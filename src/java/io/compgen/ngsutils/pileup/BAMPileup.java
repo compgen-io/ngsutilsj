@@ -22,6 +22,7 @@ public class BAMPileup {
     private int minBaseQual = -1;
     private int filterFlags = -1;
     private int requiredFlags = -1;
+    private boolean nogaps = false;
     
     private boolean disableBAQ = true;
     private boolean extendedBAQ = false;
@@ -116,7 +117,7 @@ public class BAMPileup {
             throw new RuntimeException("Cannot start samtools mpileup! " + e.getMessage());
         }
         InputStream bis = new BufferedInputStream(proc.getInputStream());
-        final PileupReader reader = new PileupReader(bis, minBaseQual);
+        final PileupReader reader = new PileupReader(bis, minBaseQual, nogaps);
         
         new Thread(new Runnable() {
             @Override
@@ -195,8 +196,8 @@ public class BAMPileup {
         proc.destroy();
         
         InputStream bis = new BufferedInputStream(new FileInputStream(tmp));
-        final PileupReader reader = new PileupReader(bis, minBaseQual);
-        
+        final PileupReader reader = new PileupReader(bis, minBaseQual, nogaps);
+
         return new CloseableIterator<PileupRecord>(){
             Iterator<PileupRecord> it = reader.iterator();
             @Override
@@ -258,5 +259,9 @@ public class BAMPileup {
 
     public void setBedFilename(String bedFilename) {
         this.bedFilename = bedFilename;
+    }
+
+    public void setNoGaps(boolean nogaps) {
+        this.nogaps = nogaps;        
     }
 }

@@ -33,6 +33,7 @@ public class BamCoverage extends AbstractOutputCommand {
     
     private boolean paired = false;
     private boolean all = false;
+    private boolean nogaps = false;
 
     @UnnamedArg(name = "FILE")
     public void setFilename(String filename) {
@@ -55,6 +56,11 @@ public class BamCoverage extends AbstractOutputCommand {
     public void setAll(boolean val) {
         this.all = val;
     }
+
+    @Option(desc="Don't count gaps", name="no-gaps")
+    public void setNoGaps(boolean val) {
+        this.nogaps = val;
+    }    
 
     @Option(desc="Only count properly paired reads", name="paired")
     public void setPaired(boolean val) {
@@ -100,6 +106,7 @@ public class BamCoverage extends AbstractOutputCommand {
         pileup.setMinBaseQual(minBaseQual);
         pileup.setFlagFilter(filterFlags);
         pileup.setFlagRequired(requiredFlags);
+        pileup.setNoGaps(nogaps);
 
         BedAnnotationSource bed = null;
         
@@ -153,7 +160,7 @@ public class BamCoverage extends AbstractOutputCommand {
 //                if (bedRecord.getSampleCount(0) == 0) {
 //                    System.err.println(bedRecord.ref+":"+bedRecord.pos+" 0 C");
 //                }
-                tally.incr(record.getSampleCount(0));
+                tally.incr(record.getSampleRecords(0).calls.size());
             }
             lastPos = record.pos;
         }
