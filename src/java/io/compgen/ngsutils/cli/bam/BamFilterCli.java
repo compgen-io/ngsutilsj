@@ -91,7 +91,7 @@ public class BamFilterCli extends AbstractCommand {
     private boolean uniqueStart = false;
 
     private boolean lenient = false;
-    private final boolean silent = false;
+    private boolean silent = false;
 
     private int filterFlags = 0;
     private int requiredFlags = 0;
@@ -197,6 +197,11 @@ public class BamFilterCli extends AbstractCommand {
     @Option(desc = "Use lenient validation strategy", name = "lenient")
     public void setLenient(boolean lenient) {
         this.lenient = lenient;
+    }
+
+    @Option(desc = "Use silent validation strategy", name = "silent")
+    public void setSilent(boolean silent) {
+        this.silent = silent;
     }
 
     @Option(desc = "Library is in FR orientation (only used for BED filters)", name = "library-fr")
