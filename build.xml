@@ -1,5 +1,6 @@
 <project name="ngsutilsj" default="jar">
     <property name="version" value="0.3.1"/>
+    <property name="build" value="dev"/>
     <property name="lib.dir" value="lib"/>
     <property name="blib.dir" value="blib"/>
     <property name="build.dir" value="build"/>
@@ -43,9 +44,9 @@
         <copy file="LICENSE" todir="${build.dir}/classes/"/>
         <copy file="INCLUDES" todir="${build.dir}/classes/"/>
         <delete file="${build.dir}/classes/io/compgen/ngsutils/BUILD"/>
-        <echo file="${build.dir}/classes/io/compgen/ngsutils/BUILD" message="dev"/>
+        <echo file="${build.dir}/classes/io/compgen/ngsutils/BUILD" message="${build}"/>
         <delete file="${build.dir}/classes/io/compgen/ngsutils/VERSION"/>
-        <echo file="${build.dir}/classes/io/compgen/ngsutils/VERSION" message="${version}-dev-${repository.version}"/>
+        <echo file="${build.dir}/classes/io/compgen/ngsutils/VERSION" message="${version}-${repository.version}"/>
 
 		<mkdir dir="${dist.dir}"/>
 	    <taskdef name="jarjar" classname="com.tonicsystems.jarjar.JarJarTask"
