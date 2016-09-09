@@ -1,5 +1,5 @@
 <project name="ngsutilsj" default="jar">
-    <property name="version" value="0.3"/>
+    <property name="version" value="0.3.1"/>
     <property name="lib.dir" value="lib"/>
     <property name="blib.dir" value="blib"/>
     <property name="build.dir" value="build"/>
@@ -42,8 +42,10 @@
 	<target name="jar" depends="compile, git.revision">
         <copy file="LICENSE" todir="${build.dir}/classes/"/>
         <copy file="INCLUDES" todir="${build.dir}/classes/"/>
-        <delete file="${build.dir}/classes/io/compgen/ngsutilsj/VERSION"/>
- 		<echo file="${build.dir}/classes/io/compgen/ngsutilsj/VERSION" message="ngsutilsj-${version}-${repository.version}"/>
+        <delete file="${build.dir}/classes/io/compgen/ngsutils/BUILD"/>
+        <echo file="${build.dir}/classes/io/compgen/ngsutils/BUILD" message="dev"/>
+        <delete file="${build.dir}/classes/io/compgen/ngsutils/VERSION"/>
+        <echo file="${build.dir}/classes/io/compgen/ngsutils/VERSION" message="${version}-dev-${repository.version}"/>
 
 		<mkdir dir="${dist.dir}"/>
 	    <taskdef name="jarjar" classname="com.tonicsystems.jarjar.JarJarTask"
@@ -62,8 +64,8 @@
             <zipfileset src="${lib.dir}/commons-jexl-2.1.1.jar"/>
             <zipfileset src="${lib.dir}/commons-logging-1.1.1.jar"/>
             <zipfileset src="${lib.dir}/commons-math3-3.3.jar"/>
-            <zipfileset src="${lib.dir}/compgen-common-0.2.jar"/>
-            <zipfileset src="${lib.dir}/compgen-cmdline-0.4.1.jar"/>
+            <zipfileset src="${lib.dir}/compgen-common-0.3.jar"/>
+            <zipfileset src="${lib.dir}/compgen-cmdline-0.4.2.jar"/>
             <zipfileset src="${lib.dir}/commons-compress-1.8.1.jar"/>
 	    	<zipfileset src="${lib.dir}/sqz-api-0.1.jar"/>
             <zap pattern="*.java"/>

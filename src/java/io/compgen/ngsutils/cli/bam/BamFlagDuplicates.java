@@ -37,7 +37,8 @@ import java.util.List;
 @Command(name="bam-dups", desc="Flags or removes duplicate reads", category="bam", 
          doc="Flags reads as duplicates based upon their paired left-most and right-most positions. "
            + "For inter-chromosomal reads, it is based on the start positions of the reads. This "
-           + "requires an accurate TLEN/ISIZE field.")
+           + "requires an accurate TLEN/ISIZE field. It can optionally also look for a TAG to use "
+           + "in determining if reads are duplicates (such as an extra barcode sequence).")
 public class BamFlagDuplicates extends AbstractCommand {
     private List<String> filenames = null;
     private boolean lenient = false;
@@ -49,6 +50,7 @@ public class BamFlagDuplicates extends AbstractCommand {
     private String tagName = null;
     private String tagValue = null;
     private boolean scoreMapQ = false;
+    private String dupTagName = null;
     
     @UnnamedArg(name = "INFILE OUTFILE")
     public void setFilename(List<String> filenames) throws CommandArgumentException {
@@ -69,7 +71,12 @@ public class BamFlagDuplicates extends AbstractCommand {
         this.remove = true;
     }
 
-    @Option(desc = "Attribute tag to add to duplicates (format: XX:Z:Value)", name="tag")
+    @Option(desc = "Optional tag to use in finding duplicates (format: XX)", name="dup-tag")
+    public void setDupTagName(String dupTagName) {
+        this.dupTagName = dupTagName;
+    }
+
+    @Option(desc = "Additional attribute tag added to duplicate reads (format: XX:Z:Value)", name="tag")
     public void setTagAttribute(String tagAttribute) throws CommandArgumentException {
         if (tagAttribute != null) {
             String[] vals = tagAttribute.split(":");
@@ -179,7 +186,7 @@ public class BamFlagDuplicates extends AbstractCommand {
             failedWriter = factory.makeBAMWriter(header, true, new File(failedFilename));
         }
 
-        final FindDuplicateReads dups = new FindDuplicateReads(out, remove, failedWriter, tagName, tagValue);
+        final FindDuplicateReads dups = new FindDuplicateReads(out, remove, failedWriter, tagName, tagValue, dupTagName);
         if (scoreMapQ) {
             dups.setScoringMethodMapQ();
         }

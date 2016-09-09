@@ -5,6 +5,7 @@ import htsjdk.samtools.SAMRecord;
 import io.compgen.common.RadixSet;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -59,19 +60,21 @@ public class FindDuplicateReads {
     
     private String tagAttributeName = null;
     private String tagAttributeValue = null;
+    private String duplicateTagName = null;
     
     private ScoringMethod method = ScoringMethod.SUM_OF_QUALS;
     
-    public FindDuplicateReads(SAMFileWriter writer, boolean removeDuplicates, SAMFileWriter failedWriter, String tagAttributeName, String tagAttributeValue) {
+    public FindDuplicateReads(SAMFileWriter writer, boolean removeDuplicates, SAMFileWriter failedWriter, String tagAttributeName, String tagAttributeValue, String duplicateTagName) {
         this.writer = writer;
         this.removeDuplicates = removeDuplicates;
         this.failedWriter = failedWriter;
         this.tagAttributeName = tagAttributeName;
         this.tagAttributeValue = tagAttributeValue;
+        this.duplicateTagName = duplicateTagName;
     }
 
     public FindDuplicateReads(SAMFileWriter writer, boolean removeDuplicates) {
-        this(writer, removeDuplicates, null, null, null);
+        this(writer, removeDuplicates, null, null, null, null);
     }
 
     public void addRead(SAMRecord read) {
@@ -187,7 +190,34 @@ public class FindDuplicateReads {
                     for (Integer pos: pairs.get(refIdx).keySet()) {
                         if (pairs.get(refIdx).get(pos).size() == 1) {
                             writer.addAlignment(pairs.get(refIdx).get(pos).get(0));
+                        } else if (duplicateTagName != null) {
+                            // look for duplicates based on the tagname
+                            
+                            Map<Object, List<SAMRecord>> tagdups = new HashMap<Object, List<SAMRecord>>();
+                            for (SAMRecord read: pairs.get(refIdx).get(pos)) {
+                                Object tagVal = read.getAttribute(duplicateTagName);
+                                if (!tagdups.containsKey(tagVal)) {
+                                    tagdups.put(tagVal, new ArrayList<SAMRecord>());
+                                }
+                                tagdups.get(tagVal).add(read);
+                            }
+
+                            boolean isdup = false;
+                            for (Object k: tagdups.keySet()) {
+                                if (tagdups.get(k).size() == 1) {
+                                    writer.addAlignment(tagdups.get(k).get(0));
+                                } else {
+                                    isdup = true;
+                                    findDuplicates(tagdups.get(k));
+                                }
+                            }
+                            if (isdup) {
+                                duplicateSites++;
+                            }
+                            
                         } else {
+                            // we have duplicates based on tlen and no tag-name to use as a backup.
+                            
                             duplicateSites++;
                             findDuplicates(pairs.get(refIdx).get(pos));
                         }

@@ -6,6 +6,7 @@ import io.compgen.cmdline.MainBuilder;
 import io.compgen.cmdline.exceptions.MissingCommandException;
 import io.compgen.cmdline.exceptions.UnknownArgumentException;
 import io.compgen.common.StringUtils;
+import io.compgen.common.phone.PhoneHome;
 import io.compgen.common.progress.SocketProgress;
 import io.compgen.ngsutils.cli.annotate.GTFAnnotate;
 import io.compgen.ngsutils.cli.annotate.RepeatAnnotate;
@@ -127,7 +128,36 @@ public class NGSUtils {
             .addCommand(GeneExport.class);
 
         try {
+            if (args.length == 0) {
+                main.showCommands();
+            } else if (main.isValidCommand(args[0]) || args[0].equals("help")) {
+                if (!getBuild().equals("dev")) {
+                    PhoneHome ph = new PhoneHome("http://phonehome.compgen.io/versions", "NGSUTILSJ_NO_PHONEHOME");
+                    ph.setValue("cmd", args[0]);
+                    ph.setValue("os", System.getProperty("os.name"));
+                    ph.setValue("arch", System.getProperty("os.arch"));
+                    ph.setValue("java_version", System.getProperty("java.version"));
+                    ph.setValue("java_vendor", System.getProperty("java.vendor"));
+                    
+                    if (!ph.isCurrentVersion("ngsutilsj", getBuild(), getVersionCode())) {
+                        // TODO: Add suuport for a "last-check" to avoid notifying on each run
+                        //       Need to write a temp file someplace?
+                        String desc = ph.getCurrentVersionDescription("ngsutilsj", getBuild());
+                        if (desc == null || desc.equals("")) {
+                            System.err.println("Updated version of ngsutilsj is available: "+ph.getCurrentVersion("ngsutilsj", getBuild()));
+                        } else {
+                            System.err.println("Updated version of ngsutilsj is available: "+ph.getCurrentVersion("ngsutilsj", getBuild()) + " ("+ desc + ")");
+                        }
+                    }
+                }
+
                 main.findAndRun(args);
+            } else {
+                System.err.println("ERROR: Unknown command: " + args[0]);
+                System.err.println();
+                main.showCommands();
+                System.exit(1);
+            }
         } catch (UnknownArgumentException e) {
             System.err.println("ERROR: " + e.getMessage());
             System.err.println();
@@ -142,14 +172,32 @@ public class NGSUtils {
         }
     }
 
+    public static String getVersionCode() {
+        try {
+            return MainBuilder.readFile("io/compgen/ngsutils/VERSION");
+        } catch (IOException e) {
+            return "0";
+        }
+    }
+
+    
 	public static String getVersion() {
 	    try {
-            return MainBuilder.readFile("io/compgen/ngsutilsj/VERSION");
+            return "ngsutilsj-"+MainBuilder.readFile("io/compgen/ngsutils/VERSION")+" ("+getBuild()+")";
         } catch (IOException e) {
-            return "unknown";
+            return "ngsutilsj-unknown";
         }
 	}
 
+	   public static String getBuild() {
+	        try {
+	            return MainBuilder.readFile("io/compgen/ngsutils/BUILD");
+	        } catch (IOException e) {
+	            return "dev";
+	        }
+	    }
+
+	
 	private static String args;
 	
 	public static String getArgs() {

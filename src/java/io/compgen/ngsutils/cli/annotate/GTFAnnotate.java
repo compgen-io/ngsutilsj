@@ -32,6 +32,7 @@ public class GTFAnnotate extends AbstractOutputCommand {
     private int strandCol = -1;
     private int regionCol = -1;
     private int junctionCol = -1;
+    private boolean junctionWithinGene = false;
     
     private int within = 0;
     
@@ -46,6 +47,12 @@ public class GTFAnnotate extends AbstractOutputCommand {
     public void setFilename(String filename) {
         this.filename = filename;
     }
+
+    @Option(desc = "Annotate a novel junction that is spanned by a gene (requires --col-strand)", name="within-gene")
+    public void setWithinGene(boolean junctionWithinGene) {
+        this.junctionWithinGene = junctionWithinGene;
+    }
+
 
     @Option(desc = "GTF filename", name="gtf", helpValue="fname")
     public void setGTFFilename(String gtfFilename) {
@@ -294,7 +301,22 @@ public class GTFAnnotate extends AbstractOutputCommand {
                     annVals = ann.findAnnotation(genomeSpan);
                 } else if (junctionCol > -1) {
                     String junction = cols[junctionCol];
+                    
+                    // This looks only at annotated junctions
                     annVals = ann.findJunction(junction);
+                    
+                    if (annVals.size() == 0 && junctionWithinGene && strandCol != -1) {
+                        String[] spl = junction.split(":");
+                        String chrom = spl[0];
+                        int start = Integer.parseInt(spl[1].split("-")[0]);
+                        int end = Integer.parseInt(spl[1].split("-")[0]);
+                        Strand strand = Strand.parse(cols[strandCol]);
+                        GenomeSpan span = new GenomeSpan(chrom, start, end, strand);
+                        
+                        // this will look for genes that include this junction-span
+                        annVals = ann.findAnnotation(span);
+                    }
+                    
                 } else {
                     String ref = cols[refCol];
                     int start = Integer.parseInt(cols[startCol])-within;
