@@ -136,6 +136,7 @@ public class BamToBed extends AbstractOutputCommand {
             writer.write(read.getMappingQuality());
             writer.write(read.getReadNegativeStrandFlag() ? "-" : "+");
             writer.eol();
+            i++;
             
         }
         writer.close();
