@@ -43,10 +43,9 @@
 	<target name="jar" depends="compile, git.revision">
         <copy file="LICENSE" todir="${build.dir}/classes/"/>
         <copy file="INCLUDES" todir="${build.dir}/classes/"/>
-        <delete file="${build.dir}/classes/io/compgen/ngsutils/BUILD"/>
-        <echo file="${build.dir}/classes/io/compgen/ngsutils/BUILD" message="${build}"/>
-        <delete file="${build.dir}/classes/io/compgen/ngsutils/VERSION"/>
-        <echo file="${build.dir}/classes/io/compgen/ngsutils/VERSION" message="${version}-${repository.version}"/>
+        <echo file="${build.dir}/classes/io/compgen/ngsutils/ngsutilsj.properties" message="build=${build}${line.separator}"/>
+        <echo file="${build.dir}/classes/io/compgen/ngsutils/ngsutilsj.properties" message="version=${version}${line.separator}" append="true"/>
+        <echo file="${build.dir}/classes/io/compgen/ngsutils/ngsutilsj.properties" message="gitcommit=${repository.version}${line.separator}" append="true"/>
 
 		<mkdir dir="${dist.dir}"/>
 	    <taskdef name="jarjar" classname="com.tonicsystems.jarjar.JarJarTask"
