@@ -176,12 +176,15 @@ public class FastqBatchSplit extends AbstractCommand {
         long unmatchedCount = 0;
         
         OutputStream[] outs = null;
+        String[] tmpNames = null;
         
         if (outputTemplate != null) {
             outs = new OutputStream[readGroups.length];
+            tmpNames = new String[readGroups.length];
         
             for (int i=0; i<readGroups.length; i++) {
-                String fname = outputTemplate.replace("%RGID", readGroups[i]);
+                String fname = outputTemplate.replace("%RGID", readGroups[i])+".tmp";
+                tmpNames[i] = fname;
                 if (compress) {
                     outs[i] = new GZIPOutputStream(new FileOutputStream(fname));
                 } else {
@@ -191,11 +194,13 @@ public class FastqBatchSplit extends AbstractCommand {
         }
 
         OutputStream unmatched = null;
+        String unmatchedTmp = null;
         if (unmatchedFname != null) {
+            unmatchedTmp = unmatchedFname+".tmp";
             if (compress) {
-                unmatched = new GZIPOutputStream(new FileOutputStream(unmatchedFname));
+                unmatched = new GZIPOutputStream(new FileOutputStream(unmatchedTmp));
             } else {
-                unmatched = new FileOutputStream(unmatchedFname);
+                unmatched = new FileOutputStream(unmatchedTmp);
             }
         }
         
@@ -233,6 +238,10 @@ public class FastqBatchSplit extends AbstractCommand {
                 out.flush();
                 out.close();
             }
+            for (int i=0; i<readGroups.length; i++) {
+                String fname = outputTemplate.replace("%RGID", readGroups[i]);
+                new File(tmpNames[i]).renameTo(new File(fname));
+            }
         }
         
         if (unmatched != null) {
@@ -240,10 +249,12 @@ public class FastqBatchSplit extends AbstractCommand {
             unmatched.close();
             if (unmatchedCount == 0) {
                 // no unmatched reads, remove the file.
-                File f = new File(unmatchedFname);
+                File f = new File(unmatchedTmp);
                 if (f.exists()) {
                     f.delete();
                 }
+            } else {
+                new File(unmatchedTmp).renameTo(new File(unmatchedFname));
             }
         }
         

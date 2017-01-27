@@ -45,7 +45,7 @@ public class BedSpans extends AbstractLineReader<SpanGroup> implements SpanSourc
     public SpanGroup convertLine(String line) {
         String[] cols = line.split("\\t", -1);
         SpanGroup span;
-        if (cols.length > 3) {
+        if (cols.length > 5) {
             span = new SpanGroup(cols[0], Strand.parse(cols[5]), cols, Integer.parseInt(cols[1]), Integer.parseInt(cols[2]));
         } else {
             span = new SpanGroup(cols[0], Strand.NONE, cols, Integer.parseInt(cols[1]), Integer.parseInt(cols[2]));
