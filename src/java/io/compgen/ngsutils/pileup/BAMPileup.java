@@ -18,6 +18,7 @@ public class BAMPileup {
     private String refFilename = null;
     private String bedFilename = null;
 
+    private int maxDepth = -1;
     private int minMappingQual = -1;
     private int minBaseQual = -1;
     private int filterFlags = -1;
@@ -55,8 +56,10 @@ public class BAMPileup {
             cmd.add(""+minMappingQual);
         }
 
+        // TODO: add mapping quality (-s) to output?? This would make it possible to use minBaseQual again
+        //       as an argument to samtools
+
 //      This needs to be done so that we get all the calls, qual, and pos info.
-        
         cmd.add("-Q 0");
         
 //        if (minBaseQual > -1) {
@@ -82,6 +85,11 @@ public class BAMPileup {
         if (bedFilename!=null) {
             cmd.add("-l");
             cmd.add(bedFilename);
+        }
+        
+        if (maxDepth > 0) {
+            cmd.add("-d");
+            cmd.add(""+maxDepth);
         }
         
         if (disableBAQ) {
@@ -261,6 +269,10 @@ public class BAMPileup {
         this.bedFilename = bedFilename;
     }
 
+    public void setMaxDepth(int maxDepth) {
+        this.maxDepth = maxDepth;
+    }
+    
     public void setNoGaps(boolean nogaps) {
         this.nogaps = nogaps;        
     }

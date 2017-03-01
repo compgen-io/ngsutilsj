@@ -18,7 +18,11 @@ import io.compgen.ngsutils.pileup.PileupRecord;
 import java.io.IOException;
 import java.util.Iterator;
 
-@Command(name="bam-coverage", desc="Scans an aligned BAM file and calculates the number of reads covering each base", category="bam", experimental=true)
+@Command(name="bam-coverage", desc="Scans an aligned BAM file and calculates the number of reads covering each base", category="bam", experimental=true, 
+    doc = "Note: This will not properly count bases with zero coverage at the start/end \n"
+        + "of a chrom/reference. Those will be silently ignored. Zero coverage bases \n"
+        + "within a chromosome or BED region will be properly tallied. Zero coverage \n"
+        + "bases at the start/end of BED regions will also be properly tallied.\n")
 public class BamCoverage extends AbstractOutputCommand {
     private String filename = null;
     private String bedFilename = null;
@@ -27,7 +31,8 @@ public class BamCoverage extends AbstractOutputCommand {
     
     private int minMappingQual=0;
     private int minBaseQual=13;
-    
+    private int maxDepth = 1000;
+        
     private int requiredFlags = 0;
     private int filterFlags = 1796;
     
@@ -40,6 +45,11 @@ public class BamCoverage extends AbstractOutputCommand {
         this.filename = filename;
     }
 
+    @Option(desc="Max depth for pileup", name="max-depth", defaultValue="8000")
+    public void setMaxDepth(int maxDepth) {
+        this.maxDepth = maxDepth;
+    }
+    
     @Option(desc="Use these regions to count (BED format)", name="bed")
     public void setBedFilename(String bedFilename) {
         this.bedFilename = bedFilename;
@@ -57,7 +67,7 @@ public class BamCoverage extends AbstractOutputCommand {
         this.all = val;
     }
 
-    @Option(desc="Don't count gaps", name="no-gaps")
+    @Option(desc="Don't count gaps (RNA)", name="no-gaps")
     public void setNoGaps(boolean val) {
         this.nogaps = val;
     }    
@@ -94,7 +104,6 @@ public class BamCoverage extends AbstractOutputCommand {
         }
         
         TallyCounts tally = new TallyCounts();
-
         BAMPileup pileup = new BAMPileup(filename);
         
         if (paired) {
@@ -107,6 +116,7 @@ public class BamCoverage extends AbstractOutputCommand {
         pileup.setFlagFilter(filterFlags);
         pileup.setFlagRequired(requiredFlags);
         pileup.setNoGaps(nogaps);
+        pileup.setMaxDepth(maxDepth);
 
         BedAnnotationSource bed = null;
         
@@ -138,12 +148,10 @@ public class BamCoverage extends AbstractOutputCommand {
                     GenomeSpan curRegion = ann.getCoord();
                     if (lastRegion != null && !curRegion.equals(lastRegion)) {
                         for (int i=lastPos+1; i<=lastRegion.end; i++) {
-//                            System.err.println(lastRegion.ref+":"+i+" 0 A");
                             tally.incr(0);
                         }
                         if (record.pos > curRegion.start) {
                             for (int i=curRegion.start; i<record.pos; i++) {
-//                                System.err.println(curRegion.ref+":"+i+" 0 B");
                                 tally.incr(0);
                             }
                         }
@@ -154,31 +162,27 @@ public class BamCoverage extends AbstractOutputCommand {
             }
             
             if (record.isBlank()) {
-//                System.err.println(bedRecord.ref+":"+bedRecord.pos+" -0-");
                 tally.incr(0);
             } else {
-//                if (bedRecord.getSampleCount(0) == 0) {
-//                    System.err.println(bedRecord.ref+":"+bedRecord.pos+" 0 C");
-//                }
                 tally.incr(record.getSampleRecords(0).calls.size());
             }
             lastPos = record.pos;
         }
 
         if (lastRegion!=null) {
-            for (int i=lastPos+1; i<=lastRegion.end; i++) {
+            for (int i=lastPos+1; i<=lastRegion.end; i++) { 
                 tally.incr(0);
             }
         }
 
-        
         if (all) {
             tally.write(out);
+        } else {
+            out.write(("Min\t"+tally.getMin()+"\n").getBytes());
+            for (double pct: new double[]{0.05, 0.25, 0.5, 0.75, 0.95}) {
+                out.write((pct+"\t" + tally.getQuantile(pct)+"\n").getBytes());
+            }
+            out.write(("Max\t"+tally.getMax()+"\n").getBytes());
         }
-        out.write(("Min\t"+tally.getMin()+"\n").getBytes());
-        for (double pct: new double[]{0.05, 0.25, 0.5, 0.75, 0.95}) {
-            out.write((pct+"\t" + tally.getQuantile(pct)+"\n").getBytes());
-        }
-        out.write(("Max\t"+tally.getMax()+"\n").getBytes());
     }
 }
