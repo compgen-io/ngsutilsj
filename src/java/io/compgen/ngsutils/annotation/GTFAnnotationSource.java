@@ -272,10 +272,10 @@ public class GTFAnnotationSource extends AbstractAnnotationSource<GTFGene> {
             transcripts.get(transcriptId).addCDS(start, end, attributes);
         }
 
-        public List<GTFTranscript> getTranscripts(boolean codingOnly) {
-            if (!codingOnly) {
+        public List<GTFTranscript> getTranscripts(boolean codingOnly, boolean nonCodingOnly) {
+            if (!codingOnly && !nonCodingOnly) {
                 return new ArrayList<GTFTranscript>(transcripts.values());
-            } else {
+            } else if (codingOnly){
                 List<GTFTranscript> codingTranscripts = new ArrayList<GTFTranscript>();
                 for (GTFTranscript t: transcripts.values()) {
                     if (t.hasCDS()) {
@@ -283,10 +283,20 @@ public class GTFAnnotationSource extends AbstractAnnotationSource<GTFGene> {
                     }
                 }
                 return codingTranscripts;
+            } else if (nonCodingOnly){
+                List<GTFTranscript> codingTranscripts = new ArrayList<GTFTranscript>();
+                for (GTFTranscript t: transcripts.values()) {
+                    if (!t.hasCDS()) {
+                        codingTranscripts.add(t);
+                    }
+                }
+                return codingTranscripts;
             }
+            return null;
         }
+
         public List<GTFTranscript> getTranscripts() {
-            return getTranscripts(false);
+            return getTranscripts(false, false);
         }
 
         public List<GTFExon> getExons() {

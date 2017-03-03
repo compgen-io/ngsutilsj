@@ -40,6 +40,7 @@ public class GTFExport extends AbstractOutputCommand {
     private boolean exportExon = false;
     private boolean exportIntron = false;
     private boolean codingOnly = false;
+    private boolean nonCodingOnly = false;
     
     private boolean exportUTR3 = false;
     private boolean exportUTR5 = false;
@@ -66,9 +67,15 @@ public class GTFExport extends AbstractOutputCommand {
     public void setCombine(boolean val) {
         combine = val;
     }
-    @Option(desc="Only export regions for coding genes.", name="coding")
+
+    @Option(desc="Only export coding genes/transcripts", name="coding-only")
     public void setCoding(boolean val) {
         codingOnly = val;
+    }
+
+    @Option(desc="Only export non-coding genes/transcripts", name="noncoding-only")
+    public void setNonCoding(boolean val) {
+        nonCodingOnly = val;
     }
 //
 //    @Option(desc="Export gene/transcript ID instead of gene name", name="genes")
@@ -134,6 +141,10 @@ public class GTFExport extends AbstractOutputCommand {
             throw new CommandArgumentException("You must specify a GTF file! (- for stdin)");
         }
         
+        if (codingOnly && nonCodingOnly) {
+            throw new CommandArgumentException("You can't specify --coding-only and --noncoding-only");
+        }
+
         int exportCount = 0;
         if (exportGene) {
             exportCount++;
@@ -218,7 +229,7 @@ public class GTFExport extends AbstractOutputCommand {
             if (exportGene) {
                 if (codingOnly) {
                     boolean isCoding = false;
-                    for (GTFTranscript txpt: gene.getTranscripts(codingOnly)) {
+                    for (GTFTranscript txpt: gene.getTranscripts(codingOnly, nonCodingOnly)) {
                         if (txpt.hasCDS()) {
                             isCoding = true;
                             break;
@@ -243,7 +254,7 @@ public class GTFExport extends AbstractOutputCommand {
             
             if (exportJunctions) {
                 Set<String> junctions = new HashSet<String>();
-                for (GTFTranscript txpt: gene.getTranscripts(codingOnly)) {
+                for (GTFTranscript txpt: gene.getTranscripts(codingOnly, nonCodingOnly)) {
                     int lastpos = -1;
                     for (GTFExon exon: txpt.getExons()) {
                         if (lastpos > -1) {
@@ -261,7 +272,7 @@ public class GTFExport extends AbstractOutputCommand {
             
             if (exportDonors) {
                 Set<Integer> outs = new HashSet<Integer>();
-                for (GTFTranscript txpt: gene.getTranscripts(codingOnly)) {
+                for (GTFTranscript txpt: gene.getTranscripts(codingOnly, nonCodingOnly)) {
                     List<GTFExon> exons = txpt.getExons();
                     if (gene.getStrand().equals(Strand.PLUS)) {
                         for (GTFExon exon: exons.subList(0,exons.size()-1)) {
@@ -285,7 +296,7 @@ public class GTFExport extends AbstractOutputCommand {
 
             if (exportAcceptors) {
                 Set<Integer> outs = new HashSet<Integer>();
-                for (GTFTranscript txpt: gene.getTranscripts(codingOnly)) {
+                for (GTFTranscript txpt: gene.getTranscripts(codingOnly, nonCodingOnly)) {
                     List<GTFExon> exons = txpt.getExons();
                     if (gene.getStrand().equals(Strand.PLUS)) {
                         for (GTFExon exon: exons.subList(1,exons.size())) {
@@ -310,7 +321,7 @@ public class GTFExport extends AbstractOutputCommand {
             
             if (exportTSS) {
                 List<Integer> starts = new ArrayList<Integer>();
-                for (GTFTranscript txpt: gene.getTranscripts(codingOnly)) {
+                for (GTFTranscript txpt: gene.getTranscripts(codingOnly, nonCodingOnly)) {
                     if (gene.getStrand() == Strand.PLUS) {
                         if (starts.contains(txpt.getStart())) {
                             continue;
@@ -397,7 +408,7 @@ public class GTFExport extends AbstractOutputCommand {
 
             if (exportTLSS) {
                 List<Integer> stops = new ArrayList<Integer>();
-                for (GTFTranscript txpt: gene.getTranscripts(codingOnly)) {
+                for (GTFTranscript txpt: gene.getTranscripts(codingOnly, nonCodingOnly)) {
                     if (!txpt.hasCDS() || gene.getStrand() == Strand.NONE) {
                         continue;
                     }
@@ -457,7 +468,7 @@ public class GTFExport extends AbstractOutputCommand {
 
             if (exportUTR3) {
                 Set<Pair<Integer, Integer>> utrs = new HashSet<Pair<Integer, Integer>>();
-                for (GTFTranscript txpt: gene.getTranscripts(codingOnly)) {
+                for (GTFTranscript txpt: gene.getTranscripts(codingOnly, nonCodingOnly)) {
                     if (!txpt.hasCDS() || gene.getStrand() == Strand.NONE) {
                         continue;
                     }
@@ -523,7 +534,7 @@ public class GTFExport extends AbstractOutputCommand {
             }
             if (exportUTR5) {
                 Set<Pair<Integer, Integer>> utrs = new HashSet<Pair<Integer, Integer>>();
-                for (GTFTranscript txpt: gene.getTranscripts(codingOnly)) {
+                for (GTFTranscript txpt: gene.getTranscripts(codingOnly, nonCodingOnly)) {
                     if (!txpt.hasCDS() || gene.getStrand() == Strand.NONE) {
                         continue;
                     }
@@ -657,7 +668,7 @@ public class GTFExport extends AbstractOutputCommand {
             if (exportIntron) {
                 if (!combine) {
                     SortedSet<GenomeSpan> introns = new TreeSet<GenomeSpan>();
-                    for (GTFTranscript txpt:gene.getTranscripts(codingOnly)) {
+                    for (GTFTranscript txpt:gene.getTranscripts(codingOnly, nonCodingOnly)) {
                         int lastEnd = -1;
                         for (GTFExon exon:txpt.getExons()) {
                             if (lastEnd > -1) {

@@ -33,6 +33,7 @@ public class GeneExport extends AbstractOutputCommand {
     private boolean exportMaxIntron = false;
     
     private boolean codingOnly = false;
+    private boolean nonCodingOnly = false;
     
     @UnnamedArg(name = "FILE")
     public void setFilename(String filename) {
@@ -54,9 +55,14 @@ public class GeneExport extends AbstractOutputCommand {
         exportTranscriptSize = val;
     }
 
-    @Option(desc="Only export codingOnly genes", name="codingOnly")
+    @Option(desc="Only export coding genes/transcripts", name="coding-only")
     public void setCoding(boolean val) {
         codingOnly = val;
+    }
+
+    @Option(desc="Only export non-coding genes/transcripts", name="noncoding-only")
+    public void setNonCoding(boolean val) {
+        nonCodingOnly = val;
     }
 
     @Option(desc="Export the size of the longest intron", name="longest-intron")
@@ -68,6 +74,10 @@ public class GeneExport extends AbstractOutputCommand {
     public void exec() throws CommandArgumentException, IOException {
         if (filename == null) {
             throw new CommandArgumentException("You must specify a GTF file! (- for stdin)");
+        }
+
+        if (codingOnly && nonCodingOnly) {
+            throw new CommandArgumentException("You can't specify --coding-only and --noncoding-only");
         }
 
         if (
@@ -135,7 +145,7 @@ public class GeneExport extends AbstractOutputCommand {
             }
             
             boolean isCoding = false;
-            for (GTFTranscript txpt: gene.getTranscripts(codingOnly)) {
+            for (GTFTranscript txpt: gene.getTranscripts(codingOnly, nonCodingOnly)) {
                 if (txpt.hasCDS()) {
                     isCoding = true;
                     break;
@@ -153,7 +163,7 @@ public class GeneExport extends AbstractOutputCommand {
             
             if (exportTranscriptSize) {
                 int maxLen = 0;
-                for (GTFTranscript txpt: gene.getTranscripts(codingOnly)) {
+                for (GTFTranscript txpt: gene.getTranscripts(codingOnly, nonCodingOnly)) {
                     int len = 0;
                     for (GTFExon exon: txpt.getExons()) {
                         len += (exon.getEnd()-exon.getStart());
@@ -167,7 +177,7 @@ public class GeneExport extends AbstractOutputCommand {
 
             if (exportMaxIntron) {
                 int maxLen = 0;
-                for (GTFTranscript txpt: gene.getTranscripts(codingOnly)) {
+                for (GTFTranscript txpt: gene.getTranscripts(codingOnly, nonCodingOnly)) {
                     int lastEnd = -1;
                     for (GTFExon exon: txpt.getExons()) {
                         if (lastEnd != -1) {
