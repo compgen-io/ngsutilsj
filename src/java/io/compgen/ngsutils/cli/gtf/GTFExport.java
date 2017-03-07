@@ -58,7 +58,7 @@ public class GTFExport extends AbstractOutputCommand {
         this.filename = filename;
     }
 
-    @Option(desc="Whitelist of gene names to use", name="whitelist")
+    @Option(desc="Whitelist of gene names to use (filename or comma-separated list)", name="whitelist")
     public void setWhitelist(String whitelist) {
         this.whitelist = whitelist;
     }
