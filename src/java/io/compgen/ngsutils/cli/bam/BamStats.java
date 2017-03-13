@@ -108,13 +108,16 @@ public class BamStats extends AbstractOutputCommand {
             if (k.toUpperCase().equals("MAPQ")) {
                 numTagCounts.put("MAPQ", new TallyCounts());
             } else {
+                if (k.trim().indexOf(":")<0) {
+                    throw new CommandArgumentException("You must specify tags and their type (ex: NH:i, RG:Z)!");
+                }
                 String[] tag_type = k.trim().split(":");
                 if (tag_type[1].toUpperCase().equals("Z")) {
                     strTagCounts.put(tag_type[0], new TallyValues<String>());
                 } else if (tag_type[1].toUpperCase().equals("I")) {
                     numTagCounts.put(tag_type[0], new TallyCounts());
                 } else {
-                    throw new CommandArgumentException("You must specify tags and their type (ex: NH:i)!");
+                    throw new CommandArgumentException("Only Z (string) and I (integer) tags are supported!");
                 }
             }
         }
