@@ -142,7 +142,7 @@ public class NGSUtils {
                 main.showCommands();
             } else {
                 if (!getBuild().equals("dev")) {
-                    UpdateCheck uc = new UpdateCheck("http://updates.compgen.io/versions.txt", "NGSUTILSJ_NO_UPDATECHECK");
+                    UpdateCheck uc = new UpdateCheck("http://updates.compgen.io/versions.txt", "NGSUTILSJ_NO_UPDATECHECK", "io.compgen.ngsutilsj.no_upatecheck");
                     uc.setValue("cmd", args[0]);
                     uc.setValue("os", System.getProperty("os.name"));
                     uc.setValue("arch", System.getProperty("os.arch"));
