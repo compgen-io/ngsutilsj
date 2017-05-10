@@ -1,11 +1,11 @@
 package io.compgen.ngsutils.bam.filter;
 
-import htsjdk.samtools.SAMFileWriter;
-import htsjdk.samtools.SAMRecord;
-
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.Iterator;
+
+import htsjdk.samtools.SAMFileWriter;
+import htsjdk.samtools.SAMRecord;
 
 public abstract class AbstractBamFilter implements BamFilter, Iterable<SAMRecord> {
     protected BamFilter parent;

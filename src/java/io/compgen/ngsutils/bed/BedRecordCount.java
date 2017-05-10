@@ -1,12 +1,12 @@
 package io.compgen.ngsutils.bed;
 
-import io.compgen.common.StringUtils;
-import io.compgen.ngsutils.bam.Strand;
-
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
+
+import io.compgen.common.StringUtils;
+import io.compgen.ngsutils.bam.Strand;
 
 public class BedRecordCount extends BedRecord {
     private int count = 0;

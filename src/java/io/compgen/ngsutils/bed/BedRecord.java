@@ -1,14 +1,14 @@
 package io.compgen.ngsutils.bed;
 
-import io.compgen.common.StringUtils;
-import io.compgen.ngsutils.annotation.Annotation;
-import io.compgen.ngsutils.annotation.GenomeSpan;
-import io.compgen.ngsutils.bam.Strand;
-
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
+
+import io.compgen.common.StringUtils;
+import io.compgen.ngsutils.annotation.Annotation;
+import io.compgen.ngsutils.annotation.GenomeSpan;
+import io.compgen.ngsutils.bam.Strand;
 
 public class BedRecord implements Annotation {
     final protected String name;

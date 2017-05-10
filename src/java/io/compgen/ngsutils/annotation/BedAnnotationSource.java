@@ -1,14 +1,14 @@
 package io.compgen.ngsutils.annotation;
 
-import io.compgen.common.IterUtils;
-import io.compgen.ngsutils.bed.BedReader;
-import io.compgen.ngsutils.bed.BedRecord;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+
+import io.compgen.common.IterUtils;
+import io.compgen.ngsutils.bed.BedReader;
+import io.compgen.ngsutils.bed.BedRecord;
 
 /**
  * Loads annotations from a BED file 

@@ -1,8 +1,8 @@
 package io.compgen.ngsutils.fastq.filter;
 
-import io.compgen.ngsutils.fastq.FastqRead;
-
 import java.util.Iterator;
+
+import io.compgen.ngsutils.fastq.FastqRead;
 
 public abstract class AbstractSingleReadFilter implements FastqFilter, Iterable<FastqRead> {
 	protected long total = 0;

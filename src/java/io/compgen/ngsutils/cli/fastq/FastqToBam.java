@@ -1,5 +1,13 @@
 package io.compgen.ngsutils.cli.fastq;
 
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.channels.FileChannel;
+import java.util.List;
+
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMFileHeader.SortOrder;
 import htsjdk.samtools.SAMFileWriter;
@@ -18,14 +26,6 @@ import io.compgen.ngsutils.bam.support.BamHeaderUtils;
 import io.compgen.ngsutils.fastq.Fastq;
 import io.compgen.ngsutils.fastq.FastqRead;
 import io.compgen.ngsutils.fastq.FastqReader;
-
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.nio.channels.FileChannel;
-import java.util.List;
 
 @Command(name = "fastq-tobam", desc = "Converts a FASTQ file (or two paired files) into an unmapped BAM file", category="fastq", doc="Note: Interleaved FASTQ files are auto-detected.")
 public class FastqToBam extends AbstractCommand {

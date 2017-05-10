@@ -1,5 +1,8 @@
 package io.compgen.ngsutils.cli.fastq;
 
+import java.io.IOException;
+import java.io.OutputStream;
+
 import io.compgen.cmdline.annotation.Command;
 import io.compgen.cmdline.annotation.Exec;
 import io.compgen.cmdline.annotation.Option;
@@ -11,9 +14,6 @@ import io.compgen.common.io.FileUtils;
 import io.compgen.ngsutils.fastq.Fastq;
 import io.compgen.ngsutils.fastq.FastqRead;
 import io.compgen.ngsutils.fastq.FastqReader;
-
-import java.io.IOException;
-import java.io.OutputStream;
 
 @Command(name = "fastq-separate", desc = "Splits an interleaved FASTQ file by read number.", category="fastq")
 public class FastqSeparate extends AbstractCommand {

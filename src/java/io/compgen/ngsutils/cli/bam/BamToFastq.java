@@ -1,14 +1,5 @@
 package io.compgen.ngsutils.cli.bam;
 
-import io.compgen.cmdline.annotation.Command;
-import io.compgen.cmdline.annotation.Exec;
-import io.compgen.cmdline.annotation.Option;
-import io.compgen.cmdline.annotation.UnnamedArg;
-import io.compgen.cmdline.exceptions.CommandArgumentException;
-import io.compgen.cmdline.impl.AbstractCommand;
-import io.compgen.ngsutils.bam.BamFastqReader;
-import io.compgen.ngsutils.fastq.FastqRead;
-
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -17,6 +8,15 @@ import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.zip.GZIPOutputStream;
+
+import io.compgen.cmdline.annotation.Command;
+import io.compgen.cmdline.annotation.Exec;
+import io.compgen.cmdline.annotation.Option;
+import io.compgen.cmdline.annotation.UnnamedArg;
+import io.compgen.cmdline.exceptions.CommandArgumentException;
+import io.compgen.cmdline.impl.AbstractCommand;
+import io.compgen.ngsutils.bam.BamFastqReader;
+import io.compgen.ngsutils.fastq.FastqRead;
 
 /**
  * TODO: Add option for exporting arbitrary tag values as comments (e.g. RG:Z, BC:Z, etc...)

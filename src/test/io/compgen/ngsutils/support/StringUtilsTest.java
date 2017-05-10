@@ -1,12 +1,13 @@
 package io.compgen.ngsutils.support;
 
 import static org.junit.Assert.assertEquals;
-import io.compgen.common.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.Test;
+
+import io.compgen.common.StringUtils;
 
 public class StringUtilsTest {
 

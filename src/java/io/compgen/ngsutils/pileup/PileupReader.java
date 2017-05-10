@@ -1,9 +1,9 @@
 package io.compgen.ngsutils.pileup;
 
-import io.compgen.common.AbstractLineReader;
-
 import java.io.IOException;
 import java.io.InputStream;
+
+import io.compgen.common.AbstractLineReader;
 
 public class PileupReader extends AbstractLineReader<PileupRecord>{
     private final int minBaseQual;

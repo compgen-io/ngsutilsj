@@ -1,5 +1,15 @@
 package io.compgen.ngsutils.cli.bam;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.channels.FileChannel;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.TreeMap;
+
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMReadGroupRecord;
 import htsjdk.samtools.SAMRecord;
@@ -27,16 +37,6 @@ import io.compgen.ngsutils.annotation.GenicRegion;
 import io.compgen.ngsutils.bam.Orientation;
 import io.compgen.ngsutils.bam.support.ReadUtils;
 import io.compgen.ngsutils.support.CloseableFinalizer;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.channels.FileChannel;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.TreeMap;
 
 
 // TODO: Add % bases >= Q30

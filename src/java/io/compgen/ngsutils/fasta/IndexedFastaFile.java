@@ -1,14 +1,14 @@
 package io.compgen.ngsutils.fasta;
 
-import io.compgen.common.StringLineReader;
-import io.compgen.common.StringUtils;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
+
+import io.compgen.common.StringLineReader;
+import io.compgen.common.StringUtils;
 
 public class IndexedFastaFile extends BasicFastaReader {
     public class IndexRecord {

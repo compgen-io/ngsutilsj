@@ -1,5 +1,18 @@
 package io.compgen.ngsutils.cli.bam;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.channels.FileChannel;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Random;
+import java.util.Set;
+
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamInputResource;
 import htsjdk.samtools.SamReader;
@@ -15,19 +28,6 @@ import io.compgen.common.progress.FileChannelStats;
 import io.compgen.common.progress.ProgressMessage;
 import io.compgen.common.progress.ProgressUtils;
 import io.compgen.ngsutils.support.CloseableFinalizer;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.nio.channels.FileChannel;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Random;
-import java.util.Set;
 
 @Command(name="bam-sample", desc="Create a whitelist of read names sampled randomly from a file", category="bam", experimental=true)
 public class BamSampleReads extends AbstractCommand {

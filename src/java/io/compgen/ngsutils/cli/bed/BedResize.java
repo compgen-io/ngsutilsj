@@ -1,5 +1,7 @@
 package io.compgen.ngsutils.cli.bed;
 
+import java.io.IOException;
+
 import io.compgen.cmdline.annotation.Command;
 import io.compgen.cmdline.annotation.Exec;
 import io.compgen.cmdline.annotation.Option;
@@ -10,8 +12,6 @@ import io.compgen.common.IterUtils;
 import io.compgen.ngsutils.annotation.GenomeSpan;
 import io.compgen.ngsutils.bed.BedReader;
 import io.compgen.ngsutils.bed.BedRecord;
-
-import java.io.IOException;
 
 @Command(name="bed-resize", desc="Resize BED regions (extend or shrink)", category="bed")
 public class BedResize extends AbstractOutputCommand {

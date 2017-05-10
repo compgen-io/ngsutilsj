@@ -1,5 +1,12 @@
 package io.compgen.ngsutils.cli.fasta;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import io.compgen.cmdline.annotation.Command;
 import io.compgen.cmdline.annotation.Exec;
 import io.compgen.cmdline.annotation.Option;
@@ -8,13 +15,6 @@ import io.compgen.cmdline.exceptions.CommandArgumentException;
 import io.compgen.cmdline.impl.AbstractOutputCommand;
 import io.compgen.common.IterUtils;
 import io.compgen.common.StringLineReader;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 @Command(name="fasta-mask", desc="Mask regions of a FASTA reference", category="fasta")
 public class FastaMask extends AbstractOutputCommand {

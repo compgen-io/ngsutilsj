@@ -1,9 +1,9 @@
 package io.compgen.ngsutils.bam.filter;
 
-import htsjdk.samtools.SAMRecord;
-
 import java.io.FileNotFoundException;
 import java.io.IOException;
+
+import htsjdk.samtools.SAMRecord;
 
 public class RefInclude extends RefExclude {
     

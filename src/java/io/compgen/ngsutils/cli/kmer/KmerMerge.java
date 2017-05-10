@@ -1,14 +1,5 @@
 package io.compgen.ngsutils.cli.kmer;
 
-import io.compgen.cmdline.annotation.Command;
-import io.compgen.cmdline.annotation.Exec;
-import io.compgen.cmdline.annotation.Option;
-import io.compgen.cmdline.annotation.UnnamedArg;
-import io.compgen.cmdline.exceptions.CommandArgumentException;
-import io.compgen.cmdline.impl.AbstractOutputCommand;
-import io.compgen.ngsutils.kmer.KmerLineReader;
-import io.compgen.ngsutils.kmer.KmerRecord;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -17,6 +8,15 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+
+import io.compgen.cmdline.annotation.Command;
+import io.compgen.cmdline.annotation.Exec;
+import io.compgen.cmdline.annotation.Option;
+import io.compgen.cmdline.annotation.UnnamedArg;
+import io.compgen.cmdline.exceptions.CommandArgumentException;
+import io.compgen.cmdline.impl.AbstractOutputCommand;
+import io.compgen.ngsutils.kmer.KmerLineReader;
+import io.compgen.ngsutils.kmer.KmerRecord;
 
 @Command(name="kmer-merge", desc="Merges kmer count files", category="kmer", experimental=true)
 public class KmerMerge extends AbstractOutputCommand {

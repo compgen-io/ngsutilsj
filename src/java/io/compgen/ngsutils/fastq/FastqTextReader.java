@@ -1,9 +1,5 @@
 package io.compgen.ngsutils.fastq;
 
-import io.compgen.common.progress.FileChannelStats;
-import io.compgen.common.progress.ProgressMessage;
-import io.compgen.common.progress.ProgressUtils;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -11,6 +7,10 @@ import java.io.InputStreamReader;
 import java.nio.channels.FileChannel;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+
+import io.compgen.common.progress.FileChannelStats;
+import io.compgen.common.progress.ProgressMessage;
+import io.compgen.common.progress.ProgressUtils;
 
 
 public class FastqTextReader implements FastqReader {

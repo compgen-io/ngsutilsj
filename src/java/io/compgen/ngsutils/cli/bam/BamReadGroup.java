@@ -1,5 +1,15 @@
 package io.compgen.ngsutils.cli.bam;
 
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.channels.FileChannel;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMFileWriter;
 import htsjdk.samtools.SAMFileWriterFactory;
@@ -21,16 +31,6 @@ import io.compgen.common.progress.ProgressMessage;
 import io.compgen.common.progress.ProgressUtils;
 import io.compgen.ngsutils.bam.support.BamHeaderUtils;
 import io.compgen.ngsutils.support.CloseableFinalizer;
-
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.nio.channels.FileChannel;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
 
 @Command(name="bam-readgroup", desc="Add a read group ID to each read in a BAM file", category="bam")
 public class BamReadGroup extends AbstractCommand {

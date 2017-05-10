@@ -1,12 +1,12 @@
 package io.compgen.ngsutils.annotation;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
+
 import io.compgen.common.StringLineReader;
 import io.compgen.common.StringUtils;
 import io.compgen.ngsutils.annotation.RepeatMaskerAnnotationSource.RepeatAnnotation;
 import io.compgen.ngsutils.bam.Strand;
-
-import java.io.FileNotFoundException;
-import java.io.IOException;
 
 /**
  * Loads annotations from a RepeatMasker output

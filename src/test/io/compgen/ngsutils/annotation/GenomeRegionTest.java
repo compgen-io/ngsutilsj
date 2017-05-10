@@ -2,9 +2,10 @@ package io.compgen.ngsutils.annotation;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import io.compgen.ngsutils.bam.Strand;
 
 import org.junit.Test;
+
+import io.compgen.ngsutils.bam.Strand;
 
 public class GenomeRegionTest {
 

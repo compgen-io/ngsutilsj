@@ -1,6 +1,16 @@
 package io.compgen.ngsutils.cli.gtf;
 
 
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
+
 import io.compgen.cmdline.annotation.Command;
 import io.compgen.cmdline.annotation.Exec;
 import io.compgen.cmdline.annotation.Option;
@@ -20,16 +30,6 @@ import io.compgen.ngsutils.annotation.GTFAnnotationSource.GTFTranscript;
 import io.compgen.ngsutils.annotation.GenomeAnnotation;
 import io.compgen.ngsutils.annotation.GenomeSpan;
 import io.compgen.ngsutils.bam.Strand;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.SortedSet;
-import java.util.TreeSet;
 
 @Command(name="gtf-export", desc="Export gene annotations from a GTF file as BED regions", category="gtf")
 public class GTFExport extends AbstractOutputCommand {

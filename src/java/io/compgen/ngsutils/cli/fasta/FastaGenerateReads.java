@@ -1,5 +1,7 @@
 package io.compgen.ngsutils.cli.fasta;
 
+import java.io.IOException;
+
 import io.compgen.cmdline.annotation.Command;
 import io.compgen.cmdline.annotation.Exec;
 import io.compgen.cmdline.annotation.Option;
@@ -9,8 +11,6 @@ import io.compgen.cmdline.impl.AbstractOutputCommand;
 import io.compgen.common.IterUtils;
 import io.compgen.common.StringLineReader;
 import io.compgen.common.progress.ProgressMessage;
-
-import java.io.IOException;
 
 @Command(name="fasta-genreads", desc="Generate mock reads from a reference FASTA file", category="fasta", experimental=true)
 public class FastaGenerateReads extends AbstractOutputCommand {

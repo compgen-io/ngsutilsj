@@ -1,5 +1,11 @@
 package io.compgen.ngsutils.cli.bam;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.nio.channels.FileChannel;
+import java.util.Iterator;
+
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamInputResource;
 import htsjdk.samtools.SamReader;
@@ -17,12 +23,6 @@ import io.compgen.common.progress.ProgressMessage;
 import io.compgen.common.progress.ProgressUtils;
 import io.compgen.ngsutils.bam.support.ReadUtils;
 import io.compgen.ngsutils.support.CloseableFinalizer;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.nio.channels.FileChannel;
-import java.util.Iterator;
 
 @Command(name="bam-check", desc="Checks a BAM file to make sure it is valid", category="bam")
 public class BamCheck extends AbstractCommand {

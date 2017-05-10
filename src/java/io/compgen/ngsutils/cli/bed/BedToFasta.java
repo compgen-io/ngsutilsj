@@ -1,5 +1,7 @@
 package io.compgen.ngsutils.cli.bed;
 
+import java.io.IOException;
+
 import io.compgen.cmdline.annotation.Command;
 import io.compgen.cmdline.annotation.Exec;
 import io.compgen.cmdline.annotation.Option;
@@ -14,8 +16,6 @@ import io.compgen.ngsutils.bed.BedRecord;
 import io.compgen.ngsutils.fasta.FastaReader;
 import io.compgen.ngsutils.fasta.FastaRecord;
 import io.compgen.ngsutils.support.SeqUtils;
-
-import java.io.IOException;
 
 @Command(name="bed-tofasta", desc="Extract FASTA sequences based on BED coordinates", category="bed")
 public class BedToFasta extends AbstractOutputCommand {

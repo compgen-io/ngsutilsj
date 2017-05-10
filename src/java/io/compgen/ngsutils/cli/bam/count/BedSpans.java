@@ -1,13 +1,13 @@
 package io.compgen.ngsutils.cli.bam.count;
 
-import io.compgen.common.AbstractLineReader;
-import io.compgen.ngsutils.bam.Strand;
-
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+
+import io.compgen.common.AbstractLineReader;
+import io.compgen.ngsutils.bam.Strand;
 
 public class BedSpans extends AbstractLineReader<SpanGroup> implements SpanSource {
     private int numCols;

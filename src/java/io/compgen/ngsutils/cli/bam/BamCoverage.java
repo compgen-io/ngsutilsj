@@ -1,5 +1,8 @@
 package io.compgen.ngsutils.cli.bam;
 
+import java.io.IOException;
+import java.util.Iterator;
+
 import io.compgen.cmdline.annotation.Command;
 import io.compgen.cmdline.annotation.Exec;
 import io.compgen.cmdline.annotation.Option;
@@ -14,9 +17,6 @@ import io.compgen.ngsutils.bam.support.ReadUtils;
 import io.compgen.ngsutils.bed.BedRecord;
 import io.compgen.ngsutils.pileup.BAMPileup;
 import io.compgen.ngsutils.pileup.PileupRecord;
-
-import java.io.IOException;
-import java.util.Iterator;
 
 @Command(name="bam-coverage", desc="Scans an aligned BAM file and calculates the number of reads covering each base", category="bam", experimental=true, 
     doc = "Note: This will not properly count bases with zero coverage at the start/end \n"

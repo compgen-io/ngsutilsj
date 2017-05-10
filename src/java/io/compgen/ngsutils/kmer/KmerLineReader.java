@@ -1,11 +1,11 @@
 package io.compgen.ngsutils.kmer;
 
-import io.compgen.common.AbstractLineReader;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.zip.GZIPInputStream;
+
+import io.compgen.common.AbstractLineReader;
 
 public class KmerLineReader extends AbstractLineReader<KmerRecord> {
     

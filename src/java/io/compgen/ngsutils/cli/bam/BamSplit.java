@@ -1,5 +1,15 @@
 package io.compgen.ngsutils.cli.bam;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.nio.channels.FileChannel;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMFileHeader.SortOrder;
 import htsjdk.samtools.SAMFileWriter;
@@ -22,16 +32,6 @@ import io.compgen.common.progress.ProgressMessage;
 import io.compgen.common.progress.ProgressUtils;
 import io.compgen.ngsutils.bam.support.BamHeaderUtils;
 import io.compgen.ngsutils.support.CloseableFinalizer;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.nio.channels.FileChannel;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
 
 @Command(name="bam-split", desc="Split a BAM file into smaller files", category="bam")
 public class BamSplit extends AbstractCommand {

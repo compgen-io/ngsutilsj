@@ -1,15 +1,15 @@
 package io.compgen.ngsutils.bam;
 
-import htsjdk.samtools.SAMFileWriter;
-import htsjdk.samtools.SAMRecord;
-import io.compgen.common.RadixSet;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+
+import htsjdk.samtools.SAMFileWriter;
+import htsjdk.samtools.SAMRecord;
+import io.compgen.common.RadixSet;
 
 public class FindDuplicateReads {
     public abstract static class ScoringMethod {

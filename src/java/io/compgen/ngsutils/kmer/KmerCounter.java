@@ -1,14 +1,14 @@
 package io.compgen.ngsutils.kmer;
 
-import io.compgen.ngsutils.NGSUtils;
-import io.compgen.ngsutils.support.SeqUtils;
-
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
+
+import io.compgen.ngsutils.NGSUtils;
+import io.compgen.ngsutils.support.SeqUtils;
 
 public class KmerCounter {
     private Map<String, Long> records = new TreeMap<String, Long>(); // store kmers in sorted order

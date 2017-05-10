@@ -1,5 +1,10 @@
 package io.compgen.ngsutils.cli.fasta;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.HashSet;
+import java.util.Set;
+
 import io.compgen.cmdline.annotation.Command;
 import io.compgen.cmdline.annotation.Exec;
 import io.compgen.cmdline.annotation.Option;
@@ -9,11 +14,6 @@ import io.compgen.cmdline.impl.AbstractOutputCommand;
 import io.compgen.common.IterUtils;
 import io.compgen.common.StringLineReader;
 import io.compgen.common.progress.ProgressMessage;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.HashSet;
-import java.util.Set;
 
 @Command(name="fasta-filter", desc="Filter out sequences from a FASTA file", category="fasta")
 public class FastaFilter extends AbstractOutputCommand {

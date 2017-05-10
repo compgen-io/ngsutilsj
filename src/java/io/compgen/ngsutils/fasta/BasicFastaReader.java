@@ -1,11 +1,11 @@
 package io.compgen.ngsutils.fasta;
 
+import java.io.IOException;
+import java.util.Iterator;
+
 import io.compgen.common.IterUtils;
 import io.compgen.common.StringLineReader;
 import io.compgen.common.StringUtils;
-
-import java.io.IOException;
-import java.util.Iterator;
 
 public class BasicFastaReader extends FastaReader {
     protected final String filename;

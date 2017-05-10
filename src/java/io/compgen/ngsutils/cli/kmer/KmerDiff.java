@@ -1,5 +1,10 @@
 package io.compgen.ngsutils.cli.kmer;
 
+import java.io.IOException;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.TreeMap;
+
 import io.compgen.cmdline.annotation.Command;
 import io.compgen.cmdline.annotation.Exec;
 import io.compgen.cmdline.annotation.UnnamedArg;
@@ -9,11 +14,6 @@ import io.compgen.common.IterUtils;
 import io.compgen.common.Pair;
 import io.compgen.common.StringLineReader;
 import io.compgen.common.StringUtils;
-
-import java.io.IOException;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.TreeMap;
 
 @Command(name="kmer-diff", desc="Calculate differences between two kmer files", category="kmer", experimental=true)
 public class KmerDiff extends AbstractOutputCommand {

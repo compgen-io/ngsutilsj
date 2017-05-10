@@ -1,10 +1,10 @@
 package io.compgen.ngsutils.bam.filter;
 
-import htsjdk.samtools.SAMRecord;
-
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+
+import htsjdk.samtools.SAMRecord;
 
 public class UniqueStart extends AbstractBamFilter {
     private int lastPlusPos = -1;

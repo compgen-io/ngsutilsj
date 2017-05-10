@@ -1,5 +1,11 @@
 package io.compgen.ngsutils.cli.bam;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.nio.channels.FileChannel;
+import java.util.Iterator;
+
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamInputResource;
 import htsjdk.samtools.SamReader;
@@ -20,12 +26,6 @@ import io.compgen.ngsutils.bam.Strand;
 import io.compgen.ngsutils.cli.bam.count.BinCounter;
 import io.compgen.ngsutils.cli.bam.count.BinCounter.BinCounterExporter;
 import io.compgen.ngsutils.support.CloseableFinalizer;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.nio.channels.FileChannel;
-import java.util.Iterator;
 
 @Command(name="bam-bins", desc="Quickly count the number of reads that fall into bins (bins assigned based on 5' end of the first read)", category="bam")
 public class BinCount extends AbstractOutputCommand {

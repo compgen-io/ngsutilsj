@@ -1,5 +1,7 @@
 package io.compgen.ngsutils.cli.fasta;
 
+import java.io.IOException;
+
 import io.compgen.cmdline.annotation.Command;
 import io.compgen.cmdline.annotation.Exec;
 import io.compgen.cmdline.annotation.Option;
@@ -10,8 +12,6 @@ import io.compgen.common.IterUtils;
 import io.compgen.common.StringLineReader;
 import io.compgen.common.TabWriter;
 import io.compgen.ngsutils.fasta.FastaReader;
-
-import java.io.IOException;
 
 @Command(name="fasta-gc", desc="Determine the GC% for a given region or bins", category="fasta")
 public class FastaGC extends AbstractOutputCommand {

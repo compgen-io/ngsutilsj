@@ -1,5 +1,7 @@
 package io.compgen.ngsutils.cli.bed;
 
+import java.io.IOException;
+
 import io.compgen.cmdline.annotation.Command;
 import io.compgen.cmdline.annotation.Exec;
 import io.compgen.cmdline.annotation.Option;
@@ -14,8 +16,6 @@ import io.compgen.ngsutils.bam.Strand;
 import io.compgen.ngsutils.bed.BedReader;
 import io.compgen.ngsutils.bed.BedRecord;
 import io.compgen.ngsutils.bed.BedRecordCount;
-
-import java.io.IOException;
 
 @Command(name="bed-count", desc="Given reference and query BED files, count the number of query regions that are contained within each reference region", category="bed")
 public class BedCount extends AbstractOutputCommand {

@@ -1,5 +1,10 @@
 package io.compgen.ngsutils.cli.bed;
 
+import java.io.IOException;
+import java.util.Iterator;
+import java.util.SortedMap;
+import java.util.TreeMap;
+
 import io.compgen.cmdline.annotation.Command;
 import io.compgen.cmdline.annotation.Exec;
 import io.compgen.cmdline.annotation.Option;
@@ -12,11 +17,6 @@ import io.compgen.ngsutils.annotation.GenomeSpan;
 import io.compgen.ngsutils.bam.Strand;
 import io.compgen.ngsutils.bed.BedReader;
 import io.compgen.ngsutils.bed.BedRecord;
-
-import java.io.IOException;
-import java.util.Iterator;
-import java.util.SortedMap;
-import java.util.TreeMap;
 
 @Command(name="bed-reduce", desc="Merge overlaping BED regions", category="bed")
 public class BedReduce extends AbstractOutputCommand {

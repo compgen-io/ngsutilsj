@@ -1,5 +1,14 @@
 package io.compgen.ngsutils.cli.fastq;
 
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.channels.FileChannel;
+import java.util.zip.GZIPOutputStream;
+
 import io.compgen.cmdline.annotation.Command;
 import io.compgen.cmdline.annotation.Exec;
 import io.compgen.cmdline.annotation.Option;
@@ -12,15 +21,6 @@ import io.compgen.common.IterUtils.EachPair;
 import io.compgen.ngsutils.fastq.Fastq;
 import io.compgen.ngsutils.fastq.FastqRead;
 import io.compgen.ngsutils.fastq.FastqReader;
-
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.nio.channels.FileChannel;
-import java.util.zip.GZIPOutputStream;
 
 @Command(name = "fastq-split", desc = "Splits an FASTQ file into smaller files", category="fastq")
 public class FastqSplit extends AbstractCommand {

@@ -1,5 +1,12 @@
 package io.compgen.ngsutils.bam.support;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.SortedMap;
+import java.util.TreeMap;
+
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMRecord;
@@ -9,13 +16,6 @@ import htsjdk.samtools.SamReader;
 import io.compgen.ngsutils.annotation.GenomeSpan;
 import io.compgen.ngsutils.bam.Orientation;
 import io.compgen.ngsutils.bam.Strand;
-
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.SortedMap;
-import java.util.TreeMap;
 
 public class ReadUtils {
     public static final int READ_PAIRED_FLAG = 0x1;

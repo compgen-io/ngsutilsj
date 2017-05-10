@@ -1,14 +1,14 @@
 package io.compgen.ngsutils.fastq;
 
-import io.compgen.common.io.DataIO;
-import io.compgen.common.io.PeekableInputStream;
-import io.compgen.ngsutils.bam.BamFastqReader;
-
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.channels.FileChannel;
 import java.util.zip.GZIPInputStream;
+
+import io.compgen.common.io.DataIO;
+import io.compgen.common.io.PeekableInputStream;
+import io.compgen.ngsutils.bam.BamFastqReader;
 
 public class BAMFastqReaderSource implements FastqReaderSource {
     public final byte[] BAM_MAGIC = new byte[] {0x42, 0x41, 0x4d, 0x01};

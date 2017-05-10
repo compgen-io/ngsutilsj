@@ -1,14 +1,14 @@
 package io.compgen.ngsutils.annotation;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import htsjdk.samtools.AlignmentBlock;
 import htsjdk.samtools.SAMRecord;
 import io.compgen.common.StringUtils;
 import io.compgen.ngsutils.bam.Orientation;
 import io.compgen.ngsutils.bam.Strand;
 import io.compgen.ngsutils.bam.support.ReadUtils;
-
-import java.util.ArrayList;
-import java.util.List;
 
 
 /*

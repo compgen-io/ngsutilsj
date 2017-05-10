@@ -1,5 +1,9 @@
 package io.compgen.ngsutils.cli.fasta;
 
+import java.io.BufferedOutputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+
 import io.compgen.cmdline.annotation.Command;
 import io.compgen.cmdline.annotation.Exec;
 import io.compgen.cmdline.annotation.Option;
@@ -8,10 +12,6 @@ import io.compgen.cmdline.exceptions.CommandArgumentException;
 import io.compgen.cmdline.impl.AbstractCommand;
 import io.compgen.common.IterUtils;
 import io.compgen.common.StringLineReader;
-
-import java.io.BufferedOutputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
 
 @Command(name="fasta-split", desc="Split a FASTA file into a new file for each sequence present", category="fasta")
 public class FastaSplit extends AbstractCommand {

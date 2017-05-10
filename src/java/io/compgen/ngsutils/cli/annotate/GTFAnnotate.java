@@ -1,5 +1,9 @@
 package io.compgen.ngsutils.cli.annotate;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
 import io.compgen.cmdline.annotation.Command;
 import io.compgen.cmdline.annotation.Exec;
 import io.compgen.cmdline.annotation.Option;
@@ -15,10 +19,6 @@ import io.compgen.ngsutils.annotation.GTFAnnotationSource.GTFGene;
 import io.compgen.ngsutils.annotation.GenicRegion;
 import io.compgen.ngsutils.annotation.GenomeSpan;
 import io.compgen.ngsutils.bam.Strand;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 @Command(name="annotate-gtf", desc="Annotate GTF gene regions (for tab-delimited text, BED, or BAM input)", doc="Note: Column indexes start at 1.", category="annotation")
 public class GTFAnnotate extends AbstractOutputCommand {

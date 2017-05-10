@@ -3,13 +3,14 @@ package io.compgen.ngsutils.annotation;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+
+import org.junit.Before;
+import org.junit.Test;
+
 import io.compgen.common.IterUtils;
 import io.compgen.common.StringUtils;
 import io.compgen.ngsutils.bam.Strand;
 import io.compgen.ngsutils.bed.BedRecord;
-
-import org.junit.Before;
-import org.junit.Test;
 
 public class TestBEDAnnotation {
     BedAnnotationSource bed;

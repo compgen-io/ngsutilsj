@@ -1,11 +1,11 @@
 package io.compgen.ngsutils.annotation;
 
-import htsjdk.samtools.SAMRecord;
-import io.compgen.ngsutils.bam.Orientation;
-
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+
+import htsjdk.samtools.SAMRecord;
+import io.compgen.ngsutils.bam.Orientation;
 
 public class AnnotatedRegionCounter {
     protected final GTFAnnotationSource gtf;

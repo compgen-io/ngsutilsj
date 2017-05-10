@@ -1,5 +1,8 @@
 package io.compgen.ngsutils.cli.fastq;
 
+import java.io.IOException;
+import java.util.Iterator;
+
 import io.compgen.cmdline.annotation.Command;
 import io.compgen.cmdline.annotation.Exec;
 import io.compgen.cmdline.annotation.Option;
@@ -8,9 +11,6 @@ import io.compgen.cmdline.impl.AbstractCommand;
 import io.compgen.ngsutils.fastq.Fastq;
 import io.compgen.ngsutils.fastq.FastqRead;
 import io.compgen.ngsutils.fastq.FastqReader;
-
-import java.io.IOException;
-import java.util.Iterator;
 
 @Command(name = "fastq-check", desc = "Verify a FASTQ single, paired, or interleaved file(s)", category="fastq")
 public class FastqCheck extends AbstractCommand {

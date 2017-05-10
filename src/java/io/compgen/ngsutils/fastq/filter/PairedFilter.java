@@ -1,10 +1,10 @@
 package io.compgen.ngsutils.fastq.filter;
 
-import io.compgen.ngsutils.fastq.FastqRead;
-
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+
+import io.compgen.ngsutils.fastq.FastqRead;
 
 public class PairedFilter implements FastqFilter, Iterable<FastqRead> {
     private Iterator<FastqRead> parent;

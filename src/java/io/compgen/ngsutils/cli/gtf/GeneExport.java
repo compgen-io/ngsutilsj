@@ -1,6 +1,11 @@
 package io.compgen.ngsutils.cli.gtf;
 
 
+import java.io.File;
+import java.io.IOException;
+import java.util.HashSet;
+import java.util.Set;
+
 import io.compgen.cmdline.annotation.Command;
 import io.compgen.cmdline.annotation.Exec;
 import io.compgen.cmdline.annotation.Option;
@@ -17,11 +22,6 @@ import io.compgen.ngsutils.annotation.GTFAnnotationSource.GTFExon;
 import io.compgen.ngsutils.annotation.GTFAnnotationSource.GTFGene;
 import io.compgen.ngsutils.annotation.GTFAnnotationSource.GTFTranscript;
 import io.compgen.ngsutils.annotation.GenomeAnnotation;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.HashSet;
-import java.util.Set;
 
 @Command(name="gtf-geneinfo", desc="Calculate information about genes (based on GTF model)", category="gtf", experimental=true)
 public class GeneExport extends AbstractOutputCommand {

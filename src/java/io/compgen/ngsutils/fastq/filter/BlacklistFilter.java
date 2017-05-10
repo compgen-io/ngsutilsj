@@ -1,12 +1,12 @@
 package io.compgen.ngsutils.fastq.filter;
 
-import io.compgen.ngsutils.fastq.FastqRead;
-
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
+
+import io.compgen.ngsutils.fastq.FastqRead;
 
 public class BlacklistFilter extends AbstractSingleReadFilter {
 	private Set<String> names = new HashSet<String>();

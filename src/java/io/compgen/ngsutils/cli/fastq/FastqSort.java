@@ -1,15 +1,5 @@
 package io.compgen.ngsutils.cli.fastq;
 
-import io.compgen.cmdline.annotation.Command;
-import io.compgen.cmdline.annotation.Exec;
-import io.compgen.cmdline.annotation.Option;
-import io.compgen.cmdline.annotation.UnnamedArg;
-import io.compgen.cmdline.impl.AbstractOutputCommand;
-import io.compgen.common.ComparablePair;
-import io.compgen.ngsutils.fastq.Fastq;
-import io.compgen.ngsutils.fastq.FastqRead;
-import io.compgen.ngsutils.fastq.FastqReader;
-
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -21,6 +11,16 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.zip.GZIPOutputStream;
+
+import io.compgen.cmdline.annotation.Command;
+import io.compgen.cmdline.annotation.Exec;
+import io.compgen.cmdline.annotation.Option;
+import io.compgen.cmdline.annotation.UnnamedArg;
+import io.compgen.cmdline.impl.AbstractOutputCommand;
+import io.compgen.common.ComparablePair;
+import io.compgen.ngsutils.fastq.Fastq;
+import io.compgen.ngsutils.fastq.FastqRead;
+import io.compgen.ngsutils.fastq.FastqReader;
 
 @Command(name="fastq-sort", desc="Sorts a FASTQ file", category="fastq")
 public class FastqSort extends AbstractOutputCommand {

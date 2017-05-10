@@ -1,11 +1,11 @@
 package io.compgen.ngsutils.cli.bam.count;
 
-import io.compgen.ngsutils.annotation.GenomeSpan;
-import io.compgen.ngsutils.bam.Strand;
-
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+
+import io.compgen.ngsutils.annotation.GenomeSpan;
+import io.compgen.ngsutils.bam.Strand;
 
 
 public class SpanGroup implements Iterable<GenomeSpan> {

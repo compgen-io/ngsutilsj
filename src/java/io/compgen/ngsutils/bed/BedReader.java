@@ -1,15 +1,15 @@
 package io.compgen.ngsutils.bed;
 
-import io.compgen.common.StringLineReader;
-import io.compgen.common.StringUtils;
-import io.compgen.ngsutils.annotation.GenomeSpan;
-import io.compgen.ngsutils.bam.Strand;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Iterator;
+
+import io.compgen.common.StringLineReader;
+import io.compgen.common.StringUtils;
+import io.compgen.ngsutils.annotation.GenomeSpan;
+import io.compgen.ngsutils.bam.Strand;
 
 public class BedReader {
     public static Iterator<BedRecord> readFile(String filename) throws IOException {

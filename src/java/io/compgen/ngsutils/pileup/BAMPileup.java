@@ -1,9 +1,5 @@
 package io.compgen.ngsutils.pileup;
 
-import htsjdk.samtools.util.CloseableIterator;
-import io.compgen.common.StringUtils;
-import io.compgen.ngsutils.annotation.GenomeSpan;
-
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -12,6 +8,10 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+
+import htsjdk.samtools.util.CloseableIterator;
+import io.compgen.common.StringUtils;
+import io.compgen.ngsutils.annotation.GenomeSpan;
 
 public class BAMPileup {
     private final String[] filenames;

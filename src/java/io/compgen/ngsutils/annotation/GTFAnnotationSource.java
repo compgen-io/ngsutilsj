@@ -1,14 +1,5 @@
 package io.compgen.ngsutils.annotation;
 
-import htsjdk.samtools.CigarElement;
-import htsjdk.samtools.CigarOperator;
-import htsjdk.samtools.SAMRecord;
-import io.compgen.common.StringLineReader;
-import io.compgen.common.StringUtils;
-import io.compgen.ngsutils.annotation.GTFAnnotationSource.GTFGene;
-import io.compgen.ngsutils.bam.Orientation;
-import io.compgen.ngsutils.bam.Strand;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -19,6 +10,15 @@ import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
+
+import htsjdk.samtools.CigarElement;
+import htsjdk.samtools.CigarOperator;
+import htsjdk.samtools.SAMRecord;
+import io.compgen.common.StringLineReader;
+import io.compgen.common.StringUtils;
+import io.compgen.ngsutils.annotation.GTFAnnotationSource.GTFGene;
+import io.compgen.ngsutils.bam.Orientation;
+import io.compgen.ngsutils.bam.Strand;
 
 /**
  * Class to extract gene annotations stored in a GTF file.

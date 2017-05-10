@@ -1,8 +1,8 @@
 package io.compgen.ngsutils.bam.filter;
 
-import htsjdk.samtools.SAMRecord;
-
 import java.util.Map;
+
+import htsjdk.samtools.SAMRecord;
 
 public class TagMin extends AbstractBamFilter {
     

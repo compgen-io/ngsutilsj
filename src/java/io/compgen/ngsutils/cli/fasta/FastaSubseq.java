@@ -1,5 +1,8 @@
 package io.compgen.ngsutils.cli.fasta;
 
+import java.io.IOException;
+import java.util.List;
+
 import io.compgen.cmdline.annotation.Command;
 import io.compgen.cmdline.annotation.Exec;
 import io.compgen.cmdline.annotation.Option;
@@ -8,9 +11,6 @@ import io.compgen.cmdline.exceptions.CommandArgumentException;
 import io.compgen.cmdline.impl.AbstractOutputCommand;
 import io.compgen.ngsutils.annotation.GenomeSpan;
 import io.compgen.ngsutils.fasta.FastaReader;
-
-import java.io.IOException;
-import java.util.List;
 
 @Command(name="fasta-subseq", desc="Extract subsequences from a FASTA file (optionally, indexed)", category="fasta", doc="Note: the start-position in the region should be 1-based")
 public class FastaSubseq extends AbstractOutputCommand {

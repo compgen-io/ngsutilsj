@@ -1,5 +1,13 @@
 package io.compgen.ngsutils.cli.bam;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.nio.channels.FileChannel;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
+
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamInputResource;
 import htsjdk.samtools.SamReader;
@@ -19,14 +27,6 @@ import io.compgen.common.progress.ProgressMessage;
 import io.compgen.common.progress.ProgressUtils;
 import io.compgen.ngsutils.NGSUtils;
 import io.compgen.ngsutils.support.CloseableFinalizer;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.nio.channels.FileChannel;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
 
 @Command(name="bam-tobed", desc="Writes read positions to a BED6 file", category="bam", experimental=true, 
 doc="The mapped position of a read is writen to a 6 column BED file.\n" 

@@ -1,9 +1,9 @@
 package io.compgen.ngsutils.bam.filter;
 
+import java.util.Iterator;
+
 import htsjdk.samtools.SAMFileWriter;
 import htsjdk.samtools.SAMRecord;
-
-import java.util.Iterator;
 
 public class NullFilter implements BamFilter {
     private Iterator<SAMRecord> iterator;

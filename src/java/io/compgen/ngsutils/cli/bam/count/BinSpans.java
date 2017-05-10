@@ -1,11 +1,11 @@
 package io.compgen.ngsutils.cli.bam.count;
 
+import java.util.Iterator;
+
 import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.SAMSequenceRecord;
 import io.compgen.ngsutils.bam.Orientation;
 import io.compgen.ngsutils.bam.Strand;
-
-import java.util.Iterator;
 
 public class BinSpans implements SpanSource {
     final private SAMSequenceDictionary seqdict;

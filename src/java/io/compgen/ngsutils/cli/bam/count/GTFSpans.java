@@ -1,5 +1,8 @@
 package io.compgen.ngsutils.cli.bam.count;
 
+import java.io.IOException;
+import java.util.Iterator;
+
 import io.compgen.common.IterUtils.MapFunc;
 import io.compgen.common.StringUtils;
 import io.compgen.common.TTY;
@@ -8,9 +11,6 @@ import io.compgen.ngsutils.annotation.GTFAnnotationSource.GTFExon;
 import io.compgen.ngsutils.annotation.GTFAnnotationSource.GTFGene;
 import io.compgen.ngsutils.annotation.GTFAnnotationSource.GTFTranscript;
 import io.compgen.ngsutils.annotation.GenomeAnnotation;
-
-import java.io.IOException;
-import java.util.Iterator;
 
 public class GTFSpans  implements SpanSource {
     private final GTFAnnotationSource gtf;

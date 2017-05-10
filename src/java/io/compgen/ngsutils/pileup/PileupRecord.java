@@ -1,9 +1,9 @@
 package io.compgen.ngsutils.pileup;
 
-import io.compgen.common.StringUtils;
-
 import java.util.ArrayList;
 import java.util.List;
+
+import io.compgen.common.StringUtils;
 
 public class PileupRecord {
 	@Override

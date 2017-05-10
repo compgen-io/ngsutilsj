@@ -1,5 +1,12 @@
 package io.compgen.ngsutils.cli.bam;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordIterator;
 import htsjdk.samtools.SamReader;
@@ -25,13 +32,6 @@ import io.compgen.ngsutils.cli.bam.count.BinSpans;
 import io.compgen.ngsutils.cli.bam.count.GTFSpans;
 import io.compgen.ngsutils.cli.bam.count.SpanGroup;
 import io.compgen.ngsutils.cli.bam.count.SpanSource;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 
 @Command(name="bam-count", desc="Counts the number of reads for genes (GTF), within a BED region, or by bins (--gtf, --bed, or --bins required)", category="bam")
 public class BamCount extends AbstractOutputCommand {

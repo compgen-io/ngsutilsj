@@ -1,10 +1,10 @@
 package io.compgen.ngsutils.fastq;
 
-import io.compgen.common.io.PeekableInputStream;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.channels.FileChannel;
+
+import io.compgen.common.io.PeekableInputStream;
 
 public class TextFastqReaderSource implements FastqReaderSource {
 

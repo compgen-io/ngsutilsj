@@ -1,5 +1,10 @@
 package io.compgen.ngsutils.cli.fastq;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.nio.channels.FileChannel;
+
 import io.compgen.cmdline.annotation.Command;
 import io.compgen.cmdline.annotation.Exec;
 import io.compgen.cmdline.annotation.UnnamedArg;
@@ -7,11 +12,6 @@ import io.compgen.cmdline.impl.AbstractCommand;
 import io.compgen.ngsutils.fastq.Fastq;
 import io.compgen.ngsutils.fastq.FastqRead;
 import io.compgen.ngsutils.fastq.FastqReader;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.nio.channels.FileChannel;
 
 @Command(name = "fastq-tofasta", desc = "Convert FASTQ sequences to FASTA format", category="fastq")
 public class FastqToFasta extends AbstractCommand {

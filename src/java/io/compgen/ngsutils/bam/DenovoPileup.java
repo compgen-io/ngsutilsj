@@ -1,14 +1,5 @@
 package io.compgen.ngsutils.bam;
 
-import htsjdk.samtools.CigarElement;
-import htsjdk.samtools.CigarOperator;
-import htsjdk.samtools.SAMFileReader;
-import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.SAMRecordIterator;
-import io.compgen.ngsutils.annotation.GenomeSpan;
-import io.compgen.ngsutils.fasta.FastaReader;
-import io.compgen.ngsutils.fasta.NullFasta;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayDeque;
@@ -19,6 +10,15 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.SortedMap;
 import java.util.TreeMap;
+
+import htsjdk.samtools.CigarElement;
+import htsjdk.samtools.CigarOperator;
+import htsjdk.samtools.SAMFileReader;
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SAMRecordIterator;
+import io.compgen.ngsutils.annotation.GenomeSpan;
+import io.compgen.ngsutils.fasta.FastaReader;
+import io.compgen.ngsutils.fasta.NullFasta;
 
 /**
  * Calculates a pileup from a BAM file

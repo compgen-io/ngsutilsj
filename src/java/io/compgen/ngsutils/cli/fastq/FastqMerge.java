@@ -1,6 +1,12 @@
 package io.compgen.ngsutils.cli.fastq;
 
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.nio.channels.FileChannel;
+import java.util.List;
+
 import io.compgen.cmdline.annotation.Command;
 import io.compgen.cmdline.annotation.Exec;
 import io.compgen.cmdline.annotation.Option;
@@ -13,12 +19,6 @@ import io.compgen.common.IterUtils.EachPair;
 import io.compgen.ngsutils.fastq.Fastq;
 import io.compgen.ngsutils.fastq.FastqRead;
 import io.compgen.ngsutils.fastq.FastqReader;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.nio.channels.FileChannel;
-import java.util.List;
 
 @Command(name="fastq-merge", desc="Merges two FASTQ files (R1/R2) into one interleaved file.", category="fastq")
 public class FastqMerge extends AbstractOutputCommand {

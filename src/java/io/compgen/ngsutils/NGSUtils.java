@@ -1,5 +1,8 @@
 package io.compgen.ngsutils;
 
+import java.io.IOException;
+import java.util.Properties;
+
 import io.compgen.cmdline.Help;
 import io.compgen.cmdline.License;
 import io.compgen.cmdline.MainBuilder;
@@ -59,9 +62,6 @@ import io.compgen.ngsutils.cli.kmer.FastqKmer;
 import io.compgen.ngsutils.cli.kmer.KmerDiff;
 import io.compgen.ngsutils.cli.kmer.KmerMerge;
 import io.compgen.ngsutils.support.stats.FisherCli;
-
-import java.io.IOException;
-import java.util.Properties;
 
 @SuppressWarnings("deprecation")
 public class NGSUtils {

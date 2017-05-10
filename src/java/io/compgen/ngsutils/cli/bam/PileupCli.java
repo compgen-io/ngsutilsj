@@ -1,5 +1,10 @@
 package io.compgen.ngsutils.cli.bam;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.nio.channels.FileChannel;
+
 import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.ValidationStringency;
 import io.compgen.cmdline.annotation.Command;
@@ -17,11 +22,6 @@ import io.compgen.ngsutils.bam.DenovoPileup;
 import io.compgen.ngsutils.bam.DenovoPileup.PileupPos;
 import io.compgen.ngsutils.bam.DenovoPileup.PileupRead;
 import io.compgen.ngsutils.bam.support.ReadUtils;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.nio.channels.FileChannel;
 
 /**
  * PileupCli - produces output similar to samtools mpileup, but using de DenovoPileup class.

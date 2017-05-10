@@ -1,11 +1,11 @@
 package io.compgen.ngsutils.bam.filter;
 
-import htsjdk.samtools.SAMRecord;
-
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
+
+import htsjdk.samtools.SAMRecord;
 
 public class RefExclude extends AbstractBamFilter {
     final protected Set<String> invalidRefs = new HashSet<String>();

@@ -1,5 +1,7 @@
 package io.compgen.ngsutils.cli.fasta;
 
+import java.io.IOException;
+
 import io.compgen.cmdline.annotation.Command;
 import io.compgen.cmdline.annotation.Exec;
 import io.compgen.cmdline.annotation.Option;
@@ -9,8 +11,6 @@ import io.compgen.cmdline.impl.AbstractOutputCommand;
 import io.compgen.common.IterUtils;
 import io.compgen.ngsutils.fasta.FastaReader;
 import io.compgen.ngsutils.fasta.FastaRecord;
-
-import java.io.IOException;
 
 @Command(name="fasta-tag", desc="Add prefix/suffix to FASTA sequence names", category="fasta")
 public class FastaTag extends AbstractOutputCommand {
