@@ -96,11 +96,13 @@ public class FastqTextReader implements FastqReader {
             
             String seq = in.readLine();
             if (seq == null) {
+                System.err.println("WARNING: POTENTIALLY CORRUPTED INPUT FILE");
                 return null;
             }
 
             String plus = in.readLine();
             if (plus == null) {
+                System.err.println("WARNING: POTENTIALLY CORRUPTED INPUT FILE");
                 return null;
             }
 
@@ -110,12 +112,14 @@ public class FastqTextReader implements FastqReader {
                 seq += plus;
                 plus = in.readLine();
                 if (plus == null) {
+                    System.err.println("WARNING: POTENTIALLY CORRUPTED INPUT FILE");
                     return null;
                 }
             }
             
             String qual = in.readLine();
             if (qual == null) {
+                System.err.println("WARNING: POTENTIALLY CORRUPTED INPUT FILE");
                 return null;
             }
 
@@ -124,12 +128,14 @@ public class FastqTextReader implements FastqReader {
             {
                 String buf = in.readLine();
                 if (buf == null) {
+                    System.err.println("WARNING: POTENTIALLY CORRUPTED INPUT FILE");
                     return null;
                 }
                 qual += buf;
             }   
             return new FastqRead(name, seq, qual, comment);
         } catch (Exception e) {
+            System.err.println("WARNING: POTENTIALLY CORRUPTED INPUT FILE");
             return null;
         }
     }   
