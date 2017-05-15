@@ -30,12 +30,18 @@ public class BAMPileup {
     
     private String tmpPath = null;
     
+    private boolean verbose = false;
+    
     public BAMPileup(String... filenames) {
         this.filenames = filenames;
     }
    
     public void setTempPath(String tmpPath) {
         this.tmpPath = tmpPath;
+    }
+    
+    public void setVerbose(boolean verbose) {
+        this.verbose = verbose;
     }
     
     public CloseableIterator<PileupRecord> pileup() throws IOException {
@@ -82,7 +88,8 @@ public class BAMPileup {
             cmd.add(refFilename);
         }
         
-        if (bedFilename!=null) {
+        if (region == null && bedFilename!=null) {
+            // if region is set, then use exclusively that...
             cmd.add("-l");
             cmd.add(bedFilename);
         }
@@ -108,6 +115,11 @@ public class BAMPileup {
         for (String f: filenames) {
             cmd.add(f);
         }
+        
+        if (verbose) {
+            System.err.println(StringUtils.join(" ", cmd));
+        }
+        
         return cmd;
     }
     
