@@ -13,6 +13,7 @@ import io.compgen.common.progress.SocketProgress;
 import io.compgen.common.updates.UpdateCheck;
 import io.compgen.ngsutils.cli.annotate.GTFAnnotate;
 import io.compgen.ngsutils.cli.annotate.RepeatAnnotate;
+import io.compgen.ngsutils.cli.bam.BamBaseCall;
 import io.compgen.ngsutils.cli.bam.BamBest;
 import io.compgen.ngsutils.cli.bam.BamCheck;
 import io.compgen.ngsutils.cli.bam.BamConcat;
@@ -135,7 +136,9 @@ public class NGSUtils {
             .addCommand(KmerMerge.class)
             .addCommand(KmerDiff.class)
             .addCommand(GeneExport.class)
-            .addCommand(FastqBatchSplit.class);
+            .addCommand(FastqBatchSplit.class)
+            .addCommand(BamBaseCall.class);
+        
 
         try {
             if (args.length == 0) {
