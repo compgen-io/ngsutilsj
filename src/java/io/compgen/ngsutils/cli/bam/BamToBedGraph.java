@@ -30,7 +30,6 @@ import io.compgen.ngsutils.pileup.PileupRecord;
 
 public class BamToBedGraph extends AbstractOutputCommand {
 
-//    private String pileupFilename = null;
 	private String bamFilename = null;
 	private String bedFilename = null;
 	private String region = null;
