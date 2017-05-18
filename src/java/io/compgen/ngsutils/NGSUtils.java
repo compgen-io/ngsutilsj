@@ -27,6 +27,7 @@ import io.compgen.ngsutils.cli.bam.BamSampleReads;
 import io.compgen.ngsutils.cli.bam.BamSplit;
 import io.compgen.ngsutils.cli.bam.BamStats;
 import io.compgen.ngsutils.cli.bam.BamToBed;
+import io.compgen.ngsutils.cli.bam.BamToBedGraph;
 import io.compgen.ngsutils.cli.bam.BamToFastq;
 import io.compgen.ngsutils.cli.bam.BinCount;
 import io.compgen.ngsutils.cli.bam.PileupCli;
@@ -137,7 +138,8 @@ public class NGSUtils {
             .addCommand(KmerDiff.class)
             .addCommand(GeneExport.class)
             .addCommand(FastqBatchSplit.class)
-            .addCommand(BamBaseCall.class);
+            .addCommand(BamBaseCall.class)
+            .addCommand(BamToBedGraph.class);
         
 
         try {
