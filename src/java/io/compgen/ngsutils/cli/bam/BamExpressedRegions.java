@@ -87,13 +87,15 @@ public class BamExpressedRegions extends AbstractOutputCommand {
         String curRef=null;
         int curStart = -1;
         int curEnd = -1;
+        int peak = -1;
+        int regionCount = 0;
         int progress = 0;
         
         CloseableIterator<PileupRecord> it = pileup.pileup();
         for (PileupRecord record : IterUtils.wrap(it)) {
             if (curRef == null || !record.ref.equals(curRef)) {
                 if (curRef != null && curEnd - curStart > minSize) {
-                    writer.write(curRef, ""+curStart, ""+curEnd);
+                    writer.write(curRef, ""+curStart, ""+curEnd, "region_"+(++regionCount),""+peak);
                     writer.eol();
                 }
                 if (verbose) {
@@ -102,6 +104,7 @@ public class BamExpressedRegions extends AbstractOutputCommand {
                 curRef = record.ref;
                 curStart = -1;
                 curEnd = -1;
+                peak = -1;
                 progress = 100000;
             }
 
@@ -114,20 +117,25 @@ public class BamExpressedRegions extends AbstractOutputCommand {
                 continue;
             }
 
-            if (curEnd + 1 + windowExtend < record.pos) {
-                if (curEnd - curStart > minSize) {
-                    writer.write(curRef, ""+curStart, ""+curEnd);
+            if (curStart == -1 || curEnd + 1 + windowExtend < record.pos) {
+                if (curStart > -1 && curEnd - curStart > minSize) {
+                    writer.write(curRef, ""+curStart, ""+curEnd, "region_"+(++regionCount),""+peak);
                     writer.eol();
                 }
 
                 curStart = record.pos;
+                peak = record.getSampleCount(0);
             }
 
+            if (record.getSampleCount(0) > peak) {
+                peak = record.getSampleCount(0);
+            }
+            
             curEnd = record.pos;
         }
         if (curRef != null && curStart > -1) {
             if (curEnd - curStart > minSize) {
-                writer.write(curRef, ""+curStart, ""+curEnd);
+                writer.write(curRef, ""+curStart, ""+curEnd, "region_"+(++regionCount),""+peak);
                 writer.eol();
             }
         }
