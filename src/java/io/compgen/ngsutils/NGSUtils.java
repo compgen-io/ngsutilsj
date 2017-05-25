@@ -20,6 +20,7 @@ import io.compgen.ngsutils.cli.bam.BamConcat;
 import io.compgen.ngsutils.cli.bam.BamCount;
 import io.compgen.ngsutils.cli.bam.BamCoverage;
 import io.compgen.ngsutils.cli.bam.BamDiscord;
+import io.compgen.ngsutils.cli.bam.BamExpressedRegions;
 import io.compgen.ngsutils.cli.bam.BamFilterCli;
 import io.compgen.ngsutils.cli.bam.BamFlagDuplicates;
 import io.compgen.ngsutils.cli.bam.BamReadGroup;
@@ -139,7 +140,8 @@ public class NGSUtils {
             .addCommand(GeneExport.class)
             .addCommand(FastqBatchSplit.class)
             .addCommand(BamBaseCall.class)
-            .addCommand(BamToBedGraph.class);
+            .addCommand(BamToBedGraph.class)
+            .addCommand(BamExpressedRegions.class);
         
 
         try {
