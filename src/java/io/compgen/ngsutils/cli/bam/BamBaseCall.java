@@ -250,26 +250,28 @@ public class BamBaseCall extends AbstractOutputCommand {
         }
         if (minDepth == 0) {
             boolean debugWritten = false;
-            if (lastChrom!=null) {
-                if (header.getSequence(lastChrom)!= null) {
-                    int maxLength = header.getSequence(lastChrom).getSequenceLength();
-                    if (span != null) {
-                        maxLength = span.end;
+            if (lastChrom!=null || span != null) {
+                int maxLength=-1;
+                if (lastChrom != null && header.getSequence(lastChrom)!= null) {
+                    maxLength = header.getSequence(lastChrom).getSequenceLength();
+                }
+                if (span != null) {
+                    maxLength = span.end;
+                    if (lastChrom == null) {
+                        lastChrom = span.ref;
                     }
+                }
     
-                    while (lastPos+1 < maxLength) {
-                        if (verbose && !debugWritten) {
-                            debugWritten = true;
-                            if (span != null) {
-                                System.err.println("Flushing " + span);
-                            } else {
-                                System.err.println("Flushing " + lastChrom);
-                            }
+                while (lastPos+1 < maxLength) {
+                    if (verbose && !debugWritten) {
+                        debugWritten = true;
+                        if (span != null) {
+                            System.err.println("Flushing " + span);
+                        } else {
+                            System.err.println("Flushing " + lastChrom);
                         }
-                        writeEmptyRecord(lastChrom, ++lastPos, writer);
                     }
-                } else {
-                    System.err.println("WARNING: 100 - lastChrom not found in header? (" + lastChrom+")");
+                    writeEmptyRecord(lastChrom, ++lastPos, writer);
                 }
             } else {
                 System.err.println("WARNING: 101 - lastChrom == null?");
