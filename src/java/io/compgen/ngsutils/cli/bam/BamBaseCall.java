@@ -259,6 +259,7 @@ public class BamBaseCall extends AbstractOutputCommand {
                     maxLength = span.end;
                     if (lastChrom == null) {
                         lastChrom = span.ref;
+                        lastPos = span.start-1;
                     }
                 }
     
