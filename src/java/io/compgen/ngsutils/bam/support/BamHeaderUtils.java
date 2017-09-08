@@ -58,8 +58,9 @@ public class BamHeaderUtils {
         for (Entry<String, String> k: existing.getAttributes()) {
             if (k.getKey().equals(SAMProgramRecord.PREVIOUS_PROGRAM_GROUP_ID_TAG)) {
                 pg.setAttribute(k.getKey(), k.getValue()+suffix);
+            } else {
+                pg.setAttribute(k.getKey(), k.getValue());
             }
-            pg.setAttribute(k.getKey(), k.getValue());
         }
         return pg;
     }
