@@ -49,6 +49,7 @@ import io.compgen.ngsutils.cli.fasta.FastaSplit;
 import io.compgen.ngsutils.cli.fasta.FastaSubseq;
 import io.compgen.ngsutils.cli.fasta.FastaTag;
 import io.compgen.ngsutils.cli.fasta.FastaWrap;
+import io.compgen.ngsutils.cli.fastq.FastqBarcodeSummary;
 import io.compgen.ngsutils.cli.fastq.FastqBatchSplit;
 import io.compgen.ngsutils.cli.fastq.FastqCheck;
 import io.compgen.ngsutils.cli.fastq.FastqFilterCli;
@@ -141,7 +142,8 @@ public class NGSUtils {
             .addCommand(FastqBatchSplit.class)
             .addCommand(BamBaseCall.class)
             .addCommand(BamToBedGraph.class)
-            .addCommand(BamExpressedRegions.class);
+            .addCommand(BamExpressedRegions.class)
+            .addCommand(FastqBarcodeSummary.class);
         
 
         try {
