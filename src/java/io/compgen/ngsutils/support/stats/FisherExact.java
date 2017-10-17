@@ -23,7 +23,7 @@ public class FisherExact {
 			logVals = new double[n+1];
 			logVals[0] = 0.0;
 		} else {
-			start = logVals.length + 1;
+			start = logVals.length;
 
 			double[] tmp = new double[n+1];
 			for (int i=0; i<logVals.length; i++) {
