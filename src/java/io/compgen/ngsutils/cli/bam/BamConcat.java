@@ -40,7 +40,8 @@ public class BamConcat extends AbstractCommand {
     private String[] inputNames = null;
     private String outputName = null;
     
-    private boolean useSameRGID = false; 
+    private boolean useSameRGID = false;
+    private boolean mergePG = false;
     
     private boolean lenient = false;
     private boolean silent = false;
@@ -63,6 +64,12 @@ public class BamConcat extends AbstractCommand {
     public void setUseSameRGID(boolean useSameRGID) {
         this.useSameRGID = useSameRGID;
     }
+    
+    @Option(desc = "Merge identical @PG records (ID, CL, PN, VN, and PP match)", name="merge-pg")
+    public void setMergePG(boolean mergePG) {
+        this.mergePG = mergePG;
+    }
+
 
     @Option(desc = "Use lenient validation strategy", name="lenient")
     public void setLenient(boolean lenient) {
@@ -146,14 +153,29 @@ public class BamConcat extends AbstractCommand {
             
             for (SAMProgramRecord pgRec: readers[i].getFileHeader().getProgramRecords()) {
                 String suffix = "_"+(i+1);
+                if (mergePG) {
+                    suffix = "";
+                }
                 
                 int j=0;
                 boolean found = true;
+                boolean dup = false;
                 while (found) {
                     found = false;
                     for (SAMProgramRecord tmp: pgRecords) {
                         if (tmp.getId().equals(pgRec.getId()+suffix)) {
+                            
                             found = true;
+                            
+                            if (mergePG && 
+                                    nullOrEqual(tmp.getCommandLine(), pgRec.getCommandLine()) &&
+                                    nullOrEqual(tmp.getPreviousProgramGroupId(), pgRec.getPreviousProgramGroupId()) &&
+                                    nullOrEqual(tmp.getProgramName(), pgRec.getProgramName()) &&
+                                    nullOrEqual(tmp.getProgramVersion(), pgRec.getProgramVersion())
+                                    ) {
+                                found = false;
+                                dup = true;
+                            }
                         }
                     }
                     
@@ -163,7 +185,9 @@ public class BamConcat extends AbstractCommand {
                     }
                 }
                 
-                pgRecords.add(BamHeaderUtils.suffixAddSAMProgramRecord(pgRec, suffix));
+                if (!dup || i == 0) {
+                    pgRecords.add(BamHeaderUtils.suffixAddSAMProgramRecord(pgRec, suffix));
+                }
             }
             for (SAMReadGroupRecord rgr: readers[i].getFileHeader().getReadGroups()) {
                 boolean found = true;
@@ -233,5 +257,20 @@ public class BamConcat extends AbstractCommand {
         writer.close();
         
         System.err.println("Total reads: "+total);
+    }
+
+    private boolean nullOrEqual(String foo, String bar) {
+        if (foo == null && bar == null) {
+            return true;
+        }
+        if (foo == null && bar != null) {
+            return false;
+        }
+        if (foo != null && bar == null) {
+            return false;
+        }
+
+        return foo.equals(bar);
+        
     }
 }
