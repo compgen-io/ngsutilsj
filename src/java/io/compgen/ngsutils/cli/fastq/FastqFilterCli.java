@@ -91,6 +91,11 @@ public class FastqFilterCli extends AbstractOutputCommand {
         if (trimIllumina) {
             this.trimSeq1 = "AGATCGGAAGAGCACACGTC";
             this.trimSeq2 = "AGATCGGAAGAGCGTCGTGT";
+            
+            // Full sequences: https://support.illumina.com/bulletins/2016/12/what-sequences-do-i-use-for-adapter-trimming.html
+            // this.trimSeq1 = "AGATCGGAAGAGCACACGTCTGAACTCCAGTCA";
+            // this.trimSeq2 = "AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT";
+
         }
     }
 

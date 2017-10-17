@@ -193,7 +193,7 @@ public class PileupRecord {
                     }
                     qual_idx++;
 				} else {
-				    if (cols[i+2].charAt(qual_idx)-33 > minBaseQual) {
+				    if (cols[i+2].charAt(qual_idx)-33 >= minBaseQual) {
 				        calls.add(record.new PileupBaseCall(PileupBaseCallOp.Match, ""+base, cols[i+2].charAt(qual_idx)-33, refBase, readPos[qual_idx]));
 				    }
 					qual_idx++;
