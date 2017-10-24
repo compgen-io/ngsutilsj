@@ -107,7 +107,7 @@ public class FastqBarcodeSummary extends AbstractCommand {
             double frac = entry.getValue()/total;
             if (frac > minFraction) {
                 if (writeSplitConfig) {
-                    System.out.println("RG"+rgid+"\t"+entry.getKey());
+                    System.out.println(rgid+"\t"+entry.getKey());
                     rgid++;
                 } else {
                     System.out.println(entry.getKey()+"\t"+entry.getValue()+"\t"+frac);
