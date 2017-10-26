@@ -25,12 +25,18 @@ import java.util.Map.Entry;
 @Command(name = "fastq-barcodesummary", desc = "Given Illumina 1.8+ naming, summarize the lane/barcodes included", category="fastq")
 public class FastqBarcodeSummary extends AbstractCommand {
     private String filename = null;
+    private boolean noWildCard = false;
     private boolean writeSplitConfig = false;
     private double minFraction = 0.0;
 
     public FastqBarcodeSummary() {
     }
 
+    
+    @Option(desc = "No wildcards in barcode", name="no-wild")
+    public void setNoWildcard(boolean noWildCard) {
+        this.noWildCard = noWildCard;
+    }
     
     @Option(desc = "Write a config file for fastq-batchsplit", name="conf")
     public void setWriteSplitConfig(boolean writeSplitConfig) {
@@ -105,6 +111,11 @@ public class FastqBarcodeSummary extends AbstractCommand {
         int rgid=0;
         for (Entry<String, Long> entry: entries) {
             double frac = entry.getValue()/total;
+            
+            if (noWildCard && entry.getKey().contains("N")) {
+                continue;
+            }
+            
             if (frac > minFraction) {
                 if (writeSplitConfig) {
                     System.out.println(rgid+"\t"+entry.getKey());
