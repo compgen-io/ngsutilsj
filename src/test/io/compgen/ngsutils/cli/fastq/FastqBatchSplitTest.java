@@ -24,16 +24,16 @@ public class FastqBatchSplitTest {
 
     @Test
     public void testMatches() {
-        assertTrue(FastqBatchSplit.matches("ABCABC", "ABCABC", 0));
-        assertFalse(FastqBatchSplit.matches("ABCABD", "ABCABC", 0));
-        assertTrue(FastqBatchSplit.matches("ABCABD", "ABCABC", 1));
-        assertTrue(FastqBatchSplit.matches("DBCABD", "ABCABC", 2));
-        assertFalse(FastqBatchSplit.matches("DDCABD", "ABCABC", 2));
+        assertTrue(FastqDemux.matches("ABCABC", "ABCABC", 0));
+        assertFalse(FastqDemux.matches("ABCABD", "ABCABC", 0));
+        assertTrue(FastqDemux.matches("ABCABD", "ABCABC", 1));
+        assertTrue(FastqDemux.matches("DBCABD", "ABCABC", 2));
+        assertFalse(FastqDemux.matches("DDCABD", "ABCABC", 2));
     }
 
     @Test
     public void testGenerateMismatchPatterns() {
-        List<String> l1 = FastqBatchSplit.generateMismatchPatterns("ABCABC", 1);
+        List<String> l1 = FastqDemux.generateMismatchPatterns("ABCABC", 1);
         for (String s: l1) {
             System.out.println(s);
         }
@@ -41,7 +41,7 @@ public class FastqBatchSplitTest {
         hs1.addAll(l1);
         assertEquals(l1.size(), hs1.size());
         
-        List<String> l2 = FastqBatchSplit.generateMismatchPatterns("ABCABC", 2);
+        List<String> l2 = FastqDemux.generateMismatchPatterns("ABCABC", 2);
         for (String s: l2) {
             System.out.println(s);
         }

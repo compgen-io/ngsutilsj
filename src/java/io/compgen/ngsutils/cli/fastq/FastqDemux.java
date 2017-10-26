@@ -22,8 +22,8 @@ import io.compgen.ngsutils.fastq.FastqRead;
 import io.compgen.ngsutils.fastq.FastqReader;
 import io.compgen.ngsutils.fastq.filter.FilteringException;
 
-@Command(name = "fastq-batchsplit", desc = "Splits a FASTQ file based on lane/barcode values", category="fastq")
-public class FastqBatchSplit extends AbstractCommand {
+@Command(name = "fastq-demux", desc = "Splits a FASTQ file based on lane/barcode values", category="fastq")
+public class FastqDemux extends AbstractCommand {
     private String nameSubstr1[] = null;
     private String nameSubstr2[] = null;
     private String readGroups[] = null;
@@ -38,7 +38,7 @@ public class FastqBatchSplit extends AbstractCommand {
 
     private String filename;
   
-    public FastqBatchSplit() {
+    public FastqDemux() {
     }
 
     @UnnamedArg(name = "FILE", defaultValue="-")

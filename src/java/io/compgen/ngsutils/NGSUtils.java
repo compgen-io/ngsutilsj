@@ -49,8 +49,8 @@ import io.compgen.ngsutils.cli.fasta.FastaSplit;
 import io.compgen.ngsutils.cli.fasta.FastaSubseq;
 import io.compgen.ngsutils.cli.fasta.FastaTag;
 import io.compgen.ngsutils.cli.fasta.FastaWrap;
-import io.compgen.ngsutils.cli.fastq.FastqBarcodeSummary;
-import io.compgen.ngsutils.cli.fastq.FastqBatchSplit;
+import io.compgen.ngsutils.cli.fastq.FastqBarcode;
+import io.compgen.ngsutils.cli.fastq.FastqDemux;
 import io.compgen.ngsutils.cli.fastq.FastqCheck;
 import io.compgen.ngsutils.cli.fastq.FastqFilterCli;
 import io.compgen.ngsutils.cli.fastq.FastqMerge;
@@ -139,11 +139,11 @@ public class NGSUtils {
             .addCommand(KmerMerge.class)
             .addCommand(KmerDiff.class)
             .addCommand(GeneExport.class)
-            .addCommand(FastqBatchSplit.class)
+            .addCommand(FastqDemux.class)
             .addCommand(BamBaseCall.class)
             .addCommand(BamToBedGraph.class)
             .addCommand(BamExpressedRegions.class)
-            .addCommand(FastqBarcodeSummary.class);
+            .addCommand(FastqBarcode.class);
         
 
         try {
