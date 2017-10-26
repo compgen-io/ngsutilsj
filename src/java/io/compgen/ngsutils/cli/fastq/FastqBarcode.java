@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-@Command(name = "fastq-barcode", desc = "Given Illumina 1.8+ naming, summarize the lane/barcodes included", category="fastq")
+@Command(name = "fastq-barcode", desc = "Given Illumina 1.8+ naming, find the lane/barcodes included", category="fastq")
 public class FastqBarcode extends AbstractCommand {
     private String filename = null;
     private boolean noWildCard = false;
