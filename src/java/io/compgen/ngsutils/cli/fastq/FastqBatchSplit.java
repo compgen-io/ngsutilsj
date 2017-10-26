@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 import java.util.zip.GZIPOutputStream;
 
 import io.compgen.cmdline.annotation.Command;
@@ -30,6 +31,8 @@ public class FastqBatchSplit extends AbstractCommand {
     private String unmatchedFname = null;
     private String configFile = null;
     
+    private int mismatches = 0;
+    
     private boolean force = false;
     private boolean compress = false;
 
@@ -51,17 +54,17 @@ public class FastqBatchSplit extends AbstractCommand {
         this.filename = filename;
     }
 
-    @Option(desc="Read --rg-id, --str1, and --str2 values from a tab-delimited text file (rgid\\tstr1\\tstr2\\n)", name="conf", helpValue="fname")
+    @Option(desc="Read --rg-id, --lane, and --barcode values from a tab-delimited text file (rgid\\tlane\\tbarcode\\n)", name="conf", helpValue="fname")
     public void setConfigFile(String configFile) {
         this.configFile = configFile;
     }
 
-    @Option(desc="Read name contains this substring (e.g. flowcell/lane ID)", name="str1", helpValue="val1,val2,...")
+    @Option(desc="Read name contains this exact substring (e.g. flowcell/lane ID)", name="lane", helpValue="val1,val2,...")
     public void setNameSubstr1(String nameSubstr1) {
         this.nameSubstr1 = nameSubstr1.split(",");
     }
 
-    @Option(desc="Read name contains this secondary substring (e.g. barcode)", name="str2", helpValue="val1,val2,...")
+    @Option(desc="Read name contains this substring (e.g. barcode), allows for some mismatches", name="barcode", helpValue="val1,val2,...")
     public void setNameSubstr2(String nameSubstr2) {
         this.nameSubstr2 = nameSubstr2.split(",");
     }
@@ -91,11 +94,16 @@ public class FastqBatchSplit extends AbstractCommand {
         this.force = force;
     }
     
+    @Option(desc="Allow X mismatches in the barcode seq", name="mismatches", defaultValue="0")
+    public void setMismatches(int mismatches) {
+        this.mismatches = mismatches;
+    }
+    
     @Exec
     public void exec() throws IOException, CommandArgumentException, FilteringException {
         if (configFile != null) {
             if (nameSubstr1 != null || nameSubstr2 != null || readGroups != null) {
-                throw new CommandArgumentException("--rg-id, --str1, and --str2 values obtained from config file: " + configFile);
+                throw new CommandArgumentException("--rg-id, --lane, and --barcode values obtained from config file: " + configFile);
             }
             
             List<String> tmpRgID = new ArrayList<String>();
@@ -139,8 +147,8 @@ public class FastqBatchSplit extends AbstractCommand {
             throw new CommandArgumentException("Missing --out filename template or --missing filename (at least one is required)!");
         }
 
-        if (nameSubstr1 == null) {
-            throw new CommandArgumentException("You must specify at least one value to split reads (-str1)!");
+        if (nameSubstr1 == null && nameSubstr2 == null) {
+            throw new CommandArgumentException("You must specify at least one value to split reads (--lane, --barcode)!");
         }
 
         if (readGroups == null) {
@@ -150,12 +158,16 @@ public class FastqBatchSplit extends AbstractCommand {
             }
         }
         
-        if (nameSubstr1.length != readGroups.length) {
-            throw new CommandArgumentException("--str1 and --rg-id must be the same length!");
+        if (nameSubstr1 != null && nameSubstr1.length != readGroups.length) {
+            throw new CommandArgumentException("--lane and --rg-id must be the same length!");
+        }
+        
+        if (nameSubstr2 != null && nameSubstr2.length != readGroups.length) {
+            throw new CommandArgumentException("--barcode and --rg-id must be the same length!");
         }
         
         if (nameSubstr2 != null && nameSubstr1.length != nameSubstr2.length) {
-            throw new CommandArgumentException("--str1 and --str2 must be the same length (if --str2 is set)!");
+            throw new CommandArgumentException("--lane and --barcode must be the same length (if set)!");
         }
         
         if (!force) {
@@ -206,21 +218,39 @@ public class FastqBatchSplit extends AbstractCommand {
         }
 
         for (FastqRead read: reader) {
-            boolean match = false;
-            String fqLine = read.getName() + " " + read.getComment(); 
-            for (int i=0; i<nameSubstr1.length && !match; i++) {
-                if (fqLine.contains(nameSubstr1[i])) {
-                    if (nameSubstr2 == null || fqLine.contains(nameSubstr2[i])) {
-                        match = true;
-                        counts[i]++;
-                        if (outs != null) {
-                            read.write(outs[i]);
-                        }
+            String fqLine = read.getName() + " " + read.getComment();
+            boolean matched = false;
+            
+            for (int i=0; i<readGroups.length; i++) {
+                boolean match1 = false;
+                boolean match2 = false;
+
+                if (nameSubstr1 != null) {
+                    if (fqLine.contains(nameSubstr1[i])) {
+                        match1 = true;
+                    }
+                } else {
+                    match1 = true;
+                }
+
+                if (nameSubstr2 != null) {
+                    if (matches(fqLine, nameSubstr2[i], mismatches)) {
+                        match2 = true;
+                    }
+                } else {
+                    match2 = true;
+                }
+                
+                if (match1 && match2) {
+                    matched = true;
+                    counts[i]++;
+                    if (outs != null) {
+                        read.write(outs[i]);
                     }
                 }
             }
             
-            if (!match) {
+            if (!matched) {
                 unmatchedCount++;
                 if (unmatched != null) {
                     read.write(unmatched);
@@ -252,5 +282,48 @@ public class FastqBatchSplit extends AbstractCommand {
         }
         System.err.println("Unmatched: " + unmatchedCount +" reads");
         
+    }
+
+    public static boolean matches(String fqLine, String barcode, int mismatches) {
+        if (fqLine.contains(barcode)) {
+            return true;
+        }
+
+        List<String> permutations = generateMismatchPatterns(barcode, mismatches);
+        for (String bait: permutations) {
+            if (Pattern.matches(bait, fqLine)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    public static List<String> generateMismatchPatterns(String s, int iter) {
+        List<String> out = new ArrayList<String>();
+        out.add(s);
+        out = generateMismatchPatternsInner(out, iter);
+        return out;
+    }
+    
+    public static List<String> generateMismatchPatternsInner(List<String> buffer, int iter) {
+        if (iter <= 0) {
+            return buffer;
+        }
+        int max = buffer.size();
+        for (int i=0; i<max; i++) {
+            String s = buffer.get(i);
+            for (int j=0; j<s.length(); j++) {
+                if (s.charAt(j) != '.') {
+                    String tmp = s.substring(0, j);
+                    tmp += ".";
+                    tmp += s.substring(j+1);
+                    // not optimal, but this is typically a small set of strings, so not terrible.
+                    if (!buffer.contains(tmp)) {
+                        buffer.add(tmp);
+                    }
+                }
+            }
+        }
+        return generateMismatchPatternsInner(buffer, --iter);
     }
 }
