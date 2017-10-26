@@ -118,7 +118,7 @@ public class FastqBarcode extends AbstractCommand {
             
             if (frac > minFraction) {
                 if (writeSplitConfig) {
-                    System.out.println(rgid+"\t"+entry.getKey());
+                    System.out.println(rgid+"\t"+entry.getKey()+"\t"+frac);
                     rgid++;
                 } else {
                     System.out.println(entry.getKey()+"\t"+entry.getValue()+"\t"+frac);
