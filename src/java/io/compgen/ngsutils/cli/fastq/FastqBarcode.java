@@ -26,7 +26,7 @@ import java.util.Map.Entry;
 public class FastqBarcode extends AbstractCommand {
     private String filename = null;
     private boolean noWildCard = false;
-    private boolean writeSplitConfig = false;
+    private boolean writeDemuxConfig = false;
     private double minFraction = 0.0;
 
     public FastqBarcode() {
@@ -38,9 +38,9 @@ public class FastqBarcode extends AbstractCommand {
         this.noWildCard = noWildCard;
     }
     
-    @Option(desc = "Write a config file for fastq-batchsplit", name="conf")
-    public void setWriteSplitConfig(boolean writeSplitConfig) {
-        this.writeSplitConfig = writeSplitConfig;
+    @Option(desc = "Write a config file for fastq-demux", name="conf")
+    public void setWriteSplitConfig(boolean writeDemuxConfig) {
+        this.writeDemuxConfig = writeDemuxConfig;
     }
     
     @Option(desc = "Only write lane/barcodes with at least this fraction (0.0-1.0)", name="frac", defaultValue="0.0")
@@ -82,12 +82,13 @@ public class FastqBarcode extends AbstractCommand {
                 key = nameSplit[0]+":"+nameSplit[1];
             } else {
                 // Casava 1.8+
-                key = nameSplit[0]+":"+nameSplit[1]+":"+nameSplit[2]+":"+nameSplit[3];
+                // instrument:run:flowcell:lane -- we'll just use flowcell and lanev
+                key = nameSplit[2]+":"+nameSplit[3];
             }
             
             if (read.getComment()!=null) {
                 String[] commentSplit = read.getComment().split(":");
-                key += "\t" + commentSplit[commentSplit.length-1];
+                key += "\t" + commentSplit[commentSplit.length-1].trim();
             }
             
             tally.incr(key);
@@ -112,12 +113,15 @@ public class FastqBarcode extends AbstractCommand {
         for (Entry<String, Long> entry: entries) {
             double frac = entry.getValue()/total;
             
-            if (noWildCard && entry.getKey().contains("N")) {
-                continue;
+            if (noWildCard) {
+                String[] lane_barcode = entry.getKey().split("\t");
+                if (lane_barcode.length > 1 && lane_barcode[1].contains("N")) {
+                    continue;
+                }
             }
             
             if (frac > minFraction) {
-                if (writeSplitConfig) {
+                if (writeDemuxConfig) {
                     System.out.println(rgid+"\t"+entry.getKey()+"\t"+frac);
                     rgid++;
                 } else {
