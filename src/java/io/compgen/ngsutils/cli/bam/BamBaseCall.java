@@ -41,15 +41,27 @@ public class BamBaseCall extends AbstractOutputCommand {
 	private String region = null;
 
     private int minDepth = 1;
+    private int minAlt = 0;
     private int maxDepth = -11;
 	private int minBaseQual = 13;
 	private int minMapQ = 0;
 
-   private boolean properPairs = false;
+	private boolean properPairs = false;
+    private boolean exportBAF = false;
 
    @Option(desc="Only count properly-paired reads", name="paired")
    public void setProperPairs(boolean properPairs) {
        this.properPairs = properPairs;
+   }
+   
+   @Option(desc="If --only-alt set, minimum number of alt calls (set to >1 to export only alt bases)", name="min-alt")
+   public void setMinAlt(int minAlt) {
+       this.minAlt = minAlt;
+   }
+   
+   @Option(desc="Export BAF (B-allele frequency)", name="baf")
+   public void setExportBAF(boolean exportBAF) {
+       this.exportBAF = exportBAF;
    }
    
    @Option(desc="Minimum depth to output (set to 0 to output all bases)", name="min-depth", defaultValue="1")
@@ -99,12 +111,24 @@ public class BamBaseCall extends AbstractOutputCommand {
 		if (bamFilename == null){
             throw new CommandArgumentException("You must specify a BAM file for input.");
 		}
-		
-		if (bedFilename != null && region != null) {
+
+        if (bedFilename != null && region != null) {
             throw new CommandArgumentException("You can not specify both --region and --bed.");
-		}
-		
-		TabWriter writer = new TabWriter(out);
+        }
+
+        if (minAlt>0 && minDepth == 0) {
+            throw new CommandArgumentException("You must set --min-depth > 0 when --min-alt is also > 0");
+        }
+
+        if (minAlt>0 && fastaFilename==null) {
+            throw new CommandArgumentException("You must set --fasta when --min-alt is > 0.");
+        }
+        
+        if (exportBAF && fastaFilename==null) {
+            throw new CommandArgumentException("You must set --fasta when --baf is also set.");
+        }
+        
+        TabWriter writer = new TabWriter(out);
         writer.write_line("## program: " + NGSUtils.getVersion());
         writer.write_line("## cmd: " + NGSUtils.getArgs());
 		writer.write_line("## input: " + bamFilename);
@@ -113,9 +137,6 @@ public class BamBaseCall extends AbstractOutputCommand {
 		} else if (region != null) {
 	          writer.write_line("## region: " + region);
 		}
-				
-        writer.write("chrom", "pos", "ref", "A", "C", "G", "T", "N", "plus-strand", "minus-strand");
-        writer.eol();
 
         SamReader bam = SamReaderFactory.makeDefault().open(new File(bamFilename));
         final SAMFileHeader header = bam.getFileHeader();
@@ -127,11 +148,20 @@ public class BamBaseCall extends AbstractOutputCommand {
         pileup.setMinBaseQual(minBaseQual);
         pileup.setMinMappingQual(minMapQ);
         pileup.setMaxDepth(maxDepth);
-        pileup.setVerbose(verbose);
+//        pileup.setVerbose(verbose);
         if (fastaFilename != null) {
             pileup.setRefFilename(fastaFilename);
         }
+        
+        writer.write("## pileup-cmd: "+StringUtils.join(" ", pileup.getCommand()));
+        writer.eol();
 
+        writer.write("chrom", "pos", "ref", "A", "C", "G", "T", "N", "plus-strand", "minus-strand");
+        if (exportBAF) {
+            writer.write("BAF");
+        }
+        writer.eol();
+        
         if (region != null) {
             GenomeSpan span = GenomeSpan.parse(region);
             
@@ -237,7 +267,7 @@ public class BamBaseCall extends AbstractOutputCommand {
                 }
             }
             
-            if (record.getSampleCount(0) >= minDepth) {
+            if (minDepth == 0 || (record.getSampleRecords(0).calls!=null && record.getSampleRecords(0).calls.size() >= minDepth)) {
                 writeRecord(record, writer);
             }
 
@@ -281,10 +311,6 @@ public class BamBaseCall extends AbstractOutputCommand {
     }
 
     private void writeRecord(PileupRecord record, TabWriter writer) throws IOException {
-        writer.write(record.ref);
-        writer.write(record.pos+1);
-        writer.write(record.refBase);
-        
         int a = 0;
         int c = 0;
         int g = 0;
@@ -292,6 +318,8 @@ public class BamBaseCall extends AbstractOutputCommand {
         int n = 0;
         int pos = 0;
         int neg = 0;
+        
+        int alt = 0;
         
         for (PileupBaseCall call: record.getSampleRecords(0).calls) {
             switch(call.call) {
@@ -310,6 +338,10 @@ public class BamBaseCall extends AbstractOutputCommand {
             default:
                 n++;
             }
+           
+            if (!call.call.equals(record.refBase)) {
+                alt++;
+            }
             
             if (call.plusStrand) {
                 pos++;
@@ -317,7 +349,14 @@ public class BamBaseCall extends AbstractOutputCommand {
                 neg++;
             }
         }
+
+        if (alt < minAlt) {
+            return;
+        }
         
+        writer.write(record.ref);
+        writer.write(record.pos+1);
+        writer.write(record.refBase);
         writer.write(a);
         writer.write(c);
         writer.write(g);
@@ -325,6 +364,9 @@ public class BamBaseCall extends AbstractOutputCommand {
         writer.write(n);
         writer.write(pos);
         writer.write(neg);
+        if (exportBAF) {
+            writer.write(((double) alt) / (pos+neg));
+        }
         writer.eol();        
         
     }
@@ -340,6 +382,9 @@ public class BamBaseCall extends AbstractOutputCommand {
         writer.write(0);
         writer.write(0);
         writer.write(0);
+        if (exportBAF) {
+            writer.write(0);
+        }
         writer.eol();        
         
     }
