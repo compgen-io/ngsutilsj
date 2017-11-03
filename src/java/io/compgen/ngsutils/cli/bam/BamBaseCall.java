@@ -2,6 +2,7 @@ package io.compgen.ngsutils.cli.bam;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -42,21 +43,33 @@ public class BamBaseCall extends AbstractOutputCommand {
 
     private int minDepth = 1;
     private int minAlt = 0;
+    private int minMinor = 0;
     private int maxDepth = -11;
 	private int minBaseQual = 13;
 	private int minMapQ = 0;
 
 	private boolean properPairs = false;
     private boolean exportBAF = false;
+    private boolean exportIndel = false;
 
    @Option(desc="Only count properly-paired reads", name="paired")
    public void setProperPairs(boolean properPairs) {
        this.properPairs = properPairs;
    }
    
-   @Option(desc="If --only-alt set, minimum number of alt calls (set to >1 to export only alt bases)", name="min-alt")
+   @Option(desc="Minimum number of non-reference (alt) calls (set to >1 to export only alt bases)", name="min-alt")
    public void setMinAlt(int minAlt) {
        this.minAlt = minAlt;
+   }
+   
+   @Option(desc="Minimum number of minor-allele calls (set to avoid exporting homozygous non-ref bases)", name="min-minor")
+   public void setMinMinor(int minMinor) {
+       this.minMinor = minMinor;
+   }
+   
+   @Option(desc="Export Indel counts", name="indel")
+   public void setExportIndel(boolean exportIndel) {
+       this.exportIndel = exportIndel;
    }
    
    @Option(desc="Export BAF (B-allele frequency)", name="baf")
@@ -116,8 +129,12 @@ public class BamBaseCall extends AbstractOutputCommand {
             throw new CommandArgumentException("You can not specify both --region and --bed.");
         }
 
+        if (minMinor>0 && minDepth == 0) {
+            throw new CommandArgumentException("You must set --min-depth > 0 when --min-minor is > 0");
+        }
+
         if (minAlt>0 && minDepth == 0) {
-            throw new CommandArgumentException("You must set --min-depth > 0 when --min-alt is also > 0");
+            throw new CommandArgumentException("You must set --min-depth > 0 when --min-alt is > 0");
         }
 
         if (minAlt>0 && fastaFilename==null) {
@@ -156,7 +173,11 @@ public class BamBaseCall extends AbstractOutputCommand {
         writer.write("## pileup-cmd: "+StringUtils.join(" ", pileup.getCommand()));
         writer.eol();
 
-        writer.write("chrom", "pos", "ref", "A", "C", "G", "T", "N", "plus-strand", "minus-strand");
+        writer.write("chrom", "pos", "ref", "A", "C", "G", "T", "N");
+        if (exportIndel) {
+            writer.write("ins", "del");
+        }
+        writer.write("plus-strand", "minus-strand");
         if (exportBAF) {
             writer.write("BAF");
         }
@@ -318,31 +339,46 @@ public class BamBaseCall extends AbstractOutputCommand {
         int n = 0;
         int pos = 0;
         int neg = 0;
+        int ins = 0;
+        int del = 0;
         
         int alt = 0;
         
         for (PileupBaseCall call: record.getSampleRecords(0).calls) {
-            switch(call.call) {
-            case "A":
-                a++;
-                break;
-            case "C":
-                c++;
-                break;
-            case "G":
-                g++;
-                break;
-            case "T":
-                t++;
-                break;
-            default:
-                n++;
+            if (call.op == PileupRecord.PileupBaseCallOp.Match) {
+                switch(call.call) {
+                case "A":
+                    a++;
+                    break;
+                case "C":
+                    c++;
+                    break;
+                case "G":
+                    g++;
+                    break;
+                case "T":
+                    t++;
+                    break;
+                default:
+                    n++;
+                }
+               
+                if (!call.call.equals(record.refBase)) {
+                    alt++;
+                }
+                
+            } else if (call.op == PileupRecord.PileupBaseCallOp.Ins){
+                if (exportIndel) {
+                    ins++;
+                    alt++;
+                }
+            } else if (call.op == PileupRecord.PileupBaseCallOp.Del){
+                if (exportIndel) {
+                    del++;
+                    alt++;
+                }
             }
-           
-            if (!call.call.equals(record.refBase)) {
-                alt++;
-            }
-            
+
             if (call.plusStrand) {
                 pos++;
             } else {
@@ -354,6 +390,14 @@ public class BamBaseCall extends AbstractOutputCommand {
             return;
         }
         
+        if (minMinor > 0) {
+            int[] calls = new int[] { a, c, g, t, ins, del };
+            Arrays.sort(calls);
+            if (calls[calls.length-2] < minMinor) {
+                return;
+            }
+        }
+        
         writer.write(record.ref);
         writer.write(record.pos+1);
         writer.write(record.refBase);
@@ -362,10 +406,14 @@ public class BamBaseCall extends AbstractOutputCommand {
         writer.write(g);
         writer.write(t);
         writer.write(n);
+        if (exportIndel) {
+            writer.write(ins);
+            writer.write(del);
+        }
         writer.write(pos);
         writer.write(neg);
         if (exportBAF) {
-            writer.write(((double) alt) / (pos+neg));
+            writer.write(((double) alt) / (a+c+g+t+ins+del+n));
         }
         writer.eol();        
         
@@ -375,6 +423,8 @@ public class BamBaseCall extends AbstractOutputCommand {
         writer.write(chrom);
         writer.write(pos+1);
         writer.write("");
+        writer.write(0);
+        writer.write(0);
         writer.write(0);
         writer.write(0);
         writer.write(0);
