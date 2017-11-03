@@ -7,11 +7,11 @@ import java.util.Map;
 import htsjdk.samtools.SAMRecord;
 import io.compgen.ngsutils.bam.Orientation;
 
-public class AnnotatedRegionCounter {
+public class GeneRegionCounter {
     protected final GTFAnnotationSource gtf;
     protected Map<GenicRegion, Long> regionCounts = new HashMap<GenicRegion, Long>();
     
-    public AnnotatedRegionCounter(String filename) throws NumberFormatException, IOException {
+    public GeneRegionCounter(String filename) throws NumberFormatException, IOException {
         System.err.print("Loading GTF annotation: "+filename+"...");
         gtf = new GTFAnnotationSource(filename);
         System.err.println(" done");

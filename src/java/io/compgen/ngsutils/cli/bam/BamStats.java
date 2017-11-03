@@ -32,7 +32,8 @@ import io.compgen.common.io.PassthruInputStream;
 import io.compgen.common.progress.FileChannelStats;
 import io.compgen.common.progress.ProgressMessage;
 import io.compgen.common.progress.ProgressUtils;
-import io.compgen.ngsutils.annotation.AnnotatedRegionCounter;
+import io.compgen.ngsutils.annotation.BedRegionCounter;
+import io.compgen.ngsutils.annotation.GeneRegionCounter;
 import io.compgen.ngsutils.annotation.GenicRegion;
 import io.compgen.ngsutils.bam.Orientation;
 import io.compgen.ngsutils.bam.support.ReadUtils;
@@ -46,6 +47,7 @@ import io.compgen.ngsutils.support.CloseableFinalizer;
 public class BamStats extends AbstractOutputCommand {
     private String filename = null;
     private String gtfFilename = null;
+    private String bedFilename = null;
     private String rgid = null;
     private boolean lenient = false;
     private boolean silent = false;
@@ -92,6 +94,11 @@ public class BamStats extends AbstractOutputCommand {
         this.silent = silent;
     }    
 
+    @Option(desc="BED file with target regions (on-target rate and relative coverage will be calculated)", name="bed")
+    public void setBEDFilename(String filename) {
+        this.bedFilename = filename;
+    }    
+
     @Option(desc="GTF annotation file (note: library-orientation will be automatically determined)", name="gtf")
     public void setGTFFilename(String filename) {
         this.gtfFilename = filename;
@@ -132,10 +139,16 @@ public class BamStats extends AbstractOutputCommand {
             throw new CommandArgumentException("You can't write the report and pipe input both to stdout!");
         }
 
-        AnnotatedRegionCounter geneRegionCounter = null;
+        GeneRegionCounter geneRegionCounter = null;
         
         if (gtfFilename != null) {
-            geneRegionCounter = new AnnotatedRegionCounter(gtfFilename);
+            geneRegionCounter = new GeneRegionCounter(gtfFilename);
+        }
+        
+        BedRegionCounter bedCounter = null;
+        
+        if (bedFilename != null) {
+            bedCounter = new BedRegionCounter(bedFilename);
         }
         
         SamReaderFactory readerFactory = SamReaderFactory.makeDefault();
@@ -338,6 +351,14 @@ public class BamStats extends AbstractOutputCommand {
                     geneRegionCounter.addRead(read, Orientation.FR);
                 }
             }
+
+            if (bedCounter != null) {
+                if (!read.getReadPairedFlag() || (!read.getSecondOfPairFlag() && read.getProperPairFlag() && !read.getDuplicateReadFlag() && !read.getReadFailsVendorQualityCheckFlag() && !read.getSupplementaryAlignmentFlag())) {
+                    
+                    // We only profile the first read of a pair... and only proper pairs
+                    bedCounter.addRead(read, Orientation.UNSTRANDED);
+                }
+            }
         }
         
         reader.close();
@@ -347,12 +368,24 @@ public class BamStats extends AbstractOutputCommand {
         println("Unmapped-reads:\t" + unmapped);
         println("Multiple-mapped-reads:\t" + multiple);
         println("Uniquely-mapped-reads:\t" + (mapped - multiple));
+        if (bedCounter!=null) {
+            println("On-target-reads:\t" + (bedCounter.getOnTarget()));
+            println("On-target-pct:\t" + String.format("%.2f%%", (100.0*bedCounter.getOnTarget()) / bedCounter.getTotalCount()));
+        } 
         println("Total-bases:\t" + totalBases);
-        println("Ref-length:\t" + refTotalLength);
+        if (bedCounter!=null) {
+            println("Target-length:\t" + bedCounter.getBedSize());
+        } else {
+            println("Ref-length:\t" + refTotalLength);
+        }
         println("Q30-pct:\t" + String.format("%.2f", 100.0 * q30Bases / totalBases) + "%");
         if (!hasGaps) {
             // if we have gaps, this is RNAseq and coverage is not a meaningful measure.
-            println("Effective-depth:\t" + String.format("%.2f", ((double) totalBases) / refTotalLength) + "X");
+            if (bedCounter != null) {
+                println("Effective-depth:\t" + String.format("%.2f", ((double) totalBases) / bedCounter.getBedSize()) + "X");
+            } else {
+                println("Effective-depth:\t" + String.format("%.2f", ((double) totalBases) / refTotalLength) + "X");
+            }
         }
         if (paired && calcInsert) {
             println();
