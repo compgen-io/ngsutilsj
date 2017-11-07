@@ -1,7 +1,10 @@
 package io.compgen.ngsutils.cli.bam;
 
+import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
@@ -52,9 +55,16 @@ public class BamBaseCall extends AbstractOutputCommand {
     private boolean exportBAF = false;
     private boolean exportIndel = false;
 
+    private String bedOutputTemplate = null;
+    
    @Option(desc="Only count properly-paired reads", name="paired")
    public void setProperPairs(boolean properPairs) {
        this.properPairs = properPairs;
+   }
+   
+   @Option(desc="If using a BED file, write the output to a separate file for each BED region", name="bed-output", helpValue="template.txt")
+   public void setBedOutputTemplate(String bedOutputTemplate) {
+       this.bedOutputTemplate = bedOutputTemplate;
    }
    
    @Option(desc="Minimum number of non-reference (alt) calls (set to >1 to export only alt bases)", name="min-alt")
@@ -145,15 +155,6 @@ public class BamBaseCall extends AbstractOutputCommand {
             throw new CommandArgumentException("You must set --fasta when --baf is also set.");
         }
         
-        TabWriter writer = new TabWriter(out);
-        writer.write_line("## program: " + NGSUtils.getVersion());
-        writer.write_line("## cmd: " + NGSUtils.getArgs());
-		writer.write_line("## input: " + bamFilename);
-		if (bedFilename != null) {
-	          writer.write_line("## bed-regions: " + bedFilename);
-		} else if (region != null) {
-	          writer.write_line("## region: " + region);
-		}
 
         SamReader bam = SamReaderFactory.makeDefault().open(new File(bamFilename));
         final SAMFileHeader header = bam.getFileHeader();
@@ -169,31 +170,31 @@ public class BamBaseCall extends AbstractOutputCommand {
         if (fastaFilename != null) {
             pileup.setRefFilename(fastaFilename);
         }
-        
-        writer.write("## pileup-cmd: "+StringUtils.join(" ", pileup.getCommand()));
-        writer.eol();
+        TabWriter writer=null;
 
-        writer.write("chrom", "pos", "ref", "A", "C", "G", "T", "N");
-        if (exportIndel) {
-            writer.write("ins", "del");
-        }
-        writer.write("plus-strand", "minus-strand");
-        if (exportBAF) {
-            writer.write("BAF");
-        }
-        writer.eol();
         
         if (region != null) {
+            writer = setupWriter(out, pileup);
             GenomeSpan span = GenomeSpan.parse(region);
             
             CloseableIterator<PileupRecord> it = pileup.pileup(span);
             writePileupRecords(it, header, writer, span);
             it.close();
+            writer.close();
+
         } else if (bedFilename != null){
 			StringLineReader strReader = new StringLineReader(bedFilename);
 			Set<String> chromMissingError = new HashSet<String>();
 			int regionCount=0;
+			
+			if (bedOutputTemplate == null) {
+	            writer = setupWriter(out, pileup);
+			}
+			
 			for (String line: strReader) {
+			    if (line.startsWith("#") || line.trim().length()==0) {
+			        continue;
+			    }
 				String[] cols = StringUtils.strip(line).split("\t");
 				String chrom = cols[0];
 				int start = Integer.parseInt(cols[1]);
@@ -211,7 +212,11 @@ public class BamBaseCall extends AbstractOutputCommand {
 					}
 					continue;
 				}
-				
+
+                if (bedOutputTemplate != null) {
+                    writer = setupWriter(new BufferedOutputStream(new FileOutputStream(bedOutputTemplate+name+".txt")), pileup);
+                }
+
                 GenomeSpan span = new GenomeSpan(chrom, start, end);
 
                 if (verbose) {
@@ -221,17 +226,51 @@ public class BamBaseCall extends AbstractOutputCommand {
                 CloseableIterator<PileupRecord> it = pileup.pileup(span);
 	            writePileupRecords(it, header, writer, span);
 				it.close();
+
+                if (bedOutputTemplate != null) {
+                    writer.close();
+                }
 			}
+            if (bedOutputTemplate == null) {
+                writer.close();
+            }
 			strReader.close();
 		} else {
 		    // output everything
 
+            writer = setupWriter(out, pileup);
 			CloseableIterator<PileupRecord> it = pileup.pileup();
             writePileupRecords(it, header, writer, null);
 			it.close();
+	        writer.close();
 		}
-		writer.close();
 	}
+
+    private TabWriter setupWriter(OutputStream out, BAMPileup pileup) throws IOException {
+        TabWriter writer = new TabWriter(out);
+        writer.write_line("## program: " + NGSUtils.getVersion());
+        writer.write_line("## cmd: " + NGSUtils.getArgs());
+        writer.write_line("## input: " + bamFilename);
+        if (bedFilename != null) {
+              writer.write_line("## bed-regions: " + bedFilename);
+        } else if (region != null) {
+              writer.write_line("## region: " + region);
+        }
+
+        writer.write("## pileup-cmd: "+StringUtils.join(" ", pileup.getCommand()));
+        writer.eol();
+
+        writer.write("chrom", "pos", "ref", "A", "C", "G", "T", "N");
+        if (exportIndel) {
+            writer.write("ins", "del");
+        }
+        writer.write("plus-strand", "minus-strand");
+        if (exportBAF) {
+            writer.write("BAF");
+        }
+        writer.eol();
+        return writer;
+    }
 
     private void writePileupRecords(CloseableIterator<PileupRecord> it, SAMFileHeader header, TabWriter writer, GenomeSpan span) throws IOException {
         String lastChrom = null;
