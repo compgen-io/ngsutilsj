@@ -32,7 +32,7 @@ public class IndexedFastaFile extends BasicFastaReader {
 
     private Map<String, IndexRecord> indexMap = new LinkedHashMap<String, IndexRecord>();
     
-    protected IndexedFastaFile(String filename) throws IOException {
+    public IndexedFastaFile(String filename) throws IOException {
         super(filename);
         
         if (!new File(filename+".fai").exists()) {
