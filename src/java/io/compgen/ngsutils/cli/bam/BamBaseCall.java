@@ -25,6 +25,7 @@ import io.compgen.common.StringUtils;
 import io.compgen.common.TabWriter;
 import io.compgen.ngsutils.NGSUtils;
 import io.compgen.ngsutils.annotation.GenomeSpan;
+import io.compgen.ngsutils.bam.support.ReadUtils;
 import io.compgen.ngsutils.pileup.BAMPileup;
 import io.compgen.ngsutils.pileup.PileupRecord;
 import io.compgen.ngsutils.pileup.PileupRecord.PileupBaseCall;
@@ -51,17 +52,59 @@ public class BamBaseCall extends AbstractOutputCommand {
 	private int minBaseQual = 13;
 	private int minMapQ = 0;
 
-	private boolean properPairs = false;
+    private int requiredFlags = 0;
+    private int filterFlags = 0;
+	
     private boolean exportBAF = false;
     private boolean exportIndel = false;
 
     private String bedOutputTemplate = null;
     
-   @Option(desc="Only count properly-paired reads", name="paired")
-   public void setProperPairs(boolean properPairs) {
-       this.properPairs = properPairs;
-   }
-   
+    @Option(desc = "Only keep properly paired reads", name = "proper-pairs")
+    public void setProperPairs(boolean val) {
+        if (val) {
+            requiredFlags |= ReadUtils.PROPER_PAIR_FLAG;
+        }
+    }
+
+    @Option(desc = "Only keep mapped reads (both reads if paired)", name = "mapped")
+    public void setMapped(boolean val) {
+        if (val) {
+            filterFlags |= ReadUtils.READ_UNMAPPED_FLAG | ReadUtils.MATE_UNMAPPED_FLAG;
+        }
+    }
+
+    @Option(desc = "No secondary mappings", name = "no-secondary")
+    public void setNoSecondary(boolean val) {
+        if (val) {
+            filterFlags |= ReadUtils.NOT_PRIMARY_ALIGNMENT_FLAG;
+        }
+    }
+
+    @Option(desc = "No PCR duplicates", name = "no-pcrdup")
+    public void setNoPCRDuplicates(boolean val) {
+        if (val) {
+            filterFlags |= ReadUtils.DUPLICATE_READ_FLAG;
+        }
+    }
+
+    @Option(desc = "No QC failures", name = "no-qcfail")
+    public void setNoQCFail(boolean val) {
+        if (val) {
+            filterFlags |= ReadUtils.READ_FAILS_VENDOR_QUALITY_CHECK_FLAG;
+        }
+    }
+
+    @Option(desc = "Filtering flags", name = "filter-flags", defaultValue = "0")
+    public void setFilterFlags(int flag) {
+        filterFlags |= flag;
+    }
+
+    @Option(desc = "Required flags", name = "required-flags", defaultValue = "0")
+    public void setRequiredFlags(int flag) {
+        requiredFlags |= flag;
+    }
+    
    @Option(desc="If using a BED file, write the output to a separate file for each BED region", name="bed-output", helpValue="template.txt")
    public void setBedOutputTemplate(String bedOutputTemplate) {
        this.bedOutputTemplate = bedOutputTemplate;
@@ -162,7 +205,8 @@ public class BamBaseCall extends AbstractOutputCommand {
         BAMPileup pileup = new BAMPileup(bamFilename);
         pileup.setDisableBAQ(true);
         pileup.setExtendedBAQ(false);
-        pileup.setFlagRequired(properPairs ? 0x2:0);
+        pileup.setFlagRequired(requiredFlags);
+        pileup.setFlagFilter(filterFlags);
         pileup.setMinBaseQual(minBaseQual);
         pileup.setMinMappingQual(minMapQ);
         pileup.setMaxDepth(maxDepth);
@@ -295,9 +339,9 @@ public class BamBaseCall extends AbstractOutputCommand {
                                 if (verbose && !debugWritten) {
                                     debugWritten = true;
                                     if (span != null) {
-                                        System.err.println("Flushing " + span);
+                                        System.err.println("Flushing " + span + " /1");
                                     } else {
-                                        System.err.println("Flushing " + lastChrom);
+                                        System.err.println("Flushing " + lastChrom + " /2");
                                     }
                                 }
                             }
@@ -357,9 +401,9 @@ public class BamBaseCall extends AbstractOutputCommand {
                     if (verbose && !debugWritten) {
                         debugWritten = true;
                         if (span != null) {
-                            System.err.println("Flushing " + span);
+                            System.err.println("Flushing " + span + " /3");
                         } else {
-                            System.err.println("Flushing " + lastChrom);
+                            System.err.println("Flushing " + lastChrom + " /4");
                         }
                     }
                     writeEmptyRecord(lastChrom, ++lastPos, writer);
