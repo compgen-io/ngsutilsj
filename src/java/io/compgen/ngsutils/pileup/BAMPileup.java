@@ -28,7 +28,7 @@ public class BAMPileup {
     private boolean disableBAQ = true;
     private boolean extendedBAQ = false;
     
-    private String tmpPath = null;
+    private String tmpPath = ".";
     
     private boolean verbose = false;
     
