@@ -18,7 +18,7 @@ public class DataIOTest {
     public void testReadByte() {
         ByteArrayInputStream bais = new ByteArrayInputStream(new byte[]{(byte) 0xFF, (byte) 0xFE, (byte) 0xEF});
         try {
-            byte b = DataIO.readByte(bais);
+            int b = DataIO.readByte(bais);
             assertEquals((byte)0xFF, b);
             b = DataIO.readByte(bais);
             assertEquals((byte)0xFE, b);
@@ -45,7 +45,7 @@ public class DataIOTest {
     public void testEndianWrite() {
         ByteArrayOutputStream baos = new ByteArrayOutputStream(4);
         try {
-            DataIO.writeUInt32(baos, 0x0A0B0C0D);
+            DataIO.writeUint32(baos, 0x0A0B0C0D);
             baos.close();
             assertTrue(Arrays.equals(baos.toByteArray(), new byte[]{(byte) 0x0D, (byte) 0x0C, (byte) 0x0B, (byte) 0x0A}));
         } catch (IOException e) {
@@ -143,13 +143,13 @@ public class DataIOTest {
     public void testWriteUint() {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         try {
-            DataIO.writeUInt32(baos, 1);
+            DataIO.writeUint32(baos, 1);
             dumpByteArray(baos.toByteArray());
 
             assertEquals(4, baos.toByteArray().length);
             assertTrue(Arrays.equals(baos.toByteArray(), new byte[]{(byte) 1, (byte) 0, (byte)0, (byte)0}));
 
-            DataIO.writeUInt32(baos, 2880291034L);
+            DataIO.writeUint32(baos, 2880291034L);
             dumpByteArray(baos.toByteArray());
 
             assertEquals(8, baos.toByteArray().length);
