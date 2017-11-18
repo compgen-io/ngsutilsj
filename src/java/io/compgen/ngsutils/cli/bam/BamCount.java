@@ -53,11 +53,28 @@ public class BamCount extends AbstractOutputCommand {
     
     private boolean startOnly = false;
 
-    // TODO: Add these
-    //private int filterFlags = 0;
-    //private int requiredFlags = 0;
+    private int filterFlags = 0;
+    private int requiredFlags = 0;
 
     private Orientation orient = Orientation.UNSTRANDED;
+
+    @Option(desc = "Only keep properly paired reads", name = "proper-pairs")
+    public void setProperPairs(boolean val) {
+        if (val) {
+            requiredFlags |= ReadUtils.PROPER_PAIR_FLAG;
+            filterFlags |= ReadUtils.MATE_UNMAPPED_FLAG;
+        }
+    }
+
+    @Option(desc = "Filtering flags", name = "filter-flags", defaultValue = "3844")
+    public void setFilterFlags(int flag) {
+        filterFlags = flag;
+    }
+
+    @Option(desc = "Required flags", name = "required-flags", defaultValue = "0")
+    public void setRequiredFlags(int flag) {
+        requiredFlags = flag;
+    }
     
     @UnnamedArg(name = "FILE")
     public void setFilename(String filename) {
@@ -120,8 +137,8 @@ public class BamCount extends AbstractOutputCommand {
         }
     }
 
-    @Option(desc="Also report the number/ratio of properly-paired reads", name="proper-pairs")
-    public void setProperPairs(boolean val) {
+    @Option(desc="Also report the number/ratio of properly-paired reads", name="report-proper")
+    public void setReportProperPairs(boolean val) {
         proper = val;
     }
 
@@ -256,9 +273,14 @@ public class BamCount extends AbstractOutputCommand {
                 SAMRecordIterator it = reader.query(spanGroup.getRefName(), spanStart, spanEnd, contained);
                 while (it.hasNext()) {
                     SAMRecord read = it.next();
+                    
+                    if ((read.getFlags() & requiredFlags) != requiredFlags) {
+                        // if missing a required flag, skip
+                        continue;
+                    }
 
-                    if (read.isSecondaryOrSupplementary() || read.getDuplicateReadFlag() || read.getNotPrimaryAlignmentFlag() || read.getReadUnmappedFlag() || read.getSupplementaryAlignmentFlag()) {
-                        // skip all secondary / duplicate / unmapped reads
+                    if ((read.getFlags() & filterFlags) > 0) {
+                        // if has any filter flag, skip
                         continue;
                     }
 
