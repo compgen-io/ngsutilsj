@@ -77,7 +77,7 @@ public class GenomeSpan implements Comparable<GenomeSpan> {
     
     public static GenomeSpan parse(String str, Strand strand, boolean zero) {
         if (str.indexOf(':') <= 0) {
-            return null;
+            return new GenomeSpan(str, -1, -1);
         }
 
         String ref = str.substring(0,str.indexOf(':'));
@@ -127,6 +127,11 @@ public class GenomeSpan implements Comparable<GenomeSpan> {
             return false;            
         }
         
+        if (start < 0) {
+            // this is a whole-chrom span, so if the ref matches, return true
+            return true;
+        }
+        
         boolean startWithin = false;
         boolean endWithin = false;
         
@@ -162,6 +167,9 @@ public class GenomeSpan implements Comparable<GenomeSpan> {
     }
 
     public String toString(boolean oneBasedStart) {
+        if (start < 0) {
+            return ref;
+        }
         if (start == end) {
             if (strand==Strand.NONE) {
                 return ref+":"+Integer.toString(start + (oneBasedStart ? 1: 0));
@@ -224,6 +232,7 @@ public class GenomeSpan implements Comparable<GenomeSpan> {
         }
 
         if (start < o.start) {
+            // whole chrom length spans will always be first
             return -1;
         } else if (start > o.start) {
             return 1;

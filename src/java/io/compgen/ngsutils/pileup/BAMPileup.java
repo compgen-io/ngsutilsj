@@ -28,7 +28,7 @@ public class BAMPileup {
     private boolean disableBAQ = true;
     private boolean extendedBAQ = false;
     
-    private String tmpPath = ".";
+    private String tmpPath = null;
     
     private boolean verbose = false;
     
@@ -109,7 +109,13 @@ public class BAMPileup {
         
         if (region != null) {
             cmd.add("-r");
-            cmd.add(region.ref+":"+(region.start+1)+"-"+region.end);
+            if (region.start > 0 && region.end > 0) {
+                cmd.add(region.ref+":"+(region.start+1)+"-"+region.end);
+            } else if (region.start > 0) {
+                cmd.add(region.ref+":"+(region.start+1));
+            } else {
+                cmd.add(region.ref);
+            }
         }
 
         for (String f: filenames) {
@@ -144,12 +150,15 @@ public class BAMPileup {
             public void run() {
                 try {
                     proc.waitFor();
-                    proc.getErrorStream().close();
-                    proc.getInputStream().close();
-                    proc.getOutputStream().close();
                     if (proc.exitValue()!=0) {
                         throw new RuntimeException("Error running: "+ StringUtils.join(" ", pb.command()));
                     }
+                    while (!reader.isClosed()) {
+                        Thread.sleep(100);
+                    }
+                    proc.getErrorStream().close();
+                    proc.getInputStream().close();
+                    proc.getOutputStream().close();
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 } catch (IOException e) {
@@ -162,6 +171,11 @@ public class BAMPileup {
             Iterator<PileupRecord> it = reader.iterator();
             @Override
             public boolean hasNext() {
+                if (!it.hasNext()) {
+                    // don't leave this hanging or expect caller to close.
+                    // if we don't have another record, then auto-close.
+                    close();
+                }
                 return it.hasNext();
             }
 

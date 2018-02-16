@@ -50,8 +50,8 @@ import io.compgen.ngsutils.cli.fasta.FastaSubseq;
 import io.compgen.ngsutils.cli.fasta.FastaTag;
 import io.compgen.ngsutils.cli.fasta.FastaWrap;
 import io.compgen.ngsutils.cli.fastq.FastqBarcode;
-import io.compgen.ngsutils.cli.fastq.FastqDemux;
 import io.compgen.ngsutils.cli.fastq.FastqCheck;
+import io.compgen.ngsutils.cli.fastq.FastqDemux;
 import io.compgen.ngsutils.cli.fastq.FastqFilterCli;
 import io.compgen.ngsutils.cli.fastq.FastqMerge;
 import io.compgen.ngsutils.cli.fastq.FastqSeparate;
@@ -65,6 +65,12 @@ import io.compgen.ngsutils.cli.gtf.GeneExport;
 import io.compgen.ngsutils.cli.kmer.FastqKmer;
 import io.compgen.ngsutils.cli.kmer.KmerDiff;
 import io.compgen.ngsutils.cli.kmer.KmerMerge;
+import io.compgen.ngsutils.cli.vcf.CSIDump;
+import io.compgen.ngsutils.cli.vcf.VCFAnnotateCmd;
+import io.compgen.ngsutils.cli.vcf.VCFChrFix;
+import io.compgen.ngsutils.cli.vcf.VCFExportCmd;
+import io.compgen.ngsutils.cli.vcf.VCFFilterCmd;
+import io.compgen.ngsutils.cli.vcf.VCFToBED;
 import io.compgen.ngsutils.support.stats.FisherCli;
 
 @SuppressWarnings("deprecation")
@@ -86,7 +92,7 @@ public class NGSUtils {
             .setHelpHeader("ngsutilsj - Data wrangling for NGS\n---------------------------------------")
             .setDefaultUsage("Usage: ngsutilsj cmd [options]")
             .setHelpFooter("http://compgen.io/ngsutilsj\n" + getVersion())
-            .setCategoryOrder(new String[] { "bam", "bed", "fasta", "fastq", "gtf", "annotation", "kmer", "help"})
+            .setCategoryOrder(new String[] { "bam", "bed", "fasta", "fastq", "gtf", "annotation", "vcf", "help"})
             .addCommand(License.class)
             .addCommand(Help.class)
             .addCommand(FastqToBam.class)
@@ -143,7 +149,14 @@ public class NGSUtils {
             .addCommand(BamBaseCall.class)
             .addCommand(BamToBedGraph.class)
             .addCommand(BamExpressedRegions.class)
-            .addCommand(FastqBarcode.class);
+            .addCommand(FastqBarcode.class)
+            .addCommand(VCFFilterCmd.class)
+            .addCommand(VCFAnnotateCmd.class)
+            .addCommand(VCFExportCmd.class)
+            .addCommand(VCFToBED.class)
+            .addCommand(VCFChrFix.class)
+            .addCommand(CSIDump.class);
+
         
 
         try {

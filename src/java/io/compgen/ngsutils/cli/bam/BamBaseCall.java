@@ -5,8 +5,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import htsjdk.samtools.SAMFileHeader;
@@ -25,6 +25,8 @@ import io.compgen.common.StringUtils;
 import io.compgen.common.TabWriter;
 import io.compgen.ngsutils.NGSUtils;
 import io.compgen.ngsutils.annotation.GenomeSpan;
+import io.compgen.ngsutils.bam.support.BaseTally;
+import io.compgen.ngsutils.bam.support.BaseTally.BaseCount;
 import io.compgen.ngsutils.bam.support.ReadUtils;
 import io.compgen.ngsutils.pileup.BAMPileup;
 import io.compgen.ngsutils.pileup.PileupRecord;
@@ -110,7 +112,7 @@ public class BamBaseCall extends AbstractOutputCommand {
        this.bedOutputTemplate = bedOutputTemplate;
    }
    
-   @Option(desc="Minimum number of non-reference (alt) calls (set to >1 to export only alt bases)", name="min-alt")
+   @Option(desc="Minimum number of non-reference (alt) calls (set to > 0 to export only alt bases)", name="min-alt")
    public void setMinAlt(int minAlt) {
        this.minAlt = minAlt;
    }
@@ -415,51 +417,24 @@ public class BamBaseCall extends AbstractOutputCommand {
     }
 
     private void writeRecord(PileupRecord record, TabWriter writer) throws IOException {
-        int a = 0;
-        int c = 0;
-        int g = 0;
-        int t = 0;
+
+        BaseTally bt = new BaseTally("A", "C", "G", "T", "Ins", "Del");
+        
         int n = 0;
         int pos = 0;
         int neg = 0;
-        int ins = 0;
-        int del = 0;
-        
-        int alt = 0;
         
         for (PileupBaseCall call: record.getSampleRecords(0).calls) {
             if (call.op == PileupRecord.PileupBaseCallOp.Match) {
-                switch(call.call) {
-                case "A":
-                    a++;
-                    break;
-                case "C":
-                    c++;
-                    break;
-                case "G":
-                    g++;
-                    break;
-                case "T":
-                    t++;
-                    break;
-                default:
+                if (bt.contains(call.call)) {
+                    bt.incr(call.call);
+                } else {
                     n++;
                 }
-               
-                if (!call.call.equals(record.refBase)) {
-                    alt++;
-                }
-                
             } else if (call.op == PileupRecord.PileupBaseCallOp.Ins){
-                if (exportIndel) {
-                    ins++;
-                    alt++;
-                }
+                bt.incr("Ins");
             } else if (call.op == PileupRecord.PileupBaseCallOp.Del){
-                if (exportIndel) {
-                    del++;
-                    alt++;
-                }
+                bt.incr("Del");
             }
 
             if (call.plusStrand) {
@@ -469,14 +444,17 @@ public class BamBaseCall extends AbstractOutputCommand {
             }
         }
 
+        int alt = bt.nonRefSum(record.refBase);
+        int total = bt.sum();
+        
         if (alt < minAlt) {
             return;
         }
+
+        List<BaseCount> calls = bt.getSorted();
         
         if (minMinor > 0) {
-            int[] calls = new int[] { a, c, g, t, ins, del };
-            Arrays.sort(calls);
-            if (calls[calls.length-2] < minMinor) {
+            if (calls.get(calls.size()-2).getCount() < minMinor) {
                 return;
             }
         }
@@ -484,19 +462,27 @@ public class BamBaseCall extends AbstractOutputCommand {
         writer.write(record.ref);
         writer.write(record.pos+1);
         writer.write(record.refBase);
-        writer.write(a);
-        writer.write(c);
-        writer.write(g);
-        writer.write(t);
+        writer.write(bt.getCount("A"));
+        writer.write(bt.getCount("C"));
+        writer.write(bt.getCount("G"));
+        writer.write(bt.getCount("T"));
         writer.write(n);
         if (exportIndel) {
-            writer.write(ins);
-            writer.write(del);
+            writer.write(bt.getCount("Ins"));
+            writer.write(bt.getCount("Del"));
         }
         writer.write(pos);
         writer.write(neg);
         if (exportBAF) {
-            writer.write(((double) alt) / (a+c+g+t+ins+del+n));
+            double b;
+            if (calls.get(calls.size()-1).getBase().equals(record.refBase)) {
+                // if the last one (greatest count) is ref, b-allele is the second best.
+                b = calls.get(calls.size()-2).getCount();
+            } else {
+                // if the last one (greatest count) isn't ref, so b-allele is that one
+                b = calls.get(calls.size()-1).getCount();
+            }
+            writer.write(b / total);
         }
         writer.eol();        
         
