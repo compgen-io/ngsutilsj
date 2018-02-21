@@ -13,7 +13,6 @@ import io.compgen.cmdline.impl.AbstractOutputCommand;
 import io.compgen.ngsutils.NGSUtils;
 import io.compgen.ngsutils.vcf.annotate.BEDAnnotation;
 import io.compgen.ngsutils.vcf.annotate.CopyNumberLogRatio;
-import io.compgen.ngsutils.vcf.annotate.EnsemblVEP;
 import io.compgen.ngsutils.vcf.annotate.FisherStrandBias;
 import io.compgen.ngsutils.vcf.annotate.FlankingBases;
 import io.compgen.ngsutils.vcf.annotate.GTFGene;
@@ -151,43 +150,6 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
         } else {
     		throw new CommandArgumentException("Unable to parse argument for --vcf-flag: "+vcf);
     	}
-    }
-    
-    @Option(desc="Add INFO annotations Ensembl VEP web service (human)", name="vep")
-    public void setVEP() throws CommandArgumentException {
-    	
-    	try {
-			chain.add(new EnsemblVEP(null, null, null));
-		} catch (IOException e) {
-			throw new CommandArgumentException(e);
-		}
-    }
-    
-    @Option(desc="Add INFO annotations Ensembl VEP web service with config (valid settings: species, cache, host)", name="vep-config", helpValue="config (key=val,...)")
-    public void setVEPSpecies(String config) throws CommandArgumentException {
-    	
-    	String species = null;
-    	String cacheFile = null;
-    	String hostname = null;
-    	
-    	String[] spl = config.split(",");
-    	for (String v: spl) {
-    		String[] spl2 = v.split("=");
-    		if (spl2[0].equals("species")) {
-    			species = spl2[1];
-    		} else if (spl2[0].equals("cache")) {
-    			cacheFile = spl2[1];
-    		} else if (spl2[0].equals("host")) {
-    			hostname = spl2[1];
-    		}
-    	}
-    	
-    	try {
-			chain.add(new EnsemblVEP(species, cacheFile, hostname));
-		} catch (IOException e) {
-			throw new CommandArgumentException(e);
-		}
-
     }
     
     @Option(desc="Flag if an existing INFO value present is in a file", name="in-file", helpValue="FLAG:INFO:FILENAME", allowMultiple=true)
