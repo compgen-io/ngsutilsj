@@ -1,4 +1,4 @@
-package io.compgen.ngsutils.vcf.vcf;
+package io.compgen.ngsutils.vcf;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;

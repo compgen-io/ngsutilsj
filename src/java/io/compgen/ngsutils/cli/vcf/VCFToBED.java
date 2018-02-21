@@ -11,8 +11,8 @@ import io.compgen.cmdline.impl.AbstractOutputCommand;
 import io.compgen.common.IterUtils;
 import io.compgen.common.TabWriter;
 import io.compgen.ngsutils.NGSUtils;
-import io.compgen.ngsutils.vcf.vcf.VCFReader;
-import io.compgen.ngsutils.vcf.vcf.VCFRecord;
+import io.compgen.ngsutils.vcf.VCFReader;
+import io.compgen.ngsutils.vcf.VCFRecord;
 
 
 @Command(name="vcf-tobed", desc="Export allele positions from a VCF file to BED format", category="vcf")

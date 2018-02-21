@@ -8,11 +8,11 @@ import io.compgen.common.StringUtils;
 import io.compgen.ngsutils.annotation.GTFAnnotationSource;
 import io.compgen.ngsutils.annotation.GenicRegion;
 import io.compgen.ngsutils.annotation.GenomeSpan;
-import io.compgen.ngsutils.vcf.vcf.VCFAnnotationDef;
-import io.compgen.ngsutils.vcf.vcf.VCFAttributeValue;
-import io.compgen.ngsutils.vcf.vcf.VCFHeader;
-import io.compgen.ngsutils.vcf.vcf.VCFParseException;
-import io.compgen.ngsutils.vcf.vcf.VCFRecord;
+import io.compgen.ngsutils.vcf.VCFAnnotationDef;
+import io.compgen.ngsutils.vcf.VCFAttributeValue;
+import io.compgen.ngsutils.vcf.VCFHeader;
+import io.compgen.ngsutils.vcf.VCFParseException;
+import io.compgen.ngsutils.vcf.VCFRecord;
 
 public class GTFGene extends AbstractBasicAnnotator {
 	final protected String filename;

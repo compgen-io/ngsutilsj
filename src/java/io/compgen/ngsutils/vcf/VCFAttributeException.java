@@ -1,4 +1,4 @@
-package io.compgen.ngsutils.vcf.vcf;
+package io.compgen.ngsutils.vcf;
 
 public class VCFAttributeException extends Exception {
 

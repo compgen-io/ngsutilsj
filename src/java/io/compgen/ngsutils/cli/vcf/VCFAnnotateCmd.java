@@ -11,6 +11,10 @@ import io.compgen.cmdline.annotation.UnnamedArg;
 import io.compgen.cmdline.exceptions.CommandArgumentException;
 import io.compgen.cmdline.impl.AbstractOutputCommand;
 import io.compgen.ngsutils.NGSUtils;
+import io.compgen.ngsutils.vcf.VCFHeader;
+import io.compgen.ngsutils.vcf.VCFReader;
+import io.compgen.ngsutils.vcf.VCFRecord;
+import io.compgen.ngsutils.vcf.VCFWriter;
 import io.compgen.ngsutils.vcf.annotate.BEDAnnotation;
 import io.compgen.ngsutils.vcf.annotate.CopyNumberLogRatio;
 import io.compgen.ngsutils.vcf.annotate.FisherStrandBias;
@@ -23,10 +27,6 @@ import io.compgen.ngsutils.vcf.annotate.NullAnnotator;
 import io.compgen.ngsutils.vcf.annotate.VCFAnnotation;
 import io.compgen.ngsutils.vcf.annotate.VCFAnnotator;
 import io.compgen.ngsutils.vcf.annotate.VariantDistance;
-import io.compgen.ngsutils.vcf.vcf.VCFHeader;
-import io.compgen.ngsutils.vcf.vcf.VCFReader;
-import io.compgen.ngsutils.vcf.vcf.VCFRecord;
-import io.compgen.ngsutils.vcf.vcf.VCFWriter;
 
 
 @Command(name="vcf-annotate", desc="Annotate a VCF file", category="vcf")

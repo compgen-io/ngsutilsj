@@ -15,12 +15,12 @@ import io.compgen.common.IterUtils;
 import io.compgen.common.StringUtils;
 import io.compgen.common.TabWriter;
 import io.compgen.ngsutils.NGSUtils;
+import io.compgen.ngsutils.vcf.VCFHeader;
+import io.compgen.ngsutils.vcf.VCFReader;
+import io.compgen.ngsutils.vcf.VCFRecord;
 import io.compgen.ngsutils.vcf.export.ExportFormatField;
 import io.compgen.ngsutils.vcf.export.ExportInfoField;
 import io.compgen.ngsutils.vcf.export.VCFExport;
-import io.compgen.ngsutils.vcf.vcf.VCFHeader;
-import io.compgen.ngsutils.vcf.vcf.VCFReader;
-import io.compgen.ngsutils.vcf.vcf.VCFRecord;
 
 
 @Command(name="vcf-export", desc="Export information from a VCF file", category="vcf")

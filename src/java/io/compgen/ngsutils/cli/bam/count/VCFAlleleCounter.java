@@ -11,10 +11,10 @@ import io.compgen.ngsutils.pileup.BAMPileup;
 import io.compgen.ngsutils.pileup.PileupRecord;
 import io.compgen.ngsutils.pileup.PileupRecord.PileupBaseCall;
 import io.compgen.ngsutils.pileup.PileupRecord.PileupBaseCallOp;
-import io.compgen.ngsutils.vcf.vcf.VCFAttributeException;
-import io.compgen.ngsutils.vcf.vcf.VCFParseException;
-import io.compgen.ngsutils.vcf.vcf.VCFReader;
-import io.compgen.ngsutils.vcf.vcf.VCFRecord;
+import io.compgen.ngsutils.vcf.VCFAttributeException;
+import io.compgen.ngsutils.vcf.VCFParseException;
+import io.compgen.ngsutils.vcf.VCFReader;
+import io.compgen.ngsutils.vcf.VCFRecord;
 
 public class VCFAlleleCounter {
     private VCFReader reader;

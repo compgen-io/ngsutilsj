@@ -5,11 +5,11 @@ import java.util.Collections;
 import java.util.List;
 
 import io.compgen.ngsutils.support.GlobUtils;
-import io.compgen.ngsutils.vcf.vcf.VCFAttributeException;
-import io.compgen.ngsutils.vcf.vcf.VCFAttributeValue;
-import io.compgen.ngsutils.vcf.vcf.VCFAttributes;
-import io.compgen.ngsutils.vcf.vcf.VCFHeader;
-import io.compgen.ngsutils.vcf.vcf.VCFRecord;
+import io.compgen.ngsutils.vcf.VCFAttributeException;
+import io.compgen.ngsutils.vcf.VCFAttributeValue;
+import io.compgen.ngsutils.vcf.VCFAttributes;
+import io.compgen.ngsutils.vcf.VCFHeader;
+import io.compgen.ngsutils.vcf.VCFRecord;
 
 public class ExportFormatField implements VCFExport {
 	protected final String keyName;

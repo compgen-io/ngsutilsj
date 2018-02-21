@@ -16,6 +16,10 @@ import io.compgen.common.StringUtils;
 import io.compgen.common.TabWriter;
 import io.compgen.common.TallyValues;
 import io.compgen.ngsutils.NGSUtils;
+import io.compgen.ngsutils.vcf.VCFHeader;
+import io.compgen.ngsutils.vcf.VCFReader;
+import io.compgen.ngsutils.vcf.VCFRecord;
+import io.compgen.ngsutils.vcf.VCFWriter;
 import io.compgen.ngsutils.vcf.filter.Equals;
 import io.compgen.ngsutils.vcf.filter.GreaterThan;
 import io.compgen.ngsutils.vcf.filter.GreaterThanEqual;
@@ -23,10 +27,6 @@ import io.compgen.ngsutils.vcf.filter.LessThan;
 import io.compgen.ngsutils.vcf.filter.LessThanEqual;
 import io.compgen.ngsutils.vcf.filter.NotEquals;
 import io.compgen.ngsutils.vcf.filter.VCFFilter;
-import io.compgen.ngsutils.vcf.vcf.VCFHeader;
-import io.compgen.ngsutils.vcf.vcf.VCFReader;
-import io.compgen.ngsutils.vcf.vcf.VCFRecord;
-import io.compgen.ngsutils.vcf.vcf.VCFWriter;
 
 
 @Command(name="vcf-filter", desc="Filter a VCF file", category="vcf")

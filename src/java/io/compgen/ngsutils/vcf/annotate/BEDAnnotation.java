@@ -10,11 +10,11 @@ import io.compgen.common.StringUtils;
 import io.compgen.ngsutils.annotation.BedAnnotationSource;
 import io.compgen.ngsutils.annotation.GenomeSpan;
 import io.compgen.ngsutils.bed.BedRecord;
-import io.compgen.ngsutils.vcf.vcf.VCFAnnotationDef;
-import io.compgen.ngsutils.vcf.vcf.VCFAttributeValue;
-import io.compgen.ngsutils.vcf.vcf.VCFHeader;
-import io.compgen.ngsutils.vcf.vcf.VCFParseException;
-import io.compgen.ngsutils.vcf.vcf.VCFRecord;
+import io.compgen.ngsutils.vcf.VCFAnnotationDef;
+import io.compgen.ngsutils.vcf.VCFAttributeValue;
+import io.compgen.ngsutils.vcf.VCFHeader;
+import io.compgen.ngsutils.vcf.VCFParseException;
+import io.compgen.ngsutils.vcf.VCFRecord;
 
 public class BEDAnnotation extends AbstractBasicAnnotator {
 	private static Map<String, BedAnnotationSource> cache = new HashMap<String, BedAnnotationSource>();

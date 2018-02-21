@@ -1,10 +1,10 @@
 package io.compgen.ngsutils.vcf.filter;
 
-import io.compgen.ngsutils.vcf.vcf.VCFAttributeException;
-import io.compgen.ngsutils.vcf.vcf.VCFAttributeValue;
-import io.compgen.ngsutils.vcf.vcf.VCFAttributes;
-import io.compgen.ngsutils.vcf.vcf.VCFHeader;
-import io.compgen.ngsutils.vcf.vcf.VCFRecord;
+import io.compgen.ngsutils.vcf.VCFAttributeException;
+import io.compgen.ngsutils.vcf.VCFAttributeValue;
+import io.compgen.ngsutils.vcf.VCFAttributes;
+import io.compgen.ngsutils.vcf.VCFHeader;
+import io.compgen.ngsutils.vcf.VCFRecord;
 
 public class Equals extends VCFAbstractFilter {
 	protected String key;

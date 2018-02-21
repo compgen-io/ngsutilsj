@@ -1,7 +1,7 @@
 package io.compgen.ngsutils.vcf.annotate;
 
-import io.compgen.ngsutils.vcf.vcf.VCFHeader;
-import io.compgen.ngsutils.vcf.vcf.VCFRecord;
+import io.compgen.ngsutils.vcf.VCFHeader;
+import io.compgen.ngsutils.vcf.VCFRecord;
 
 public interface VCFAnnotator {
 	public VCFRecord next() throws VCFAnnotatorException;

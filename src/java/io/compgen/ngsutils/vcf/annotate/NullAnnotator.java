@@ -2,9 +2,9 @@ package io.compgen.ngsutils.vcf.annotate;
 
 import java.util.Iterator;
 
-import io.compgen.ngsutils.vcf.vcf.VCFHeader;
-import io.compgen.ngsutils.vcf.vcf.VCFReader;
-import io.compgen.ngsutils.vcf.vcf.VCFRecord;
+import io.compgen.ngsutils.vcf.VCFHeader;
+import io.compgen.ngsutils.vcf.VCFReader;
+import io.compgen.ngsutils.vcf.VCFRecord;
 
 public class NullAnnotator implements VCFAnnotator {
 

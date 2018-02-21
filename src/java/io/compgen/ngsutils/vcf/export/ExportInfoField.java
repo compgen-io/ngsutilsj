@@ -5,10 +5,10 @@ import java.util.Collections;
 import java.util.List;
 
 import io.compgen.ngsutils.support.GlobUtils;
-import io.compgen.ngsutils.vcf.vcf.VCFAttributeException;
-import io.compgen.ngsutils.vcf.vcf.VCFAttributeValue;
-import io.compgen.ngsutils.vcf.vcf.VCFHeader;
-import io.compgen.ngsutils.vcf.vcf.VCFRecord;
+import io.compgen.ngsutils.vcf.VCFAttributeException;
+import io.compgen.ngsutils.vcf.VCFAttributeValue;
+import io.compgen.ngsutils.vcf.VCFHeader;
+import io.compgen.ngsutils.vcf.VCFRecord;
 
 public class ExportInfoField implements VCFExport {
 	private final String keyName;

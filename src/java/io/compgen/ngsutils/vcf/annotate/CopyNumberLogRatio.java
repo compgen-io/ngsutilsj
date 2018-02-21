@@ -1,12 +1,12 @@
 package io.compgen.ngsutils.vcf.annotate;
 
 import io.compgen.ngsutils.support.stats.StatUtils;
-import io.compgen.ngsutils.vcf.vcf.VCFAnnotationDef;
-import io.compgen.ngsutils.vcf.vcf.VCFAttributeException;
-import io.compgen.ngsutils.vcf.vcf.VCFAttributeValue;
-import io.compgen.ngsutils.vcf.vcf.VCFHeader;
-import io.compgen.ngsutils.vcf.vcf.VCFParseException;
-import io.compgen.ngsutils.vcf.vcf.VCFRecord;
+import io.compgen.ngsutils.vcf.VCFAnnotationDef;
+import io.compgen.ngsutils.vcf.VCFAttributeException;
+import io.compgen.ngsutils.vcf.VCFAttributeValue;
+import io.compgen.ngsutils.vcf.VCFHeader;
+import io.compgen.ngsutils.vcf.VCFParseException;
+import io.compgen.ngsutils.vcf.VCFRecord;
 
 public class CopyNumberLogRatio extends AbstractBasicAnnotator {
 	final protected String germlineSampleID;

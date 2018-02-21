@@ -6,12 +6,12 @@ import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 
-import io.compgen.ngsutils.vcf.vcf.VCFAnnotationDef;
-import io.compgen.ngsutils.vcf.vcf.VCFAttributeException;
-import io.compgen.ngsutils.vcf.vcf.VCFAttributeValue;
-import io.compgen.ngsutils.vcf.vcf.VCFHeader;
-import io.compgen.ngsutils.vcf.vcf.VCFParseException;
-import io.compgen.ngsutils.vcf.vcf.VCFRecord;
+import io.compgen.ngsutils.vcf.VCFAnnotationDef;
+import io.compgen.ngsutils.vcf.VCFAttributeException;
+import io.compgen.ngsutils.vcf.VCFAttributeValue;
+import io.compgen.ngsutils.vcf.VCFHeader;
+import io.compgen.ngsutils.vcf.VCFParseException;
+import io.compgen.ngsutils.vcf.VCFRecord;
 
 public class InfoInFile extends AbstractBasicAnnotator {
 

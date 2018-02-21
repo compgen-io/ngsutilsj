@@ -5,12 +5,12 @@ import java.util.List;
 
 import io.compgen.common.StringUtils;
 import io.compgen.ngsutils.support.stats.FisherExact;
-import io.compgen.ngsutils.vcf.vcf.VCFAnnotationDef;
-import io.compgen.ngsutils.vcf.vcf.VCFAttributeValue;
-import io.compgen.ngsutils.vcf.vcf.VCFAttributes;
-import io.compgen.ngsutils.vcf.vcf.VCFHeader;
-import io.compgen.ngsutils.vcf.vcf.VCFParseException;
-import io.compgen.ngsutils.vcf.vcf.VCFRecord;
+import io.compgen.ngsutils.vcf.VCFAnnotationDef;
+import io.compgen.ngsutils.vcf.VCFAttributeValue;
+import io.compgen.ngsutils.vcf.VCFAttributes;
+import io.compgen.ngsutils.vcf.VCFHeader;
+import io.compgen.ngsutils.vcf.VCFParseException;
+import io.compgen.ngsutils.vcf.VCFRecord;
 
 public class FisherStrandBias extends AbstractBasicAnnotator {
 	protected FisherExact fisher = new FisherExact();

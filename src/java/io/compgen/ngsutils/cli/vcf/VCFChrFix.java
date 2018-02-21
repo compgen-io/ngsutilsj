@@ -8,10 +8,10 @@ import io.compgen.cmdline.exceptions.CommandArgumentException;
 import io.compgen.cmdline.impl.AbstractOutputCommand;
 import io.compgen.common.IterUtils;
 import io.compgen.ngsutils.NGSUtils;
-import io.compgen.ngsutils.vcf.vcf.VCFHeader;
-import io.compgen.ngsutils.vcf.vcf.VCFReader;
-import io.compgen.ngsutils.vcf.vcf.VCFRecord;
-import io.compgen.ngsutils.vcf.vcf.VCFWriter;
+import io.compgen.ngsutils.vcf.VCFHeader;
+import io.compgen.ngsutils.vcf.VCFReader;
+import io.compgen.ngsutils.vcf.VCFRecord;
+import io.compgen.ngsutils.vcf.VCFWriter;
 
 
 @Command(name="vcf-chrfix", desc="Changes the reference (chrom) format (Ensembl/UCSC)", category="vcf")

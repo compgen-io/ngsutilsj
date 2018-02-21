@@ -1,8 +1,8 @@
 package io.compgen.ngsutils.vcf.filter;
 
-import io.compgen.ngsutils.vcf.vcf.VCFFilterDef;
-import io.compgen.ngsutils.vcf.vcf.VCFHeader;
-import io.compgen.ngsutils.vcf.vcf.VCFRecord;
+import io.compgen.ngsutils.vcf.VCFFilterDef;
+import io.compgen.ngsutils.vcf.VCFHeader;
+import io.compgen.ngsutils.vcf.VCFRecord;
 
 public interface VCFFilter {
 	public VCFFilterDef getDefinition();
