@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import io.compgen.common.StringUtils;
+import io.compgen.ngsutils.support.GlobUtils;
 
 public class VCFAttributes {
 	public Map<String, VCFAttributeValue> attributes = new LinkedHashMap<String, VCFAttributeValue>();
@@ -15,10 +16,24 @@ public class VCFAttributes {
 		attributes.put(key, value);
 	}
 	
-	public VCFAttributeValue get(String key) {
-		return attributes.get(key);
-	}
-	public boolean contains(String key) {
+    public VCFAttributeValue get(String key) {
+        return attributes.get(key);
+    }
+
+    public List<String> findKeys(String keyGlob) {
+        List<String> keys = new ArrayList<String>();
+
+        for (String k: attributes.keySet()) {
+            if (GlobUtils.matches(k,  keyGlob)) {
+                keys.add(k);
+            }
+        }
+        
+        return keys;
+    }
+
+    
+    public boolean contains(String key) {
 		return attributes.containsKey(key);
 	}
 	

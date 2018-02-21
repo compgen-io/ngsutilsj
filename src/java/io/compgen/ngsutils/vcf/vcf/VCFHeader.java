@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import io.compgen.common.StringUtils;
 
@@ -125,9 +126,17 @@ public class VCFHeader {
 		return formatDefs.get(id);
 	}
 
-	public VCFAnnotationDef getInfoDef(String id) {
-		return infoDefs.get(id);
-	}
+    public Set<String> getFormatIDs() {
+        return formatDefs.keySet();
+    }
+
+    public VCFAnnotationDef getInfoDef(String id) {
+        return infoDefs.get(id);
+    }
+
+    public Set<String> getInfoIDs() {
+        return infoDefs.keySet();
+    }
 
 	public static String quoteString(String s) {
 		s=s.replaceAll("\\\\", "\\\\\\\\");
