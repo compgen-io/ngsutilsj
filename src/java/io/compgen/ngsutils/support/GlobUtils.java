@@ -47,7 +47,7 @@ public class GlobUtils {
     }
     
     public static boolean matches(String query, String glob) {
-        System.err.println("Matching: "+query+ " to "+glob + " regex:"+globToRegex(glob));
+//        System.err.println("Matching: "+query+ " to "+glob + " regex:"+globToRegex(glob));
 
         return Pattern.matches(globToRegex(glob), query);
     }
