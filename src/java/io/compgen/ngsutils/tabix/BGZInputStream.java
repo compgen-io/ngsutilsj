@@ -1,4 +1,4 @@
-package io.compgen.ngsutils.vcf.support;
+package io.compgen.ngsutils.tabix;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;

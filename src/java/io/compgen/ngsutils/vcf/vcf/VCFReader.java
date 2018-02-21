@@ -11,8 +11,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.zip.GZIPInputStream;
 
-import io.compgen.ngsutils.vcf.support.BGZFile;
-import io.compgen.ngsutils.vcf.support.BGZInputStream;
+import io.compgen.ngsutils.tabix.BGZFile;
+import io.compgen.ngsutils.tabix.BGZInputStream;
 
 public class VCFReader {
 	protected BufferedReader in;

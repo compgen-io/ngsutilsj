@@ -9,7 +9,7 @@ import java.util.Map;
 import java.util.zip.DataFormatException;
 
 import io.compgen.common.StringUtils;
-import io.compgen.ngsutils.vcf.support.BGZFile;
+import io.compgen.ngsutils.tabix.BGZFile;
 import io.compgen.ngsutils.vcf.vcf.VCFAnnotationDef;
 import io.compgen.ngsutils.vcf.vcf.VCFAttributeException;
 import io.compgen.ngsutils.vcf.vcf.VCFAttributeValue;
@@ -43,9 +43,11 @@ public class VCFAnnotation extends AbstractBasicAnnotator {
 			if (!BGZFile.isBGZFile(filename)) {
 				throw new IOException("VCF file: "+filename+" is not BGZip compressed");
 			}
-			if (!new File(filename+".csi").exists()) {
-				throw new IOException("VCF file: "+filename+" is missing a CSI index");
-			}
+            if (!new File(filename+".csi").exists()) {
+                if (!new File(filename+".tbi").exists()) {
+                    throw new IOException("VCF file: "+filename+" is missing a CSI/TBI index");
+                }
+            }
 			cache.put(filename, new BGZFile(filename));
 		}
 		return cache.get(filename);		

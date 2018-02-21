@@ -65,13 +65,13 @@ import io.compgen.ngsutils.cli.gtf.GeneExport;
 import io.compgen.ngsutils.cli.kmer.FastqKmer;
 import io.compgen.ngsutils.cli.kmer.KmerDiff;
 import io.compgen.ngsutils.cli.kmer.KmerMerge;
-import io.compgen.ngsutils.cli.vcf.CSIDump;
 import io.compgen.ngsutils.cli.vcf.VCFAnnotateCmd;
 import io.compgen.ngsutils.cli.vcf.VCFChrFix;
 import io.compgen.ngsutils.cli.vcf.VCFExportCmd;
 import io.compgen.ngsutils.cli.vcf.VCFFilterCmd;
 import io.compgen.ngsutils.cli.vcf.VCFToBED;
 import io.compgen.ngsutils.support.stats.FisherCli;
+import io.compgen.ngsutils.tabix.TabixQuery;
 
 @SuppressWarnings("deprecation")
 public class NGSUtils {
@@ -87,7 +87,7 @@ public class NGSUtils {
         NGSUtils.args = StringUtils.join(" ", args);
         
         SocketProgress.setHeader("ngsutilsj - " + NGSUtils.args);
-        MainBuilder main = new MainBuilder()
+        MainBuilder main = new MainBuilder(false)
             .setProgName("ngsutilsj")
             .setHelpHeader("ngsutilsj - Data wrangling for NGS\n---------------------------------------")
             .setDefaultUsage("Usage: ngsutilsj cmd [options]")
@@ -155,7 +155,7 @@ public class NGSUtils {
             .addCommand(VCFExportCmd.class)
             .addCommand(VCFToBED.class)
             .addCommand(VCFChrFix.class)
-            .addCommand(CSIDump.class);
+            .addCommand(TabixQuery.class);
 
         
 

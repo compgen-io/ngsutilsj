@@ -1,4 +1,4 @@
-package io.compgen.ngsutils.vcf.support;
+package io.compgen.ngsutils.tabix;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -11,18 +11,18 @@ import java.util.zip.DataFormatException;
 import java.util.zip.GZIPInputStream;
 
 import io.compgen.common.io.DataIO;
-import io.compgen.ngsutils.vcf.support.CSIFile.Chunk;
 
 public class BGZFile {
 	protected String filename;
-	protected CSIFile index;
+	protected TabixIndex index;
 	protected RandomAccessFile file;
 	
 	public BGZFile(String filename) throws IOException {
 		this.filename = filename;
-		File indexFile = new File(filename+".csi");
-		if (indexFile.exists()) {
-			this.index = new CSIFile(indexFile);
+        if (new File(filename+".csi").exists()) {
+            this.index = new CSIFile(new File(filename+".csi"));
+        } else if (new File(filename+".tbi").exists()) {
+                this.index = new TBIFile(new File(filename+".tbi"));
 		} else {
 			this.index = null;
 		}
@@ -69,17 +69,17 @@ public class BGZFile {
 		for (Chunk chunk: index.find(ref, start, end)) {
 			String s = readChunks(chunk.coffsetBegin, chunk.uoffsetBegin, chunk.coffsetEnd, chunk.uoffsetEnd);
 			for (String line: s.split("\n")) {
-				if (line.startsWith(""+index.meta)) {
+				if (line.startsWith(""+index.getMeta())) {
 					continue;
 				}
 				String[] cols = line.split("\t");
 //				System.out.println(StringUtils.join(",", cols));
-				if (cols[index.colSeq-1].equals(ref)) {
-					if (index.colEnd > 0) {
-						int b = Integer.parseInt(cols[index.colBegin-1]);
-						int e = Integer.parseInt(cols[index.colEnd-1]);
+				if (cols[index.getColSeq()-1].equals(ref)) {
+					if (index.getColEnd() > 0) {
+						int b = Integer.parseInt(cols[index.getColBegin()-1]);
+						int e = Integer.parseInt(cols[index.getColEnd()-1]);
 						
-						if ((index.format&0x10000) == 0) {
+						if ((index.getFormat()&0x10000) == 0) {
 							// convert one-based begin coord
 							b--;
 						}
@@ -90,9 +90,9 @@ public class BGZFile {
 							ret += line+"\n";
 						}
 					} else {
-						int b = Integer.parseInt(cols[index.colBegin-1]);
+						int b = Integer.parseInt(cols[index.getColBegin()-1]);
 
-						if ((index.format&0x10000) == 0) {
+						if ((index.getFormat()&0x10000) == 0) {
 							// convert one-based begin coord
 							b--;
 						}
@@ -242,11 +242,11 @@ public class BGZFile {
 		return new String(outBuf);
 	}
 
-	public void dumpIndex() throws IOException {
-		if (index != null) {
-			index.dump();
-		}
-	}
+//	public void dumpIndex() throws IOException {
+//		if (index != null) {
+//			index.dump();
+//		}
+//	}
 	
 	public static boolean isBGZFile(String filename) {
 //		System.err.println("Checking file: "+filename);
