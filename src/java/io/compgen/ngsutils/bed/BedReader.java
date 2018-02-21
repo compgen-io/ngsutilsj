@@ -4,10 +4,14 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.Iterator;
+
+import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
 
 import io.compgen.common.StringLineReader;
 import io.compgen.common.StringUtils;
+import io.compgen.common.io.PeekableInputStream;
 import io.compgen.ngsutils.annotation.GenomeSpan;
 import io.compgen.ngsutils.bam.Strand;
 
@@ -33,7 +37,16 @@ public class BedReader {
     public static Iterator<BedRecord> readInputStream(final InputStream is) throws IOException {
         return readInputStream(is, false);
     }
-    public static Iterator<BedRecord> readInputStream(final InputStream is, final boolean ignoreStrand) throws IOException {
+    public static Iterator<BedRecord> readInputStream(final InputStream rawInput, final boolean ignoreStrand) throws IOException {
+        PeekableInputStream peek = new PeekableInputStream(rawInput);
+        byte[] magic = peek.peek(2);
+        final InputStream is;
+        if (Arrays.equals(magic, new byte[] {0x1f, (byte) 0x8B})) { // need to cast 0x8b because it is a neg. num in 2-complement
+            is = new GzipCompressorInputStream(peek, true);
+        } else {
+            is = peek;
+        }
+        
         return new Iterator<BedRecord>() {
             BedRecord next = null;
             boolean first = true;
