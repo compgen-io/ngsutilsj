@@ -84,7 +84,7 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
     }
     
 
-    @Option(desc="Add annotations from a BED file", name="bed", helpValue="NAME:FILENAME", allowMultiple=true)
+    @Option(desc="Add annotations from a BED4 file (name column) (add ',n' to NAME to make value a number)", name="bed", helpValue="NAME:FILENAME", allowMultiple=true)
     public void setBED(String bed) throws CommandArgumentException {
     	String[] spl = bed.split(":");
     	if (spl.length == 2) {
@@ -98,7 +98,7 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
     	}    	
     }
     
-    @Option(desc="Flag variants within a BED region", name="bed-flag", helpValue="NAME:FILENAME", allowMultiple=true)
+    @Option(desc="Flag variants within a BED3 region", name="bed-flag", helpValue="NAME:FILENAME", allowMultiple=true)
     public void setBEDFlag(String bed) throws CommandArgumentException {
     	String[] spl = bed.split(":");
     	if (spl.length == 2) {

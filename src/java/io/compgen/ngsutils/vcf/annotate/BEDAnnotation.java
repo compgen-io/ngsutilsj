@@ -22,10 +22,17 @@ public class BEDAnnotation extends AbstractBasicAnnotator {
 	final protected String name;
 	final protected String filename;
 	final protected BedAnnotationSource bed;
-	final protected boolean flag;
+    final protected boolean flag;
+    final protected boolean isNumber;
 	
 	public BEDAnnotation(String name, String filename, boolean flag) throws IOException {
-		this.name = name;
+	    if (name.endsWith(",n")) {
+            this.isNumber = true;
+	        this.name = name.substring(0, name.length()-2);
+	    } else {
+            this.isNumber = false;
+	        this.name = name;
+	    }
 		this.filename = filename;
 		this.flag = flag;
 		this.bed = getBEDSource(filename);
@@ -44,7 +51,11 @@ public class BEDAnnotation extends AbstractBasicAnnotator {
 			if (flag) {
 				header.addInfo(VCFAnnotationDef.info(name, "0", "Flag", "Present in BED file: "+ name, filename, null, null, null));
 			} else {
-				header.addInfo(VCFAnnotationDef.info(name, "1", "String", "BED file annotation: "+ name, filename, null, null, null));
+			    if (isNumber) {
+                    header.addInfo(VCFAnnotationDef.info(name, "1", "Float", "BED file annotation: "+ name, filename, null, null, null));
+                } else {
+                    header.addInfo(VCFAnnotationDef.info(name, "1", "String", "BED file annotation: "+ name, filename, null, null, null));
+                }
 			}
 		} catch (VCFParseException e) {
 			throw new VCFAnnotatorException(e);
