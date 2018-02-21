@@ -11,7 +11,7 @@ public class Indel extends AbstractBasicAnnotator {
 		try {
 			return new VCFAnnotationDef[] {
 					VCFAnnotationDef.info("CG_INSERT", "0", "Flag", "Variant is an insertion"),
-					VCFAnnotationDef.info("CG_DELETION", "0", "Flag", "Variant is an deletion"),
+					VCFAnnotationDef.info("CG_DELETE", "0", "Flag", "Variant is an deletion"),
 					VCFAnnotationDef.info("CG_INSLEN", "1", "Integer", "Insertion length"),
                     VCFAnnotationDef.info("CG_DELLEN", "1", "Integer", "Deletion length"),
                     VCFAnnotationDef.info("CG_INDELLEN", "1", "Integer", "In-del length"),
