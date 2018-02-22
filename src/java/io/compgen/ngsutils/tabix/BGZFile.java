@@ -19,12 +19,22 @@ public class BGZFile {
 	
 	public BGZFile(String filename) throws IOException {
 		this.filename = filename;
-        if (new File(filename+".csi").exists()) {
-            this.index = new CSIFile(new File(filename+".csi"));
-        } else if (new File(filename+".tbi").exists()) {
+        this.index = null;
+		try {
+            if (new File(filename+".csi").exists()) {
+                this.index = new CSIFile(new File(filename+".csi"));
+            } else if (new File(filename+".tbi").exists()) {
                 this.index = new TBIFile(new File(filename+".tbi"));
-		} else {
-			this.index = null;
+    		}
+		} catch (IOException e) {
+		    // Sometimes there will be an error when loading the 
+		    // index (if it is being created at the time)
+		    // in which case, we can assume the index isn't valid.
+		    // 
+		    // This may or may not be an issue for downstream, but
+		    // here we can treat it as a missing index
+		    //
+	        this.index = null;
 		}
 		this.file = new RandomAccessFile(filename, "r");
 //		System.err.println("Opened file: "+filename+", pos="+file.getFilePointer());
