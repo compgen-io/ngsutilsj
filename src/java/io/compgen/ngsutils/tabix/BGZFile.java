@@ -41,18 +41,44 @@ public class BGZFile {
 		return queryInputStream(ref, start, start+1);
 	}
 	public InputStream queryInputStream(String ref, int start, int end) throws IOException, DataFormatException {
-		String s = query(ref, start, end);
+		String s = queryWithin(ref, start, end);
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		baos.write(s.getBytes());
 		byte[] buffer = baos.toByteArray();
 		return new ByteArrayInputStream(buffer);
 	}
 
+	/**
+	 * 
+	 * @param ref
+	 * @param start (zero-based)
+	 * @return
+	 * @throws IOException
+	 * @throws DataFormatException
+	 */
 	public String query(String ref, int start) throws IOException, DataFormatException {
-		return query(ref, start, start+1);
+		return queryWithin(ref, start, start+1);
 	}
 	
 	/**
+	 * Returns lines from the TABIX file that completely CONTAIN the query range
+	 * 
+     * YES:
+     *      |             |
+     *      |-------------|
+     *      |   [query]   |
+     *      [query]
+     *              [query]
+     * 
+     * No:
+     * 
+     *      |             |
+     *      |-------------|
+     *      |             |
+     *                 [query]
+     * [query]
+     *    [ ===== query===== ]
+	 * 
 	 * 
 	 * @param ref
 	 * @param start - zero-based
@@ -61,10 +87,18 @@ public class BGZFile {
 	 * @throws IOException
 	 * @throws DataFormatException
 	 */
-	public String query(String ref, int start, int end) throws IOException, DataFormatException {
+    public String queryWithin(String ref, int start, int end) throws IOException, DataFormatException {
+        return innerQuery(ref, start, end, false);
+    }
+
+    public String queryOverlap(String ref, int start, int end) throws IOException, DataFormatException {
+        return innerQuery(ref, start, end, true);
+    }
+
+    protected String innerQuery(String ref, int start, int end, boolean overlap) throws IOException, DataFormatException {
 		String ret = "";
 		if (index == null) {
-			throw new IOException("Missing CSI index file! Expected: "+filename+".csi");
+			throw new IOException("Missing TBI or CSI index file!");
 		}
 		for (Chunk chunk: index.find(ref, start, end)) {
 			String s = readChunks(chunk.coffsetBegin, chunk.uoffsetBegin, chunk.coffsetEnd, chunk.uoffsetEnd);
@@ -73,35 +107,45 @@ public class BGZFile {
 					continue;
 				}
 				String[] cols = line.split("\t");
-//				System.out.println(StringUtils.join(",", cols));
+//				System.err.println(StringUtils.join(",", cols));
 				if (cols[index.getColSeq()-1].equals(ref)) {
+				    int b, e;
+				    
 					if (index.getColEnd() > 0) {
-						int b = Integer.parseInt(cols[index.getColBegin()-1]);
-						int e = Integer.parseInt(cols[index.getColEnd()-1]);
-						
-						if ((index.getFormat()&0x10000) == 0) {
-							// convert one-based begin coord
-							b--;
-						}
-//						System.out.println("b="+b+", e="+e+", start="+start+", end="+end);
-						
-						if (b >= start && e < end) {
-//							System.out.println("YES!");
-							ret += line+"\n";
-						}
+						b = Integer.parseInt(cols[index.getColBegin()-1]);
+						e = Integer.parseInt(cols[index.getColEnd()-1]);
 					} else {
-						int b = Integer.parseInt(cols[index.getColBegin()-1]);
-
-						if ((index.getFormat()&0x10000) == 0) {
-							// convert one-based begin coord
-							b--;
-						}
-						
-//						System.out.println("b="+b+", start="+start+", end="+end);
-						if (b >= start && b < end) {
-//							System.out.println("YES!!");
-							ret += line+"\n";
-						}
+                        b = Integer.parseInt(cols[index.getColBegin()-1]);
+                        e = Integer.parseInt(cols[index.getColBegin()-1]);;
+					}
+					
+					if ((index.getFormat()&0x10000) == 0) {
+						// convert one-based begin coord (in bgzip file)
+						b--;
+					}
+					
+//					System.err.println("b="+b+", e="+e+", start="+start+", end="+end);
+					
+					// return if the spans overlap at all -- if necessary, the 
+					// calling function can re-parse.
+	
+					if (!overlap) {
+                        if (
+                                (b <= start && start < e) && // query start is within range
+                                (b < end && end <= e)        // AND query end is within range
+                            ) {
+    //                          System.err.println("YES!");
+                            ret += line+"\n";
+                        }
+					} else {
+                        if (
+                                (b <= start && start < e) || // query start is within range
+                                (start <= b && e < end) ||   // b,e is contained completely by query
+                                (b < end && end <= e)        // query end is within range
+                            ) {
+    //                          System.err.println("YES!");
+                            ret += line+"\n";
+                        }
 					}
 				}
 			}

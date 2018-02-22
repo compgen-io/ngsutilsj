@@ -1,6 +1,7 @@
 package io.compgen.ngsutils.vcf.annotate;
 
 import java.io.File;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -93,9 +94,11 @@ public class TabixAnnotation extends AbstractBasicAnnotator {
     @Override
     public void annotate(VCFRecord record) throws VCFAnnotatorException {
         try {
+//            System.err.println("Looking for TABIX rows covering: "+record.getChrom() +":"+ record.getPos()+" ("+filename+")");
             String tabix = bgzf.query(record.getChrom(), record.getPos() - 1);
 
             if (tabix == null) {
+//                System.err.println("Not found");
                 return;
             }
 
@@ -103,11 +106,13 @@ public class TabixAnnotation extends AbstractBasicAnnotator {
             boolean found = false;
 
             for (String alt: record.getAlt()) {
-                
+//                System.err.println("  Alt: "+alt);
+                                
                 // for each alt -- process each line; 
                 // that way the order of the results will be consistent
                 
                 for (String line : tabix.split("\n")) {
+//                    System.err.println("  Line: "+line);
                     found = true;
                     if (colNum > -1) {
                         String[] spl = line.split("\t");
@@ -118,9 +123,12 @@ public class TabixAnnotation extends AbstractBasicAnnotator {
                         
                         if (altColNum > -1) {
                             if (alt.equals(spl[altColNum])) {
+//                                System.err.println("  alt match: "+ alt +"="+spl[altColNum]);
+//                                System.err.println("        val: "+ spl[colNum]);
                                 vals.add(spl[colNum]);
                             }
                         } else {
+//                            System.err.println("        val: "+ spl[colNum]);
                             vals.add(spl[colNum]);
                         }
                     }
@@ -129,12 +137,15 @@ public class TabixAnnotation extends AbstractBasicAnnotator {
 
             if (colNum == -1) {
                 if (found) {
+//                    System.err.println("  FLAG");
                     record.getInfo().put(name, VCFAttributeValue.EMPTY);
                 }
             } else {
                 if (vals.size() == 0) {
+//                    System.err.println("  MISSING");
                     record.getInfo().put(name, VCFAttributeValue.MISSING);
                 } else {
+//                    System.err.println("  VALUES: "+StringUtils.join(",", vals));
                     record.getInfo().put(name, new VCFAttributeValue(StringUtils.join(",", vals)));
                 }
             }

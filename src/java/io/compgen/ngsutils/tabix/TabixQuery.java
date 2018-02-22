@@ -35,13 +35,14 @@ public class TabixQuery extends AbstractOutputCommand {
 
 	@Exec
 	public void exec() throws Exception {		
-		BGZFile reader = new BGZFile(filename);
-		
-		String s = reader.query(span.ref, span.start, span.end);
+		BGZFile bgzf = new BGZFile(filename);
+
+		String s = bgzf.queryWithin(span.ref, span.start, span.end);
+		System.err.println(span.ref +":"+ span.start+","+ span.end);
 		if (s != null) {
 	        System.out.println(s);
 		}
-        reader.close();
+		bgzf.close();
 }
 
 }

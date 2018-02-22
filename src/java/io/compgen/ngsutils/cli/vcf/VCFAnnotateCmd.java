@@ -113,11 +113,11 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
                     if (fname == null) {
                         fname = t;
                     } else if (col == -1) {
-                        col = Integer.parseInt(t);
+                        col = Integer.parseInt(t)-1;
                     } else if (t.equals("n")) {
                         isNumber = true;
                     } else if (t.startsWith("alt=")) {
-                        altCol = Integer.parseInt(t.substring(4));
+                        altCol = Integer.parseInt(t.substring(4))-1;
                     }
                 }
                 if (col > -1) {
