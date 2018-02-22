@@ -102,15 +102,18 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
     public void setTabix(String bed) throws CommandArgumentException {
         String[] spl = bed.split(":");
         if (spl.length == 2) {
-            String[] fname = spl[1].split(",");
+            String[] spl2 = spl[1].split(",");
             try {
+                String fname = null;
                 int col = -1;
                 boolean isNumber = false;
                 int altCol = -1;
                 
-                for (String t:fname) {
-                    if (col == -1) {
-                        col = Integer.parseInt(fname[1]);
+                for (String t:spl2) {
+                    if (fname == null) {
+                        fname = t;
+                    } else if (col == -1) {
+                        col = Integer.parseInt(t);
                     } else if (t.equals("n")) {
                         isNumber = true;
                     } else if (t.startsWith("alt=")) {
@@ -118,9 +121,9 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
                     }
                 }
                 if (col > -1) {
-                    chain.add(new TabixAnnotation(spl[0], fname[0], col, isNumber, altCol));
+                    chain.add(new TabixAnnotation(spl[0], fname, col, isNumber, altCol));
                 } else {
-                    chain.add(new TabixAnnotation(spl[0], fname[0]));
+                    chain.add(new TabixAnnotation(spl[0], fname));
                 }
             } catch (NumberFormatException | IOException  e) {
                 throw new CommandArgumentException(e);
