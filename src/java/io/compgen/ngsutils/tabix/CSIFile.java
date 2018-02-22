@@ -310,9 +310,32 @@ public class CSIFile implements TabixIndex {
             refIdx++;
         }
 
+        if (refIdx >= seqNames.length) {
+            // didn't find it -- check chrX/X ??
+            
+            if (chrom.startsWith("chr")) {
+                refIdx = 0;
+                while (refIdx < seqNames.length && !seqNames[refIdx].equals(chrom.substring(3))) {
+                    refIdx++;
+                }
+                if (refIdx < seqNames.length) {
+                    printOnce(System.err, "Auto converting between UCSC/Ensembl chrom format: chrZ => Z");
+                }
+
+            } else {
+                refIdx = 0;
+                while (refIdx < seqNames.length && !seqNames[refIdx].equals("chr"+chrom)) {
+                    refIdx++;
+                }
+                if (refIdx < seqNames.length) {
+                    printOnce(System.err, "Auto converting between UCSC/Ensembl chrom format: Z => chrZ");
+                }
+            }
+        }
+
         final List<Chunk> chunks = new ArrayList<Chunk>();
 
-        if (refIdx >= seqNames.length || !seqNames[refIdx].equals(chrom)) {
+        if (refIdx >= seqNames.length) {
             printOnce(System.err, "Can't find reference: " + chrom + " in index");
             return chunks;
         }
@@ -323,12 +346,12 @@ public class CSIFile implements TabixIndex {
         final long[] possibleBins = reg2bins(start, end, minShift, depth);
         for (final long bin : possibleBins) {
             // System.out.println("bin: " +bin );
-            chunks.addAll(findInRefBin(chrom, start, end, ref.bins, bin));
+            chunks.addAll(findInRefBin(ref.bins, bin));
         }
         return chunks;
     }
 
-    private List<Chunk> findInRefBin(String chrom, int start, int end, Bin[] bins, long bin) {
+    private List<Chunk> findInRefBin(Bin[] bins, long bin) {
         final List<Chunk> chunks = new ArrayList<Chunk>();
         for (int i = 0; i < bins.length; i++) {
             if (bins[i].bin == bin) {

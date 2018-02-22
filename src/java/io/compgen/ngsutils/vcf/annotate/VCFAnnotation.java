@@ -114,9 +114,10 @@ public class VCFAnnotation extends AbstractBasicAnnotator {
 					}
 				}
 		
-				if (vals.size() > 0) {
-					record.getInfo().put(name, new VCFAttributeValue(StringUtils.join(",", vals)));
-				}
+            }
+			// it's possible for there to be multiple lines for a position, so we need to loop them all
+			if (vals.size() > 0) {
+				record.getInfo().put(name, new VCFAttributeValue(StringUtils.join(",", vals)));
 			}
 		} catch (VCFAttributeException | VCFParseException | IOException | DataFormatException e) {
 			throw new VCFAnnotatorException(e);

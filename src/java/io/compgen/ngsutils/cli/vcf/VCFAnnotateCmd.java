@@ -24,6 +24,7 @@ import io.compgen.ngsutils.vcf.annotate.Indel;
 import io.compgen.ngsutils.vcf.annotate.InfoInFile;
 import io.compgen.ngsutils.vcf.annotate.MinorStrandPct;
 import io.compgen.ngsutils.vcf.annotate.NullAnnotator;
+import io.compgen.ngsutils.vcf.annotate.TabixAnnotation;
 import io.compgen.ngsutils.vcf.annotate.VCFAnnotation;
 import io.compgen.ngsutils.vcf.annotate.VCFAnnotator;
 import io.compgen.ngsutils.vcf.annotate.VariantDistance;
@@ -85,16 +86,48 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
 
     @Option(desc="Add annotations from a BED4 file (name column) (add ',n' to NAME to make value a number)", name="bed", helpValue="NAME:FILENAME", allowMultiple=true)
     public void setBED(String bed) throws CommandArgumentException {
-    	String[] spl = bed.split(":");
-    	if (spl.length == 2) {
-    		try {
-				chain.add(new BEDAnnotation(spl[0], spl[1], false));
-			} catch (IOException e) {
-	    		throw new CommandArgumentException(e);
-			}
-    	} else {
-    		throw new CommandArgumentException("Unable to parse argument for --bed: "+bed);
-    	}    	
+        String[] spl = bed.split(":");
+        if (spl.length == 2) {
+            try {
+                chain.add(new BEDAnnotation(spl[0], spl[1], false));
+            } catch (IOException e) {
+                throw new CommandArgumentException(e);
+            }
+        } else {
+            throw new CommandArgumentException("Unable to parse argument for --bed: "+bed);
+        }       
+    }
+    
+    @Option(desc="Add annotations from a Tabix file (If col is left out, this is treaded as a VCF flag; add ',n' for a number; set alt=col# to specify an alternative allele column -- will use exact matching)", name="tab", helpValue="NAME:FILENAME{,col,n,alt=X}", allowMultiple=true)
+    public void setTabix(String bed) throws CommandArgumentException {
+        String[] spl = bed.split(":");
+        if (spl.length == 2) {
+            String[] fname = spl[1].split(",");
+            try {
+                int col = -1;
+                boolean isNumber = false;
+                int altCol = -1;
+                
+                for (String t:fname) {
+                    if (col == -1) {
+                        col = Integer.parseInt(fname[1]);
+                    } else if (t.equals("n")) {
+                        isNumber = true;
+                    } else if (t.startsWith("alt=")) {
+                        altCol = Integer.parseInt(t.substring(4));
+                    }
+                }
+                if (col > -1) {
+                    chain.add(new TabixAnnotation(spl[0], fname[0], col, isNumber, altCol));
+                } else {
+                    chain.add(new TabixAnnotation(spl[0], fname[0]));
+                }
+            } catch (NumberFormatException | IOException  e) {
+                throw new CommandArgumentException(e);
+            }
+        } else {
+            throw new CommandArgumentException("Unable to parse argument for --bed: "+bed);
+        }       
     }
     
     @Option(desc="Flag variants within a BED3 region", name="bed-flag", helpValue="NAME:FILENAME", allowMultiple=true)
