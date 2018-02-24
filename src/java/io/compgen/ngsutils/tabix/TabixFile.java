@@ -6,6 +6,7 @@ import java.util.zip.DataFormatException;
 
 import io.compgen.common.StringUtils;
 import io.compgen.ngsutils.support.LogUtils;
+import io.compgen.ngsutils.tabix.TabixIndex.Chunk;
 
 public class TabixFile {
 	protected String filename;
