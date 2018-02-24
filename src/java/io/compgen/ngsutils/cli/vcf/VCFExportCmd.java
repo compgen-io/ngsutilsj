@@ -42,6 +42,24 @@ public class VCFExportCmd extends AbstractOutputCommand {
     	this.missingBlank = missingBlank;
     }
     
+    @Option(desc="Export FORMAT field", name="format", helpValue="KEY{:SAMPLE:ALLELE}", allowMultiple=true)
+    public void setFormat(String val) throws CommandArgumentException {
+        boolean ignoreMissing = false;
+        if (val.endsWith(":?")) {
+            ignoreMissing = true;
+            val = val.substring(0,  val.length()-2);
+        }
+        
+        String[] spl = val.split(":");
+        if (spl.length == 1) {
+            chain.add(new ExportFormatField(spl[0], null, null, ignoreMissing));
+        } else if (spl.length == 2) {
+            chain.add(new ExportFormatField(spl[0], spl[1], null, ignoreMissing));
+        } else {
+            chain.add(new ExportFormatField(spl[0], spl[1], spl[2], ignoreMissing));
+        }
+    }
+        
     @Option(desc="Export INFO field", name="info", helpValue="KEY{:ALLELE}", allowMultiple=true)
     public void setInfo(String val) throws CommandArgumentException {
     	boolean ignoreMissing = false;
@@ -58,24 +76,6 @@ public class VCFExportCmd extends AbstractOutputCommand {
     	}
     }
     
-    @Option(desc="Export FORMAT field", name="format", helpValue="KEY{:SAMPLE:ALLELE}", allowMultiple=true)
-    public void setFormat(String val) throws CommandArgumentException {
-    	boolean ignoreMissing = false;
-    	if (val.endsWith(":?")) {
-    		ignoreMissing = true;
-    		val = val.substring(0,  val.length()-2);
-    	}
-    	
-    	String[] spl = val.split(":");
-    	if (spl.length == 1) {
-    		chain.add(new ExportFormatField(spl[0], null, null, ignoreMissing));
-    	} else if (spl.length == 2) {
-        	chain.add(new ExportFormatField(spl[0], spl[1], null, ignoreMissing));
-    	} else {
-        	chain.add(new ExportFormatField(spl[0], spl[1], spl[2], ignoreMissing));
-    	}
-    }
-        
     @UnnamedArg(name = "input.vcf", required=true)
     public void setFilename(String filename) throws CommandArgumentException {
     	this.filename = filename;
