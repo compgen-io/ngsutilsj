@@ -155,9 +155,9 @@ public class TabixFile {
     					// calling function can re-parse.
     	
                         if (
-                                (b <= start && start < e) || // query start is within range
-                                (start <= b && e < end) ||   // b,e is contained completely by query
-                                (b < end && end <= e)        // query end is within range
+                                (b <= start && start < e) || // query start is within tabix range
+                                (start <= b && e < end) ||   // tabix range is contained completely by query
+                                (b < end && end <= e)        // query end is within tabix range
                             ) {
                             ret += line+"\n";
                             
@@ -179,7 +179,23 @@ public class TabixFile {
 		return ret.equals("") ? null: ret;
 	}
 
-    public void dumpIndex() throws IOException {
-        index.dump();        
+        public char getMeta() {
+        return index.getMeta();
+    }
+
+    public int getColSeq() {
+        return index.getColSeq();
+    }
+
+    public int getColBegin() {
+        return index.getColBegin();
+    }
+
+    public int getColEnd() {
+        return index.getColEnd();
+    }
+
+    public int getFormat() {
+        return index.getFormat();
     }
 }

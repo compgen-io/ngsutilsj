@@ -69,9 +69,7 @@ public class VCFAnnotation extends AbstractBasicAnnotator {
 	@Override
 	public void annotate(VCFRecord record) throws VCFAnnotatorException {
 		try {
-//			System.err.println("Looking for variants: "+ record.getChrom()+":"+(record.getPos()-1));
-			String records = vcfTabix.query(record.getChrom(), record.getPos()-1);
-//			System.err.println(records);
+			String records = vcfTabix.query(record.getChrom(), record.getPos()-1); // zero-based query
 
 			if (records == null) {
 				return;
@@ -81,6 +79,11 @@ public class VCFAnnotation extends AbstractBasicAnnotator {
 
 			for (String line: records.split("\n")) {
 				VCFRecord bgzfRec = VCFRecord.parseLine(line);
+				
+				if (!bgzfRec.getChrom().equals(record.getChrom()) || bgzfRec.getPos() != record.getPos()) {
+				    // exact pos matches only...
+				    continue;
+				}
 
 				boolean match = !exactMatch;
 				

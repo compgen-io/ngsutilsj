@@ -86,7 +86,6 @@ public class TabixAnnotation extends AbstractBasicAnnotator {
             
 //            System.err.println("Looking for TABIX rows covering: "+record.getChrom() +":"+ record.getPos()+" ("+filename+")");
             String tabixLines = tabix.query(record.getChrom(), record.getPos() - 1);
-
             if (tabixLines == null) {
 //                System.err.println("Not found");
                 return;
@@ -95,47 +94,48 @@ public class TabixAnnotation extends AbstractBasicAnnotator {
             List<String> vals = new ArrayList<String>();
             boolean found = false;
 
-            for (String alt: record.getAlt()) {
-//                System.err.println("  Alt: "+alt);
-                                
-                // for each alt -- process each line; 
-                // that way the order of the results will be consistent
-                
+            if (altColNum > -1) {
+                // need to verify the alt column.
                 for (String line : tabixLines.split("\n")) {
-//                    System.err.println("  Line: "+line);
-                    found = true;
-                    if (colNum > -1) {
+                    for (String alt: record.getAlt()) {
                         String[] spl = line.split("\t");
-    
+                        if (alt.equals(spl[altColNum])) {
+                            found = true;
+                            if (colNum > -1) {
+                                // annotate based on a column value
+                                if (spl.length <= colNum) {
+                                    throw new VCFAnnotatorException("Missing column for line: " + line);
+                                }
+                                vals.add(spl[colNum]);
+                            }
+                        }
+                    }
+                }
+            } else {
+                // just look for a BED region that spans this VCF position
+                found = false;
+                for (String line : tabixLines.split("\n")) {
+                    found = true;
+                    if (colNum > -1) { 
+                        // annotate based on a column value
+                        String[] spl = line.split("\t");
+
                         if (spl.length <= colNum) {
                             throw new VCFAnnotatorException("Missing column for line: " + line);
                         }
-                        
-                        if (altColNum > -1) {
-                            if (alt.equals(spl[altColNum])) {
-//                                System.err.println("  alt match: "+ alt +"="+spl[altColNum]);
-//                                System.err.println("        val: "+ spl[colNum]);
-                                vals.add(spl[colNum]);
-                            }
-                        } else {
-//                            System.err.println("        val: "+ spl[colNum]);
-                            vals.add(spl[colNum]);
-                        }
+                        vals.add(spl[colNum]);
                     }
                 }
             }
 
             if (colNum == -1) {
                 if (found) {
-//                    System.err.println("  FLAG");
                     record.getInfo().put(name, VCFAttributeValue.EMPTY);
                 }
             } else {
                 if (vals.size() == 0) {
-//                    System.err.println("  MISSING");
                     record.getInfo().put(name, VCFAttributeValue.MISSING);
                 } else {
-//                    System.err.println("  VALUES: "+StringUtils.join(",", vals));
                     record.getInfo().put(name, new VCFAttributeValue(StringUtils.join(",", vals)));
                 }
             }
