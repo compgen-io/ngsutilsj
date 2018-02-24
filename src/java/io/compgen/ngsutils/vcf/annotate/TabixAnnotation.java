@@ -1,7 +1,5 @@
 package io.compgen.ngsutils.vcf.annotate;
 
-import java.io.File;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -10,7 +8,7 @@ import java.util.Map;
 import java.util.zip.DataFormatException;
 
 import io.compgen.common.StringUtils;
-import io.compgen.ngsutils.tabix.BGZFile;
+import io.compgen.ngsutils.tabix.TabixFile;
 import io.compgen.ngsutils.vcf.VCFAnnotationDef;
 import io.compgen.ngsutils.vcf.VCFAttributeValue;
 import io.compgen.ngsutils.vcf.VCFHeader;
@@ -18,11 +16,11 @@ import io.compgen.ngsutils.vcf.VCFParseException;
 import io.compgen.ngsutils.vcf.VCFRecord;
 
 public class TabixAnnotation extends AbstractBasicAnnotator {
-    private static Map<String, BGZFile> cache = new HashMap<String, BGZFile>();
+    private static Map<String, TabixFile> cache = new HashMap<String, TabixFile>();
 
     final protected String name;
     final protected String filename;
-    final protected BGZFile bgzf;
+    final protected TabixFile tabix;
     final protected int colNum;
     final protected int altColNum;
     final protected boolean isNumber;
@@ -34,7 +32,7 @@ public class TabixAnnotation extends AbstractBasicAnnotator {
         this.colNum = colNum;
         this.isNumber = isNumber;
         this.altColNum = altColNum;
-        this.bgzf = getBGZFile(filename);
+        this.tabix = getTabixFile(filename);
     }
 
     public TabixAnnotation(String name, String filename, int colNum, boolean isNumber)
@@ -46,18 +44,9 @@ public class TabixAnnotation extends AbstractBasicAnnotator {
         this(name, filename, -1, false, -1);
     }
 
-    private static BGZFile getBGZFile(String filename) throws IOException {
+    private static TabixFile getTabixFile(String filename) throws IOException {
         if (!cache.containsKey(filename)) {
-            if (!BGZFile.isBGZFile(filename)) {
-                throw new IOException("VCF file: " + filename + " is not BGZip compressed");
-            }
-            if (!new File(filename + ".csi").exists()) {
-                if (!new File(filename + ".tbi").exists()) {
-                    throw new IOException(
-                            "VCF file: " + filename + " is missing a CSI/TBI index");
-                }
-            }
-            cache.put(filename, new BGZFile(filename));
+            cache.put(filename, new TabixFile(filename));
         }
         return cache.get(filename);
     }
@@ -85,7 +74,7 @@ public class TabixAnnotation extends AbstractBasicAnnotator {
     @Override
     public void close() throws VCFAnnotatorException {
         try {
-            bgzf.close();
+            tabix.close();
         } catch (IOException e) {
             throw new VCFAnnotatorException(e);
         }
@@ -94,10 +83,11 @@ public class TabixAnnotation extends AbstractBasicAnnotator {
     @Override
     public void annotate(VCFRecord record) throws VCFAnnotatorException {
         try {
+            
 //            System.err.println("Looking for TABIX rows covering: "+record.getChrom() +":"+ record.getPos()+" ("+filename+")");
-            String tabix = bgzf.query(record.getChrom(), record.getPos() - 1);
+            String tabixLines = tabix.query(record.getChrom(), record.getPos() - 1);
 
-            if (tabix == null) {
+            if (tabixLines == null) {
 //                System.err.println("Not found");
                 return;
             }
@@ -111,7 +101,7 @@ public class TabixAnnotation extends AbstractBasicAnnotator {
                 // for each alt -- process each line; 
                 // that way the order of the results will be consistent
                 
-                for (String line : tabix.split("\n")) {
+                for (String line : tabixLines.split("\n")) {
 //                    System.err.println("  Line: "+line);
                     found = true;
                     if (colNum > -1) {

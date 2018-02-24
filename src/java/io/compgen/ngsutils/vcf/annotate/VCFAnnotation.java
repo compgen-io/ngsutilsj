@@ -1,6 +1,5 @@
 package io.compgen.ngsutils.vcf.annotate;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -9,7 +8,7 @@ import java.util.Map;
 import java.util.zip.DataFormatException;
 
 import io.compgen.common.StringUtils;
-import io.compgen.ngsutils.tabix.BGZFile;
+import io.compgen.ngsutils.tabix.TabixFile;
 import io.compgen.ngsutils.vcf.VCFAnnotationDef;
 import io.compgen.ngsutils.vcf.VCFAttributeException;
 import io.compgen.ngsutils.vcf.VCFAttributeValue;
@@ -18,11 +17,11 @@ import io.compgen.ngsutils.vcf.VCFParseException;
 import io.compgen.ngsutils.vcf.VCFRecord;
 
 public class VCFAnnotation extends AbstractBasicAnnotator {
-	private static Map<String, BGZFile> cache = new HashMap<String, BGZFile>();
+	private static Map<String, TabixFile> cache = new HashMap<String, TabixFile>();
 	
 	final protected String name;
 	final protected String filename;
-	final protected BGZFile bgzf;
+	final protected TabixFile vcfTabix;
 	final protected String infoVal;
 	final protected boolean exactMatch;
 	
@@ -31,24 +30,16 @@ public class VCFAnnotation extends AbstractBasicAnnotator {
 		this.filename = filename;
 		this.infoVal = infoVal;
 		this.exactMatch = exact;
-		this.bgzf = getBGZFile(filename);
+		this.vcfTabix = getTabixFile(filename);
 	}	
 
 	public VCFAnnotation(String name, String filename, String infoVal) throws IOException {
 		this(name, filename, infoVal, false);
 	}
 	
-	private static BGZFile getBGZFile(String filename) throws IOException {
+	private static TabixFile getTabixFile(String filename) throws IOException {
 		if (!cache.containsKey(filename)) {
-			if (!BGZFile.isBGZFile(filename)) {
-				throw new IOException("VCF file: "+filename+" is not BGZip compressed");
-			}
-            if (!new File(filename+".csi").exists()) {
-                if (!new File(filename+".tbi").exists()) {
-                    throw new IOException("VCF file: "+filename+" is missing a CSI/TBI index");
-                }
-            }
-			cache.put(filename, new BGZFile(filename));
+			cache.put(filename, new TabixFile(filename));
 		}
 		return cache.get(filename);		
 	}
@@ -69,7 +60,7 @@ public class VCFAnnotation extends AbstractBasicAnnotator {
 	@Override
 	public void close() throws VCFAnnotatorException {
 		try {
-			bgzf.close();
+			vcfTabix.close();
 		} catch (IOException e) {
 			throw new VCFAnnotatorException(e);
 		}
@@ -79,7 +70,7 @@ public class VCFAnnotation extends AbstractBasicAnnotator {
 	public void annotate(VCFRecord record) throws VCFAnnotatorException {
 		try {
 //			System.err.println("Looking for variants: "+ record.getChrom()+":"+(record.getPos()-1));
-			String records = bgzf.query(record.getChrom(), record.getPos()-1);
+			String records = vcfTabix.query(record.getChrom(), record.getPos()-1);
 //			System.err.println(records);
 
 			if (records == null) {
@@ -89,19 +80,20 @@ public class VCFAnnotation extends AbstractBasicAnnotator {
 			List<String> vals = new ArrayList<String>();
 
 			for (String line: records.split("\n")) {
-//				System.err.println(">>"+line);
 				VCFRecord bgzfRec = VCFRecord.parseLine(line);
 
 				boolean match = !exactMatch;
 				
 				if (exactMatch) {
-					for (String a1: bgzfRec.getAlt()) {
-						for (String a2: record.getAlt()) {
-							if (a1.equals(a2)) { 
-								match = true;
-							}
-						}
-					}
+				    if (bgzfRec.getAlt()!=null) {
+    					for (String a1: bgzfRec.getAlt()) {
+    						for (String a2: record.getAlt()) {
+    							if (a1.equals(a2)) { 
+    								match = true;
+    							}
+    						}
+    					}
+				    }
 				}
 				
 				if (match) {

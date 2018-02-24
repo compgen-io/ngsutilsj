@@ -71,6 +71,7 @@ import io.compgen.ngsutils.cli.vcf.VCFExportCmd;
 import io.compgen.ngsutils.cli.vcf.VCFFilterCmd;
 import io.compgen.ngsutils.cli.vcf.VCFToBED;
 import io.compgen.ngsutils.support.stats.FisherCli;
+import io.compgen.ngsutils.tabix.BGZFCat;
 import io.compgen.ngsutils.tabix.TabixQuery;
 
 @SuppressWarnings("deprecation")
@@ -155,7 +156,8 @@ public class NGSUtils {
             .addCommand(VCFExportCmd.class)
             .addCommand(VCFToBED.class)
             .addCommand(VCFChrFix.class)
-            .addCommand(TabixQuery.class);
+            .addCommand(TabixQuery.class)
+            .addCommand(BGZFCat.class);
 
         
 

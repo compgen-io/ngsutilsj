@@ -4,15 +4,13 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.PrintStream;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.zip.GZIPInputStream;
 
 import io.compgen.common.StringUtils;
 import io.compgen.common.io.DataIO;
+import io.compgen.ngsutils.support.LogUtils;
 
 public class TBIFile implements TabixIndex {
 
@@ -89,7 +87,7 @@ public class TBIFile implements TabixIndex {
             this.seqNames[i] = seqNames.get(i);
         }
 
-        refs = new Ref[nRef];
+        this.refs = new Ref[nRef];
 
         for (int i = 0; i < refs.length; i++) {
             final int nBin = DataIO.readInt32(in);
@@ -161,6 +159,16 @@ public class TBIFile implements TabixIndex {
     @Override
     public int getFormat() {
         return format;
+    }
+    
+    @Override
+    public boolean containsSeq(String name) {
+        for (String s: seqNames) {
+            if (s.equals(name)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public void dump() throws IOException {
@@ -282,33 +290,10 @@ public class TBIFile implements TabixIndex {
             refIdx++;
         }
 
-        if (refIdx >= seqNames.length) {
-            // didn't find it -- check chrX/X ??
-            
-            if (chrom.startsWith("chr")) {
-                refIdx = 0;
-                while (refIdx < seqNames.length && !seqNames[refIdx].equals(chrom.substring(3))) {
-                    refIdx++;
-                }
-                if (refIdx < seqNames.length) {
-                    printOnce(System.err, "Auto converting between UCSC/Ensembl chrom format: chrZ => Z");
-                }
-
-            } else {
-                refIdx = 0;
-                while (refIdx < seqNames.length && !seqNames[refIdx].equals("chr"+chrom)) {
-                    refIdx++;
-                }
-                if (refIdx < seqNames.length) {
-                    printOnce(System.err, "Auto converting between UCSC/Ensembl chrom format: Z => chrZ");
-                }
-            }
-        }
-
         final List<Chunk> chunks = new ArrayList<Chunk>();
 
         if (refIdx >= seqNames.length) {
-            printOnce(System.err, "Can't find reference: " + chrom + " in index");
+            LogUtils.printOnce(System.err, "Can't find reference: " + chrom + " in index");
             return chunks;
         }
 
@@ -337,16 +322,6 @@ public class TBIFile implements TabixIndex {
         }
         return chunks;
     }
-
-    private static Set<String> printed = new HashSet<String>();
-    
-    public static void printOnce(PrintStream ps, String str) {
-        if (!printed.contains(str)) {
-            printed.add(str);
-            ps.println(str);
-        }
-    }
-
 
 }
 

@@ -4,23 +4,18 @@ import java.io.IOException;
 import java.util.List;
 
 class Chunk {
-    final protected long begin;
-    final protected long end;
-    
-    final protected int coffsetBegin;
+    final protected long coffsetBegin;
     final protected int uoffsetBegin;
-    final protected int coffsetEnd;
+    final protected long coffsetEnd;
     final protected int uoffsetEnd;
 
     public Chunk(long begin, long end) {
-        this.begin = begin;
-        this.end = end;
-
-        coffsetBegin = (int) (begin>>16);
+        coffsetBegin = (begin >> 16) & 0xFFFFFFFFFFFFl;
         uoffsetBegin = (int) (begin & 0xFFFF);
         
-        coffsetEnd = (int) (end>>16);
+        coffsetEnd = (end >> 16) & 0xFFFFFFFFFFFFl;
         uoffsetEnd = (int) (end & 0xFFFF);
+
     }
 }
 
@@ -32,4 +27,6 @@ public interface TabixIndex {
     public int getColBegin();
     public int getColEnd();
     public int getFormat();
+    public boolean containsSeq(String name);
+    public void dump() throws IOException;
 }

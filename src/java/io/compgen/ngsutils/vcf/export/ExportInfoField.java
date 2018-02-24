@@ -2,8 +2,11 @@ package io.compgen.ngsutils.vcf.export;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
+import io.compgen.common.Pair;
 import io.compgen.ngsutils.support.GlobUtils;
 import io.compgen.ngsutils.vcf.VCFAttributeException;
 import io.compgen.ngsutils.vcf.VCFAttributeValue;
@@ -11,6 +14,8 @@ import io.compgen.ngsutils.vcf.VCFHeader;
 import io.compgen.ngsutils.vcf.VCFRecord;
 
 public class ExportInfoField implements VCFExport {
+    protected static Set<Pair<String,String>> exportedFields = new HashSet<Pair<String,String>>();
+    
 	private final String keyName;
 	protected VCFHeader header = null;
 	private String alleleName;
@@ -35,7 +40,14 @@ public class ExportInfoField implements VCFExport {
 		List<String> ids = new ArrayList<String>();
 		for (String id: header.getInfoIDs()) {
 		    if (GlobUtils.matches(id, keyName)) {
-		        ids.add(id);
+		        Pair<String, String> pair = new Pair<String, String>(id, alleleName);
+		        if (!exportedFields.contains(pair)) {
+		            // don't export a field more than once across multiple instances.
+		            // this stops a glob (*) from exporting something that was explicitly
+		            // added eariler.
+		            exportedFields.add(pair);
+		            ids.add(id);
+		        }
 		    }
 		}		
         this.ids = Collections.unmodifiableList(ids);

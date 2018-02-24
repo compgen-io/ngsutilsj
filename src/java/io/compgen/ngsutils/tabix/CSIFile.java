@@ -5,15 +5,13 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.PrintStream;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.zip.GZIPInputStream;
 
 import io.compgen.common.StringUtils;
 import io.compgen.common.io.DataIO;
+import io.compgen.ngsutils.support.LogUtils;
 
 public class CSIFile implements TabixIndex {
 
@@ -70,8 +68,14 @@ public class CSIFile implements TabixIndex {
         minShift = DataIO.readInt32(in);
         depth = DataIO.readInt32(in);
         auxLength = DataIO.readInt32(in);
-        aux = DataIO.readRawBytes(in, auxLength);
 
+        if (auxLength < 28) {
+            throw new IOException("Missing aux data in CSI header -- is this a tabix-compatible index?");
+        }
+
+        aux = DataIO.readRawBytes(in, auxLength);
+        
+        // read aux data...
         final ByteArrayInputStream auxIS = new ByteArrayInputStream(aux);
         format = DataIO.readInt32(auxIS);
         colSeq = DataIO.readInt32(auxIS);
@@ -104,7 +108,7 @@ public class CSIFile implements TabixIndex {
 
         final int nRef = DataIO.readInt32(in);
 
-        refs = new Ref[nRef];
+        this.refs = new Ref[nRef];
 
         for (int i = 0; i < refs.length; i++) {
             final int nBin = DataIO.readInt32(in);
@@ -172,6 +176,16 @@ public class CSIFile implements TabixIndex {
         return format;
     }
 
+    @Override
+    public boolean containsSeq(String name) {
+        for (String s: seqNames) {
+            if (s.equals(name)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
     public void dump() throws IOException {
         System.out.println("magic: " + StringUtils.byteArrayToString(magic) + " => "
                 + (char) magic[0] + (char) magic[1] + (char) magic[2] + "\\" + magic[3] + "");
@@ -180,15 +194,16 @@ public class CSIFile implements TabixIndex {
         System.out.println("l_aux: " + auxLength);
         System.out.println("aux: " + StringUtils.byteArrayToString(aux));
 
-        System.out.println("format: " + format);
-        System.out.println("col_seq: " + colSeq);
-        System.out.println("col_beg: " + colBegin);
-        System.out.println("col_end: " + colEnd);
-        System.out.println("meta: " + meta);
-        System.out.println("skip: " + skipLines);
+        System.out.println("  format: " + format);
+        System.out.println("  col_seq: " + colSeq);
+        System.out.println("  col_beg: " + colBegin);
+        System.out.println("  col_end: " + colEnd);
+        System.out.println("  meta: " + meta);
+        System.out.println("  skip: " + skipLines);
+        System.out.println("  nseq: " + seqNames.length);
 
         for (int i = 0; i < seqNames.length; i++) {
-            System.out.println("seq[" + i + "]: " + seqNames[i]);
+            System.out.println("    seq[" + i + "]: " + seqNames[i]);
         }
 
         System.out.println("n_ref: " + refs.length);
@@ -196,18 +211,18 @@ public class CSIFile implements TabixIndex {
         for (int i = 0; i < refs.length; i++) {
             System.out.println("    n_bin: " + refs[i].bins.length);
 
-            // for (int j=0; j<refs[i].bins.length; j++) {
-            // System.out.println(" bin: " + refs[i].bins[j].bin);
-            // System.out.println(" loffset: " + refs[i].bins[j].lOffset);
-            //
-            // System.out.println(" n_chunk: " + refs[i].bins[j].chunks.length);
-            // for (int k=0; k<refs[i].bins[j].chunks.length; k++) {
-            // System.out.println(" chunk_beg: " +
-            // refs[i].bins[j].chunks[k].begin);
-            // System.out.println(" chunk_end: " +
-            // refs[i].bins[j].chunks[k].end);
-            // }
-            // }
+//             for (int j=0; j<refs[i].bins.length; j++) {
+//             System.out.println("      bin: " + refs[i].bins[j].bin);
+//             System.out.println("      loffset: " + refs[i].bins[j].lOffset + " => " + ((refs[i].bins[j].lOffset>> 16) & 0xFFFFFFFFFFFFl)+ " | " + (refs[i].bins[j].lOffset & 0xFFFF));
+//            
+//             System.out.println("      n_chunk: " + refs[i].bins[j].chunks.length);
+//             for (int k=0; k<refs[i].bins[j].chunks.length; k++) {
+//             System.out.println("          chunk_beg: " +
+//             refs[i].bins[j].chunks[k].coffsetBegin+"|"+refs[i].bins[j].chunks[k].uoffsetBegin);
+//             System.out.println("          chunk_end: " +
+//             refs[i].bins[j].chunks[k].coffsetEnd+"|"+refs[i].bins[j].chunks[k].uoffsetEnd);
+//             }
+//             }
         }
 
         System.out.println("n_no_coor: " + nNoCoor);
@@ -305,49 +320,35 @@ public class CSIFile implements TabixIndex {
 
     @Override
     public List<Chunk> find(String chrom, int start, int end) throws IOException {
+//        System.out.println("Searching for: "+chrom+":"+start+","+end);
         int refIdx = 0;
         while (refIdx < seqNames.length && !seqNames[refIdx].equals(chrom)) {
             refIdx++;
         }
 
-        if (refIdx >= seqNames.length) {
-            // didn't find it -- check chrX/X ??
-            
-            if (chrom.startsWith("chr")) {
-                refIdx = 0;
-                while (refIdx < seqNames.length && !seqNames[refIdx].equals(chrom.substring(3))) {
-                    refIdx++;
-                }
-                if (refIdx < seqNames.length) {
-                    printOnce(System.err, "Auto converting between UCSC/Ensembl chrom format: chrZ => Z");
-                }
-
-            } else {
-                refIdx = 0;
-                while (refIdx < seqNames.length && !seqNames[refIdx].equals("chr"+chrom)) {
-                    refIdx++;
-                }
-                if (refIdx < seqNames.length) {
-                    printOnce(System.err, "Auto converting between UCSC/Ensembl chrom format: Z => chrZ");
-                }
-            }
-        }
-
         final List<Chunk> chunks = new ArrayList<Chunk>();
 
         if (refIdx >= seqNames.length) {
-            printOnce(System.err, "Can't find reference: " + chrom + " in index");
+            LogUtils.printOnce(System.err, "Can't find reference: " + chrom + " in index");
             return chunks;
         }
 
-        // System.out.println("refIdx="+refIdx+" => " + seqNames[refIdx]);
+//        System.out.println("refIdx="+refIdx+" => " + seqNames[refIdx]);
         final Ref ref = refs[refIdx];
 
         final long[] possibleBins = reg2bins(start, end, minShift, depth);
         for (final long bin : possibleBins) {
-            // System.out.println("bin: " +bin );
+//            System.out.println("POSSIBLE BIN: " +bin );
             chunks.addAll(findInRefBin(ref.bins, bin));
         }
+        
+//        for (Chunk c: chunks) {
+//          System.out.println("          chunk_beg: " +
+//          c.coffsetBegin+"|"+c.uoffsetBegin);
+//          System.out.println("          chunk_end: " +
+//          c.coffsetEnd+"|"+c.uoffsetEnd);
+//        }
+
         return chunks;
     }
 
@@ -364,15 +365,6 @@ public class CSIFile implements TabixIndex {
             }
         }
         return chunks;
-    }
-
-    private static Set<String> printed = new HashSet<String>();
-    
-    public static void printOnce(PrintStream ps, String str) {
-        if (!printed.contains(str)) {
-            printed.add(str);
-            ps.println(str);
-        }
     }
 
 }

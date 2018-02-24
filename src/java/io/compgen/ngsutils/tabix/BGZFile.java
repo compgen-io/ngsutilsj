@@ -1,12 +1,10 @@
 package io.compgen.ngsutils.tabix;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.RandomAccessFile;
+import java.util.Arrays;
 import java.util.zip.DataFormatException;
 import java.util.zip.GZIPInputStream;
 
@@ -14,197 +12,74 @@ import io.compgen.common.io.DataIO;
 
 public class BGZFile {
 	protected String filename;
-	protected TabixIndex index;
 	protected RandomAccessFile file;
 	
 	public BGZFile(String filename) throws IOException {
+	    if (!isBGZFile(filename)) {
+	        throw new IOException("File: "+filename+" is not a valid BGZ file!");
+	    }
 		this.filename = filename;
-        this.index = null;
-		try {
-            if (new File(filename+".csi").exists()) {
-                this.index = new CSIFile(new File(filename+".csi"));
-            } else if (new File(filename+".tbi").exists()) {
-                this.index = new TBIFile(new File(filename+".tbi"));
-    		}
-		} catch (IOException e) {
-		    // Sometimes there will be an error when loading the 
-		    // index (if it is being created at the time)
-		    // in which case, we can assume the index isn't valid.
-		    // 
-		    // This may or may not be an issue for downstream, but
-		    // here we can treat it as a missing index
-		    //
-	        this.index = null;
-		}
-		this.file = new RandomAccessFile(filename, "r");
-//		System.err.println("Opened file: "+filename+", pos="+file.getFilePointer());
+        this.file = new RandomAccessFile(filename, "r");
 	}
 	
 	public void close() throws IOException {
 		file.close();
-		if (index != null) {
-			index.close();
-		}
 	}
 
-	public InputStream queryInputStream(String ref, int start) throws IOException, DataFormatException {
-		return queryInputStream(ref, start, start+1);
-	}
-	public InputStream queryInputStream(String ref, int start, int end) throws IOException, DataFormatException {
-		String s = queryWithin(ref, start, end);
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		baos.write(s.getBytes());
-		byte[] buffer = baos.toByteArray();
-		return new ByteArrayInputStream(buffer);
-	}
-
-	/**
-	 * 
-	 * @param ref
-	 * @param start (zero-based)
-	 * @return
-	 * @throws IOException
-	 * @throws DataFormatException
-	 */
-	public String query(String ref, int start) throws IOException, DataFormatException {
-		return queryWithin(ref, start, start+1);
-	}
-	
-	/**
-	 * Returns lines from the TABIX file that completely CONTAIN the query range
-	 * 
-     * YES:
-     *      |             |
-     *      |-------------|
-     *      |   [query]   |
-     *      [query]
-     *              [query]
-     * 
-     * No:
-     * 
-     *      |             |
-     *      |-------------|
-     *      |             |
-     *                 [query]
-     * [query]
-     *    [ ===== query===== ]
-	 * 
-	 * 
-	 * @param ref
-	 * @param start - zero-based
-	 * @param end
-	 * @return
-	 * @throws IOException
-	 * @throws DataFormatException
-	 */
-    public String queryWithin(String ref, int start, int end) throws IOException, DataFormatException {
-        return innerQuery(ref, start, end, false);
-    }
-
-    public String queryOverlap(String ref, int start, int end) throws IOException, DataFormatException {
-        return innerQuery(ref, start, end, true);
-    }
-
-    protected String innerQuery(String ref, int start, int end, boolean overlap) throws IOException, DataFormatException {
-		String ret = "";
-		if (index == null) {
-			throw new IOException("Missing TBI or CSI index file!");
-		}
-		for (Chunk chunk: index.find(ref, start, end)) {
-			String s = readChunks(chunk.coffsetBegin, chunk.uoffsetBegin, chunk.coffsetEnd, chunk.uoffsetEnd);
-			for (String line: s.split("\n")) {
-				if (line.startsWith(""+index.getMeta())) {
-					continue;
-				}
-				String[] cols = line.split("\t");
-//				System.err.println(StringUtils.join(",", cols));
-				if (cols[index.getColSeq()-1].equals(ref)) {
-				    int b, e;
-				    
-					if (index.getColEnd() > 0) {
-						b = Integer.parseInt(cols[index.getColBegin()-1]);
-						e = Integer.parseInt(cols[index.getColEnd()-1]);
-					} else {
-                        b = Integer.parseInt(cols[index.getColBegin()-1]);
-                        e = Integer.parseInt(cols[index.getColBegin()-1]);;
-					}
-					
-					if ((index.getFormat()&0x10000) == 0) {
-						// convert one-based begin coord (in bgzip file)
-						b--;
-					}
-					
-//					System.err.println("b="+b+", e="+e+", start="+start+", end="+end);
-					
-					// return if the spans overlap at all -- if necessary, the 
-					// calling function can re-parse.
-	
-					if (!overlap) {
-                        if (
-                                (b <= start && start < e) && // query start is within range
-                                (b < end && end <= e)        // AND query end is within range
-                            ) {
-    //                          System.err.println("YES!");
-                            ret += line+"\n";
-                        }
-					} else {
-                        if (
-                                (b <= start && start < e) || // query start is within range
-                                (start <= b && e < end) ||   // b,e is contained completely by query
-                                (b < end && end <= e)        // query end is within range
-                            ) {
-    //                          System.err.println("YES!");
-                            ret += line+"\n";
-                        }
-					}
-				}
-			}
-		}
-		
-		return ret.equals("") ? null: ret;
-	}
-
-	
-	protected String readChunks(int cOffsetBegin,int uOffsetBegin,int cOffsetEnd, int uOffsetEnd) throws IOException, DataFormatException {
+	protected byte[] readChunks(long cOffsetBegin,int uOffsetBegin,long cOffsetEnd, int uOffsetEnd) throws IOException, DataFormatException {
 		// TODO: Load chunks from a cache...
 		
-//		System.err.println("offset => " + cOffsetBegin + ","+uOffsetBegin + " => "+ cOffsetEnd + ","+uOffsetEnd);
+//	    System.err.println("offset => " + cOffsetBegin + ","+uOffsetBegin + " => "+ cOffsetEnd + ","+uOffsetEnd);
 		
-		file.seek(cOffsetBegin);
-		String s = "";
+	    file.seek(cOffsetBegin);
+
+//	    String s = "";
+//		int chunkNum = 1;
 		
-		long curOffset = cOffsetBegin;
+		byte[] buf = new byte[0];
+		int pos = 0;
 		
 		while (file.getFilePointer() <= cOffsetEnd) {
-			String tmpStr = readCurrentChunk();
-			int start = 0;
-			int end = tmpStr.length();
+            long curOffset = file.getFilePointer();
+			byte[] cur = readCurrentBlock();
+
+//			System.err.println("chunk["+(chunkNum++)+"] "+curOffset+", "+cur.length);
 			
-//			System.err.println("curOffset="+curOffset);
+			int start = 0;
+			int end = cur.length;
+			
 			if (curOffset == cOffsetBegin) {
 //				System.err.println("Offsetting chunk (begin); "+uOffsetBegin);
 				start = uOffsetBegin;
 			}
-
-			curOffset = file.getFilePointer();
-//			System.err.println("newOffset="+curOffset);
 
 			if (curOffset > cOffsetEnd) {
 //				System.err.println("Offsetting chunk (end); "+uOffsetEnd);
 				end = uOffsetEnd;
 			}
 
+			if (start != 0 || end != cur.length) {
+			    cur = Arrays.copyOfRange(cur, start, end);
+			}
+
+			buf = Arrays.copyOf(buf, buf.length + cur.length);
+			for (int i=0; i<cur.length;i++) {
+			    buf[pos + i] = cur[i];
+			}
+			pos = pos + cur.length;
+			
 //			System.err.println("tmpStr.length="+tmpStr.length());
 //			System.err.println("start="+start+", end="+end);
 			
-			s+= tmpStr.substring(start, end); 
+//			s+= tmpStr.substring(start, end); 
 			
 		}
 		
-		return s;
+//        System.err.println(" CHUNK (complete) => \n"+s);
+		return buf;
 	}
 
-	protected String readCurrentChunk() throws IOException {
+	protected byte[] readCurrentBlock() throws IOException {
 //		System.err.println("reading chunk -- fname  = " + filename+ ", curpos = " + file.getFilePointer() +", length = " + file.length());
 		
 		long curOffset = file.getFilePointer();
@@ -228,7 +103,7 @@ public class BGZFile {
 //		long mtime = DataIO.readUint32(file);
 //		int xfl = DataIO.readByte(file);
 //		int os = DataIO.readByte(file);
-//		DataIO.readRawBytes(file, 8);
+
 		file.skipBytes(8);
 		int xlen = DataIO.readUint16(file);
 		
@@ -249,15 +124,22 @@ public class BGZFile {
 			}
 		}
 		bais.close();
-
-//		byte[] cdata = DataIO.readRawBytes(file, bsize - xlen - 19);
-//		long crc = DataIO.readUint32(file);
-//		DataIO.readRawBytes(file, bsize - xlen - 19);
-//		DataIO.readUint32(file);
-		file.skipBytes(bsize - xlen - 19);
-		file.skipBytes(4);
-		long isize = DataIO.readUint32(file);
 		
+		if (bsize == 0) {
+		    throw new IOException("Invalid BGZF chunk (missing BSIZE)!");
+		}
+
+		// payload
+		//byte[] cdata = DataIO.readRawBytes(file, bsize - xlen - 19);
+		file.skipBytes(bsize - xlen - 19);
+		// crc
+		//long crc = DataIO.readUint32(file);
+		file.skipBytes(4);
+		
+		// Uncompressed size [0, 65536]
+		long isize = DataIO.readUint32(file);
+//        System.err.println("isize => " + isize);
+
 //		System.out.println("magic1: "+ magic1);
 //		System.out.println("magic2: "+ magic2);
 //		System.out.println("cm    : "+ cm);
@@ -271,29 +153,34 @@ public class BGZFile {
 //		System.out.println("crc : "+ crc);
 //		System.out.println("isize : "+ isize);
 		
-//		System.out.println("cur-pointer: " + file.getFilePointer());
-		
-		byte[] buf = new byte[bsize+1];
-		file.seek(curOffset);
-		file.read(buf, 0, buf.length);
+        // Now that we know all of the sizes, let's read in the compressed chunk and decompress the 
+        // full GZip record (naked inflate on cdata was acting funny...)
 
-		// Now that we know all of the sizes, let's read in the compressed chunk and decompress the 
-		// full GZip record (naked inflate was acting funny...)
+		// jump back to the beginning of the record
+		// and read it into a byte array
 		
-		GZIPInputStream in = new GZIPInputStream(new ByteArrayInputStream(buf));
-		byte[] outBuf = new byte[(int) isize];
-		int read = 0;
-		while (read < isize) {
-			int c = in.read(outBuf, read, outBuf.length - read);
+		byte[] cBuf = new byte[bsize+1];
+		file.seek(curOffset);
+		file.readFully(cBuf, 0, cBuf.length);
+
+		GZIPInputStream in = new GZIPInputStream(new ByteArrayInputStream(cBuf));
+		byte[] uBuf = new byte[(int) isize];
+		int readPos = 0;
+		while (readPos < isize) {
+			int c = in.read(uBuf, readPos, uBuf.length - readPos);
 			if (c == -1) {
 				break;
 			}
-			read += c;
+			readPos += c;
+//			System.err.println("================================");
+//	        System.err.println("reading chunk -- fname  = " + filename+ ", curOffset = " + curOffset +", clen = "+(bsize+1)+", ulen = "+isize);
+//            System.err.println("["+curOffset+"] Read "+c+" bytes from BGZF record // strlen=" + new String(uBuf).length()+", readPos="+readPos);
+//            System.err.println(new String(uBuf).substring(0,readPos));
 		}
 
 		in.close();
 //		System.err.println("read chunk -- fname  = " + filename+ ", curpos = " + file.getFilePointer() +", length = " + file.length());
-		return new String(outBuf);
+		return uBuf;
 	}
 
 //	public void dumpIndex() throws IOException {

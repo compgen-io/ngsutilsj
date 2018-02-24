@@ -19,17 +19,11 @@ public class BGZInputStream extends InputStream {
 	@Override
 	public int read() throws IOException {
 		if (buf == null || buf.available() == 0) {
-			String s;
-			try {
-				s = bgzf.readCurrentChunk();
-				if (s == null) {
-					return -1;
-				}
-			} catch (IOException e) {
-				return -1;
-			}
-
-			buf = new ByteArrayInputStream(s.getBytes());
+		    byte[] cur = bgzf.readCurrentBlock();
+		    if (cur == null ) {
+		        return -1;
+		    }
+            buf = new ByteArrayInputStream(cur);
 		}		
 		return buf.read();
 	}
