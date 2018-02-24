@@ -128,15 +128,15 @@ public class TabixAnnotation extends AbstractBasicAnnotator {
                 }
             }
 
-            if (colNum == -1) {
-                if (found) {
+            if (found) {
+                if (colNum == -1) {
                     record.getInfo().put(name, VCFAttributeValue.EMPTY);
-                }
-            } else {
-                if (vals.size() == 0) {
-                    record.getInfo().put(name, VCFAttributeValue.MISSING);
                 } else {
-                    record.getInfo().put(name, new VCFAttributeValue(StringUtils.join(",", vals)));
+                    if (vals.size() == 0) {
+                        record.getInfo().put(name, VCFAttributeValue.MISSING);
+                    } else {
+                        record.getInfo().put(name, new VCFAttributeValue(StringUtils.join(",", vals)));
+                    }
                 }
             }
         } catch (IOException | DataFormatException e) {
