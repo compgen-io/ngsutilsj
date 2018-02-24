@@ -26,15 +26,14 @@ public class BGZFile {
 		file.close();
 	}
 
-	protected byte[] readChunks(long cOffsetBegin,int uOffsetBegin,long cOffsetEnd, int uOffsetEnd) throws IOException, DataFormatException {
+	public byte[] readBlocks(long cOffsetBegin,int uOffsetBegin,long cOffsetEnd, int uOffsetEnd) throws IOException, DataFormatException {
 		// TODO: Load chunks from a cache...
 		
 //	    System.err.println("offset => " + cOffsetBegin + ","+uOffsetBegin + " => "+ cOffsetEnd + ","+uOffsetEnd);
 		
 	    file.seek(cOffsetBegin);
 
-//	    String s = "";
-//		int chunkNum = 1;
+//		int blockNum = 1;
 		
 		byte[] buf = new byte[0];
 		int pos = 0;
@@ -43,7 +42,7 @@ public class BGZFile {
             long curOffset = file.getFilePointer();
 			byte[] cur = readCurrentBlock();
 
-//			System.err.println("chunk["+(chunkNum++)+"] "+curOffset+", "+cur.length);
+//			System.err.println("block["+(blockNum++)+"] "+curOffset+", "+cur.length);
 			
 			int start = 0;
 			int end = cur.length;
@@ -53,7 +52,7 @@ public class BGZFile {
 				start = uOffsetBegin;
 			}
 
-			if (curOffset > cOffsetEnd) {
+			if (curOffset >= cOffsetEnd) {
 //				System.err.println("Offsetting chunk (end); "+uOffsetEnd);
 				end = uOffsetEnd;
 			}
@@ -68,14 +67,10 @@ public class BGZFile {
 			}
 			pos = pos + cur.length;
 			
-//			System.err.println("tmpStr.length="+tmpStr.length());
-//			System.err.println("start="+start+", end="+end);
-			
-//			s+= tmpStr.substring(start, end); 
-			
+//			System.err.println("start="+start+", end="+end+", buf.length="+buf.length);
 		}
 		
-//        System.err.println(" CHUNK (complete) => \n"+s);
+//        System.err.println(" block (complete)");
 		return buf;
 	}
 

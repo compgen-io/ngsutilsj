@@ -118,11 +118,11 @@ public class TabixFile {
 
 //        System.err.println("Finding chunks for: "+ref+":"+start+","+end);
 
-//        int i=1;
+        int i=1;
 		for (Chunk chunk: index.find(ref, start, end)) {
 //	        System.err.println("  chunk["+(i++)+"]"+chunk.coffsetBegin +","+ chunk.uoffsetBegin +" -> "+ chunk.coffsetEnd+","+ chunk.uoffsetEnd);
 		    
-			byte[] chunkBuf = bgzf.readChunks(chunk.coffsetBegin, chunk.uoffsetBegin, chunk.coffsetEnd, chunk.uoffsetEnd);
+			byte[] chunkBuf = bgzf.readBlocks(chunk.coffsetBegin, chunk.uoffsetBegin, chunk.coffsetEnd, chunk.uoffsetEnd);
 			String s = new String(chunkBuf, "UTF-8");
 			for (String line: s.split("\n")) {
 				if (line.startsWith(""+index.getMeta())) {
@@ -163,12 +163,14 @@ public class TabixFile {
                             
     					}
                     } catch (Exception ex) {
+                        System.err.println("ERROR chunk["+(i-1)+"]"+chunk.coffsetBegin +","+ chunk.uoffsetBegin +" -> "+ chunk.coffsetEnd+","+ chunk.uoffsetEnd);
                         System.err.println("ref="+ref+", b="+b+", e="+e+", start="+start+", end="+end);
+                        System.err.println("chunkBuf.length => " + chunkBuf.length);
                         System.err.println("line => " + line);
                         System.err.println("cols => " + StringUtils.join(", ", cols));
-                        for (String l: s.split("\n")) {
-                            System.err.println("s => " + l);
-                        }
+//                        for (String l: s.split("\n")) {
+//                            System.err.println("s => " + l);
+//                        }
                         ex.printStackTrace(System.err);
                         System.exit(1);
                     }
@@ -197,5 +199,14 @@ public class TabixFile {
 
     public int getFormat() {
         return index.getFormat();
+    }
+
+    public void dumpIndex() {
+        try {
+            index.dump();
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
     }
 }

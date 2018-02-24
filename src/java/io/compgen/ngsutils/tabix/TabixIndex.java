@@ -28,4 +28,5 @@ public interface TabixIndex {
     public int getColEnd();
     public int getFormat();
     public boolean containsSeq(String name);
+    public void dump() throws IOException;
 }

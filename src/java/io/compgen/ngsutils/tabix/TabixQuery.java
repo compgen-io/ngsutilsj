@@ -49,7 +49,7 @@ public class TabixQuery extends AbstractOutputCommand {
 //        if (verbose) {
 //            tabix.dumpIndex();
 //        }
-//
+
         final String s = tabix.query(span.ref, span.start, span.end);
         // System.err.println(span.ref +":"+ span.start+","+ span.end);
         if (s != null) {
@@ -58,12 +58,12 @@ public class TabixQuery extends AbstractOutputCommand {
                     for (final String line : s.split("\n")) {
                         final String[] spl = line.split("\t");
                         if (alt.equals(spl[altCol])) {
-                            System.out.println(s);
+                            System.out.println(line);
                         }
                     }
                 }
             } else {
-                System.out.println(s);
+                System.out.print(s);
             }
         }
         tabix.close();
