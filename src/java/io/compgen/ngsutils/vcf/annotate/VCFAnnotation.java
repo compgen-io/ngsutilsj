@@ -80,8 +80,12 @@ public class VCFAnnotation extends AbstractBasicAnnotator {
 			for (String line: records.split("\n")) {
 				VCFRecord bgzfRec = VCFRecord.parseLine(line);
 				
-				if (!bgzfRec.getChrom().equals(record.getChrom()) || bgzfRec.getPos() != record.getPos()) {
+				if (bgzfRec.getPos() != record.getPos()) {
 				    // exact pos matches only...
+				    
+				    // don't check chrom to avoid potential chrZ/Z mismatches 
+				    // the tabix query handles this.
+				    
 				    continue;
 				}
 
