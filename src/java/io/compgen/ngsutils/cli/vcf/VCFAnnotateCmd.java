@@ -99,10 +99,11 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
     }
     
     @Option(desc="Add annotations from a Tabix file (If col is left out, this is treaded as a VCF flag; add ',n' for a number; set alt=col# to specify an alternative allele column -- will use exact matching)", name="tab", helpValue="NAME:FILENAME{,col,n,alt=X}", allowMultiple=true)
-    public void setTabix(String bed) throws CommandArgumentException {
-        String[] spl = bed.split(":");
+    public void setTabix(String tab) throws CommandArgumentException {
+        String[] spl = tab.split(":");
         if (spl.length == 2) {
             String[] spl2 = spl[1].split(",");
+            
             try {
                 String fname = null;
                 int col = -1;
@@ -125,11 +126,14 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
                 } else {
                     chain.add(new TabixAnnotation(spl[0], fname));
                 }
+                
+                
+                
             } catch (NumberFormatException | IOException  e) {
                 throw new CommandArgumentException(e);
             }
         } else {
-            throw new CommandArgumentException("Unable to parse argument for --bed: "+bed);
+            throw new CommandArgumentException("Unable to parse argument for --tab: "+tab);
         }       
     }
     
@@ -170,22 +174,31 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
     
     @Option(desc="Flag variants within a VCF file (CSI indexed, add '!' for exact matches)", name="vcf-flag", helpValue="NAME:FILENAME{:!}", allowMultiple=true)
     public void setVCFFlag(String vcf) throws CommandArgumentException {
-    	String[] spl = vcf.split(":");
-    	if (spl.length == 2) {
-    		try {
-				chain.add(new VCFAnnotation(spl[0], spl[1], null));
-			} catch (IOException e) {
-	    		throw new CommandArgumentException(e);
-			}
-    	} else if (spl.length == 3) {
-        		try {
-    				chain.add(new VCFAnnotation(spl[0], spl[1], null, spl[2].equals("!")));
-    			} catch (IOException e) {
-    	    		throw new CommandArgumentException(e);
-    			}
+        String[] spl = vcf.split(":");
+        if (spl.length == 2) {
+            try {
+                chain.add(new VCFAnnotation(spl[0], spl[1], null));
+            } catch (IOException e) {
+                throw new CommandArgumentException(e);
+            }
+        } else if (spl.length == 3) {
+                try {
+                    chain.add(new VCFAnnotation(spl[0], spl[1], null, spl[2].equals("!")));
+                } catch (IOException e) {
+                    throw new CommandArgumentException(e);
+                }
         } else {
-    		throw new CommandArgumentException("Unable to parse argument for --vcf-flag: "+vcf);
-    	}
+            throw new CommandArgumentException("Unable to parse argument for --vcf-flag: "+vcf);
+        }
+    }
+    
+    @Option(desc="Copy the VCF ID field from this source VCF file (exact matches only)", name="vcf-id", helpValue="FILENAME", allowMultiple=false)
+    public void setVCFID(String vcf) throws CommandArgumentException {
+        try {
+            chain.add(new VCFAnnotation("@ID", vcf, null));
+        } catch (IOException e) {
+            throw new CommandArgumentException(e);
+        }
     }
     
     @Option(desc="Flag if an existing INFO value present is in a file", name="in-file", helpValue="FLAG:INFO:FILENAME", allowMultiple=true)

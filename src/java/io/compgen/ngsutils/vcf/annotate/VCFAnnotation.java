@@ -29,7 +29,11 @@ public class VCFAnnotation extends AbstractBasicAnnotator {
 		this.name = name;
 		this.filename = filename;
 		this.infoVal = infoVal;
-		this.exactMatch = exact;
+		if (name.equals("@ID")) {
+		    this.exactMatch = true;
+		} else {
+		    this.exactMatch = exact;
+		}
 		this.vcfTabix = getTabixFile(filename);
 	}	
 
@@ -49,7 +53,7 @@ public class VCFAnnotation extends AbstractBasicAnnotator {
 		try {
 			if (infoVal == null) {
 				header.addInfo(VCFAnnotationDef.info(name, "0", "Flag", "Present in VCF file", filename, null, null, null));
-			} else {
+			} else if (!name.equals("@ID")){
 				header.addInfo(VCFAnnotationDef.info(name, "1", "String", infoVal+" from VCF file", filename, null, null, null));
 			}
 		} catch (VCFParseException e) {
@@ -106,11 +110,19 @@ public class VCFAnnotation extends AbstractBasicAnnotator {
 				if (match) {
 					if (infoVal == null) { // just add a flag
 						record.getInfo().put(name, VCFAttributeValue.EMPTY);
-						return;
+                        // flags return right away
+                        return;
+					} else if (name.equals("@ID")) {
+					    record.setDbSNPID(bgzfRec.getDbSNPID());
+                        // @ID returns right away
+                        return;
+					    
+					} else {
+	                   if (bgzfRec.getInfo().get(infoVal)!=null) {
+	                        vals.add(bgzfRec.getInfo().get(infoVal).asString(null));
+	                    }
 					}
-					if (bgzfRec.getInfo().get(infoVal)!=null) {
-						vals.add(bgzfRec.getInfo().get(infoVal).asString(null));
-					}
+					
 				}
 		
             }
