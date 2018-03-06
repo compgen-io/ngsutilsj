@@ -35,26 +35,27 @@ public class FisherStrandBias extends AbstractBasicAnnotator {
 	@Override
 	public void annotate(VCFRecord record) throws VCFAnnotatorException {
 		for (VCFAttributes sampleVals : record.getSampleAttributes()) {
-			// This should be the strand-level counts for each allele (ref+,ref-,alt1+,alt1-,alt2+,alt2-, etc...)
-			String sacVal = sampleVals.get("SAC").toString();
-			String[] spl = sacVal.split(",");
-			int refPlus = Integer.parseInt(spl[0]);
-			int refMinus = Integer.parseInt(spl[1]);
-			
-			List<String> fsbOuts = new ArrayList<String>();
-			for (int i=2; i<spl.length; i+=2) {
-				int plus = Integer.parseInt(spl[i]);
-				int minus = Integer.parseInt(spl[i+1]);
-				
-				fsbOuts.add(""+round(phred(calcFisherStrandBias(refPlus, refMinus, plus, minus)),3));
-			}
-			
-			if (fsbOuts.size() == 0) {
-				sampleVals.put("CG_FSB", VCFAttributeValue.MISSING);	
-			} else {
-				sampleVals.put("CG_FSB", new VCFAttributeValue(StringUtils.join(",", fsbOuts)));	
-			}
-			
+		    if (sampleVals.contains("SAC")) {
+	            // This should be the strand-level counts for each allele (ref+,ref-,alt1+,alt1-,alt2+,alt2-, etc...)
+    			String sacVal = sampleVals.get("SAC").toString();
+    			String[] spl = sacVal.split(",");
+    			int refPlus = Integer.parseInt(spl[0]);
+    			int refMinus = Integer.parseInt(spl[1]);
+    			
+    			List<String> fsbOuts = new ArrayList<String>();
+    			for (int i=2; i<spl.length; i+=2) {
+    				int plus = Integer.parseInt(spl[i]);
+    				int minus = Integer.parseInt(spl[i+1]);
+    				
+    				fsbOuts.add(""+round(phred(calcFisherStrandBias(refPlus, refMinus, plus, minus)),3));
+    			}
+    			
+    			if (fsbOuts.size() == 0) {
+    				sampleVals.put("CG_FSB", VCFAttributeValue.MISSING);	
+    			} else {
+    				sampleVals.put("CG_FSB", new VCFAttributeValue(StringUtils.join(",", fsbOuts)));	
+    			}
+		    }
 		}
 	}
 

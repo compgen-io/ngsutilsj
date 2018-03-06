@@ -131,7 +131,9 @@ public class VCFRecord {
 				if (filters == null) {
 					filters = new ArrayList<String>();
 				}
-				filters.add(f);
+				if (!f.equals(".")) {
+				    filters.add(f);
+				}
 			}
 		}
 

@@ -74,7 +74,7 @@ public class Equals extends VCFAbstractFilter {
 
 	public void setHeader(VCFHeader header) throws VCFFilterException {
 		super.setHeader(header);
-		if (sampleName != null) {
+        if (sampleName != null && !sampleName.equals("INFO")) {
 			sampleIdx = header.getSamplePosByName(sampleName);
 			if (sampleIdx < 0) {
 				throw new VCFFilterException("Unable to find sample: "+sampleName);

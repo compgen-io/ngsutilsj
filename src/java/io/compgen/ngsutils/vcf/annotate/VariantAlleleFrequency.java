@@ -11,11 +11,11 @@ import io.compgen.ngsutils.vcf.VCFHeader;
 import io.compgen.ngsutils.vcf.VCFParseException;
 import io.compgen.ngsutils.vcf.VCFRecord;
 
-public class MinorStrandPct extends AbstractBasicAnnotator {
+public class VariantAlleleFrequency extends AbstractBasicAnnotator {
 	
 	public VCFAnnotationDef getAnnotationType() throws VCFAnnotatorException {
 		try {
-			return VCFAnnotationDef.format("CG_SBPCT", "A", "Float", "Percent of alt-allele reads on the minor strand");
+			return VCFAnnotationDef.format("CG_VAF", "A", "Float", "Allele frequency for all alt-alleles");
 		} catch (VCFParseException e) {
 			throw new VCFAnnotatorException(e);
 		}
@@ -38,23 +38,28 @@ public class MinorStrandPct extends AbstractBasicAnnotator {
     			String[] spl = sacVal.split(",");
     			
     			List<String> outs = new ArrayList<String>();
-    			for (int i=2; i<spl.length; i+=2) {
-    				int plus = Integer.parseInt(spl[i]);
-    				int minus = Integer.parseInt(spl[i+1]);
-    				
-    				if (plus + minus == 0) {
-    					outs.add("0.0");
-    				} else if (plus > minus) {
-    					outs.add(""+FisherStrandBias.round(((double)minus) / (plus+minus), 3));
-    				} else {
-    					outs.add(""+FisherStrandBias.round(((double)plus) / (plus+minus), 3));
-    				}
-    			}
+    			int total = 0;
+    			
+                for (int i=0; i<spl.length; i+=2) {
+                    int plus = Integer.parseInt(spl[i]);
+                    int minus = Integer.parseInt(spl[i+1]);
+                    total += plus + minus;
+                }
+                for (int i=2; i<spl.length; i+=2) {
+                    int plus = Integer.parseInt(spl[i]);
+                    int minus = Integer.parseInt(spl[i+1]);
+                    
+                    if (plus + minus == 0) {
+                        outs.add("0.0");
+                    } else {
+                        outs.add(""+FisherStrandBias.round(((double)plus+minus) / (total), 3));
+                    }
+                }
     			
     			if (outs.size() == 0) {
-    				sampleVals.put("CG_SBPCT", VCFAttributeValue.MISSING);	
+    				sampleVals.put("CG_VAF", VCFAttributeValue.MISSING);	
     			} else {
-    				sampleVals.put("CG_SBPCT", new VCFAttributeValue(StringUtils.join(",", outs)));	
+    				sampleVals.put("CG_VAF", new VCFAttributeValue(StringUtils.join(",", outs)));	
     			}
 		    }
 		}

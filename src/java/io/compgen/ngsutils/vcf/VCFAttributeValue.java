@@ -80,7 +80,7 @@ public class VCFAttributeValue {
 		} else if (alleleName.equals("min")) {
 			double minVal = Double.NaN;
 			String[] spl = value.split(",");			
-			for (int i=1; i<spl.length; i++) {
+			for (int i=0; i<spl.length; i++) {
 				double d = Double.parseDouble(spl[i]);
 				if (Double.isNaN(minVal) || d < minVal) {
 					minVal = d;
@@ -90,7 +90,7 @@ public class VCFAttributeValue {
 		} else if (alleleName.equals("max")) {
 			double maxVal = Double.NaN;
 			String[] spl = value.split(",");			
-			for (int i=1; i<spl.length; i++) {
+			for (int i=0; i<spl.length; i++) {
 				double d = Double.parseDouble(spl[i]);
 				if (Double.isNaN(maxVal) || d > maxVal) {
 					maxVal = d;
@@ -106,5 +106,4 @@ public class VCFAttributeValue {
 			}
 		}
 	}
-
 }

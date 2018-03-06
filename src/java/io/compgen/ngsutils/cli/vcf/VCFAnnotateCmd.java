@@ -27,6 +27,7 @@ import io.compgen.ngsutils.vcf.annotate.NullAnnotator;
 import io.compgen.ngsutils.vcf.annotate.TabixAnnotation;
 import io.compgen.ngsutils.vcf.annotate.VCFAnnotation;
 import io.compgen.ngsutils.vcf.annotate.VCFAnnotator;
+import io.compgen.ngsutils.vcf.annotate.VariantAlleleFrequency;
 import io.compgen.ngsutils.vcf.annotate.VariantDistance;
 
 
@@ -44,10 +45,15 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
     
     @Option(desc="Add distance to nearest variant (CG_VARDIST)", name="vardist")
     public void setVarDist() throws CommandArgumentException {
-    	chain.add(new VariantDistance());
+        chain.add(new VariantDistance());
     }
     
-    @Option(desc="Add INSERT and DELETION flags (CG_INSERT, CG_DELETION)", name="indel")
+    @Option(desc="Add variant allele frequencies (CG_VAF, requires SAC)", name="vaf")
+    public void setVAF() throws CommandArgumentException {
+        chain.add(new VariantAlleleFrequency());
+    }
+    
+    @Option(desc="Add INSERT and DELETE flags (CG_INSERT, CG_DELETE, etc...)", name="indel")
     public void setIndel() throws CommandArgumentException {
     	chain.add(new Indel());
     }
@@ -74,7 +80,7 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
     	}
     	
     }
-    @Option(desc="Add flanking bases (ex: A<C>A) from reference FASTA file (FAI indexed)", name="flanking", helpValue="ref.fa")
+    @Option(desc="Add flanking bases (ex: ACA) from reference FASTA file (FAI indexed)", name="flanking", helpValue="ref.fa")
     public void setFlanking(String fasta) throws CommandArgumentException {
     	try{
 			chain.add(new FlankingBases(fasta));

@@ -67,7 +67,7 @@ public class LessThan extends VCFAbstractFilter {
 
 	public void setHeader(VCFHeader header) throws VCFFilterException {
 		super.setHeader(header);
-		if (sampleName != null) {
+		if (sampleName != null && !sampleName.equals("INFO")) {
 			sampleIdx = header.getSamplePosByName(sampleName);
 			if (sampleIdx < 0) {
 				throw new VCFFilterException("Unable to find sample: "+sampleName);
@@ -94,6 +94,9 @@ public class LessThan extends VCFAbstractFilter {
 	}
 
 	protected boolean filter(VCFAttributeValue val) throws VCFFilterException {
+	    if (val == null) {
+	        return false;
+	    }
 		double d;
 		try {
 			d = val.asDouble(alleleName);
