@@ -22,6 +22,8 @@ import io.compgen.ngsutils.vcf.VCFReader;
 import io.compgen.ngsutils.vcf.VCFRecord;
 import io.compgen.ngsutils.vcf.export.ExportFormatField;
 import io.compgen.ngsutils.vcf.export.ExportInfoField;
+import io.compgen.ngsutils.vcf.export.IDExport;
+import io.compgen.ngsutils.vcf.export.QualExport;
 import io.compgen.ngsutils.vcf.export.VCFExport;
 
 
@@ -58,6 +60,16 @@ public class VCFExportCmd extends AbstractOutputCommand {
         this.noVCFHeader = noVCFHeader;
     }
 
+    @Option(desc="Export VCF ID", name="id")
+    public void setID() throws CommandArgumentException {
+        chain.add(new IDExport());
+    }
+    
+    @Option(desc="Export VCF Qual", name="qual")
+    public void setQual() throws CommandArgumentException {
+        chain.add(new QualExport());
+    }
+    
     @Option(desc="Add a column to the beginning of the line", name="col", helpValue="{name:}value", allowMultiple=true)
     public void setCol(String val) throws CommandArgumentException {
         if (val.indexOf(":") > -1) {
@@ -67,6 +79,7 @@ public class VCFExportCmd extends AbstractOutputCommand {
             extras.put("col"+(extras.size()+1), val);
         }
     }
+    
     @Option(desc="Export FORMAT field", name="format", helpValue="KEY{:SAMPLE:ALLELE}", allowMultiple=true)
     public void setFormat(String val) throws CommandArgumentException {
         boolean ignoreMissing = false;
