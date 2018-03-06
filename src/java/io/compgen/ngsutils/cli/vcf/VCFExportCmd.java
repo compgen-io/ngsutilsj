@@ -3,7 +3,9 @@ package io.compgen.ngsutils.cli.vcf;
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import io.compgen.cmdline.annotation.Command;
 import io.compgen.cmdline.annotation.Exec;
@@ -29,7 +31,11 @@ public class VCFExportCmd extends AbstractOutputCommand {
 	
 	List<VCFExport> chain = new ArrayList<VCFExport>();
 	
-	private boolean onlyOutputPass = false;
+	Map<String, String> extras = new LinkedHashMap<String,String>();
+	
+    private boolean noHeader = false;
+    private boolean noVCFHeader = false;
+    private boolean onlyOutputPass = false;
 	private boolean missingBlank = false;
 	
     @Option(desc="Only output passing variants", name="passing")
@@ -39,9 +45,28 @@ public class VCFExportCmd extends AbstractOutputCommand {
     
     @Option(desc="Set missing values to be \"\".", name="missing-blank")
     public void setMissingBlank(boolean missingBlank) {
-    	this.missingBlank = missingBlank;
+        this.missingBlank = missingBlank;
     }
     
+    @Option(desc="Don't export the header line", name="no-header")
+    public void setNoHeader(boolean noHeader) {
+        this.noHeader = noHeader;
+    }
+
+    @Option(desc="Don't export the VCF header", name="no-vcf-header")
+    public void setNoVCFHeader(boolean noVCFHeader) {
+        this.noVCFHeader = noVCFHeader;
+    }
+
+    @Option(desc="Add a column to the beginning of the line", name="col", helpValue="{name:}value", allowMultiple=true)
+    public void setCol(String val) throws CommandArgumentException {
+        if (val.indexOf(":") > -1) {
+            String[] ar = val.split(":");
+            extras.put(ar[0], ar[1]);
+        } else {
+            extras.put("col"+(extras.size()+1), val);
+        }
+    }
     @Option(desc="Export FORMAT field", name="format", helpValue="KEY{:SAMPLE:ALLELE}", allowMultiple=true)
     public void setFormat(String val) throws CommandArgumentException {
         boolean ignoreMissing = false;
@@ -89,35 +114,44 @@ public class VCFExportCmd extends AbstractOutputCommand {
 		} else {
 			reader = new VCFReader(filename);
 		}
-		
-		VCFHeader header = reader.getHeader();
-		for (VCFExport export: chain) {
-			export.setHeader(header);
-			if (missingBlank) {
-				export.setMissingValue("");
-			}
-		}
-		
-		TabWriter writer = new TabWriter();
-		
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		header.write(baos, false);
-		baos.close();
-		String headerString = baos.toString();
-		for (String s: headerString.split("\n")) {
-			writer.write_line(s);
-		}
-		
-        writer.write_line("##ngsutilsj_vcf_exportCommand="+NGSUtils.getArgs());
-        writer.write_line("##ngsutilsj_vcf_exportVersion="+NGSUtils.getVersion());
 
-        writer.write("chrom", "pos", "ref", "alt");
-		for (VCFExport export: chain) {
-			writer.write(export.getFieldNames());
+        TabWriter writer = new TabWriter();
+
+        if (!noVCFHeader) {
+    		VCFHeader header = reader.getHeader();
+    		for (VCFExport export: chain) {
+    			export.setHeader(header);
+    			if (missingBlank) {
+    				export.setMissingValue("");
+    			}
+    		}
+    		
+    		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    		header.write(baos, false);
+    		baos.close();
+    		String headerString = baos.toString();
+    		for (String s: headerString.split("\n")) {
+    			writer.write_line(s);
+    		}
+    		
+            writer.write_line("##ngsutilsj_vcf_exportCommand="+NGSUtils.getArgs());
+            writer.write_line("##ngsutilsj_vcf_exportVersion="+NGSUtils.getVersion());
 		}
-		writer.eol();
-				
-		Iterator<VCFRecord> it = reader.iterator();
+
+        if (!noHeader) {
+            // write the column names
+            for (String k: extras.keySet()) {
+                writer.write(k);
+            }
+            
+            writer.write("chrom", "pos", "ref", "alt");
+    		for (VCFExport export: chain) {
+    			writer.write(export.getFieldNames());
+    		}
+    		writer.eol();
+        }
+
+        Iterator<VCFRecord> it = reader.iterator();
 		
 		for (VCFRecord rec: IterUtils.wrap(it)) {
 			if (onlyOutputPass && rec.isFiltered()) {
@@ -125,6 +159,10 @@ public class VCFExportCmd extends AbstractOutputCommand {
 			}
 			
 			List<String> outs = new ArrayList<String>();
+
+	        for (String k: extras.keySet()) {
+	            outs.add(extras.get(k));
+	        }
 			
 			outs.add(rec.getChrom());
 			outs.add(""+rec.getPos());
