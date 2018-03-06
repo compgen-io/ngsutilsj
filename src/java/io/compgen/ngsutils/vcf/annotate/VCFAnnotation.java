@@ -51,9 +51,12 @@ public class VCFAnnotation extends AbstractBasicAnnotator {
 	@Override
 	public void setHeader(VCFHeader header) throws VCFAnnotatorException {
 		try {
+		    if (name.equals("@ID")) {
+		        return;
+		    }
 			if (infoVal == null) {
 				header.addInfo(VCFAnnotationDef.info(name, "0", "Flag", "Present in VCF file", filename, null, null, null));
-			} else if (!name.equals("@ID")){
+			} else {
 				header.addInfo(VCFAnnotationDef.info(name, "1", "String", infoVal+" from VCF file", filename, null, null, null));
 			}
 		} catch (VCFParseException e) {
@@ -108,18 +111,20 @@ public class VCFAnnotation extends AbstractBasicAnnotator {
 				}
 				
 				if (match) {
-					if (infoVal == null) { // just add a flag
+				    if (name.equals("@ID")) {
+                        record.setDbSNPID(bgzfRec.getDbSNPID());
+                        // @ID returns right away
+                        return;
+				    } else if (infoVal == null) { // just add a flag
 						record.getInfo().put(name, VCFAttributeValue.EMPTY);
                         // flags return right away
                         return;
-					} else if (name.equals("@ID")) {
-					    record.setDbSNPID(bgzfRec.getDbSNPID());
-                        // @ID returns right away
-                        return;
-					    
 					} else {
 	                   if (bgzfRec.getInfo().get(infoVal)!=null) {
-	                        vals.add(bgzfRec.getInfo().get(infoVal).asString(null));
+	                       String val = bgzfRec.getInfo().get(infoVal).asString(null);
+	                       if (val != null && !val.equals("")) {
+	                           vals.add(val);
+	                       }
 	                    }
 					}
 					
