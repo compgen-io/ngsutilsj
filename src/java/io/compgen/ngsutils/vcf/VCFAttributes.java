@@ -64,8 +64,15 @@ public class VCFAttributes {
 			if (el.indexOf("=") == -1) {
 				attrs.put(el, VCFAttributeValue.EMPTY);
 			} else {
-				String[] kv = el.split("=");				
-				attrs.put(kv[0], VCFAttributeValue.parse(kv[1]));
+			    try {
+			        String[] kv = el.split("=");				
+			        attrs.put(kv[0], VCFAttributeValue.parse(kv[1]));
+			    } catch (ArrayIndexOutOfBoundsException e) {
+			        e.printStackTrace(System.err);
+                    System.err.println("ERROR: processing attributes string "+ el);
+                    System.err.println("ERROR: "+ s);
+			        System.exit(1);
+			    }
 			}
 		}
 		return attrs;
