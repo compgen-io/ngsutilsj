@@ -26,6 +26,7 @@ import io.compgen.ngsutils.vcf.filter.GreaterThanEqual;
 import io.compgen.ngsutils.vcf.filter.LessThan;
 import io.compgen.ngsutils.vcf.filter.LessThanEqual;
 import io.compgen.ngsutils.vcf.filter.NotEquals;
+import io.compgen.ngsutils.vcf.filter.QualityScore;
 import io.compgen.ngsutils.vcf.filter.VCFFilter;
 
 
@@ -43,9 +44,14 @@ public class VCFFilterCmd extends AbstractOutputCommand {
     	this.statsFilename = statsFilename;
     }
     
+    @Option(desc="Quality score must be above this value", name="qual")
+    public void setQual(double qual) {
+        filterChain.add(new QualityScore(qual));
+    }
+
     @Option(desc="Only output passing variants", name="passing")
     public void setOnlyOutputPass(boolean onlyOutputPass) {
-    	this.onlyOutputPass = onlyOutputPass;
+        this.onlyOutputPass = onlyOutputPass;
     }
     
     @Option(desc="Values for {KEY} is not equal to {VAL} (multiple allowed, String or number)", name="neq", helpValue="KEY:VAL:SAMPLEID:ALLELE", allowMultiple=true)
@@ -207,6 +213,7 @@ public class VCFFilterCmd extends AbstractOutputCommand {
 					break;
 				}
 			}
+			
 //			System.err.println(rec+" ;; " + !onlyOutputPass+" ;; "+!rec.isFiltered());
 			if (!onlyOutputPass || !rec.isFiltered()) {
 				count++;
