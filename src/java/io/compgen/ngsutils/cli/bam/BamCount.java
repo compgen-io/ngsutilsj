@@ -32,7 +32,6 @@ import io.compgen.ngsutils.cli.bam.count.BinSpans;
 import io.compgen.ngsutils.cli.bam.count.GTFSpans;
 import io.compgen.ngsutils.cli.bam.count.SpanGroup;
 import io.compgen.ngsutils.cli.bam.count.SpanSource;
-import io.compgen.ngsutils.cli.bam.count.VCFAlleleCounter;
 
 @Command(name="bam-count", desc="Counts the number of reads for genes (GTF), within a BED region, or by bins (--gtf, --bed, or --bins required)", category="bam")
 public class BamCount extends AbstractOutputCommand {
@@ -41,8 +40,6 @@ public class BamCount extends AbstractOutputCommand {
 
     private String bedFilename=null;
     private String gtfFilename=null;
-    private String vcfFilename=null;
-    private String refFilename=null; // set with vcf input
     private int binSize = 0;
     
     private boolean contained = false;
@@ -61,40 +58,9 @@ public class BamCount extends AbstractOutputCommand {
     
 
     // VCF options
-    private int maxDepth = -1;
-    private int minMappingQual = -1;
-    private int minBaseQual = -1;
-    private boolean disableBAQ = true;
-    private boolean extendedBAQ = false;
 
 
     private Orientation orient = Orientation.UNSTRANDED;
-
-    @Option(desc="BAQ re-calculation (VCF option) (default:false)", name="baq")
-    public void setDisableBAQ(boolean val) {
-        this.disableBAQ = !val;
-    }
-
-    @Option(desc="Perform extended BAQ re-calculation (VCF option) (default:false)", name="extended-baq")
-    public void setExtendedBAQ(boolean val) {
-        this.extendedBAQ = val;
-    }
-
-    @Option(desc="Minimum base quality (VCF option)", name="min-basequal", defaultValue="13")
-    public void setMinBaseQual(int minBaseQual) {
-        this.minBaseQual = minBaseQual;
-    }
-
-    @Option(desc="Minimum read mapping quality (MAPQ, VCF option)", name="min-mapq", defaultValue="0")
-    public void setMinMapQual(int minMappingQual) {
-        this.minMappingQual = minMappingQual;
-    }
-    
-    @Option(desc="Maximum depth (VCF option)", name="max-depth", defaultValue="0")
-    public void setMaxDepth(int maxDepth) {
-        this.maxDepth = maxDepth;
-    }
-    
 
     @Option(desc = "Only keep properly paired reads", name = "proper-pairs")
     public void setProperPairs(boolean val) {
@@ -122,16 +88,6 @@ public class BamCount extends AbstractOutputCommand {
     @Option(desc="Count bins of size [value]", name="bins", defaultValue="0")
     public void setBinSize(int binSize) {
         this.binSize = binSize;
-    }
-
-    @Option(desc="Count alleles for positions in a VCF file (requires --ref, only primary alt-allele counted)", name="vcf", helpValue="{SAMPLE:}fname")
-    public void setVCFFile(String vcfFilename) {
-        this.vcfFilename = vcfFilename;
-    }
-
-    @Option(desc="Reference FASTA file (for VCF counting)", name="ref", helpValue="fname")
-    public void setReffFilename(String refFilename) {
-        this.refFilename = refFilename;
     }
 
     @Option(desc="Count reads for genes (GTF model)", name="gtf", helpValue="fname")
@@ -218,12 +174,6 @@ public class BamCount extends AbstractOutputCommand {
         if (gtfFilename != null) {
             sources++;
         }
-        if (vcfFilename != null) {
-            if (refFilename == null) {
-                throw new CommandArgumentException("--ref is required when --vcf is specified!");
-            }
-            sources++;
-        }
         if (sources != 1) {
             throw new CommandArgumentException("You must specify one of --bins, --bed, --vcf or --gtf!");
         }
@@ -254,35 +204,6 @@ public class BamCount extends AbstractOutputCommand {
 
         if (startOnly) {
             writer.write_line("## counts: starting positions only ");
-        }
-
-        if (vcfFilename != null) {
-            // This is a special case where we can't just look at # of reads w/in
-            // a region, but we have to look at the calls at a particular position
-
-            
-            writer.write_line("## source: vcf " + vcfFilename);
-            String sampleName = null;
-            if (vcfFilename.contains(":")) {
-                String[] spl = vcfFilename.split(":");
-                sampleName = spl[0];
-                vcfFilename = spl[1];
-            }
-            
-            VCFAlleleCounter counter = new VCFAlleleCounter(vcfFilename, refFilename);
-            counter.setFlagFilter(filterFlags);
-            counter.setFlagRequired(requiredFlags);
-            counter.setMinBaseQual(minBaseQual);
-            counter.setMaxDepth(maxDepth);
-            counter.setMinMappingQual(minMappingQual);
-            counter.setDisableBAQ(disableBAQ);
-            counter.setExtendedBAQ(extendedBAQ);
-            counter.setRefFilename(refFilename);            
-            
-            counter.count(samFilename, writer, sampleName);
-            writer.close();
-            
-            return;
         }
 
         SamReader reader = readerFactory.open(new File(samFilename));

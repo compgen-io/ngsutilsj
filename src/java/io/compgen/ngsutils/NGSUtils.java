@@ -67,6 +67,7 @@ import io.compgen.ngsutils.cli.kmer.KmerDiff;
 import io.compgen.ngsutils.cli.kmer.KmerMerge;
 import io.compgen.ngsutils.cli.vcf.VCFAnnotateCmd;
 import io.compgen.ngsutils.cli.vcf.VCFChrFix;
+import io.compgen.ngsutils.cli.vcf.VCFCount;
 import io.compgen.ngsutils.cli.vcf.VCFExportCmd;
 import io.compgen.ngsutils.cli.vcf.VCFFilterCmd;
 import io.compgen.ngsutils.cli.vcf.VCFToBED;
@@ -157,7 +158,8 @@ public class NGSUtils {
             .addCommand(VCFToBED.class)
             .addCommand(VCFChrFix.class)
             .addCommand(TabixQuery.class)
-            .addCommand(BGZFCat.class);
+            .addCommand(BGZFCat.class)
+            .addCommand(VCFCount.class);
 
         
 
