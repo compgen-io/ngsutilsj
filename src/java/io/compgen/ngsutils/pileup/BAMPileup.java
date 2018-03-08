@@ -63,15 +63,25 @@ public class BAMPileup {
         }
 
         // TODO: add mapping quality (-s) to output?? This would make it possible to use minBaseQual again
-        //       as an argument to samtools
+        //       as an argument to samtools.
+        //
+        //       No.  No, this doesn't help...
+        //
+        // 
+        // Ex (-s -Q 13): chr? pos  N   4   CC-1Ncc         oJA<    ~~~~    63,44,44,44,6,6,6
+        // Ex (-s -Q 0) : chr? pos  N   7   CC-1NCc-1nccc   oJ-!A-< ~~~~~~~ 63,44,44,44,6,6,6
+        // Problem: No way to line up quality scores or read position when filtered by quality... ug.
 
-//      This needs to be done so that we get all the calls, qual, and pos info.
-        cmd.add("-Q 0");
-        
+// 
+//        cmd.add("-s");
 //        if (minBaseQual > -1) {
 //            cmd.add("-Q");
 //            cmd.add(""+minBaseQual);
 //        }
+
+//      This needs to be done so that we get all the calls, qual, and pos info.
+        cmd.add("-Q 0");
+        
         
         if (filterFlags > 0) {
             cmd.add("--ff");
