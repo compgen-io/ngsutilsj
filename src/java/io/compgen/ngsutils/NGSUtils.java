@@ -70,6 +70,7 @@ import io.compgen.ngsutils.cli.vcf.VCFChrFix;
 import io.compgen.ngsutils.cli.vcf.VCFCount;
 import io.compgen.ngsutils.cli.vcf.VCFExportCmd;
 import io.compgen.ngsutils.cli.vcf.VCFFilterCmd;
+import io.compgen.ngsutils.cli.vcf.VCFStrip;
 import io.compgen.ngsutils.cli.vcf.VCFToBED;
 import io.compgen.ngsutils.support.stats.FisherCli;
 import io.compgen.ngsutils.tabix.BGZFCat;
@@ -159,7 +160,8 @@ public class NGSUtils {
             .addCommand(VCFChrFix.class)
             .addCommand(TabixQuery.class)
             .addCommand(BGZFCat.class)
-            .addCommand(VCFCount.class);
+            .addCommand(VCFCount.class)
+            .addCommand(VCFStrip.class);
 
         
 

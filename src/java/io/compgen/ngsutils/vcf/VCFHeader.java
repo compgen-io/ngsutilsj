@@ -56,11 +56,11 @@ public class VCFHeader {
 		this.lines.add(line);
 	}
 	public void write(OutputStream out) throws IOException {
-		write(out, true);
+		write(out, true, false);
 		
 	}
 	
-	public void write(OutputStream out, boolean includeAll) throws IOException {
+	public void write(OutputStream out, boolean includeAll, boolean strip) throws IOException {
 
 		if (includeAll) {
 			while (!format.startsWith("##")) {
@@ -70,27 +70,39 @@ public class VCFHeader {
 		}
 		List<String> outlines = new ArrayList<String>();;
 		
-		for (VCFAnnotationDef def: infoDefs.values()) {
-			outlines.add(def.toString());
-		}
-		for (VCFFilterDef def: filterDefs.values()) {
-			outlines.add(def.toString());
-		}
-		for (VCFAnnotationDef def: formatDefs.values()) {
-			outlines.add(def.toString());
+		if (!strip) {
+    		for (VCFAnnotationDef def: infoDefs.values()) {
+    			outlines.add(def.toString());
+    		}
+    		for (VCFFilterDef def: filterDefs.values()) {
+    			outlines.add(def.toString());
+    		}
+    		for (VCFAnnotationDef def: formatDefs.values()) {
+    			outlines.add(def.toString());
+    		}
+            outlines.addAll(lines);
+		} else {
+		    for (String line: lines) {
+		        if (!line.startsWith("##SAMPLE=")) {
+		            outlines.add(line);
+		        }
+		    }
 		}
 		
-		outlines.addAll(lines);
 		
 		for (String line: outlines) {
 			StringUtils.writeOutputStream(out, line + "\n");
 		}
 
 		if (includeAll) {
-			if (!headerLine.startsWith("#")) {
-				headerLine = "#" + headerLine; 
-			}
-			StringUtils.writeOutputStream(out, headerLine + "\n");
+		    if (strip) {
+                StringUtils.writeOutputStream(out, "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\n");
+		    } else {
+    			if (!headerLine.startsWith("#")) {
+    				headerLine = "#" + headerLine; 
+    			}
+    			StringUtils.writeOutputStream(out, headerLine + "\n");
+            }
 		}
 	}
 

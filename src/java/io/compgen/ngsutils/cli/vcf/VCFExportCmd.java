@@ -140,7 +140,7 @@ public class VCFExportCmd extends AbstractOutputCommand {
     		}
     		
     		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    		header.write(baos, false);
+    		header.write(baos, false, false);
     		baos.close();
     		String headerString = baos.toString();
     		for (String s: headerString.split("\n")) {

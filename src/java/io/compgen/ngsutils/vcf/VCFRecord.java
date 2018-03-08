@@ -44,12 +44,15 @@ public class VCFRecord {
 		this.sampleAttributes = sampleAttributes;
 	}
 
-	public void write(OutputStream out) throws IOException{
+    public void write(OutputStream out) throws IOException{
+        write(out, false);
+    }
+    public void write(OutputStream out, boolean strip) throws IOException{
 		List<String> outcols = new ArrayList<String>();
 		
 		outcols.add(chrom);
 		outcols.add(""+pos);
-		if (dbSNPID == null) {
+		if (strip || dbSNPID == null) {
 			outcols.add(MISSING);
 		} else {
 			outcols.add(dbSNPID);
@@ -72,7 +75,9 @@ public class VCFRecord {
 			outcols.add(qstr);
 		}
 
-		if (!isFiltered()) {
+		if (strip) {
+		    outcols.add(".");
+		} else if (!isFiltered()) {
 			outcols.add(PASS);
 		} else {
 			if (filters.size()>1) {
@@ -81,16 +86,20 @@ public class VCFRecord {
 			outcols.add(StringUtils.join(";", filters));
 		}
 
-		outcols.add(info.toString());
+		if (strip) {
+		    outcols.add("");
+		} else {
+		    outcols.add(info.toString());
 		
-		if (sampleAttributes != null && sampleAttributes.size() > 0) {
-			List<String> keyOrder = sampleAttributes.get(0).getKeys();
-			
-			outcols.add(StringUtils.join(":", keyOrder));
-			
-			for (VCFAttributes attrs: sampleAttributes) {
-				outcols.add(attrs.toString(keyOrder));
-			}
+    		if (sampleAttributes != null && sampleAttributes.size() > 0) {
+    			List<String> keyOrder = sampleAttributes.get(0).getKeys();
+    			
+    			outcols.add(StringUtils.join(":", keyOrder));
+    			
+    			for (VCFAttributes attrs: sampleAttributes) {
+    				outcols.add(attrs.toString(keyOrder));
+    			}
+    		}
 		}
 				
 		StringUtils.writeOutputStream(out, StringUtils.join("\t", outcols)+"\n");
