@@ -40,6 +40,8 @@ public class VCFCount extends AbstractOutputCommand {
     private boolean extendedBAQ = false;
     
     private boolean onlyOutputPass = false;
+    private boolean outputVCFAF = false;
+
     private int filterFlags = 0;
     private int requiredFlags = 0;
 
@@ -59,6 +61,11 @@ public class VCFCount extends AbstractOutputCommand {
     @Option(desc = "Required flags", name = "required-flags", defaultValue = "0")
     public void setRequiredFlags(int flag) {
         requiredFlags = flag;
+    }
+
+    @Option(desc="Output variant allele frequency from the VCF file (requires AD FORMAT field)", name="vcf-af")
+    public void setVCFAF(boolean val) {
+        this.outputVCFAF = val;
     }
 
     @Option(desc="BAQ re-calculation (default:false)", name="baq")
@@ -119,8 +126,8 @@ public class VCFCount extends AbstractOutputCommand {
 			reader = new VCFReader(vcfFilename);
 		}
 
-		if (!reader.getHeader().getFormatIDs().contains("AD")) {
-	          throw new CommandArgumentException("The VCF file must contain the \"AD\" format annotation.");
+		if (outputVCFAF && !reader.getHeader().getFormatIDs().contains("AD")) {
+	          throw new CommandArgumentException("The VCF file must contain the \"AD\" format annotation to output allele frequencies from the VCF file.");
 		}
 
 		int sampleIdx = 0;
@@ -154,8 +161,10 @@ public class VCFCount extends AbstractOutputCommand {
         writer.write("pos");
         writer.write("ref");
         writer.write("alt");
-        writer.write("vcf_ref_count");
-        writer.write("vcf_alt_count");
+        if (outputVCFAF) {
+            writer.write("vcf_ref_count");
+            writer.write("vcf_alt_count");
+        }
         writer.write("ref_count");
         writer.write("alt_count");
         writer.eol();
@@ -167,10 +176,6 @@ public class VCFCount extends AbstractOutputCommand {
 				continue;
 			}
 
-			
-			// TODO: Add an INFO filter here... (look for EXONs)
-			
-			
             TallyValues<String> tally = new TallyValues<String>();
             
             // zero-based
@@ -210,45 +215,46 @@ public class VCFCount extends AbstractOutputCommand {
                 }
             }
             it2.close();
-            try {
-                String ad = record.getSampleAttributes().get(sampleIdx).get("AD").asString(null);
-                String spl[] = ad.split(",");
+            // for each alt-allele...
+            for (int i=0; i< record.getAlt().size(); i++) {
+                writer.write(record.getChrom());
+                writer.write(record.getPos());
 
-                // for each alt-allele...
-                for (int i=1; i< spl.length; i++) {
-                    writer.write(record.getChrom());
-                    writer.write(record.getPos());
+                writer.write(record.getRef());
+                writer.write(record.getAlt().get(i));
     
-                    writer.write(record.getRef());
-                    writer.write(record.getAlt().get(i-1));
-        
-                    writer.write(spl[0]);
-                    writer.write(spl[i]);
-
-                    if (record.getRef().length()>1) {
-                        // is a del
-                        // assumes a properly anchored variant call in VCF (ex: CA/C)
-
-                        writer.write(tally.getCount(record.getAlt().get(i-1)));
-                        writer.write(tally.getCount("del"+(record.getRef().length()-1)));
-                        
-                    } else if (spl[i].length()>1) {
-                        // is an insert
-                        writer.write(tally.getCount(record.getRef()));
-                        writer.write(tally.getCount("ins"+record.getAlt().get(i-1)));
-                    } else {
-                        // match
-                        writer.write(tally.getCount(record.getRef()));
-                        writer.write(tally.getCount(record.getAlt().get(i-1)));
+                if (outputVCFAF) {
+                    try {
+                        String ad = record.getSampleAttributes().get(sampleIdx).get("AD").asString(null);
+                        String spl[] = ad.split(",");
+                        writer.write(spl[0]);
+                        writer.write(spl[i]);
+                    } catch (VCFAttributeException e) {
+                        throw new IOException(e);
                     }
+                }
+
+                if (record.getRef().length()>1) {
+                    // is a del
+                    // assumes a properly anchored variant call in VCF (ex: CA/C)
+
+                    writer.write(tally.getCount(record.getAlt().get(i)));
+                    writer.write(tally.getCount("del"+(record.getRef().length()-1)));
                     
-                    
-                    writer.eol();
+                } else if (record.getAlt().get(i).length()>1) {
+                    // is an insert
+                    writer.write(tally.getCount(record.getRef()));
+                    writer.write(tally.getCount("ins"+record.getAlt().get(i)));
+                } else {
+                    // match
+                    writer.write(tally.getCount(record.getRef()));
+                    writer.write(tally.getCount(record.getAlt().get(i)));
                 }
                 
-            } catch (VCFAttributeException e) {
-                throw new IOException(e);
+                
+                writer.eol();
             }
+            
 
 //            if (indel) {
 //                System.out.print("INDEL: " + record.getChrom()+":"+record.getPos()+" Tally counts: ");
