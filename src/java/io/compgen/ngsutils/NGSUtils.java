@@ -62,9 +62,6 @@ import io.compgen.ngsutils.cli.fastq.FastqToBam;
 import io.compgen.ngsutils.cli.fastq.FastqToFasta;
 import io.compgen.ngsutils.cli.gtf.GTFExport;
 import io.compgen.ngsutils.cli.gtf.GeneExport;
-import io.compgen.ngsutils.cli.kmer.FastqKmer;
-import io.compgen.ngsutils.cli.kmer.KmerDiff;
-import io.compgen.ngsutils.cli.kmer.KmerMerge;
 import io.compgen.ngsutils.cli.vcf.VCFAnnotateCmd;
 import io.compgen.ngsutils.cli.vcf.VCFChrFix;
 import io.compgen.ngsutils.cli.vcf.VCFCount;
@@ -144,9 +141,6 @@ public class NGSUtils {
             .addCommand(BedCleanScore.class)
             .addCommand(FisherCli.class)
             .addCommand(BamConcat.class)
-            .addCommand(FastqKmer.class)
-            .addCommand(KmerMerge.class)
-            .addCommand(KmerDiff.class)
             .addCommand(GeneExport.class)
             .addCommand(FastqDemux.class)
             .addCommand(BamBaseCall.class)
