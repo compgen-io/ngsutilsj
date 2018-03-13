@@ -66,7 +66,7 @@ public class BamDiscord extends AbstractCommand {
         this.tmpDir = tmpDir;
     }
 
-    @Option(desc = "Maximum intra-chromosomal distance", name="dist", defaultValue="10000")
+    @Option(desc = "Maximum intra-chromosomal distance (pairs aligned more than this distance apart will be flagged as discordant)", name="dist", defaultValue="10000")
     public void setIntraChromDistance(int intraChromDistance) {
         this.intraChromDistance = intraChromDistance;
     }    
