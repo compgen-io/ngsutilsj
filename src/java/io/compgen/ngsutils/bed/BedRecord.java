@@ -10,7 +10,7 @@ import io.compgen.ngsutils.annotation.Annotation;
 import io.compgen.ngsutils.annotation.GenomeSpan;
 import io.compgen.ngsutils.bam.Strand;
 
-public class BedRecord implements Annotation {
+public class BedRecord implements Annotation, Comparable<BedRecord> {
     final protected String name;
     final protected double score;
     final protected GenomeSpan coord;
@@ -98,6 +98,11 @@ public class BedRecord implements Annotation {
 
     public String getName() {
         return name;
+    }
+
+    @Override
+    public int compareTo(BedRecord o) {
+        return coord.compareTo(o.coord);
     }
 
 }

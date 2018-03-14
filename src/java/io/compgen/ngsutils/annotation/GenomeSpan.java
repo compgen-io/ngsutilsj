@@ -127,7 +127,7 @@ public class GenomeSpan implements Comparable<GenomeSpan> {
             return false;            
         }
         
-        if (start < 0) {
+        if (start < 0 || qstart == -1) {
             // this is a whole-chrom span, so if the ref matches, return true
             return true;
         }

@@ -58,6 +58,12 @@ abstract public class AbstractAnnotationSource<T> implements AnnotationSource<T>
             return true;
         }
         public static List<RefBin> getBins(GenomeSpan coord) {
+            
+            if (coord.start == -1) {
+                // whole chromosome - send it all
+                
+            }
+            
             int start = coord.start / BINSIZE;
             int end = coord.end / BINSIZE;
 
@@ -101,18 +107,38 @@ abstract public class AbstractAnnotationSource<T> implements AnnotationSource<T>
     public List<T> findAnnotation(final GenomeSpan coord, boolean onlyWithin) {
         final Set<T> outs = new HashSet<T>();
        
-        for (RefBin bin: RefBin.getBins(coord)) {
+        List<RefBin> refbins = new ArrayList<RefBin>();
+        
+        if (coord.start == -1) {
+            // whole chrom
+            for (RefBin bin: annotationBins.keySet()) {
+                if (bin.ref.equals(coord.ref)) {
+                    refbins.add(bin);
+                }
+            }
+        } else {
+            refbins = RefBin.getBins(coord);
+        }
+        
+        for (RefBin bin: refbins) {            
             if (annotationBins.containsKey(bin)) {
                 for (GenomeAnnotation<T> ga: annotationBins.get(bin)) {
-                    if (ga.getCoordinates().start > coord.end) {
+                    if (coord.start != -1 && ga.getCoordinates().start > coord.end) {
+//                        System.err.println("BREAK");
                         break;
                     }
+//                    System.err.println("ga.getCoordinates() => " + ga.getCoordinates());
+//                    System.err.println("coord => " + coord);
+//                    System.err.println("ga.getCoordinates().overlap(coord) => " + ga.getCoordinates().overlaps(coord));
                     if (onlyWithin) {
                         if (ga.getCoordinates().contains(coord)) {
                             outs.add(ga.getValue());
                         }
                     } else if (ga.getCoordinates().overlaps(coord)) {
+//                        System.err.println("OVERLAP");
                         outs.add(ga.getValue());
+                    } else {
+//                        System.err.println("NO OVERLAP :(");
                     }
                 }                
             }
