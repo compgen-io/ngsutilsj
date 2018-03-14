@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.zip.DataFormatException;
 
+import io.compgen.common.IterUtils;
 import io.compgen.common.StringUtils;
 import io.compgen.ngsutils.tabix.TabixFile;
 import io.compgen.ngsutils.vcf.VCFAnnotationDef;
@@ -85,18 +86,18 @@ public class TabixAnnotation extends AbstractBasicAnnotator {
         try {
             
 //            System.err.println("Looking for TABIX rows covering: "+record.getChrom() +":"+ record.getPos()+" ("+filename+")");
-            String tabixLines = tabix.query(record.getChrom(), record.getPos() - 1);
-            if (tabixLines == null) {
-//                System.err.println("Not found");
-                return;
-            }
-
+//            String tabixLines = tabix.query(record.getChrom(), record.getPos() - 1);
+//            if (tabixLines == null) {
+////                System.err.println("Not found");
+//                return;
+//            }
+//
             List<String> vals = new ArrayList<String>();
             boolean found = false;
 
             if (altColNum > -1) {
                 // need to verify the alt column.
-                for (String line : tabixLines.split("\n")) {
+                for (String line : IterUtils.wrap(tabix.query(record.getChrom(), record.getPos() - 1))) {
                     for (String alt: record.getAlt()) {
                         String[] spl = line.split("\t");
                         if (alt.equals(spl[altColNum])) {
@@ -114,7 +115,7 @@ public class TabixAnnotation extends AbstractBasicAnnotator {
             } else {
                 // just look for a BED region that spans this VCF position
                 found = false;
-                for (String line : tabixLines.split("\n")) {
+                for (String line : IterUtils.wrap(tabix.query(record.getChrom(), record.getPos() - 1))) {
                     found = true;
                     if (colNum > -1) { 
                         // annotate based on a column value

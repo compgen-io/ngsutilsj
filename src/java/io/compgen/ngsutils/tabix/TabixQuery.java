@@ -6,6 +6,7 @@ import io.compgen.cmdline.annotation.Option;
 import io.compgen.cmdline.annotation.UnnamedArg;
 import io.compgen.cmdline.exceptions.CommandArgumentException;
 import io.compgen.cmdline.impl.AbstractOutputCommand;
+import io.compgen.common.IterUtils;
 import io.compgen.ngsutils.annotation.GenomeSpan;
 
 @Command(name = "tabix", desc = "Query a tabix file", category = "help", hidden = true)
@@ -50,20 +51,19 @@ public class TabixQuery extends AbstractOutputCommand {
 //            tabix.dumpIndex();
 //        }
 
-        final String s = tabix.query(span.ref, span.start, span.end);
+        for (String line: IterUtils.wrap(tabix.query(span.ref, span.start, span.end))) {
         // System.err.println(span.ref +":"+ span.start+","+ span.end);
-        if (s != null) {
-            if (alleles != null) {
-                for (final String alt : alleles) {
-                    for (final String line : s.split("\n")) {
+            if (line != null) {
+                if (alleles != null) {
+                    for (final String alt : alleles) {
                         final String[] spl = line.split("\t");
                         if (alt.equals(spl[altCol])) {
                             System.out.println(line);
                         }
                     }
+                } else {
+                    System.out.print(line);
                 }
-            } else {
-                System.out.print(s);
             }
         }
         tabix.close();

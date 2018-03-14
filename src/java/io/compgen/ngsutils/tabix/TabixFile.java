@@ -2,11 +2,10 @@ package io.compgen.ngsutils.tabix;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Iterator;
 import java.util.zip.DataFormatException;
 
-import io.compgen.common.StringUtils;
 import io.compgen.ngsutils.support.LogUtils;
-import io.compgen.ngsutils.tabix.TabixIndex.Chunk;
 
 public class TabixFile {
 	protected String filename;
@@ -60,7 +59,7 @@ public class TabixFile {
 	 * @throws IOException
 	 * @throws DataFormatException
 	 */
-	public String query(String ref, int start) throws IOException, DataFormatException {
+	public Iterator<String> query(String ref, int start) throws IOException, DataFormatException {
 		return query(ref, start, start+1);
 	}
 	
@@ -92,8 +91,7 @@ public class TabixFile {
 	 * @throws DataFormatException
 	 */
 
-    public String query(String ref, int start, int end) throws IOException, DataFormatException {
-		String ret = "";
+    public Iterator<String> query(String ref, int start, int end) throws IOException, DataFormatException {
 		if (index == null) {
 			throw new IOException("Missing TBI or CSI index file!");
 		}
@@ -116,70 +114,7 @@ public class TabixFile {
             ref = ref.substring(3);
         }
 
-
-//        System.err.println("Finding chunks for: "+ref+":"+start+","+end);
-
-        int i=1;
-		for (Chunk chunk: index.find(ref, start, end)) {
-//	        System.err.println("  chunk["+(i++)+"]"+chunk.coffsetBegin +","+ chunk.uoffsetBegin +" -> "+ chunk.coffsetEnd+","+ chunk.uoffsetEnd);
-		    
-			byte[] chunkBuf = bgzf.readBlocks(chunk.coffsetBegin, chunk.uoffsetBegin, chunk.coffsetEnd, chunk.uoffsetEnd);
-			String s = new String(chunkBuf, "UTF-8");
-			for (String line: s.split("\n")) {
-				if (line.startsWith(""+index.getMeta())) {
-					continue;
-				}
-				String[] cols = line.split("\t");
-//				System.err.println(StringUtils.join(",", cols));
-				if (cols[index.getColSeq()-1].equals(ref)) {
-				    int b = -1, e = -1;
-				    try {
-    					if (index.getColEnd() > 0) {
-    						b = Integer.parseInt(cols[index.getColBegin()-1]);
-    						e = Integer.parseInt(cols[index.getColEnd()-1]);
-    					} else {
-                            b = Integer.parseInt(cols[index.getColBegin()-1]);
-                            e = Integer.parseInt(cols[index.getColBegin()-1]);;
-    					}
-    					
-    					if ((index.getFormat()&0x10000) == 0) {
-    						// convert one-based begin coord (in bgzip file)
-    						b--;
-    					}
-
-    					if (b > end) {
-    					    // we are past the pos we need, so no more valid lines
-    					    break;
-    					}
-    					
-    					// return if the spans overlap at all -- if necessary, the 
-    					// calling function can re-parse.
-    	
-                        if (
-                                (b <= start && start < e) || // query start is within tabix range
-                                (start <= b && e < end) ||   // tabix range is contained completely by query
-                                (b < end && end <= e)        // query end is within tabix range
-                            ) {
-                            ret += line+"\n";
-                            
-    					}
-                    } catch (Exception ex) {
-                        System.err.println("ERROR chunk["+(i-1)+"]"+chunk.coffsetBegin +","+ chunk.uoffsetBegin +" -> "+ chunk.coffsetEnd+","+ chunk.uoffsetEnd);
-                        System.err.println("ref="+ref+", b="+b+", e="+e+", start="+start+", end="+end);
-                        System.err.println("chunkBuf.length => " + chunkBuf.length);
-                        System.err.println("line => " + line);
-                        System.err.println("cols => " + StringUtils.join(", ", cols));
-//                        for (String l: s.split("\n")) {
-//                            System.err.println("s => " + l);
-//                        }
-                        ex.printStackTrace(System.err);
-                        System.exit(1);
-                    }
-				}
-			}
-		}
-		
-		return ret.equals("") ? null: ret;
+        return new TabixQueryIterator(ref, start, end, index, bgzf);
 	}
 
         public char getMeta() {

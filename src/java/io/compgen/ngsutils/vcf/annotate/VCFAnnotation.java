@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.zip.DataFormatException;
 
+import io.compgen.common.IterUtils;
 import io.compgen.common.StringUtils;
 import io.compgen.ngsutils.tabix.TabixFile;
 import io.compgen.ngsutils.vcf.VCFAnnotationDef;
@@ -76,15 +77,15 @@ public class VCFAnnotation extends AbstractBasicAnnotator {
 	@Override
 	public void annotate(VCFRecord record) throws VCFAnnotatorException {
 		try {
-			String records = vcfTabix.query(record.getChrom(), record.getPos()-1); // zero-based query
-
-			if (records == null) {
-				return;
-			}
+//			String records = ; // zero-based query
+//
+//			if (records == null) {
+//				return;
+//			}
 			
 			List<String> vals = new ArrayList<String>();
 
-			for (String line: records.split("\n")) {
+			for (String line: IterUtils.wrap(vcfTabix.query(record.getChrom(), record.getPos()-1))) {
 				VCFRecord bgzfRec = VCFRecord.parseLine(line);
 				
 				if (bgzfRec.getPos() != record.getPos()) {
