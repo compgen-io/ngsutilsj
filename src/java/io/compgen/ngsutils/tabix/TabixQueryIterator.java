@@ -1,7 +1,6 @@
 package io.compgen.ngsutils.tabix;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.Iterator;
