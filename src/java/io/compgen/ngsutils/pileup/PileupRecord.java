@@ -66,6 +66,7 @@ public class PileupRecord {
 		public final int qual;
 		public final boolean plusStrand;
 		public final int readPos; // Note: this is always relative to the + strand position of the read, regardless of if the read is on the plus or minus strand.
+		                          //       Will be "-1" if missing from file
 		
 		public PileupBaseCall(PileupBaseCallOp op, String call, int qual, int readPos) {
 		    this(op, call, qual, "", readPos);
@@ -128,13 +129,34 @@ public class PileupRecord {
 //		System.err.println(StringUtils.strip(line));
 		String[] cols = StringUtils.strip(line).split("\t");
 		
+		// check to see if there are two or three columns per sample
+		// if there are three, the third is the read position.
+		// if there are two, we don't know the read positions...
+		
+		boolean hasReadPos = (cols.length-3) % 4 == 0;
+		
+		for (int i=3; hasReadPos && i<cols.length; i++) {
+		    try {
+		        Integer.parseInt(cols[i]);
+		    } catch (NumberFormatException e) {
+		        hasReadPos = false;
+		    }
+		}
+		
+		int offset = 4;
+		
+		if (!hasReadPos) {
+		    offset = 3;
+		}
+		
+		
 		String ref = cols[0];
 		int pos = Integer.parseInt(cols[1]) - 1; // we store this as a 0-based value... Pileup uses 1-based
 		String refBase = cols[2].toUpperCase();
 		
 		PileupRecord record = new PileupRecord(ref, pos, refBase);
 		
-		for (int i=3; i<cols.length; i+=4) {
+		for (int i=3; i<cols.length; i+=offset) {
 			int coverage = Integer.parseInt(cols[i]);
 			if (coverage == 0) {
 	            record.addSampleRecord(coverage, null);
@@ -143,10 +165,13 @@ public class PileupRecord {
 			List<PileupBaseCall> calls = new ArrayList<PileupBaseCall>();
 			int qual_idx = 0;
 			
-			String[] readPosSpl = cols[i+3].split(",");
-			int[] readPos = new int[readPosSpl.length];
-			for (int j=0; j<readPosSpl.length; j++) {
-			    readPos[j] = Integer.parseInt(readPosSpl[j]);
+			int[] readPos = null;
+			if (hasReadPos) {
+    			String[] readPosSpl = cols[i+3].split(",");
+    			readPos = new int[readPosSpl.length];
+    			for (int j=0; j<readPosSpl.length; j++) {
+    			    readPos[j] = Integer.parseInt(readPosSpl[j]);
+    			}
 			}
 			
 			for (int j=0; j<cols[i+1].length(); j++) {
@@ -178,9 +203,9 @@ public class PileupRecord {
 
 					// always add indels (no good qual scores avail)
 					if (base == '+') {
-						calls.add(record.new PileupBaseCall(PileupBaseCallOp.Ins, indel, -1, readPos[qual_idx-1]));
+						calls.add(record.new PileupBaseCall(PileupBaseCallOp.Ins, indel, -1, hasReadPos ? readPos[qual_idx-1] : -1));
 					} else {
-						calls.add(record.new PileupBaseCall(PileupBaseCallOp.Del, indel, -1, readPos[qual_idx-1]));
+						calls.add(record.new PileupBaseCall(PileupBaseCallOp.Del, indel, -1, hasReadPos ? readPos[qual_idx-1] : -1));
 					}
 					
 					j += indelLen-1;
@@ -188,13 +213,13 @@ public class PileupRecord {
                     // < or > is a "refskip" (N CIGAR op)
                     if (cols[i+2].charAt(qual_idx)-33 > minBaseQual) {
                         if (!nogaps) {
-                            calls.add(record.new PileupBaseCall(PileupBaseCallOp.Gap, ""+base, cols[i+2].charAt(qual_idx)-33, refBase, readPos[qual_idx]));
+                            calls.add(record.new PileupBaseCall(PileupBaseCallOp.Gap, ""+base, cols[i+2].charAt(qual_idx)-33, refBase, hasReadPos ? readPos[qual_idx] : -1));
                         }
                     }
                     qual_idx++;
 				} else {
 				    if (cols[i+2].charAt(qual_idx)-33 >= minBaseQual) {
-				        calls.add(record.new PileupBaseCall(PileupBaseCallOp.Match, ""+base, cols[i+2].charAt(qual_idx)-33, refBase, readPos[qual_idx]));
+				        calls.add(record.new PileupBaseCall(PileupBaseCallOp.Match, ""+base, cols[i+2].charAt(qual_idx)-33, refBase, hasReadPos ? readPos[qual_idx] : -1));
 				    }
 					qual_idx++;
 				}
