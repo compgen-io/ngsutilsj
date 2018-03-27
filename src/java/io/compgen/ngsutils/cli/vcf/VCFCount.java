@@ -41,6 +41,7 @@ public class VCFCount extends AbstractOutputCommand {
     
     private boolean onlyOutputPass = false;
     private boolean outputVCFAF = false;
+    private boolean outputAF = false;
 
     private int filterFlags = 0;
     private int requiredFlags = 0;
@@ -66,6 +67,11 @@ public class VCFCount extends AbstractOutputCommand {
     @Option(desc="Output variant allele frequency from the VCF file (requires AD FORMAT field)", name="vcf-af")
     public void setVCFAF(boolean val) {
         this.outputVCFAF = val;
+    }
+
+    @Option(desc="Output alternative allele frequency (from BAM file)", name="af")
+    public void setAF(boolean val) {
+        this.outputAF = val;
     }
 
     @Option(desc="BAQ re-calculation (default:false)", name="baq")
@@ -167,6 +173,9 @@ public class VCFCount extends AbstractOutputCommand {
         }
         writer.write("ref_count");
         writer.write("alt_count");
+        if (outputAF) {
+            writer.write("alt_freq");
+        }
         writer.eol();
 
 		Iterator<VCFRecord> it = reader.iterator();
@@ -234,24 +243,31 @@ public class VCFCount extends AbstractOutputCommand {
                     }
                 }
 
+                long ref;
+                long alt;
+                
                 if (record.getRef().length()>1) {
                     // is a del
                     // assumes a properly anchored variant call in VCF (ex: CA/C)
 
-                    writer.write(tally.getCount(record.getAlt().get(i)));
-                    writer.write(tally.getCount("del"+(record.getRef().length()-1)));
+                    ref = tally.getCount(record.getAlt().get(i));
+                    alt = tally.getCount("del"+(record.getRef().length()-1));
+                    
                     
                 } else if (record.getAlt().get(i).length()>1) {
                     // is an insert
-                    writer.write(tally.getCount(record.getRef()));
-                    writer.write(tally.getCount("ins"+record.getAlt().get(i)));
+                    ref = tally.getCount(record.getRef());
+                    alt = tally.getCount("ins"+record.getAlt().get(i));
                 } else {
                     // match
-                    writer.write(tally.getCount(record.getRef()));
-                    writer.write(tally.getCount(record.getAlt().get(i)));
+                    ref = tally.getCount(record.getRef());
+                    alt = tally.getCount(record.getAlt().get(i));
                 }
                 
-                
+                if (outputAF) {
+                    writer.write(""+((double)alt) / (alt+ref));
+                }
+
                 writer.eol();
             }
             
