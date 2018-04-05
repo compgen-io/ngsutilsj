@@ -14,7 +14,7 @@ import io.compgen.ngsutils.vcf.VCFRecord;
 import io.compgen.ngsutils.vcf.VCFWriter;
 
 
-@Command(name="vcf-strip", desc="Remove all annotation and sample information (FILTER,INFO,FORMAT,dbSNP)", category="vcf")
+@Command(name="vcf-strip", desc="Remove all annotation and sample information (FILTER,INFO,FORMAT,dbSNP) but keep output in VCF format", category="vcf")
 public class VCFStrip extends AbstractOutputCommand {
 	private String filename = "-";
 
