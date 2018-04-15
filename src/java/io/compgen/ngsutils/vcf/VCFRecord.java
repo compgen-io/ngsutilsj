@@ -76,13 +76,15 @@ public class VCFRecord {
 		}
 
 		if (strip) {
-		    outcols.add(".");
+            outcols.add(MISSING);
+		} else if (filters != null && filters.size() == 0) {
+            outcols.add(MISSING);
 		} else if (!isFiltered()) {
 			outcols.add(PASS);
 		} else {
-			if (filters.size()>1) {
-				filters.remove(".");
-			}
+//			if (filters.size()>1) {
+//				filters.remove(MISSING);
+//			}
 			outcols.add(StringUtils.join(";", filters));
 		}
 
@@ -136,11 +138,14 @@ public class VCFRecord {
 		
 		List<String> filters = null;
 		if (!cols[6].equals(PASS)) {
-			for (String f: cols[6].split(";")) {
+		    // if filters is null => PASS
+		    // if filters is not null, but empty => MISSING
+
+		    for (String f: cols[6].split(";")) {
 				if (filters == null) {
 					filters = new ArrayList<String>();
 				}
-				if (!f.equals(".")) {
+				if (!f.equals(MISSING)) {
 				    filters.add(f);
 				}
 			}
