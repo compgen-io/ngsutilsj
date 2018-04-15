@@ -133,9 +133,9 @@ public class PileupRecord {
 		// if there are three, the third is the read position.
 		// if there are two, we don't know the read positions...
 		
-		boolean hasReadPos = (cols.length-3) % 4 == 0;
+		boolean hasReadPos = cols.length >=7 && (cols.length-3) % 4 == 0;
 		
-		for (int i=3; hasReadPos && i<cols.length; i++) {
+		for (int i=3; hasReadPos && i<cols.length; i+=4) {
 		    try {
 		        Integer.parseInt(cols[i]);
 		    } catch (NumberFormatException e) {
