@@ -83,6 +83,7 @@ public class VCFHeader {
             outlines.addAll(lines);
 		} else {
 		    for (String line: lines) {
+		        // when stripping the output, still output all other lines except the sample lines
 		        if (!line.startsWith("##SAMPLE=")) {
 		            outlines.add(line);
 		        }
@@ -148,6 +149,52 @@ public class VCFHeader {
 
     public Set<String> getInfoIDs() {
         return infoDefs.keySet();
+    }
+
+    public List<String> getContigNames() {
+        List<String> names = new ArrayList<String>();
+        for (String line: lines) {
+            if (line.startsWith("##contig=<") && line.endsWith(">")) {
+                // contig lines are formatted:
+                // ##contig=<ID=name,length=num,...>
+                
+                for (String s: line.substring(10, line.length()-1).split(",")) {
+                    String[] spl = s.split("=");
+                    if (spl[0].toUpperCase().equals("ID")) {
+                        names.add(spl[1]);
+                    }
+                }
+            }
+        }
+        
+        return names;
+    }
+
+    public int getContigLength(String name) {
+        for (String line: lines) {
+            if (line.startsWith("##contig=<") && line.endsWith(">")) {
+                // contig lines are formatted:
+                // ##contig=<ID=name,length=num,...>
+                
+                boolean found = false;
+                int length = -1;
+                for (String s: line.substring(10, line.length()-1).split(",")) {
+                    String[] spl = s.split("=");
+                    if (spl[0].toUpperCase().equals("ID")) {
+                        if (spl[1].equals(name)) {
+                            found = true;
+                        }
+                    }
+                    if (spl[0].toUpperCase().equals("LENGTH")) {
+                        length = Integer.parseInt(spl[1]);
+                    }
+                }
+                if (found) { 
+                    return length;
+                }
+            }
+        }
+        return -1;
     }
 
 	public static String quoteString(String s) {

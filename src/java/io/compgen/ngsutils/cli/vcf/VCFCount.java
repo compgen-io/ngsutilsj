@@ -1,7 +1,8 @@
 package io.compgen.ngsutils.cli.vcf;
 
 import java.io.IOException;
-import java.util.Iterator;
+import java.util.ArrayList;
+import java.util.List;
 
 import htsjdk.samtools.util.CloseableIterator;
 import io.compgen.cmdline.annotation.Command;
@@ -14,6 +15,9 @@ import io.compgen.common.IterUtils;
 import io.compgen.common.StringUtils;
 import io.compgen.common.TabWriter;
 import io.compgen.common.TallyValues;
+import io.compgen.common.progress.ProgressMessage;
+import io.compgen.common.progress.ProgressStats;
+import io.compgen.common.progress.ProgressUtils;
 import io.compgen.ngsutils.NGSUtils;
 import io.compgen.ngsutils.annotation.GenomeSpan;
 import io.compgen.ngsutils.bam.support.ReadUtils;
@@ -22,6 +26,7 @@ import io.compgen.ngsutils.pileup.PileupRecord;
 import io.compgen.ngsutils.pileup.PileupRecord.PileupBaseCall;
 import io.compgen.ngsutils.pileup.PileupRecord.PileupBaseCallOp;
 import io.compgen.ngsutils.vcf.VCFAttributeException;
+import io.compgen.ngsutils.vcf.VCFHeader;
 import io.compgen.ngsutils.vcf.VCFReader;
 import io.compgen.ngsutils.vcf.VCFRecord;
 
@@ -46,12 +51,19 @@ public class VCFCount extends AbstractOutputCommand {
     private int filterFlags = 0;
     private int requiredFlags = 0;
 
+    private int maxBatchLen = -1;
+
     @Option(desc = "Only keep properly paired reads", name = "proper-pairs")
     public void setProperPairs(boolean val) {
         if (val) {
             requiredFlags |= ReadUtils.PROPER_PAIR_FLAG;
             filterFlags |= ReadUtils.MATE_UNMAPPED_FLAG;
         }
+    }
+
+    @Option(desc = "Batch variants into blocks of size {val} for mpileup", name = "batchlen")
+    public void setBatchLen(int maxBatchLen) {
+        this.maxBatchLen = maxBatchLen;
     }
 
     @Option(desc = "Filtering flags", name = "filter-flags", defaultValue = "3844")
@@ -178,98 +190,64 @@ public class VCFCount extends AbstractOutputCommand {
         }
         writer.eol();
 
-		Iterator<VCFRecord> it = reader.iterator();
-		
-		for (VCFRecord record: IterUtils.wrap(it)) {
+        long total = 0;
+        final long[] offset = new long[]{0,0}; // offset, curpos
+        
+        for (String chr: reader.getHeader().getContigNames()) {
+            total += reader.getHeader().getContigLength(chr);
+        }
+        
+        final List<VCFRecord> recordBlock = new ArrayList<VCFRecord>();
+        final VCFHeader header = reader.getHeader();
+        final long totalF = total;
+        
+		for (VCFRecord record: IterUtils.wrap(ProgressUtils.getIterator(vcfFilename == "-" ? "variants <stdin>": vcfFilename, reader.iterator(), new ProgressStats(){
+
+            @Override
+            public long size() {
+                return totalF;
+            }
+
+            @Override
+            public long position() {
+                return offset[0] + offset[1];
+            }}, new ProgressMessage<VCFRecord>(){
+
+                String curChrom = "";
+                
+                @Override
+                public String msg(VCFRecord current) {
+                    if (!current.getChrom().equals(curChrom)) {
+                        if (!curChrom.equals("")) {
+                            offset[0] += header.getContigLength(curChrom);
+                        }
+                        
+                        curChrom = current.getChrom();
+                    }
+
+                    offset[1] = current.getPos();
+                    
+                    return current.getChrom()+":"+current.getPos();
+                }}))) {
 			if (onlyOutputPass && record.isFiltered()) {
 				continue;
 			}
 
-            TallyValues<String> tally = new TallyValues<String>();
-            
-            // zero-based
-            int pos = record.getPos()-1;
-//            boolean indel = false;
-            
-            CloseableIterator<PileupRecord> it2 = pileup.pileup(new GenomeSpan(record.getChrom(), pos));
-            for (PileupRecord pileupRecord: IterUtils.wrap(it2)) {
-                if (pileupRecord.ref.equals(record.getChrom()) && pileupRecord.pos == pos) {
-                    if (refFilename != null && !pileupRecord.refBase.equals(record.getRef())) {
-                        throw new IOException("Reference bases don't match! "+record.getChrom()+":"+record.getPos());
-                    }
-                    
-                    for (PileupBaseCall call: pileupRecord.getSampleRecords(0).calls) {
-                        if (call.op == PileupBaseCallOp.Match) {
-                            tally.incr(call.call);
-                        } else if (call.op == PileupBaseCallOp.Ins) {
-                            // NOTE: Indels are always reported out by BAMPileup/samtools mpileup 
-                            // Ex: C->CA  is a +1A in the pileup but C/CA in VCF
-                            //     chr8    109080640       C       4       ..-1A,, oJA<
-                            //     Should be 4 ref (C), 1 alt (-CA)
-
-                            tally.incr("ins"+record.getRef()+call.call); 
-//                            indel = true;
-
-                        } else if (call.op == PileupBaseCallOp.Del) {
-                            // Ex: CA->C  is a -1A in the pileup but CA/C in VCF
-                            //     chr8    109080640       C       4       ..-1A,, oJA<
-                            //     Should be 4 ref (C), 1 alt (-CA)
-
-                            tally.incr("del"+call.call.length()); 
-//                            indel = true;
-                        }
-                    }
-                } else {
-                    System.err.println("Bad chrom/pos in pileup? => " + pileupRecord.ref+":"+pileupRecord.pos);
-                }
-            }
-            it2.close();
-            // for each alt-allele...
-            for (int i=0; i< record.getAlt().size(); i++) {
-                writer.write(record.getChrom());
-                writer.write(record.getPos());
-
-                writer.write(record.getRef());
-                writer.write(record.getAlt().get(i));
-    
-                if (outputVCFAF) {
-                    try {
-                        String ad = record.getSampleAttributes().get(sampleIdx).get("AD").asString(null);
-                        String spl[] = ad.split(",");
-                        writer.write(spl[0]);
-                        writer.write(spl[i]);
-                    } catch (VCFAttributeException e) {
-                        throw new IOException(e);
+			if (maxBatchLen > 0) {			
+                if (recordBlock.size() > 0) {
+                    if (!recordBlock.get(0).getChrom().equals(record.getChrom())) {
+                        processVariants(recordBlock, pileup, writer, sampleIdx);
+                        recordBlock.clear();
+                    } else if (record.getPos() - recordBlock.get(0).getPos() > maxBatchLen) {
+                        processVariants(recordBlock, pileup, writer, sampleIdx);
+                        recordBlock.clear();
                     }
                 }
-
-                long ref;
-                long alt;
-                
-                if (record.getRef().length()>1) {
-                    // is a del
-                    // assumes a properly anchored variant call in VCF (ex: CA/C)
-
-                    ref = tally.getCount(record.getAlt().get(i));
-                    alt = tally.getCount("del"+(record.getRef().length()-1));
-                    
-                    
-                } else if (record.getAlt().get(i).length()>1) {
-                    // is an insert
-                    ref = tally.getCount(record.getRef());
-                    alt = tally.getCount("ins"+record.getAlt().get(i));
-                } else {
-                    // match
-                    ref = tally.getCount(record.getRef());
-                    alt = tally.getCount(record.getAlt().get(i));
-                }
-                
-                if (outputAF) {
-                    writer.write(""+((double)alt) / (alt+ref));
-                }
-
-                writer.eol();
-            }
+    			
+                recordBlock.add(record);
+			} else {
+			    processVariant(record, pileup, writer, sampleIdx);
+			}
             
 
 //            if (indel) {
@@ -281,9 +259,136 @@ public class VCFCount extends AbstractOutputCommand {
 //            }
 		
 		}
-		
+
+		if (recordBlock.size() > 0) {
+		    processVariants(recordBlock, pileup, writer, sampleIdx);
+		}
+
 		reader.close();
 		writer.close();
 	}
 
+    private void processVariant(VCFRecord record, BAMPileup pileup, TabWriter writer, int sampleIdx) throws IOException {
+        int pos = record.getPos() - 1; // switch to 0-based
+        
+        CloseableIterator<PileupRecord> it2 = pileup.pileup(new GenomeSpan(record.getChrom(), pos));
+        for (PileupRecord pileupRecord: IterUtils.wrap(it2)) {
+            if (pileupRecord.ref.equals(record.getChrom()) && pileupRecord.pos == pos) {
+                if (refFilename != null && !pileupRecord.refBase.equals(record.getRef())) {
+                    throw new IOException("Reference bases don't match! "+record.getChrom()+":"+record.getPos());
+                }
+                processVariantRecord(record, pileupRecord, writer, sampleIdx);
+            }
+        }
+        it2.close();       
+
+    }
+    
+    private void processVariantRecord(VCFRecord record, PileupRecord pileupRecord, TabWriter writer, int sampleIdx) throws IOException {
+        if (refFilename != null && !pileupRecord.refBase.equals(record.getRef())) {
+            throw new IOException("Reference bases don't match! "+record.getChrom()+":"+record.getPos());
+        }
+        
+        TallyValues<String> tally = new TallyValues<String>();
+
+        for (PileupBaseCall call: pileupRecord.getSampleRecords(0).calls) {
+            if (call.op == PileupBaseCallOp.Match) {
+                tally.incr(call.call);
+            } else if (call.op == PileupBaseCallOp.Ins) {
+                // NOTE: Indels are always reported out by BAMPileup/samtools mpileup 
+                // Ex: C->CA  is a +1A in the pileup but C/CA in VCF
+                //     chr8    109080640       C       4       ..-1A,, oJA<
+                //     Should be 4 ref (C), 1 alt (-CA)
+
+                tally.incr("ins"+record.getRef()+call.call); 
+//                indel = true;
+
+            } else if (call.op == PileupBaseCallOp.Del) {
+                // Ex: CA->C  is a -1A in the pileup but CA/C in VCF
+                //     chr8    109080640       C       4       ..-1A,, oJA<
+                //     Should be 4 ref (C), 1 alt (-CA)
+
+                tally.incr("del"+call.call.length()); 
+//                indel = true;
+            }
+        }
+        // for each alt-allele...
+        for (int i=0; i< record.getAlt().size(); i++) {
+            writer.write(record.getChrom());
+            writer.write(record.getPos());
+        
+            writer.write(record.getRef());
+            writer.write(record.getAlt().get(i));
+        
+            if (outputVCFAF) {
+                try {
+                    String ad = record.getSampleAttributes().get(sampleIdx).get("AD").asString(null);
+                    String spl[] = ad.split(",");
+                    writer.write(spl[0]);
+                    writer.write(spl[i]);
+                } catch (VCFAttributeException e) {
+                    throw new IOException(e);
+                }
+            }
+        
+            long ref;
+            long alt;
+            
+            if (record.getRef().length()>1) {
+                // is a del
+                // assumes a properly anchored variant call in VCF (ex: CA/C)
+        
+                ref = tally.getCount(record.getAlt().get(i));
+                alt = tally.getCount("del"+(record.getRef().length()-1));
+                
+                
+            } else if (record.getAlt().get(i).length()>1) {
+                // is an insert
+                ref = tally.getCount(record.getRef());
+                alt = tally.getCount("ins"+record.getAlt().get(i));
+            } else {
+                // match
+                ref = tally.getCount(record.getRef());
+                alt = tally.getCount(record.getAlt().get(i));
+            }
+            
+            writer.write(ref);
+            writer.write(alt);
+            
+            if (outputAF) {
+                writer.write(""+((double)alt) / (alt+ref));
+            }
+        
+            writer.eol();
+        }
+        
+    }
+
+    private void processVariants(List<VCFRecord> records, BAMPileup pileup, TabWriter writer, int sampleIdx) throws IOException {
+        // records must have the same chrom.
+        
+        int start = records.get(0).getPos() - 1;
+        int end = records.get(records.size()-1).getPos(); // minus 1?
+        
+        GenomeSpan span = new GenomeSpan(records.get(0).getChrom(), start, end);
+        CloseableIterator<PileupRecord> it2 = pileup.pileup(span);
+        
+        VCFRecord curRecord = records.get(0);
+        int idx = 1;
+        
+        for (PileupRecord pileupRecord: IterUtils.wrap(it2)) {
+            if (pileupRecord.ref.equals(curRecord.getChrom()) && pileupRecord.pos == curRecord.getPos()-1) {
+                processVariantRecord(curRecord, pileupRecord, writer, sampleIdx);
+                if (idx < records.size()) {
+                    curRecord = records.get(idx++);
+                } else {
+                    break;
+                }
+            }
+        }
+        
+        it2.close();
+
+    }
+    
 }
