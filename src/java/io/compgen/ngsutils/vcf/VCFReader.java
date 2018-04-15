@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.zip.GZIPInputStream;
@@ -20,20 +21,39 @@ public class VCFReader {
 	private boolean closed = false;
 	
 	public VCFReader(String filename) throws IOException, VCFParseException {
-		if (filename.equals("-")) {
-			in = new BufferedReader(new InputStreamReader(System.in));
-		} else if (filename.endsWith(".gz") || filename.endsWith(".bgz") ||filename.endsWith(".bgzf")) {
-			if (BGZFile.isBGZFile(filename)) {
-				in = new BufferedReader(new InputStreamReader(new BGZInputStream(filename)));				
-			} else {
-				in = new BufferedReader(new InputStreamReader(new GZIPInputStream(new FileInputStream(filename))));
-			}
-		} else {
-			in = new BufferedReader(new FileReader(filename));
-		}
-		readHeader();
+        if (filename.equals("-")) {
+            in = new BufferedReader(new InputStreamReader(System.in));
+        } else if (BGZFile.isBGZFile(filename)) {
+                in = new BufferedReader(new InputStreamReader(new BGZInputStream(filename)));               
+        } else if (isGZipFile(filename)){
+                in = new BufferedReader(new InputStreamReader(new GZIPInputStream(new FileInputStream(filename))));
+        } else {
+            in = new BufferedReader(new FileReader(filename));
+        }
+
+//        if (filename.equals("-")) {
+//            in = new BufferedReader(new InputStreamReader(System.in));
+//        } else if (filename.endsWith(".gz") || filename.endsWith(".bgz") ||filename.endsWith(".bgzf")) {
+//            if (BGZFile.isBGZFile(filename)) {
+//                in = new BufferedReader(new InputStreamReader(new BGZInputStream(filename)));               
+//            } else {
+//                in = new BufferedReader(new InputStreamReader(new GZIPInputStream(new FileInputStream(filename))));
+//            }
+//        } else {
+//            in = new BufferedReader(new FileReader(filename));
+//        }
+
+        readHeader();
 	}
 
+	public static boolean isGZipFile(String filename) throws IOException {
+	    InputStream is = new FileInputStream(filename);
+        byte[] magic = new byte[2];
+        is.read(magic);
+        is.close();
+        return Arrays.equals(magic, new byte[] {0x1f, (byte) 0x8B});// need to cast 0x8b because it is a neg. num in 2-complement
+	}
+	
 	public VCFReader(InputStream stream) throws IOException, VCFParseException {
 		in = new BufferedReader(new InputStreamReader(stream));
 		readHeader();
