@@ -50,7 +50,17 @@ public class ExportFormatField implements VCFExport {
 	
 	@Override
 	public List<String> getFieldNames() {
-		return ids;
+	    if (sample != null) {
+	        return ids;
+	    }
+
+	    List<String> outs = new ArrayList<String>();
+        for (String sample: header.getSamples()) {
+            for (String id: ids) {
+                outs.add(sample+":"+id);
+            }
+        }
+        return outs;
 	}
 
 	@Override

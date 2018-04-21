@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import io.compgen.common.ListBuilder;
 import io.compgen.common.StringUtils;
 
 public class VCFHeader {
@@ -50,6 +51,10 @@ public class VCFHeader {
 				samples[i-9]=spl[i];
 			}
 		}
+	}
+
+	public List<String> getSamples() {
+	    return ListBuilder.build(samples);
 	}
 	
 	public void addLine(String line) {
