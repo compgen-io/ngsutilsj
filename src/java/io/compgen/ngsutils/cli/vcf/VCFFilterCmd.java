@@ -21,6 +21,8 @@ import io.compgen.ngsutils.vcf.VCFReader;
 import io.compgen.ngsutils.vcf.VCFRecord;
 import io.compgen.ngsutils.vcf.VCFWriter;
 import io.compgen.ngsutils.vcf.filter.Equals;
+import io.compgen.ngsutils.vcf.filter.FlagAbsent;
+import io.compgen.ngsutils.vcf.filter.FlagPresent;
 import io.compgen.ngsutils.vcf.filter.GreaterThan;
 import io.compgen.ngsutils.vcf.filter.GreaterThanEqual;
 import io.compgen.ngsutils.vcf.filter.LessThan;
@@ -30,7 +32,8 @@ import io.compgen.ngsutils.vcf.filter.QualityScore;
 import io.compgen.ngsutils.vcf.filter.VCFFilter;
 
 
-@Command(name="vcf-filter", desc="Filter a VCF file", category="vcf")
+@Command(name="vcf-filter", desc="Filter a VCF file", category="vcf", doc="Note: This command will set filters in the VCF file, "
+        + "which is what you'd normally use to exclude records. Passing records match no filters.")
 public class VCFFilterCmd extends AbstractOutputCommand {
 	private String filename = "-";
 	
@@ -54,18 +57,28 @@ public class VCFFilterCmd extends AbstractOutputCommand {
         this.onlyOutputPass = onlyOutputPass;
     }
     
+    @Option(desc="Record contains INFO flag {KEY}", name="flag-present", helpValue="KEY", allowMultiple=true)
+    public void setFlagPresent(String val) throws CommandArgumentException {
+        filterChain.add(new FlagPresent(val));
+    }
+    
+    @Option(desc="Record missing INFO flag {KEY}", name="flag-missing", helpValue="KEY", allowMultiple=true)
+    public void setFlagAbsent(String val) throws CommandArgumentException {
+        filterChain.add(new FlagAbsent(val));
+    }
+    
     @Option(desc="Values for {KEY} is not equal to {VAL} (multiple allowed, String or number)", name="neq", helpValue="KEY:VAL:SAMPLEID:ALLELE", allowMultiple=true)
     public void setNotEQ(String val) throws CommandArgumentException {
-    	String[] spl = val.split(":");
-		if (spl.length==2) {
-        	filterChain.add(new NotEquals(spl[0], spl[1], null, null));
-		} else if (spl.length==3) {
-        	filterChain.add(new NotEquals(spl[0], spl[1], spl[2], null));
-		} else if (spl.length==4) {
-        	filterChain.add(new NotEquals(spl[0], spl[1], spl[2], spl[3]));
-		} else {
-    		throw new CommandArgumentException("1. Malformed argument. Should be in form => KEY:VAL or KEY:VAL:SAMPLEID or KEY:VAL:SAMPLEID:ALLELE");
-		}
+        String[] spl = val.split(":");
+        if (spl.length==2) {
+            filterChain.add(new NotEquals(spl[0], spl[1], null, null));
+        } else if (spl.length==3) {
+            filterChain.add(new NotEquals(spl[0], spl[1], spl[2], null));
+        } else if (spl.length==4) {
+            filterChain.add(new NotEquals(spl[0], spl[1], spl[2], spl[3]));
+        } else {
+            throw new CommandArgumentException("1. Malformed argument. Should be in form => KEY:VAL or KEY:VAL:SAMPLEID or KEY:VAL:SAMPLEID:ALLELE");
+        }
     }
     
     @Option(desc="Values for {KEY} is equal to {VAL} (multiple allowed, String or number)", name="eq", helpValue="KEY:VAL:SAMPLEID:ALLELE", allowMultiple=true)
