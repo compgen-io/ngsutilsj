@@ -52,6 +52,7 @@ public class VCFCount extends AbstractOutputCommand {
     private int requiredFlags = 0;
 
     private int maxBatchLen = -1;
+    private boolean hetOnly = false;
 
     @Option(desc = "Only keep properly paired reads", name = "proper-pairs")
     public void setProperPairs(boolean val) {
@@ -64,6 +65,11 @@ public class VCFCount extends AbstractOutputCommand {
     @Option(desc = "Batch variants into blocks of size {val} for mpileup", name = "batchlen")
     public void setBatchLen(int maxBatchLen) {
         this.maxBatchLen = maxBatchLen;
+    }
+
+    @Option(desc = "Only count heterozygous variants (requires format GT=0/1)", name = "het")
+    public void setHeterozygous(boolean hetOnly) {
+        this.hetOnly = hetOnly;
     }
 
     @Option(desc = "Filtering flags", name = "filter-flags", defaultValue = "3844")
@@ -233,6 +239,17 @@ public class VCFCount extends AbstractOutputCommand {
 				continue;
 			}
 
+			if (hetOnly) {
+			    if (!record.getSampleAttributes().get(sampleIdx).contains("GT")) {
+			        throw new CommandArgumentException("Missing GT field");
+			    }
+
+	            String val = record.getSampleAttributes().get(sampleIdx).get("GT").asString(null);
+	            if (!val.equals("0/1") && !val.equals("0|1")) {
+	                continue;
+	            }
+			}
+			
 			if (maxBatchLen > 0) {			
                 if (recordBlock.size() > 0) {
                     if (!recordBlock.get(0).getChrom().equals(record.getChrom())) {
