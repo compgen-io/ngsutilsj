@@ -18,8 +18,9 @@ public class QualExport implements VCFExport {
     public void export(VCFRecord rec, List<String> outs) throws VCFExportException {
         if (rec.getQual() == -1) {
             outs.add(missingValue);
+        } else {
+            outs.add(""+rec.getQual());
         }
-        outs.add(""+rec.getQual());
     }
 
     @Override
