@@ -54,7 +54,7 @@ public class CopyNumberLogRatio extends AbstractBasicAnnotator {
 	}
 
 	@Override
-	public void setHeader(VCFHeader header) throws VCFAnnotatorException {
+	public void setHeaderInner(VCFHeader header) throws VCFAnnotatorException {
 		VCFAnnotationDef adDef = header.getFormatDef("AD");
 		if (adDef == null || !adDef.number.equals("R") || !adDef.type.equals("Integer")) {
 			throw new VCFAnnotatorException("\"AD\" FORMAT annotation missing!");

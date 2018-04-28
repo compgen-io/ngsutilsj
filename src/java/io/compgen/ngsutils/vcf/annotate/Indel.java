@@ -22,7 +22,7 @@ public class Indel extends AbstractBasicAnnotator {
 	}
 
 	@Override
-	public void setHeader(VCFHeader header) throws VCFAnnotatorException {
+	public void setHeaderInner(VCFHeader header) throws VCFAnnotatorException {
 		for (VCFAnnotationDef def : getAnnotationTypes()) {
 			header.addFormat(def);
 		}

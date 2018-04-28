@@ -22,6 +22,7 @@ import io.compgen.ngsutils.vcf.VCFReader;
 import io.compgen.ngsutils.vcf.VCFRecord;
 import io.compgen.ngsutils.vcf.export.ExportFormatField;
 import io.compgen.ngsutils.vcf.export.ExportInfoField;
+import io.compgen.ngsutils.vcf.export.FilterExport;
 import io.compgen.ngsutils.vcf.export.IDExport;
 import io.compgen.ngsutils.vcf.export.QualExport;
 import io.compgen.ngsutils.vcf.export.VCFExport;
@@ -60,6 +61,11 @@ public class VCFExportCmd extends AbstractOutputCommand {
         this.noVCFHeader = noVCFHeader;
     }
 
+    @Option(desc="Export VCF Filters", name="filter")
+    public void setFilter() throws CommandArgumentException {
+        chain.add(new FilterExport());
+    }
+    
     @Option(desc="Export VCF ID", name="id")
     public void setID() throws CommandArgumentException {
         chain.add(new IDExport());

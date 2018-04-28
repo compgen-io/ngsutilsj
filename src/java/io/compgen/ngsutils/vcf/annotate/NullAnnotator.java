@@ -38,4 +38,12 @@ public class NullAnnotator implements VCFAnnotator {
 	@Override
 	public void close() throws VCFAnnotatorException {
 	}
+
+    @Override
+    public void setAltChrom(String key) throws VCFAnnotatorException {
+    }
+
+    @Override
+    public void setAltPos(String key) throws VCFAnnotatorException {
+    }
 }

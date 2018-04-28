@@ -53,7 +53,7 @@ public class TabixAnnotation extends AbstractBasicAnnotator {
     }
 
     @Override
-    public void setHeader(VCFHeader header) throws VCFAnnotatorException {
+    public void setHeaderInner(VCFHeader header) throws VCFAnnotatorException {
         try {
             if (colNum == -1) {
                 header.addInfo(VCFAnnotationDef.info(name, "0", "Flag", "Present in Tabix file",
@@ -83,6 +83,15 @@ public class TabixAnnotation extends AbstractBasicAnnotator {
 
     @Override
     public void annotate(VCFRecord record) throws VCFAnnotatorException {
+        String chrom;
+        int pos;
+        try {
+            chrom = getChrom(record);
+            pos = getPos(record);
+        } catch (VCFAnnotatorMissingAltException e) {
+            return;
+        }
+
         try {
             
 //            System.err.println("Looking for TABIX rows covering: "+record.getChrom() +":"+ record.getPos()+" ("+filename+")");
@@ -97,7 +106,7 @@ public class TabixAnnotation extends AbstractBasicAnnotator {
 
             if (altColNum > -1) {
                 // need to verify the alt column.
-                for (String line : IterUtils.wrap(tabix.query(record.getChrom(), record.getPos() - 1))) {
+                for (String line : IterUtils.wrap(tabix.query(chrom, pos - 1))) {
                     for (String alt: record.getAlt()) {
                         String[] spl = line.split("\t");
                         if (alt.equals(spl[altColNum])) {
@@ -115,7 +124,7 @@ public class TabixAnnotation extends AbstractBasicAnnotator {
             } else {
                 // just look for a BED region that spans this VCF position
                 found = false;
-                for (String line : IterUtils.wrap(tabix.query(record.getChrom(), record.getPos() - 1))) {
+                for (String line : IterUtils.wrap(tabix.query(chrom, pos - 1))) {
                     found = true;
                     if (colNum > -1) { 
                         // annotate based on a column value

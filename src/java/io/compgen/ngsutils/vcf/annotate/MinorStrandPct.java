@@ -22,7 +22,7 @@ public class MinorStrandPct extends AbstractBasicAnnotator {
 	}
 
 	@Override
-	public void setHeader(VCFHeader header) throws VCFAnnotatorException {
+	public void setHeaderInner(VCFHeader header) throws VCFAnnotatorException {
 		VCFAnnotationDef sacDef = header.getFormatDef("SAC");
 		if (sacDef == null || !sacDef.number.equals(".") || !sacDef.type.equals("Integer")) {
 			throw new VCFAnnotatorException("\"SAC\" FORMAT annotation missing!");

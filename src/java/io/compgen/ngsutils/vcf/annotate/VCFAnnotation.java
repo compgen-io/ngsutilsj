@@ -50,7 +50,7 @@ public class VCFAnnotation extends AbstractBasicAnnotator {
 	}
 	
 	@Override
-	public void setHeader(VCFHeader header) throws VCFAnnotatorException {
+	public void setHeaderInner(VCFHeader header) throws VCFAnnotatorException {
 		try {
 		    if (name.equals("@ID")) {
 		        return;
@@ -76,7 +76,16 @@ public class VCFAnnotation extends AbstractBasicAnnotator {
 
 	@Override
 	public void annotate(VCFRecord record) throws VCFAnnotatorException {
-		try {
+        String chrom;
+        int pos;
+        try {
+            chrom = getChrom(record);
+            pos = getPos(record);
+        } catch (VCFAnnotatorMissingAltException e) {
+            return;
+        }
+
+	    try {
 //			String records = ; // zero-based query
 //
 //			if (records == null) {
@@ -85,7 +94,7 @@ public class VCFAnnotation extends AbstractBasicAnnotator {
 			
 			List<String> vals = new ArrayList<String>();
 
-			for (String line: IterUtils.wrap(vcfTabix.query(record.getChrom(), record.getPos()-1))) {
+			for (String line: IterUtils.wrap(vcfTabix.query(chrom, pos))) {
 				VCFRecord bgzfRec = VCFRecord.parseLine(line);
 				
 				if (bgzfRec.getPos() != record.getPos()) {

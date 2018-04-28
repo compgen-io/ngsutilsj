@@ -8,4 +8,7 @@ public interface VCFAnnotator {
 	public void setHeader(VCFHeader header) throws VCFAnnotatorException;
 	public void setParent(VCFAnnotator parent) throws VCFAnnotatorException;
 	public void close() throws VCFAnnotatorException;
+	
+    public void setAltChrom(String key) throws VCFAnnotatorException;
+    public void setAltPos(String key) throws VCFAnnotatorException;
 }

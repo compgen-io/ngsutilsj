@@ -32,7 +32,7 @@ public class FlankingBases extends AbstractBasicAnnotator {
 	}
 
 	@Override
-	public void setHeader(VCFHeader header) throws VCFAnnotatorException {
+	public void setHeaderInner(VCFHeader header) throws VCFAnnotatorException {
 		header.addFormat(getAnnotationType());
 	}
 	

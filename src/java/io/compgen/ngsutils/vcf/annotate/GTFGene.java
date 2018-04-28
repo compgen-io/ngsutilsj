@@ -25,7 +25,7 @@ public class GTFGene extends AbstractBasicAnnotator {
 	
 
 	@Override
-	public void setHeader(VCFHeader header) throws VCFAnnotatorException {
+	public void setHeaderInner(VCFHeader header) throws VCFAnnotatorException {
 		try {
 			/*
 			 * TODO: add more? From VEP docs:
@@ -58,7 +58,12 @@ public class GTFGene extends AbstractBasicAnnotator {
 
 	@Override
 	public void annotate(VCFRecord record) throws VCFAnnotatorException {
-		GenomeSpan pos = new GenomeSpan(record.getChrom(), record.getPos());
+        GenomeSpan pos;
+        try {
+            pos = new GenomeSpan(getChrom(record), getPos(record));
+        } catch (VCFAnnotatorMissingAltException e) {
+            return;
+        }
 		
 		List<String> geneNames = new ArrayList<String>();
 		List<String> strands = new ArrayList<String>();

@@ -35,6 +35,8 @@ import io.compgen.ngsutils.vcf.annotate.VariantDistance;
 public class VCFAnnotateCmd extends AbstractOutputCommand {
 	private String filename = "-";
 	private boolean onlyPassing = false;
+	private String altChrom = null;
+	private String altPos = null;
 	
 	List<VCFAnnotator> chain = new ArrayList<VCFAnnotator>();
 	
@@ -43,32 +45,42 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
     	this.onlyPassing = onlyPassing;
     }
     
-    @Option(desc="Add distance to nearest variant (CG_VARDIST)", name="vardist")
+    @Option(desc="Use an alternate INFO field for the chromosome (ex: SV). If missing, skip annotation.", name="alt-chrom")
+    public void setAltChrom(String key) throws CommandArgumentException {
+        this.altChrom = key;
+    }
+    
+    @Option(desc="Use an alternate INFO field for the position (ex: SV). If missing, skip annotation.", name="alt-pos")
+    public void setAltPos(String key) throws CommandArgumentException {
+        this.altPos = key;
+    }
+    
+    @Option(desc="Add distance to nearest variant (INFO:CG_VARDIST)", name="vardist")
     public void setVarDist() throws CommandArgumentException {
         chain.add(new VariantDistance());
     }
     
-    @Option(desc="Add variant allele frequencies (CG_VAF, requires SAC)", name="vaf")
+    @Option(desc="Add variant allele frequencies (FORMAT:CG_VAF, requires SAC)", name="vaf")
     public void setVAF() throws CommandArgumentException {
         chain.add(new VariantAlleleFrequency());
     }
     
-    @Option(desc="Add INSERT and DELETE flags (CG_INSERT, CG_DELETE, etc...)", name="indel")
+    @Option(desc="Add INSERT and DELETE flags (INFO:CG_INSERT, CG_DELETE, etc...)", name="indel")
     public void setIndel() throws CommandArgumentException {
     	chain.add(new Indel());
     }
     
-    @Option(desc="Add Fisher strand bias by sample (CG_FSB, requires SAC)", name="fisher-sb")
+    @Option(desc="Add Fisher strand bias by sample (FORMAT:CG_FSB, requires SAC)", name="fisher-sb")
     public void setFisherStrandBias() throws CommandArgumentException {
     	chain.add(new FisherStrandBias());
     }
     
-    @Option(desc="Add minor strand pct (CG_SBPCT, requires SAC)", name="minor-strand")
+    @Option(desc="Add minor strand pct (FORMAT:CG_SBPCT, requires SAC)", name="minor-strand")
     public void setMinorStrandPct() throws CommandArgumentException {
     	chain.add(new MinorStrandPct());
     }
 
-    @Option(desc="Add copy-number (log2 ratio, somatic/germline) (CG_CNLR, requires AD)", name="copy-logratio", helpValue="SOMATIC:GERMLINE{:somatic-total-count:germline-total-count} (sample-ids)")
+    @Option(desc="Add copy-number estimate (log2 ratio, somatic/germline -- at variant position) (INFO:CG_CNLR, requires AD)", name="copy-logratio", helpValue="SOMATIC:GERMLINE{:somatic-total-count:germline-total-count} (sample-ids)")
     public void setCopyNumberLogRatio(String samples) throws CommandArgumentException {
     	String[] spl = samples.split(":");
     	if (spl.length == 2) {
@@ -80,7 +92,7 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
     	}
     	
     }
-    @Option(desc="Add flanking bases (ex: ACA) from reference FASTA file (FAI indexed)", name="flanking", helpValue="ref.fa")
+    @Option(desc="Add flanking bases (ex: ACA) from reference FASTA file (FAI indexed) (INFO:CG_FLANKING)", name="flanking", helpValue="ref.fa")
     public void setFlanking(String fasta) throws CommandArgumentException {
     	try{
 			chain.add(new FlankingBases(fasta));
@@ -90,7 +102,7 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
     }
     
 
-    @Option(desc="Add annotations from a BED4 file (name column) (add ',n' to NAME to make value a number)", name="bed", helpValue="NAME:FILENAME", allowMultiple=true)
+    @Option(desc="Add annotations from a BED4 file (using the name column, INFO) (add ',n' to NAME to make value a number)", name="bed", helpValue="NAME:FILENAME", allowMultiple=true)
     public void setBED(String bed) throws CommandArgumentException {
         String[] spl = bed.split(":");
         if (spl.length == 2) {
@@ -104,7 +116,7 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
         }       
     }
     
-    @Option(desc="Add annotations from a Tabix file (If col is left out, this is treaded as a VCF flag; add ',n' for a number; set alt=col# to specify an alternative allele column -- will use exact matching)", name="tab", helpValue="NAME:FILENAME{,col,n,alt=X}", allowMultiple=true)
+    @Option(desc="Add annotations from a Tabix file (INFO: If col is left out, this is treaded as a VCF flag; add ',n' for a number; set alt=col# to specify an alternative allele column -- will use exact matching)", name="tab", helpValue="NAME:FILENAME{,col,n,alt=X}", allowMultiple=true)
     public void setTabix(String tab) throws CommandArgumentException {
         String[] spl = tab.split(":");
         if (spl.length == 2) {
@@ -143,7 +155,7 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
         }       
     }
     
-    @Option(desc="Flag variants within a BED3 region", name="bed-flag", helpValue="NAME:FILENAME", allowMultiple=true)
+    @Option(desc="Flag variants within a BED3 region (INFO)", name="bed-flag", helpValue="NAME:FILENAME", allowMultiple=true)
     public void setBEDFlag(String bed) throws CommandArgumentException {
     	String[] spl = bed.split(":");
     	if (spl.length == 2) {
@@ -178,7 +190,7 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
     	}    	
     }    
     
-    @Option(desc="Flag variants within a VCF file (CSI indexed, add '!' for exact matches)", name="vcf-flag", helpValue="NAME:FILENAME{:!}", allowMultiple=true)
+    @Option(desc="Flag variants within a VCF file (INFO, CSI indexed, add '!' for exact matches)", name="vcf-flag", helpValue="NAME:FILENAME{:!}", allowMultiple=true)
     public void setVCFFlag(String vcf) throws CommandArgumentException {
         String[] spl = vcf.split(":");
         if (spl.length == 2) {
@@ -207,7 +219,7 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
         }
     }
     
-    @Option(desc="Flag if an existing INFO value present is in a file", name="in-file", helpValue="FLAG:INFO:FILENAME", allowMultiple=true)
+    @Option(desc="Add flag if an existing INFO value present is in a file", name="in-file", helpValue="FLAGNAME:INFOKEY:FILENAME", allowMultiple=true)
     public void setInfoInFile(String val) throws CommandArgumentException {
     	String[] spl = val.split(":");
     	if (spl.length == 3) {
@@ -221,7 +233,7 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
     	}
     }
     
-    @Option(desc="Add gene annotations", name="gtf", helpValue="filename.gtf")
+    @Option(desc="Add gene annotations (INFO: CG_GENE, CG_GENE_STRAND, CG_GENE_REGION)", name="gtf", helpValue="filename.gtf")
     public void setGTF(String filename) throws CommandArgumentException {
 		try {
 			chain.add(new GTFGene(filename));
@@ -245,7 +257,20 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
 		}
 		
 		NullAnnotator nullAnn = new NullAnnotator(reader, onlyPassing);
-		
+
+
+        if (altChrom != null) {
+            for (int i=0; i< chain.size(); i++) {
+                chain.get(i).setAltChrom(altChrom);
+            }
+        }
+        
+        if (altPos != null) {
+            for (int i=0; i< chain.size(); i++) {
+                chain.get(i).setAltPos(altPos);
+            }
+        }
+
 		VCFHeader header = reader.getHeader();
 		for (int i=0; i< chain.size(); i++) {
 			chain.get(i).setHeader(header);
