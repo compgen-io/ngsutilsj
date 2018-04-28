@@ -35,6 +35,8 @@ public class FastqDemux extends AbstractCommand {
     
     private boolean force = false;
     private boolean compress = false;
+    
+    private boolean allowWildcards = false;
 
     private String filename;
   
@@ -87,6 +89,11 @@ public class FastqDemux extends AbstractCommand {
     @Option(desc="Compress output files (gzip)", charName="z", name="gzip")
     public void setCompress(boolean compress) {
         this.compress = compress;
+    }
+    
+    @Option(desc="Allow wildcards in barcodes (allow 'N' in barcode)", name="wildcard")
+    public void setAllowWildcard(boolean allowWildcards) {
+        this.allowWildcards = allowWildcards;
     }
     
     @Option(desc="Force overwriting existing files", charName="f", name="force")
@@ -234,7 +241,7 @@ public class FastqDemux extends AbstractCommand {
                 }
 
                 if (nameSubstr2 != null) {
-                    if (matches(fqLine, nameSubstr2[i], mismatches)) {
+                    if (matches(fqLine, nameSubstr2[i], mismatches, allowWildcards)) {
                         match2 = true;
                     }
                 } else {
@@ -284,13 +291,17 @@ public class FastqDemux extends AbstractCommand {
         
     }
 
-    public static boolean matches(String fqLine, String barcode, int mismatches) {
+    public static boolean matches(String fqLine, String barcode, int mismatches, boolean allowWildcards2) {
         if (fqLine.contains(barcode)) {
             return true;
         }
 
         List<String> permutations = generateMismatchPatterns(barcode, mismatches);
+        
         for (String bait: permutations) {
+            if (allowWildcards2) {
+                bait = bait.replaceAll("N", "\\[ACGT\\]");
+            }
             if (Pattern.matches(bait, fqLine)) {
                 return true;
             }

@@ -24,11 +24,11 @@ public class FastqBatchSplitTest {
 
     @Test
     public void testMatches() {
-        assertTrue(FastqDemux.matches("ABCABC", "ABCABC", 0));
-        assertFalse(FastqDemux.matches("ABCABD", "ABCABC", 0));
-        assertTrue(FastqDemux.matches("ABCABD", "ABCABC", 1));
-        assertTrue(FastqDemux.matches("DBCABD", "ABCABC", 2));
-        assertFalse(FastqDemux.matches("DDCABD", "ABCABC", 2));
+        assertTrue(FastqDemux.matches("ABCABC", "ABCABC", 0, false));
+        assertFalse(FastqDemux.matches("ABCABD", "ABCABC", 0, false));
+        assertTrue(FastqDemux.matches("ABCABD", "ABCABC", 1, false));
+        assertTrue(FastqDemux.matches("DBCABD", "ABCABC", 2, false));
+        assertFalse(FastqDemux.matches("DDCABD", "ABCABC", 2, false));
     }
 
     @Test
@@ -49,6 +49,15 @@ public class FastqBatchSplitTest {
         hs2.addAll(l2);
         assertEquals(l2.size(), hs2.size());
         
+    }
+
+    @Test
+    public void testMatchesWildcard() {
+        assertFalse(FastqDemux.matches("ACGTACGT", "NCGTACGT", 0, false));
+        assertTrue(FastqDemux.matches("ACGTACGT", "NCGTACGT", 0, true));
+        assertTrue(FastqDemux.matches("ACGTACGT", "NNGTACGT", 0, true));
+        assertTrue(FastqDemux.matches("ACGTACGT", "NNNTACGT", 0, true));
+        assertTrue(FastqDemux.matches("ACGTACGT", "NNNNACGT", 0, true));
     }
 
 }
