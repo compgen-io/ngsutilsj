@@ -250,6 +250,9 @@ public class BamCount extends AbstractOutputCommand {
         boolean missingReferences = false;
         
         for (SpanGroup spanGroup: IterUtils.wrap(ProgressUtils.getIterator(name, spanSource.iterator(), new IncrementingStats(spanSource.size())))) {
+            if (spanGroup == null) {
+                continue;
+            }
             spanCount ++;
             if (verbose && spanCount % 1000 == 0) {
                 System.err.println("[" +spanCount + "]" + spanGroup.getRefName()+":"+spanGroup.getStart());

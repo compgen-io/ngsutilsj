@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import io.compgen.common.AbstractLineReader;
+import io.compgen.common.StringUtils;
 import io.compgen.ngsutils.bam.Strand;
 
 public class BedSpans extends AbstractLineReader<SpanGroup> implements SpanSource {
@@ -43,8 +44,17 @@ public class BedSpans extends AbstractLineReader<SpanGroup> implements SpanSourc
     }
     
     public SpanGroup convertLine(String line) {
+        if (line == null || line.trim().equals("")) {
+            return null;
+        }
+        line = StringUtils.rstrip(line);
         String[] cols = line.split("\\t", -1);
         SpanGroup span;
+        
+        if (cols.length < 3) {
+            return null;
+        }
+        
         if (cols.length > 5) {
             span = new SpanGroup(cols[0], Strand.parse(cols[5]), cols, Integer.parseInt(cols[1]), Integer.parseInt(cols[2]));
         } else {
