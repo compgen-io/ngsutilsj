@@ -373,7 +373,11 @@ public class VCFCount extends AbstractOutputCommand {
             writer.write(alt);
             
             if (outputAF) {
-                writer.write(""+((double)alt) / (alt+ref));
+                if (alt+ref > 0) {
+                    writer.write(""+((double)alt) / (alt+ref));
+                } else {
+                    writer.write("");
+                }
             }
         
             writer.eol();
