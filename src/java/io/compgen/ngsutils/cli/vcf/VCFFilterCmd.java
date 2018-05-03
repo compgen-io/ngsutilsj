@@ -25,6 +25,8 @@ import io.compgen.ngsutils.vcf.filter.FlagAbsent;
 import io.compgen.ngsutils.vcf.filter.FlagPresent;
 import io.compgen.ngsutils.vcf.filter.GreaterThan;
 import io.compgen.ngsutils.vcf.filter.GreaterThanEqual;
+import io.compgen.ngsutils.vcf.filter.HeterozygousFilter;
+import io.compgen.ngsutils.vcf.filter.HomozygousFilter;
 import io.compgen.ngsutils.vcf.filter.LessThan;
 import io.compgen.ngsutils.vcf.filter.LessThanEqual;
 import io.compgen.ngsutils.vcf.filter.NotEquals;
@@ -39,7 +41,7 @@ public class VCFFilterCmd extends AbstractOutputCommand {
 	
 	List<VCFFilter> filterChain = new ArrayList<VCFFilter>();
 	
-	private boolean onlyOutputPass = false;
+    private boolean onlyOutputPass = false;
 	private String statsFilename=null;
 	
     @Option(desc="Write filter stats to a file", name="stats")
@@ -52,6 +54,20 @@ public class VCFFilterCmd extends AbstractOutputCommand {
         filterChain.add(new QualityScore(qual));
     }
 
+    @Option(desc="Filter homozygous variants (requires GT field)", name="hom")
+    public void setOnlyHom(boolean onlyHom) {
+        if (onlyHom) {
+            filterChain.add(new HomozygousFilter());
+        }
+    }
+    
+    @Option(desc="Filter heterozygous variants (requires GT field)", name="het")
+    public void setOnlyHet(boolean onlyHet) {
+        if (onlyHet) {
+            filterChain.add(new HeterozygousFilter());
+        }
+    }
+    
     @Option(desc="Only output passing variants", name="passing")
     public void setOnlyOutputPass(boolean onlyOutputPass) {
         this.onlyOutputPass = onlyOutputPass;
