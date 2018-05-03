@@ -329,6 +329,7 @@ public class VCFCount extends AbstractOutputCommand {
 //                indel = true;
             }
         }
+        
         // for each alt-allele...
         for (int i=0; i< record.getAlt().size(); i++) {
             writer.write(record.getChrom());
@@ -373,8 +374,10 @@ public class VCFCount extends AbstractOutputCommand {
             writer.write(alt);
             
             if (outputAF) {
-                if (alt+ref > 0) {
-                    writer.write(""+((double)alt) / (alt+ref));
+                if (tally.getTotal() > 0) {
+                    // need the total allele count here (if we have two non-ref alleles in het, then we can skew the AF unless we do this...)
+                    // in those cases, the AF will not equal alt / (alt+ref); rather alt / (alt1+alt2)
+                    writer.write(""+((double)alt) / tally.getTotal());
                 } else {
                     writer.write("");
                 }
