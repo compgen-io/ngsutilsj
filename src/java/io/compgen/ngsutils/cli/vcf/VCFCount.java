@@ -67,7 +67,7 @@ public class VCFCount extends AbstractOutputCommand {
         this.maxBatchLen = maxBatchLen;
     }
 
-    @Option(desc = "Only count heterozygous variants (requires format GT=0/1)", name = "het")
+    @Option(desc = "Only count heterozygous variants (requires GT FORMAT field)", name = "het")
     public void setHeterozygous(boolean hetOnly) {
         this.hetOnly = hetOnly;
     }
@@ -245,9 +245,19 @@ public class VCFCount extends AbstractOutputCommand {
 			    }
 
 	            String val = record.getSampleAttributes().get(sampleIdx).get("GT").asString(null);
-	            if (!val.equals("0/1") && !val.equals("0|1")) {
-	                continue;
-	            }
+
+	            // if 0/0 or 1/1, etc -- skip
+                if (val.indexOf('/')>-1) {
+                    String[] v2 = val.split("/");
+                    if (v2.length == 2 && v2[0].equals(v2[1])) {
+                        continue;
+                    }
+                } else if (val.indexOf('|')>-1) {
+                    String[] v2 = val.split("\\|");
+                    if (v2.length == 2 && v2[0].equals(v2[1])) {
+                        continue;
+                    }
+                }
 			}
 			
 			if (maxBatchLen > 0) {			
