@@ -62,7 +62,7 @@ public class VCFCount extends AbstractOutputCommand {
         }
     }
 
-    @Option(desc = "Batch variants into blocks of size {val} for mpileup", name = "batchlen")
+    @Option(desc = "Batch variants into blocks of size {val} for mpileup (limits mpileup calls)", name = "batchlen")
     public void setBatchLen(int maxBatchLen) {
         this.maxBatchLen = maxBatchLen;
     }
