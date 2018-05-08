@@ -67,7 +67,6 @@ import io.compgen.ngsutils.cli.vcf.VCFChrFix;
 import io.compgen.ngsutils.cli.vcf.VCFCount;
 import io.compgen.ngsutils.cli.vcf.VCFExportCmd;
 import io.compgen.ngsutils.cli.vcf.VCFFilterCmd;
-import io.compgen.ngsutils.cli.vcf.VCFSignature;
 import io.compgen.ngsutils.cli.vcf.VCFStrip;
 import io.compgen.ngsutils.cli.vcf.VCFToBED;
 import io.compgen.ngsutils.cli.vcf.VCFToCount;
@@ -158,7 +157,7 @@ public class NGSUtils {
             .addCommand(BGZFCat.class)
             .addCommand(VCFCount.class)
             .addCommand(VCFStrip.class)
-            .addCommand(VCFSignature.class)
+//            .addCommand(VCFSignature.class)
             .addCommand(VCFToCount.class);
         
 
