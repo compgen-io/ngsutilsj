@@ -13,10 +13,10 @@ public interface TabixIndex {
         final protected int uoffsetEnd;
 
         public Chunk(long begin, long end) {
-            coffsetBegin = (begin >> 16) & 0xFFFFFFFFFFFFl;
+            coffsetBegin = (begin >> 16) & 0xFFFFFFFFFFFFL;
             uoffsetBegin = (int) (begin & 0xFFFF);
             
-            coffsetEnd = (end >> 16) & 0xFFFFFFFFFFFFl;
+            coffsetEnd = (end >> 16) & 0xFFFFFFFFFFFFL;
             uoffsetEnd = (int) (end & 0xFFFF);
 
         }
