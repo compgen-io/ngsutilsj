@@ -98,7 +98,7 @@ public class VCFToCount extends AbstractOutputCommand {
         final VCFHeader header = reader.getHeader();
         final long totalF = total;
         
-		for (VCFRecord record: IterUtils.wrap(ProgressUtils.getIterator(vcfFilename == "-" ? "variants <stdin>": vcfFilename, reader.iterator(), new ProgressStats(){
+		for (VCFRecord record: IterUtils.wrap(ProgressUtils.getIterator(vcfFilename.equals("-") ? "variants <stdin>": vcfFilename, reader.iterator(), new ProgressStats(){
 
             @Override
             public long size() {
