@@ -49,7 +49,7 @@ public class GTFGene extends AbstractBasicAnnotator {
 			 */
 			
 			header.addInfo(VCFAnnotationDef.info("CG_GENE", "1", "String", "Gene name", filename, null, null, null));
-			header.addInfo(VCFAnnotationDef.info("CG_GENE_STRAND", "1", "String", "Gene region", filename, null, null, null));
+			header.addInfo(VCFAnnotationDef.info("CG_GENE_STRAND", "1", "String", "Gene strand", filename, null, null, null));
 			header.addInfo(VCFAnnotationDef.info("CG_GENE_REGION", "1", "String", "Gene region", filename, null, null, null));
 		} catch (VCFParseException e) {
 			throw new VCFAnnotatorException(e);
