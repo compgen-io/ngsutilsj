@@ -322,6 +322,10 @@ public class TBIFile implements TabixIndex {
         }
         return chunks;
     }
+    @Override
+    public int getSkipLines() {
+        return skipLines;
+    }
 
 }
 

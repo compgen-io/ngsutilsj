@@ -367,4 +367,9 @@ public class CSIFile implements TabixIndex {
         return chunks;
     }
 
+    @Override
+    public int getSkipLines() {
+        return skipLines;
+    }
+
 }
