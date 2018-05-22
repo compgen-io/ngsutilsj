@@ -64,7 +64,7 @@ public class TabixFile {
 	}
 	
 	/**
-	 * Returns lines from the TABIX file that completely CONTAIN the query range
+	 * Returns lines from the TABIX file that overlaps the query range
 	 * 
      * YES:
      *      |             |
@@ -73,7 +73,7 @@ public class TabixFile {
      *      [query]
      *              [query]
      * 
-     * No:
+     * Also YES:
      * 
      *      |             |
      *      |-------------|
@@ -117,7 +117,87 @@ public class TabixFile {
         return new TabixQueryIterator(ref, start, end, index, bgzf);
 	}
 
-        public char getMeta() {
+    public Iterator<String> lines() {
+        return new Iterator<String>() {
+
+            byte[] buf = null;
+            int pos = -1;
+            String next = null;
+            
+            @Override
+            public boolean hasNext() {
+                if (pos == -1) {
+                    populate();
+                }
+                return next != null;
+            }
+
+            private void populate() {
+                if (buf != null) {
+                    for (int i=pos; i<buf.length; i++) {
+                        if (buf[i] == '\n') {
+                            if (buf[i-1] == '\r') {
+                                next = new String(buf, pos, i-pos-1);
+                            } else {
+                                next = new String(buf, pos, i-pos);
+                            }
+                            pos = i+1;
+                            return;
+                        }
+                    }
+                }
+                
+                
+                try {
+                    byte[] block = bgzf.readCurrentBlock();
+                    if (block == null) {
+                        if (buf!=null && pos < buf.length) { 
+                            next = new String(buf, pos, buf.length-pos);
+                            pos = buf.length;
+                        } else {
+                            next = null;
+                        }
+                        return;
+                    }
+                    
+                    if (buf != null) {
+                        byte[] newbuf = new byte[(buf.length-pos) + block.length];
+                        
+                        for (int i=0; i+pos<buf.length; i++) {
+                            newbuf[i] = buf[pos+i];
+                        }
+                        int offset = buf.length-pos;
+                        for (int i=0; i<block.length; i++) {
+                            newbuf[offset + i]=block[i];
+                        }
+                        pos = 0;
+                        buf = newbuf;
+                    } else {
+                        pos = 0;
+                        buf = block;
+                    }
+                    populate();
+                    
+                } catch (IOException e) {
+                }
+            }
+
+            @Override
+            public String next() {
+                if (pos == -1) {
+                    populate();
+                }
+
+                String ret = next;
+                populate();
+                return ret;
+            }
+            
+        };
+    }
+    
+    
+    public char getMeta() {
         return index.getMeta();
     }
 
@@ -135,6 +215,10 @@ public class TabixFile {
 
     public int getFormat() {
         return index.getFormat();
+    }
+
+    public int getSkipLines() {
+        return index.getSkipLines();
     }
 
     public void dumpIndex() {
