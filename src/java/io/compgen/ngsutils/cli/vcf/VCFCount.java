@@ -301,7 +301,7 @@ public class VCFCount extends AbstractOutputCommand {
         CloseableIterator<PileupRecord> it2 = pileup.pileup(new GenomeSpan(record.getChrom(), pos));
         for (PileupRecord pileupRecord: IterUtils.wrap(it2)) {
             if (pileupRecord.ref.equals(record.getChrom()) && pileupRecord.pos == pos) {
-                if (refFilename != null && !pileupRecord.refBase.equals(record.getRef())) {
+                if (refFilename != null && !pileupRecord.refBase.equals(record.getRef().subSequence(0, 1))) {
                     throw new IOException("Reference bases don't match! "+record.getChrom()+":"+record.getPos());
                 }
                 processVariantRecord(record, pileupRecord, writer, sampleIdx);
@@ -312,7 +312,9 @@ public class VCFCount extends AbstractOutputCommand {
     }
     
     private void processVariantRecord(VCFRecord record, PileupRecord pileupRecord, TabWriter writer, int sampleIdx) throws IOException {
-        if (refFilename != null && !pileupRecord.refBase.equals(record.getRef())) {
+        // TODO: HANDLE multi-base references?
+        
+        if (refFilename != null && !pileupRecord.refBase.equals(record.getRef().substring(0, 1))) {
             throw new IOException("Reference bases don't match! "+record.getChrom()+":"+record.getPos());
         }
         
