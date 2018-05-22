@@ -62,6 +62,7 @@ import io.compgen.ngsutils.cli.fastq.FastqToBam;
 import io.compgen.ngsutils.cli.fastq.FastqToFasta;
 import io.compgen.ngsutils.cli.gtf.GTFExport;
 import io.compgen.ngsutils.cli.gtf.GeneExport;
+import io.compgen.ngsutils.cli.tab.TabAnnotate;
 import io.compgen.ngsutils.cli.vcf.VCFAnnotateCmd;
 import io.compgen.ngsutils.cli.vcf.VCFChrFix;
 import io.compgen.ngsutils.cli.vcf.VCFCount;
@@ -72,6 +73,7 @@ import io.compgen.ngsutils.cli.vcf.VCFToBED;
 import io.compgen.ngsutils.cli.vcf.VCFToCount;
 import io.compgen.ngsutils.support.stats.FisherCli;
 import io.compgen.ngsutils.tabix.BGZFCat;
+import io.compgen.ngsutils.tabix.TabixCat;
 import io.compgen.ngsutils.tabix.TabixQuery;
 
 @SuppressWarnings("deprecation")
@@ -158,7 +160,9 @@ public class NGSUtils {
             .addCommand(VCFCount.class)
             .addCommand(VCFStrip.class)
 //            .addCommand(VCFSignature.class)
-            .addCommand(VCFToCount.class);
+            .addCommand(VCFToCount.class)
+            .addCommand(TabixCat.class)
+            .addCommand(TabAnnotate.class);
         
 
         try {
