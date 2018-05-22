@@ -26,7 +26,12 @@ public class BGZFCat extends AbstractOutputCommand {
     @Exec
     public void exec() throws Exception {
         final InputStream is = new BufferedInputStream(new BGZInputStream(infile));
-        final OutputStream os = new BufferedOutputStream(new FileOutputStream(outfile));
+        final OutputStream os;
+        if (outfile.equals("-")) {
+            os = System.out;
+        } else{
+            os = new BufferedOutputStream(new FileOutputStream(outfile));
+        }
         
         int c = 0;
         while ((c = is.read()) != -1) {
