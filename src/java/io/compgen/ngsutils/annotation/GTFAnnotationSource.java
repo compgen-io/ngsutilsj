@@ -389,7 +389,8 @@ public class GTFAnnotationSource extends AbstractAnnotationSource<GTFGene> {
             String status = null;
 
             final String[] attrs = StringUtils.quotedSplit(cols[8], ';');
-            List<String> exonAttributes = new ArrayList<String>(); 
+            List<String> exonAttributes = new ArrayList<String>();
+            
             for (final String attr : attrs) {
                 if (StringUtils.strip(attr).length() > 0) {
                     final String[] kv = StringUtils.strip(attr).split(" ", 2);
@@ -413,6 +414,7 @@ public class GTFAnnotationSource extends AbstractAnnotationSource<GTFGene> {
                     case "gene_status":
                         status = v;
                         break;
+                            
                     default:
                         exonAttributes.add(k);
                         exonAttributes.add(v);

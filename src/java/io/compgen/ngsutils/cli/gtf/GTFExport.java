@@ -41,6 +41,7 @@ public class GTFExport extends AbstractOutputCommand {
     private boolean exportIntron = false;
     private boolean codingOnly = false;
     private boolean nonCodingOnly = false;
+    private boolean ccdsOnly = false;
     
     private boolean exportUTR3 = false;
     private boolean exportUTR5 = false;
@@ -49,6 +50,7 @@ public class GTFExport extends AbstractOutputCommand {
     private boolean exportJunctions = false;
     private boolean exportDonors = false;
     private boolean exportAcceptors = false;
+    private boolean exportORF = false;
     
     private boolean combine = false;
 //    private boolean useGeneId = false;
@@ -66,6 +68,11 @@ public class GTFExport extends AbstractOutputCommand {
     @Option(desc="Combine overlapping exons/introns. For TSS, export at most one TSS per gene. ", name="combine")
     public void setCombine(boolean val) {
         combine = val;
+    }
+
+    @Option(desc="Only export transcripts tagged as CCDS (core) transcripts", name="ccds-only")
+    public void setCCDSOnly(boolean val) {
+        ccdsOnly = val;
     }
 
     @Option(desc="Only export coding genes/transcripts", name="coding-only")
@@ -134,6 +141,11 @@ public class GTFExport extends AbstractOutputCommand {
         exportExon = val;
     }
 
+    @Option(desc="Export ORF", name="orf")
+    public void setORF(boolean val) {
+        exportORF = val;
+    }
+
 
     @Exec
     public void exec() throws CommandArgumentException, IOException {
@@ -174,6 +186,9 @@ public class GTFExport extends AbstractOutputCommand {
             exportCount++;
         }
         if (exportUTR3) {
+            exportCount++;
+        }
+        if (exportORF) {
             exportCount++;
         }
         if (exportCount != 1) {
@@ -740,8 +755,144 @@ public class GTFExport extends AbstractOutputCommand {
                     }
                 }
             }
+            if (exportORF) {
+                // {buf} will be a bitmap of the ORF for each position
+                // in the gene.
+                //
+                // ORF will be 1 | 2 | 3, or rather 1 | 2 | 4
+                //
+                // 000 -> not coding (UTRs -- introns will maintain ORF to keep track for the next coding base)
+                // 001 -> ORF1
+                // 010 -> ORF2
+                // 100 -> ORF3
+                // 011 -> ORF1 and ORF2 (from different transcripts -- this should be rare)
+                // etc...
+                //
+                byte[] buf = new byte[gene.getEnd() - gene.getStart()];
+                
+                for (GTFTranscript txpt: gene.getTranscripts()) {
+                    int orf = 0;
+                    int lastPos = 0;
+                    if (gene.getStrand() == Strand.PLUS) {
+                        for (GTFExon exon: txpt.getExons()) {
+                            // Intron marks the *next* ORF
+                            if (orf > 0 && lastPos > 0) {
+                                int nextorf = orf;
+                                nextorf = nextorf << 1;
+                                if (nextorf > 4) {
+                                    nextorf = 1;
+                                }
+
+                                for (int pos = lastPos; pos < exon.getStart(); pos++) {
+                                    buf[pos - gene.getStart()] |= nextorf;
+                                }
+                            }
+
+                            for (int pos=exon.getStart(); pos<exon.getEnd(); pos++ ) {
+                                if (pos == txpt.getStartCodon()) {
+                                    orf = 1;
+                                } else if (pos == txpt.getStopCodon()) {
+                                    orf = 0;
+                                } else if (orf > 0) {
+                                    orf = orf << 1;
+                                    if (orf > 4) {
+                                        orf = 1;
+                                    }
+                                }
+                                if (orf > 0) {
+                                    buf[pos - gene.getStart()] |= orf;
+                                }
+                            }
+                            lastPos = exon.getEnd();
+                        }
+                    } else if (gene.getStrand() == Strand.MINUS) {
+                        for (GTFExon exon: txpt.getExons()) {
+                            // Intron marks the *next* ORF
+                            if (orf > 0 && lastPos > 0) {
+                                int nextorf = orf;
+                                for (int pos = lastPos; pos < exon.getStart(); pos++) {
+                                    buf[pos - gene.getStart()] |= nextorf;
+                                }
+                            }
+
+                            for (int pos=exon.getStart(); pos<exon.getEnd(); pos++ ) {
+                                if (pos == txpt.getStopCodon()+3) {
+                                    orf = 4;
+                                } else if (pos == txpt.getStartCodon()) {
+                                    orf = 0;
+                                } else if (orf > 0) {
+                                    orf = orf >> 1;
+                                    if (orf == 0) {
+                                        orf = 4;
+                                    }
+                                }
+                                if (orf > 0) {
+                                    buf[pos - gene.getStart()] |= orf;
+                                }
+                            }
+                            lastPos = exon.getEnd();
+                        }
+                    }
+                }
+                
+                int regionStart = -1;
+                byte regionOrf = 0;
+                for (int pos = gene.getStart(); pos < gene.getEnd(); pos++) {
+                    byte orf = buf[pos-gene.getStart()];
+                    if (orf != regionOrf) {
+                        if (regionOrf > 0) {
+                            writer.write(gene.getRef());
+                            writer.write(regionStart);
+                            writer.write(pos);
+                            writer.write(orfBitmapToString(regionOrf));
+                            writer.eol();
+                        }
+                        
+                        regionOrf = orf;
+                        regionStart = pos;
+                    }
+                        
+                }
+                if (regionOrf > 0) {
+                    writer.write(gene.getRef());
+                    writer.write(regionStart);
+                    writer.write(gene.getEnd());
+                    writer.write(orfBitmapToString(regionOrf));
+                    writer.eol();
+                }
+            }
         }
         
         writer.close();
+    }
+
+    private String orfBitmapToString(byte regionOrf) {
+        if (regionOrf == 1) {
+            return "1";
+        }
+        if (regionOrf == 2) {
+            return "2";
+        }
+        if (regionOrf == 4) {
+            return "3";
+        }
+
+        String s = "";
+        if ((regionOrf & 0x1)>0) {
+            s += "1";
+        }
+        if ((regionOrf & 0x2)>0) {
+            if (!s.equals("")) {
+                s += ",";
+            }
+            s += "2";
+        }
+        if ((regionOrf & 0x4)>0) {
+            if (!s.equals("")) {
+                s += ",";
+            }
+            s += "3";
+        }
+        return s;
     }
 }
