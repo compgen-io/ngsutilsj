@@ -122,6 +122,18 @@ public class VCFHeader {
 	}
 	
 	public int getSamplePosByName(String name) {
+	    
+        // You can ID a sample by index (1, 2, 3)
+	    try {
+	        int i = Integer.parseInt(name);
+	        return i - 1;
+	        
+	    } catch (NumberFormatException e) {
+	        // ignore this...
+	    }
+	    
+        // OR by name NORMAL, TUMOR, etc...
+	    
 		for (int i=0; i<samples.length; i++) {
 			if (samples[i].equals(name)) {
 				return i;
