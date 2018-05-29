@@ -771,6 +771,9 @@ public class GTFExport extends AbstractOutputCommand {
                 byte[] buf = new byte[gene.getEnd() - gene.getStart()];
                 
                 for (GTFTranscript txpt: gene.getTranscripts()) {
+                    if (!txpt.hasCDS()) {
+                        continue;
+                    }
                     int orf = 0;
                     int lastPos = 0;
                     if (gene.getStrand() == Strand.PLUS) {
