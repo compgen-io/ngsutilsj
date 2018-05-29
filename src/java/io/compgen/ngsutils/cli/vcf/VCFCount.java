@@ -14,7 +14,7 @@ import io.compgen.cmdline.impl.AbstractOutputCommand;
 import io.compgen.common.IterUtils;
 import io.compgen.common.StringUtils;
 import io.compgen.common.TabWriter;
-import io.compgen.common.TallyValues;
+import io.compgen.common.TallyValuesInt;
 import io.compgen.common.progress.ProgressMessage;
 import io.compgen.common.progress.ProgressStats;
 import io.compgen.common.progress.ProgressUtils;
@@ -25,6 +25,7 @@ import io.compgen.ngsutils.pileup.BAMPileup;
 import io.compgen.ngsutils.pileup.PileupRecord;
 import io.compgen.ngsutils.pileup.PileupRecord.PileupBaseCall;
 import io.compgen.ngsutils.pileup.PileupRecord.PileupBaseCallOp;
+import io.compgen.ngsutils.support.stats.StatUtils;
 import io.compgen.ngsutils.vcf.VCFAttributeException;
 import io.compgen.ngsutils.vcf.VCFHeader;
 import io.compgen.ngsutils.vcf.VCFReader;
@@ -45,6 +46,7 @@ public class VCFCount extends AbstractOutputCommand {
     private boolean extendedBAQ = false;
     
     private boolean onlyOutputPass = false;
+    private boolean outputVCFCounts = false;
     private boolean outputVCFAF = false;
     private boolean outputAF = false;
 
@@ -53,6 +55,7 @@ public class VCFCount extends AbstractOutputCommand {
 
     private int maxBatchLen = -1;
     private boolean hetOnly = false;
+    private boolean outputPvalue = false;
 
     @Option(desc = "Only keep properly paired reads", name = "proper-pairs")
     public void setProperPairs(boolean val) {
@@ -65,6 +68,11 @@ public class VCFCount extends AbstractOutputCommand {
     @Option(desc = "Batch variants into blocks of size {val} for mpileup (limits mpileup calls)", name = "batchlen")
     public void setBatchLen(int maxBatchLen) {
         this.maxBatchLen = maxBatchLen;
+    }
+
+    @Option(desc = "Calculate a p-value for the proportion of alt/ref between the two samples (Yates's corrected Chi-squared test)", name = "pvalue")
+    public void setPvalue(boolean pvalue) {
+        this.outputPvalue = pvalue;
     }
 
     @Option(desc = "Only count heterozygous variants (requires GT FORMAT field)", name = "het")
@@ -85,6 +93,11 @@ public class VCFCount extends AbstractOutputCommand {
     @Option(desc="Output variant allele frequency from the VCF file (requires AD FORMAT field)", name="vcf-af")
     public void setVCFAF(boolean val) {
         this.outputVCFAF = val;
+    }
+
+    @Option(desc="Output variant allele counts from the VCF file (requires AD FORMAT field)", name="vcf-counts")
+    public void setVCFCounts(boolean val) {
+        this.outputVCFCounts = val;
     }
 
     @Option(desc="Output alternative allele frequency (from BAM file)", name="af")
@@ -185,14 +198,20 @@ public class VCFCount extends AbstractOutputCommand {
         writer.write("pos");
         writer.write("ref");
         writer.write("alt");
-        if (outputVCFAF) {
+        if (outputVCFCounts) {
             writer.write("vcf_ref_count");
             writer.write("vcf_alt_count");
+        }
+        if (outputVCFAF) {
+            writer.write("vcf_alt_freq");
         }
         writer.write("ref_count");
         writer.write("alt_count");
         if (outputAF) {
             writer.write("alt_freq");
+        }
+        if (outputPvalue) {
+            writer.write("pvalue");
         }
         writer.eol();
 
@@ -312,13 +331,11 @@ public class VCFCount extends AbstractOutputCommand {
     }
     
     private void processVariantRecord(VCFRecord record, PileupRecord pileupRecord, TabWriter writer, int sampleIdx) throws IOException {
-        // TODO: HANDLE multi-base references?
-        
         if (refFilename != null && !pileupRecord.refBase.equals(record.getRef().substring(0, 1))) {
             throw new IOException("Reference bases don't match! "+record.getChrom()+":"+record.getPos());
         }
         
-        TallyValues<String> tally = new TallyValues<String>();
+        TallyValuesInt<String> tally = new TallyValuesInt<String>();
 
         for (PileupBaseCall call: pileupRecord.getSampleRecords(0).calls) {
             if (call.op == PileupBaseCallOp.Match) {
@@ -349,20 +366,29 @@ public class VCFCount extends AbstractOutputCommand {
         
             writer.write(record.getRef());
             writer.write(record.getAlt().get(i));
-        
-            if (outputVCFAF) {
-                try {
-                    String ad = record.getSampleAttributes().get(sampleIdx).get("AD").asString(null);
-                    String spl[] = ad.split(",");
-                    writer.write(spl[0]);
-                    writer.write(spl[i]);
-                } catch (VCFAttributeException e) {
-                    throw new IOException(e);
-                }
+
+            String ad = "";
+            try {
+                ad = record.getSampleAttributes().get(sampleIdx).get("AD").asString(null);
+            } catch (VCFAttributeException e) {
+                throw new IOException(e);
             }
-        
-            long ref;
-            long alt;
+
+            String spl[] = ad.split(",");
+            int vcfRef = Integer.parseInt(spl[0]);
+            int vcfAlt = Integer.parseInt(spl[i+1]);
+            
+            if (outputVCFCounts) {
+                writer.write(vcfRef);
+                writer.write(vcfAlt);
+            }
+
+            if (outputVCFAF) {
+                    writer.write(((double)vcfAlt)/(vcfAlt+vcfRef));
+            }
+
+            int ref;
+            int alt;
             
             if (record.getRef().length()>1) {
                 // is a del
@@ -370,8 +396,6 @@ public class VCFCount extends AbstractOutputCommand {
         
                 ref = tally.getCount(record.getAlt().get(i));
                 alt = tally.getCount("del"+(record.getRef().length()-1));
-                
-                
             } else if (record.getAlt().get(i).length()>1) {
                 // is an insert
                 ref = tally.getCount(record.getRef());
@@ -395,10 +419,19 @@ public class VCFCount extends AbstractOutputCommand {
                 }
             }
         
+            if (outputPvalue) { 
+                if (vcfAlt+vcfRef > 0 && alt+ref > 0) {
+                    writer.write(StatUtils.calcProportionalPvalue(vcfAlt, vcfRef, alt, ref));
+                } else {
+                    writer.write("");
+                }
+            }
+            
             writer.eol();
         }
         
     }
+
 
     private void processVariants(List<VCFRecord> records, BAMPileup pileup, TabWriter writer, int sampleIdx) throws IOException {
         // records must have the same chrom.

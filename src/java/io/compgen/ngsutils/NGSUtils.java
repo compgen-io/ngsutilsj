@@ -72,6 +72,7 @@ import io.compgen.ngsutils.cli.vcf.VCFStrip;
 import io.compgen.ngsutils.cli.vcf.VCFToBED;
 import io.compgen.ngsutils.cli.vcf.VCFToCount;
 import io.compgen.ngsutils.support.stats.FisherCli;
+import io.compgen.ngsutils.support.stats.YatesChiSqCli;
 import io.compgen.ngsutils.tabix.BGZFCat;
 import io.compgen.ngsutils.tabix.TabixCat;
 import io.compgen.ngsutils.tabix.TabixQuery;
@@ -162,7 +163,8 @@ public class NGSUtils {
 //            .addCommand(VCFSignature.class)
             .addCommand(VCFToCount.class)
             .addCommand(TabixCat.class)
-            .addCommand(TabAnnotate.class);
+            .addCommand(TabAnnotate.class)
+            .addCommand(YatesChiSqCli.class);
         
 
         try {

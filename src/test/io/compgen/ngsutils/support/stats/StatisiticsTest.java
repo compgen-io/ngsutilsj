@@ -112,4 +112,11 @@ public class StatisiticsTest {
 
         assertTrue(StatUtils.deltaEquals(corrected1, test1, 0.0001));
     }
+    
+    @Test
+    public void testPropTestPval() {
+        assertEquals("0.3072681", new DecimalFormat("0.0000000").format(StatUtils.calcProportionalPvalue(5, 11, 16, 15)));
+        assertEquals("0.8706", new DecimalFormat("0.0000").format(StatUtils.calcProportionalPvalue(5, 10, 20, 30)));
+    }
+
 }

@@ -7,6 +7,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.commons.math3.distribution.ChiSquaredDistribution;
+
 import io.compgen.common.ComparablePair;
 
 public class StatUtils {
@@ -418,7 +420,42 @@ public class StatUtils {
 
     
 
+
+    // Chi Squared dist w/ 1 d.f. (for pvalue)
+    private static ChiSquaredDistribution csd = null;
     
+    /**
+     * https://en.wikipedia.org/wiki/Yates%27s_correction_for_continuity
+     * @param vcfRef
+     * @param vcfAlt
+     * @param ref
+     * @param alt
+     * @return
+     */
+    public static double calcProportionalPvalue(int a, int b, int c, int d) {
+        if (csd == null) {
+            csd = new ChiSquaredDistribution(1);
+        }
+        
+        double Na = a + b;
+        double Nb = c + d;
+        double Ns = a + c;
+        double Nf = b + d;
+        
+        double N = a + b + c + d;
+        
+        double num = N * Math.pow(Math.max(0, Math.abs(a*d - b*c) - N/2),2);
+        double dem = Ns * Nf * Na * Nb;
+
+//        System.err.println("N="+N+", num="+num+", dem="+dem);
+        
+        double chi = num / dem;
+        double pvalue=1-csd.cumulativeProbability(chi);
+        
+//        System.err.println("a="+a+", b="+b+", c="+c+", d="+d+", X="+chi+", pval="+ pvalue);
+        
+        return pvalue;
+    }
     
 //    public static class Trendline {
 //        public final double slope;
