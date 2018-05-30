@@ -41,7 +41,6 @@ public class GTFExport extends AbstractOutputCommand {
     private boolean exportIntron = false;
     private boolean codingOnly = false;
     private boolean nonCodingOnly = false;
-    private boolean ccdsOnly = false;
     
     private boolean exportUTR3 = false;
     private boolean exportUTR5 = false;
@@ -68,11 +67,6 @@ public class GTFExport extends AbstractOutputCommand {
     @Option(desc="Combine overlapping exons/introns. For TSS, export at most one TSS per gene. ", name="combine")
     public void setCombine(boolean val) {
         combine = val;
-    }
-
-    @Option(desc="Only export transcripts tagged as CCDS (core) transcripts", name="ccds-only")
-    public void setCCDSOnly(boolean val) {
-        ccdsOnly = val;
     }
 
     @Option(desc="Only export coding genes/transcripts", name="coding-only")
@@ -847,7 +841,9 @@ public class GTFExport extends AbstractOutputCommand {
                             writer.write(gene.getRef());
                             writer.write(regionStart);
                             writer.write(pos);
-                            writer.write(orfBitmapToString(regionOrf));
+                            writer.write(gene.getGeneName()+"/frame-"+orfBitmapToString(regionOrf));
+                            writer.write(0);
+                            writer.write(gene.getStrand().toString());
                             writer.eol();
                         }
                         
@@ -860,7 +856,9 @@ public class GTFExport extends AbstractOutputCommand {
                     writer.write(gene.getRef());
                     writer.write(regionStart);
                     writer.write(gene.getEnd());
-                    writer.write(orfBitmapToString(regionOrf));
+                    writer.write(gene.getGeneName()+"/frame-"+orfBitmapToString(regionOrf));
+                    writer.write(0);
+                    writer.write(gene.getStrand().toString());
                     writer.eol();
                 }
             }
