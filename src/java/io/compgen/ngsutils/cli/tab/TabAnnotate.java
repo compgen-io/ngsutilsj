@@ -26,7 +26,7 @@ public class TabAnnotate extends AbstractOutputCommand {
 	
 	List<TabAnnotator> chain = new ArrayList<TabAnnotator>();
     
-    @Option(desc="Add annotations from a Tabix indexed file (If col is left out, this is treaded as a flag)", name="tab", helpValue="NAME:FILENAME{,col}", allowMultiple=true)
+    @Option(desc="Add annotations from a Tabix indexed file (If col is left out, this is treaded as a flag)", name="tab", helpValue="NAME:FILENAME{,col,collapse}", allowMultiple=true)
     public void setTabix(String tab) throws CommandArgumentException {
         String[] spl = tab.split(":");
         
@@ -36,16 +36,21 @@ public class TabAnnotate extends AbstractOutputCommand {
             try {
                 String fname = null;
                 int col = -1;
+                boolean collapse = false;
                 
                 for (String t:spl2) {
                     if (fname == null) {
                         fname = t;
-                    } else if (col == -1) {
-                        col = Integer.parseInt(t)-1;
+                    } else {
+                        if (t.equals("collapse")) {
+                            collapse = true;
+                        } else if (col == -1) {
+                            col = Integer.parseInt(t)-1;
+                        }
                     }
                 }
                 if (col > -1) {
-                    chain.add(new TabixTabAnnotator(spl[0], fname, col));
+                    chain.add(new TabixTabAnnotator(spl[0], fname, col, collapse));
                 } else {
                     chain.add(new TabixTabAnnotator(spl[0], fname));
                 }

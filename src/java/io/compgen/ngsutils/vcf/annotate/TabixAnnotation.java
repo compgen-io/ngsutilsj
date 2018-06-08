@@ -25,8 +25,9 @@ public class TabixAnnotation extends AbstractBasicAnnotator {
     final protected int colNum;
     final protected int altColNum;
     final protected boolean isNumber;
+    final protected boolean collapse;
 
-    public TabixAnnotation(String name, String filename, int colNum, boolean isNumber, int altColNum)
+    public TabixAnnotation(String name, String filename, int colNum, boolean isNumber, int altColNum, boolean collapse)
             throws IOException {
         this.name = name;
         this.filename = filename;
@@ -34,15 +35,16 @@ public class TabixAnnotation extends AbstractBasicAnnotator {
         this.isNumber = isNumber;
         this.altColNum = altColNum;
         this.tabix = getTabixFile(filename);
+        this.collapse = collapse;
     }
 
     public TabixAnnotation(String name, String filename, int colNum, boolean isNumber)
             throws IOException {
-        this(name, filename, colNum, isNumber, -1);
+        this(name, filename, colNum, isNumber, -1, false);
     }
 
     public TabixAnnotation(String name, String filename) throws IOException {
-        this(name, filename, -1, false, -1);
+        this(name, filename, -1, false, -1, false);
     }
 
     private static TabixFile getTabixFile(String filename) throws IOException {
@@ -142,12 +144,17 @@ public class TabixAnnotation extends AbstractBasicAnnotator {
 
             if (found) {
                 if (colNum == -1) {
+                    // this is just a flag
                     record.getInfo().put(name, VCFAttributeValue.EMPTY);
                 } else {
                     if (vals.size() == 0) {
                         record.getInfo().put(name, VCFAttributeValue.MISSING);
                     } else {
-                        record.getInfo().put(name, new VCFAttributeValue(StringUtils.join(",", vals)));
+                        if (collapse) {
+                            record.getInfo().put(name, new VCFAttributeValue(StringUtils.join(",", StringUtils.unique(vals))));
+                        } else {
+                            record.getInfo().put(name, new VCFAttributeValue(StringUtils.join(",", vals)));
+                        }
                     }
                 }
             }

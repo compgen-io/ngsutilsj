@@ -116,7 +116,7 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
         }       
     }
     
-    @Option(desc="Add annotations from a Tabix file (INFO: If col is left out, this is treaded as a VCF flag; add ',n' for a number; set alt=col# to specify an alternative allele column -- will use exact matching)", name="tab", helpValue="NAME:FILENAME{,col,n,alt=X}", allowMultiple=true)
+    @Option(desc="Add annotations from a Tabix file (INFO: If col is left out, this is treaded as a VCF flag; add ',n' for a number; set alt=col# to specify an alternative allele column -- will use exact matching; add ,collapse to collapse unique values to one)", name="tab", helpValue="NAME:FILENAME{,col,n,alt=X,collapse}", allowMultiple=true)
     public void setTabix(String tab) throws CommandArgumentException {
         String[] spl = tab.split(":");
         if (spl.length == 2) {
@@ -127,6 +127,7 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
                 int col = -1;
                 boolean isNumber = false;
                 int altCol = -1;
+                boolean collapse = false;
                 
                 for (String t:spl2) {
                     if (fname == null) {
@@ -135,12 +136,14 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
                         col = Integer.parseInt(t)-1;
                     } else if (t.equals("n")) {
                         isNumber = true;
+                    } else if (t.equals("collapse")) {
+                        collapse = true;
                     } else if (t.startsWith("alt=")) {
                         altCol = Integer.parseInt(t.substring(4))-1;
                     }
                 }
                 if (col > -1) {
-                    chain.add(new TabixAnnotation(spl[0], fname, col, isNumber, altCol));
+                    chain.add(new TabixAnnotation(spl[0], fname, col, isNumber, altCol, collapse));
                 } else {
                     chain.add(new TabixAnnotation(spl[0], fname));
                 }
