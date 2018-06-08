@@ -22,7 +22,19 @@ public class VCFToBED extends AbstractOutputCommand {
 	private boolean onlyOutputPass = false;
 	private boolean includePos = false;
 	private int padding = 0;
-	
+    private String altChrom = null;
+    private String altPos = null;
+    
+    @Option(desc="Use an alternate INFO field for the chromosome (ex: SV). If missing, skip annotation.", name="alt-chrom")
+    public void setAltChrom(String key) throws CommandArgumentException {
+        this.altChrom = key;
+    }
+    
+    @Option(desc="Use an alternate INFO field for the position (ex: SV). If missing, skip annotation.", name="alt-pos")
+    public void setAltPos(String key) throws CommandArgumentException {
+        this.altPos = key;
+    }
+
     @Option(desc="Include the position as the name field (w/o padding)", name="include-pos")
     public void setIncludePos(boolean includePos) {
     	this.includePos = includePos;
@@ -64,9 +76,21 @@ public class VCFToBED extends AbstractOutputCommand {
 				continue;
 			}
 
-			writer.write(rec.getChrom());
-			writer.write(((rec.getPos()-1)-padding));
-			writer.write((rec.getPos()+padding));
+			String chrom = rec.getChrom();
+			int pos = rec.getPos();
+			
+	        if (altChrom != null) {
+	            chrom = rec.getInfo().get(altChrom).toString();
+	        }
+	        
+	        if (altPos != null) {
+                pos = rec.getInfo().get(altChrom).asInt();
+	        }
+
+			
+			writer.write(chrom);
+			writer.write(((pos-1)-padding));
+			writer.write((pos+padding));
 			if (includePos) {
 				writer.write(rec.getChrom()+"_"+rec.getPos());
 			}
