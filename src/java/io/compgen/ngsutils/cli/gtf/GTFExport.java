@@ -781,7 +781,8 @@ public class GTFExport extends AbstractOutputCommand {
                                 }
 
                                 for (int pos = lastPos; pos < exon.getStart(); pos++) {
-                                    buf[pos - gene.getStart()] |= nextorf;
+                                    buf[pos - gene.getStart()] = (byte) (buf[pos - gene.getStart()] | nextorf);
+                                    //buf[pos - gene.getStart()] |= nextorf;
                                 }
                             }
 
@@ -797,7 +798,8 @@ public class GTFExport extends AbstractOutputCommand {
                                     }
                                 }
                                 if (orf > 0) {
-                                    buf[pos - gene.getStart()] |= orf;
+                                    buf[pos - gene.getStart()] = (byte) (buf[pos - gene.getStart()] | orf);
+//                                    buf[pos - gene.getStart()] |= orf;
                                 }
                             }
                             lastPos = exon.getEnd();
@@ -808,7 +810,8 @@ public class GTFExport extends AbstractOutputCommand {
                             if (orf > 0 && lastPos > 0) {
                                 int nextorf = orf;
                                 for (int pos = lastPos; pos < exon.getStart(); pos++) {
-                                    buf[pos - gene.getStart()] |= nextorf;
+                                    buf[pos - gene.getStart()] = (byte) (buf[pos - gene.getStart()] | nextorf);
+//                                    buf[pos - gene.getStart()] |= nextorf;
                                 }
                             }
 
@@ -824,7 +827,8 @@ public class GTFExport extends AbstractOutputCommand {
                                     }
                                 }
                                 if (orf > 0) {
-                                    buf[pos - gene.getStart()] |= orf;
+                                    buf[pos - gene.getStart()] = (byte) (buf[pos - gene.getStart()] | orf);
+//                                    buf[pos - gene.getStart()] |= orf;
                                 }
                             }
                             lastPos = exon.getEnd();
