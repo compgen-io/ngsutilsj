@@ -15,15 +15,17 @@ public class TabixTabAnnotator implements TabAnnotator {
     private TabixFile tabix;
     private int col;
     private boolean collapse;
+    private boolean first;
     
-    public TabixTabAnnotator(String name, String fname, int col, boolean collapse) throws IOException {
+    public TabixTabAnnotator(String name, String fname, int col, boolean collapse, boolean first) throws IOException {
         this.name = name;
         this.tabix = new TabixFile(fname);
         this.col = col;
         this.collapse = collapse;
+        this.first = first;
     }
     public TabixTabAnnotator(String name, String fname) throws IOException {
-        this(name, fname, -1, false);
+        this(name, fname, -1, false, false);
     }
 
     @Override
@@ -52,10 +54,14 @@ public class TabixTabAnnotator implements TabAnnotator {
                 return name;
             }
         }
-        
+
+        if (first && matches.size() > 1) {
+            return matches.get(0);
+        }
         if (collapse) {
             return StringUtils.join(",", StringUtils.unique(matches));
         }
+        
         
         return StringUtils.join(",", matches);
     }
