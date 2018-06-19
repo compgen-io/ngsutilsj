@@ -1,10 +1,11 @@
 package io.compgen.ngsutils.cli.bam.count;
 
 import java.io.BufferedReader;
-import java.io.FileReader;
+import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import java.io.InputStreamReader;
+import java.util.Arrays;
+import java.util.zip.GZIPInputStream;
 
 import io.compgen.common.AbstractLineReader;
 import io.compgen.common.StringUtils;
@@ -16,11 +17,24 @@ public class BedSpans extends AbstractLineReader<SpanGroup> implements SpanSourc
     public BedSpans(String filename) throws IOException {
         super(filename);
 
-        BufferedReader br = new BufferedReader(new FileReader(filename));
-        String line = br.readLine();
-        String[] cols = line.split("\\t", -1);
-        numCols = cols.length;
-        br.close();
+        FileInputStream peek = new FileInputStream(filename);
+        byte[] magic = new byte[2];
+        peek.read(magic);
+        peek.close();
+
+        FileInputStream fis = new FileInputStream(filename);
+        BufferedReader reader;
+        if (Arrays.equals(magic, new byte[] {0x1f, (byte) 0x8B})) {
+            reader = new BufferedReader(new InputStreamReader(new GZIPInputStream(fis)));
+        } else {
+            reader = new BufferedReader(new InputStreamReader(fis));
+        }
+        
+        String line = reader.readLine();
+        String[] cols = line.split("\\t");
+        this.numCols = cols.length;
+        
+        reader.close();
     }
     
     public long position() {
@@ -68,19 +82,16 @@ public class BedSpans extends AbstractLineReader<SpanGroup> implements SpanSourc
     public String[] getHeader() {
         String[] tmpl = new String[]{"chrom", "start", "end", "name", "score", "strand"};
 
-        List<String> out = new ArrayList<String>();
-       
-        
+        String[] out = new String[numCols];
+
         for (int i=0; i< numCols; i++) {
             if (i < tmpl.length) {
-                out.add(tmpl[i]);
+                out[i]=tmpl[i];
             } else {
-                out.add("col"+(i+1));
+                out[i]="col"+(i+1);
             }
         }
 
-        String[] target = new String[out.size()];
-        out.toArray(target);
-        return target;
+        return out;
     }
 }
