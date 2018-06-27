@@ -88,31 +88,68 @@ public class VCFExportCmd extends AbstractOutputCommand {
     
     @Option(desc="Export FORMAT field", name="format", helpValue="KEY{:SAMPLE:ALLELE}", allowMultiple=true)
     public void setFormat(String val) throws CommandArgumentException {
-        boolean ignoreMissing = false;
-        if (val.endsWith(":?")) {
+        boolean ignoreMissing = true;
+        
+        if (val.endsWith(":!")) {
+            ignoreMissing = false;
+            val = val.substring(0,  val.length()-2);
+        } else if (val.endsWith(":?")) {
             ignoreMissing = true;
             val = val.substring(0,  val.length()-2);
         }
         
+        String key=null;
+        String sample=null;
+        String allele=null;
+        String newName=null;
+        
+        
         String[] spl = val.split(":");
-        if (spl.length == 1) {
-            chain.add(new ExportFormatField(spl[0], null, null, ignoreMissing));
-        } else if (spl.length == 2) {
-            chain.add(new ExportFormatField(spl[0], spl[1], null, ignoreMissing));
-        } else {
-            chain.add(new ExportFormatField(spl[0], spl[1], spl[2], ignoreMissing));
+        
+        for (String s: spl) {
+            if (key == null) {
+                key = s;
+            } else if (sample == null) {
+                sample = s;
+            } else if (allele == null) {
+                allele = s;
+            } else if (newName == null) {
+                newName = s;
+            }
         }
+
+        if (key.equals("") || key == null) {
+            throw new CommandArgumentException("Missing argument for --format!");
+        }
+        if (sample.equals("")) {
+            sample = null;
+        }
+        if (allele.equals("")) {
+            allele = null;
+        }
+        if (newName.equals("")) {
+            newName = null;
+        }
+
+        if (newName != null && sample == null) {
+            throw new CommandArgumentException("Invalid argument for --format! You must specify a SAMPLE is ALIAS is given.");
+        }
+        
+        chain.add(new ExportFormatField(key, sample, allele, ignoreMissing, newName));
     }
         
     @Option(desc="Export INFO field", name="info", helpValue="KEY{:ALLELE}", allowMultiple=true)
     public void setInfo(String val) throws CommandArgumentException {
-    	boolean ignoreMissing = false;
-    	if (val.endsWith(":?")) {
-    		ignoreMissing = true;
-    		val = val.substring(0,  val.length()-2);
-    	}
+    	boolean ignoreMissing = true;
+        if (val.endsWith(":!")) {
+            ignoreMissing = false;
+            val = val.substring(0,  val.length()-2);
+        } else if (val.endsWith(":?")) {
+            ignoreMissing = true;
+            val = val.substring(0,  val.length()-2);
+        }
 
-    	String[] spl = val.split(":");
+        String[] spl = val.split(":");
     	if (spl.length == 1) {
     		chain.add(new ExportInfoField(spl[0], null, ignoreMissing));
     	} else {

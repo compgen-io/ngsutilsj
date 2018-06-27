@@ -19,14 +19,16 @@ public class ExportFormatField implements VCFExport {
 	private int sampleIdx = -1;
 	protected boolean ignoreMissing;
 	protected String missingValue=".";
+	protected String newSampleName = null;
 	
     protected List<String> ids = null;
 	
-	public ExportFormatField(String keyName, String sample, String alleleName, boolean ignoreMissing) {
+	public ExportFormatField(String keyName, String sample, String alleleName, boolean ignoreMissing, String newSampleName) {
 		this.keyName = keyName;
 		this.sample = sample;
 		this.alleleName = alleleName;
 		this.ignoreMissing = ignoreMissing;
+		this.newSampleName = newSampleName;
 	}
 
 	public void setHeader(VCFHeader header) {
@@ -50,16 +52,23 @@ public class ExportFormatField implements VCFExport {
 	
 	@Override
 	public List<String> getFieldNames() {
-	    if (sample != null) {
-	        return ids;
-	    }
+        List<String> outs = new ArrayList<String>();
 
-	    List<String> outs = new ArrayList<String>();
-        for (String sample: header.getSamples()) {
+        if (sample != null) {
             for (String id: ids) {
-                outs.add(sample+":"+id);
+                if (newSampleName != null) {
+                    outs.add(newSampleName+":"+id); 
+                } else {
+                    outs.add(sample+":"+id); 
+                }
             }
-        }
+	    } else {
+            for (String sample: header.getSamples()) {
+                for (String id: ids) {
+                    outs.add(sample+":"+id);
+                }
+            }
+	    }
         return outs;
 	}
 
