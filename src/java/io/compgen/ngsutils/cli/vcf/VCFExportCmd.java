@@ -118,16 +118,16 @@ public class VCFExportCmd extends AbstractOutputCommand {
             }
         }
 
-        if (key.equals("") || key == null) {
+        if (key == null || key.equals("")) {
             throw new CommandArgumentException("Missing argument for --format!");
         }
-        if (sample.equals("")) {
+        if (sample != null && sample.equals("")) {
             sample = null;
         }
-        if (allele.equals("")) {
+        if (allele != null && allele.equals("")) {
             allele = null;
         }
-        if (newName.equals("")) {
+        if (newName != null && newName.equals("")) {
             newName = null;
         }
 
