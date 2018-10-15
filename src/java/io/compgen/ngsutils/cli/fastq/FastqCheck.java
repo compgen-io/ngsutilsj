@@ -142,13 +142,26 @@ public class FastqCheck extends AbstractCommand {
             }
         }
         
+        reader1.close();
+        reader2.close();
+
         if (out1!=null) {
             out1.flush();
             out2.flush();
             out1.close();
             out2.close();
-        }
+        } else {
+            // One reader still had reads...
+            if (it1.hasNext() || it2.hasNext()) {
+                return new long[]{-1,0};
+            }
             
+            // one reader stopped short
+            if (reader1.hasWarning() || reader2.hasWarning()) {
+                return new long[]{-1,0};
+            }
+        }
+        
         return new long[] {count, errorCount};
 	}
 

@@ -18,6 +18,7 @@ public class FastqTextReader implements FastqReader {
 	private FastqRead nextRead = null;
 	private FileChannel channel = null;
 	private String name = null;
+	protected boolean warningFlag = false;
 
 //    protected FastqTextReader(String filename) throws IOException {
 //        if (filename.endsWith(".gz")) {
@@ -97,12 +98,14 @@ public class FastqTextReader implements FastqReader {
             String seq = in.readLine();
             if (seq == null) {
                 System.err.println("WARNING: POTENTIALLY CORRUPTED INPUT FILE");
+                warningFlag = true;
                 return null;
             }
 
             String plus = in.readLine();
             if (plus == null) {
                 System.err.println("WARNING: POTENTIALLY CORRUPTED INPUT FILE");
+                warningFlag = true;
                 return null;
             }
 
@@ -113,6 +116,7 @@ public class FastqTextReader implements FastqReader {
                 plus = in.readLine();
                 if (plus == null) {
                     System.err.println("WARNING: POTENTIALLY CORRUPTED INPUT FILE");
+                    warningFlag = true;
                     return null;
                 }
             }
@@ -120,6 +124,7 @@ public class FastqTextReader implements FastqReader {
             String qual = in.readLine();
             if (qual == null) {
                 System.err.println("WARNING: POTENTIALLY CORRUPTED INPUT FILE");
+                warningFlag = true;
                 return null;
             }
 
@@ -129,6 +134,7 @@ public class FastqTextReader implements FastqReader {
                 String buf = in.readLine();
                 if (buf == null) {
                     System.err.println("WARNING: POTENTIALLY CORRUPTED INPUT FILE");
+                    warningFlag = true;
                     return null;
                 }
                 qual += buf;
@@ -136,6 +142,7 @@ public class FastqTextReader implements FastqReader {
             return new FastqRead(name, seq, qual, comment);
         } catch (Exception e) {
             System.err.println("WARNING: POTENTIALLY CORRUPTED INPUT FILE");
+            warningFlag = true;
             return null;
         }
     }   
@@ -143,4 +150,9 @@ public class FastqTextReader implements FastqReader {
    public void close() throws IOException {
         in.close();
     }
+
+@Override
+public boolean hasWarning() {
+    return warningFlag;
+}
 }
