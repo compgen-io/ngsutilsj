@@ -71,8 +71,16 @@ public class FastqCheck extends AbstractCommand {
 
 	protected boolean checkPaired(FastqRead read1, FastqRead read2) {
 	    if (read2 != null) {
-	        if (!read1.getName().equals(read2.getName())) {
-	            return false;
+            if (read1.getName().endsWith("/1") && read2.getName().endsWith("/2")) {
+                String r1 = read1.getName().substring(0, read1.getName().length()-2);
+                String r2 = read2.getName().substring(0, read2.getName().length()-2);
+            
+                if (!r1.equals(r2)) {
+                    return false;
+                }
+
+            } else if (!read1.getName().equals(read2.getName())) {
+                return false;
 	        }
 	    }
 	    return true;
