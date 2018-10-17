@@ -303,4 +303,9 @@ public class BamFastqReader implements FastqReader {
             reader.close();
         }
     }
+
+    @Override
+    public boolean hasWarning() {
+        return false;
+    }
 }
