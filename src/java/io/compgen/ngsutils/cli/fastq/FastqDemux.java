@@ -119,6 +119,8 @@ public class FastqDemux extends AbstractCommand {
             
             StringLineReader reader = new StringLineReader(configFile);
             
+            boolean hasBarcode = false;
+            
             for (String line: reader) {
                 if (line.charAt(0) == '#') {
                     continue;
@@ -133,6 +135,9 @@ public class FastqDemux extends AbstractCommand {
                     tmpStr1.add(cols[1]);
                     if (cols.length > 2) {
                         tmpStr2.add(cols[2]);
+                        hasBarcode = true;
+                    } else {
+                        tmpStr2.add("");
                     }
                 }
             }
@@ -141,7 +146,7 @@ public class FastqDemux extends AbstractCommand {
 
             readGroups = tmpRgID.toArray(new String[]{});
             nameSubstr1 = tmpStr1.toArray(new String[]{});
-            if (tmpStr2.size()>0) {
+            if (hasBarcode) {
                 nameSubstr2 = tmpStr2.toArray(new String[]{});
             }
         }
@@ -240,7 +245,7 @@ public class FastqDemux extends AbstractCommand {
                     match1 = true;
                 }
 
-                if (nameSubstr2 != null) {
+                if (nameSubstr2 != null && !nameSubstr2[i].equals("")) {
                     if (matches(fqLine, nameSubstr2[i], mismatches, allowWildcards)) {
                         match2 = true;
                     }
