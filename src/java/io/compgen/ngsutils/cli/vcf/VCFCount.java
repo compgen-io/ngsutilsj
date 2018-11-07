@@ -367,24 +367,29 @@ public class VCFCount extends AbstractOutputCommand {
             writer.write(record.getRef());
             writer.write(record.getAlt().get(i));
 
-            String ad = "";
-            try {
-                ad = record.getSampleAttributes().get(sampleIdx).get("AD").asString(null);
-            } catch (VCFAttributeException e) {
-                throw new IOException(e);
-            }
+            int vcfRef = 0;
+            int vcfAlt = 0;
 
-            String spl[] = ad.split(",");
-            int vcfRef = Integer.parseInt(spl[0]);
-            int vcfAlt = Integer.parseInt(spl[i+1]);
-            
-            if (outputVCFCounts) {
-                writer.write(vcfRef);
-                writer.write(vcfAlt);
-            }
+            if (outputVCFCounts || outputVCFAF) {
+                String ad = "";
+                try {
+                    ad = record.getSampleAttributes().get(sampleIdx).get("AD").asString(null);
+                } catch (VCFAttributeException e) {
+                    throw new IOException(e);
+                }
 
-            if (outputVCFAF) {
+                String spl[] = ad.split(",");
+                vcfRef = Integer.parseInt(spl[0]);
+                vcfAlt = Integer.parseInt(spl[i+1]);
+
+                if (outputVCFCounts) {
+                    writer.write(vcfRef);
+                    writer.write(vcfAlt);
+                }
+
+                if (outputVCFAF) {
                     writer.write(((double)vcfAlt)/(vcfAlt+vcfRef));
+                }
             }
 
             int ref;
