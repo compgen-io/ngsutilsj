@@ -319,7 +319,9 @@ public class VCFCount extends AbstractOutputCommand {
         
         CloseableIterator<PileupRecord> it2 = pileup.pileup(new GenomeSpan(record.getChrom(), pos));
         for (PileupRecord pileupRecord: IterUtils.wrap(it2)) {
-            if (pileupRecord.ref.equals(record.getChrom()) && pileupRecord.pos == pos) {
+            if (pileupRecord.ref.equals(record.getChrom()) && pileupRecord.pos > record.getPos()-1) {
+                processMissingVariant(record, writer, sampleIdx);
+            } else if (pileupRecord.ref.equals(record.getChrom()) && pileupRecord.pos == pos) {
                 if (refFilename != null && !pileupRecord.refBase.equals(record.getRef().subSequence(0, 1))) {
                     throw new IOException("Reference bases don't match! "+record.getChrom()+":"+record.getPos());
                 }
@@ -451,18 +453,89 @@ public class VCFCount extends AbstractOutputCommand {
         int idx = 1;
         
         for (PileupRecord pileupRecord: IterUtils.wrap(it2)) {
+            while (pileupRecord.ref.equals(curRecord.getChrom()) && pileupRecord.pos > curRecord.getPos()-1) {
+                processMissingVariant(curRecord, writer, sampleIdx);
+                if (idx < records.size()) {
+                    curRecord = records.get(idx++);
+                } else {
+                    curRecord = null;
+                    break;
+                }
+            }
             if (pileupRecord.ref.equals(curRecord.getChrom()) && pileupRecord.pos == curRecord.getPos()-1) {
                 processVariantRecord(curRecord, pileupRecord, writer, sampleIdx);
                 if (idx < records.size()) {
                     curRecord = records.get(idx++);
                 } else {
+                    curRecord = null;
                     break;
                 }
             }
         }
         
+        while (curRecord != null) {
+            processMissingVariant(curRecord, writer, sampleIdx);
+            if (idx < records.size()) {
+                curRecord = records.get(idx++);
+            } else {
+                curRecord = null;
+                break;
+            }
+        }
+        
         it2.close();
 
+    }
+
+    private void processMissingVariant(VCFRecord record, TabWriter writer, int sampleIdx) throws IOException {
+        
+        // for each alt-allele...
+        for (int i=0; i< record.getAlt().size(); i++) {
+            writer.write(record.getChrom());
+            writer.write(record.getPos());
+        
+            writer.write(record.getRef());
+            writer.write(record.getAlt().get(i));
+
+            if (outputVCFCounts || outputVCFAF) {
+                int vcfRef = 0;
+                int vcfAlt = 0;
+
+                String ad = "";
+                try {
+                    ad = record.getSampleAttributes().get(sampleIdx).get("AD").asString(null);
+                } catch (VCFAttributeException e) {
+                    throw new IOException(e);
+                }
+
+                String spl[] = ad.split(",");
+                vcfRef = Integer.parseInt(spl[0]);
+                vcfAlt = Integer.parseInt(spl[i+1]);
+
+                if (outputVCFCounts) {
+                    writer.write(vcfRef);
+                    writer.write(vcfAlt);
+                }
+
+                if (outputVCFAF) {
+                    writer.write(((double)vcfAlt)/(vcfAlt+vcfRef));
+                }
+            }
+
+            writer.write(0); // ref
+            writer.write(0); // alt
+            
+            if (outputAF) {
+                writer.write("");
+            }
+        
+            if (outputPvalue) { 
+                writer.write("");
+            }
+            
+            writer.eol();
+        }
+        
     }
     
 }
