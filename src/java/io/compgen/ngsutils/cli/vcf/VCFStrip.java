@@ -19,12 +19,18 @@ public class VCFStrip extends AbstractOutputCommand {
 	private String filename = "-";
 
     private boolean onlyOutputPass = false;
+    private boolean onlySNVs = false;
     
     @Option(desc="Only output passing variants", name="passing")
     public void setOnlyOutputPass(boolean onlyOutputPass) {
         this.onlyOutputPass = onlyOutputPass;
     }
-	
+    
+    @Option(desc="Only output SNVs (no idels)", name="only-snvs")
+    public void setOnlySNVs(boolean onlySNVs) {
+        this.onlySNVs = onlySNVs;
+    }
+    
     @UnnamedArg(name = "input.vcf", required=true)
     public void setFilename(String filename) throws CommandArgumentException {
     	this.filename = filename;
@@ -56,6 +62,22 @@ public class VCFStrip extends AbstractOutputCommand {
 		for (VCFRecord rec: IterUtils.wrap(reader.iterator())) {
             if (onlyOutputPass && rec.isFiltered()) {
                 continue;
+            }
+            if (onlySNVs) {
+                if (rec.getRef().length() != 1) {
+                    continue;
+                }
+                boolean altOK = true;
+                for (String alt: rec.getAlt()) {
+                    if (alt.length() != 1) {
+                        // if ANY of the alt's are indels, remove the record
+                        altOK = false;
+                        continue;
+                    }
+                }
+                if (!altOK) {
+                    continue;
+                }
             }
 	        writer.write(rec);
 		}		
