@@ -48,6 +48,7 @@ import io.compgen.ngsutils.cli.fasta.FastaNames;
 import io.compgen.ngsutils.cli.fasta.FastaSplit;
 import io.compgen.ngsutils.cli.fasta.FastaSubseq;
 import io.compgen.ngsutils.cli.fasta.FastaTag;
+import io.compgen.ngsutils.cli.fasta.FastaTri;
 import io.compgen.ngsutils.cli.fasta.FastaWrap;
 import io.compgen.ngsutils.cli.fastq.FastqBarcode;
 import io.compgen.ngsutils.cli.fastq.FastqCheck;
@@ -160,12 +161,11 @@ public class NGSUtils {
             .addCommand(BGZFCat.class)
             .addCommand(VCFCount.class)
             .addCommand(VCFStrip.class)
-//            .addCommand(VCFSignature.class)
             .addCommand(VCFToCount.class)
             .addCommand(TabixCat.class)
             .addCommand(TabAnnotate.class)
-            .addCommand(YatesChiSqCli.class);
-        
+            .addCommand(YatesChiSqCli.class)
+            .addCommand(FastaTri.class);
 
         try {
             if (args.length == 0) {
