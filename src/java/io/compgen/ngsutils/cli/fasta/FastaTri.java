@@ -145,6 +145,7 @@ public class FastaTri extends AbstractOutputCommand {
                     }
                     
                 } else if (includeThisSeq) {
+                    line = line.toUpperCase();
                     if (buf != null) {
                         buf += line.trim();
                     } else { 
