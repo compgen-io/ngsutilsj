@@ -107,6 +107,11 @@ public class NotEquals extends VCFAbstractFilter {
 				double test = Double.parseDouble(this.val);
 				return d != test;
 			}
+			
+			if (val == null) {
+			    return true;
+			}
+			
 			return !this.val.equals(val.asString(alleleName));
 		} catch (VCFAttributeException e) {
 			throw new VCFFilterException(e);
