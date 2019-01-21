@@ -8,10 +8,14 @@ public class BGZInputStream extends InputStream {
 	protected BGZFile bgzf;
 	protected ByteArrayInputStream buf=null;
 	
-	public BGZInputStream(String filename) throws IOException {
-		bgzf = new BGZFile(filename);
-	}
-	
+    public BGZInputStream(String filename) throws IOException {
+        bgzf = new BGZFile(filename);
+    }
+    
+    public BGZInputStream(BGZFile bgzf) throws IOException {
+        this.bgzf = bgzf;
+    }
+    
 	public void close() throws IOException {
 		bgzf.close();
 	}

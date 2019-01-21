@@ -11,17 +11,25 @@ import java.util.zip.GZIPInputStream;
 import io.compgen.common.io.DataIO;
 
 public class BGZFile {
-	protected String filename;
+//	protected String filename;
 	protected RandomAccessFile file;
 	
-	public BGZFile(String filename) throws IOException {
-	    if (!isBGZFile(filename)) {
-	        throw new IOException("File: "+filename+" is not a valid BGZ file!");
-	    }
-		this.filename = filename;
+    public BGZFile(String filename) throws IOException {
+        if (!isBGZFile(filename)) {
+            throw new IOException("File: "+filename+" is not a valid BGZ file!");
+        }
+//        this.filename = filename;
         this.file = new RandomAccessFile(filename, "r");
-	}
-	
+    }
+
+    public BGZFile(RandomAccessFile raf) throws IOException {
+        if (!isBGZFile(raf)) {
+            throw new IOException("RandomAccessFile is not a valid BGZ file!");
+        }
+//        this.filename = filename;
+        this.file = raf;
+    }
+
 	public void close() throws IOException {
 		file.close();
 	}
@@ -227,4 +235,51 @@ public class BGZFile {
 
 		return false;		
 	}
+
+	   public static boolean isBGZFile(RandomAccessFile fis) throws IOException {
+//	      System.err.println("Checking file: "+filename);
+
+           long offset = fis.getFilePointer();
+
+	        try {
+//	            FileInputStream fis = new FileInputStream(filename);
+	            int magic1 = DataIO.readByte(fis);
+	            int magic2 = DataIO.readByte(fis);
+	            
+	            if (magic1 != 31) {
+                    fis.seek(offset);
+	                return false;
+	            }
+	            if (magic2 != 139) {
+                    fis.seek(offset);
+	                return false;
+	            }
+	            
+	            DataIO.readRawBytes(fis, 8);
+	            int xlen = DataIO.readUint16(fis);
+	            
+	            byte[] extra = DataIO.readRawBytes(fis, xlen);
+	            ByteArrayInputStream bais = new ByteArrayInputStream(extra);
+	            
+	            int s1 = 0;
+	            int s2 = 0;
+	            
+	            while (s1 != 66 && s2 != 67) {
+	                s1 = DataIO.readByte(bais);
+	                s2 = DataIO.readByte(bais);
+	                if (s1 == 66 && s2 == 67) {
+//	                  System.err.println("magic matches");
+	                    fis.seek(offset);
+	                    return true;
+	                }
+	            }
+
+                fis.seek(offset);
+
+	        } catch (IOException e) {
+	        }
+
+	        return false;       
+	    }
+
 }
