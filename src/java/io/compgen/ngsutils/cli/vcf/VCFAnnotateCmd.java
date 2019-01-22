@@ -132,23 +132,18 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
                 for (String t:spl2) {
                     if (fname == null) {
                         fname = t;
-                    } else if (col == -1) {
-                        col = Integer.parseInt(t)-1;
                     } else if (t.equals("n")) {
                         isNumber = true;
                     } else if (t.equals("collapse")) {
                         collapse = true;
                     } else if (t.startsWith("alt=")) {
                         altCol = Integer.parseInt(t.substring(4))-1;
+                    } else if (col == -1) {
+                        col = Integer.parseInt(t)-1;
                     }
                 }
-                if (col > -1) {
-                    chain.add(new TabixAnnotation(spl[0], fname, col, isNumber, altCol, collapse));
-                } else {
-                    chain.add(new TabixAnnotation(spl[0], fname));
-                }
-                
-                
+
+                chain.add(new TabixAnnotation(spl[0], fname, col, isNumber, altCol, collapse));
                 
             } catch (NumberFormatException | IOException  e) {
                 throw new CommandArgumentException(e);

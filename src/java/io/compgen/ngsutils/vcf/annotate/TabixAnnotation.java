@@ -38,14 +38,6 @@ public class TabixAnnotation extends AbstractBasicAnnotator {
         this.collapse = collapse;
     }
 
-    public TabixAnnotation(String name, String filename, int colNum, boolean isNumber)
-            throws IOException {
-        this(name, filename, colNum, isNumber, -1, false);
-    }
-
-    public TabixAnnotation(String name, String filename) throws IOException {
-        this(name, filename, -1, false, -1, false);
-    }
 
     private static TabixFile getTabixFile(String filename) throws IOException {
         if (!cache.containsKey(filename)) {
