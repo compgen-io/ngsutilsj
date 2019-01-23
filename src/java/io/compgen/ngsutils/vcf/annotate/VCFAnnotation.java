@@ -97,6 +97,7 @@ public class VCFAnnotation extends AbstractBasicAnnotator {
         } catch (VCFAnnotatorMissingAltException e) {
             return;
         }
+//        System.err.println("Query: " + chrom+":"+pos);
 
 	    try {
 //			String records = ; // zero-based query
@@ -107,10 +108,13 @@ public class VCFAnnotation extends AbstractBasicAnnotator {
 			
 			List<String> vals = new ArrayList<String>();
 
-			for (String line: IterUtils.wrap(vcfTabix.query(chrom, pos))) {
+			for (String line: IterUtils.wrap(vcfTabix.query(chrom, pos-1))) {
 				VCFRecord bgzfRec = VCFRecord.parseLine(line);
-				
+
+//                System.err.println("Record: " + bgzfRec.getChrom()+":"+bgzfRec.getPos());
+
 				if (bgzfRec.getPos() != record.getPos()) {
+//				    System.err.println("Wrong pos?" + record.getPos() + " vs " +  bgzfRec.getPos());
 				    // exact pos matches only...
 				    
 				    // don't check chrom to avoid potential chrZ/Z mismatches 
@@ -119,7 +123,9 @@ public class VCFAnnotation extends AbstractBasicAnnotator {
 				    continue;
 				}
 
+				
                 if (passingOnly && bgzfRec.isFiltered()) {
+//                    System.err.println("Filter fail: " + StringUtils.join(",", bgzfRec.getFilters()));
                     continue;
                 }
 
@@ -143,7 +149,8 @@ public class VCFAnnotation extends AbstractBasicAnnotator {
                         // @ID returns right away
                         return;
 				    } else if (infoVal == null) { // just add a flag
-						record.getInfo().put(name, VCFAttributeValue.EMPTY);
+//				        System.err.println("Flagged: " + name);
+                        record.getInfo().put(name, VCFAttributeValue.EMPTY);
                         // flags return right away
                         return;
 					} else {
@@ -155,6 +162,8 @@ public class VCFAnnotation extends AbstractBasicAnnotator {
 	                    }
 					}
 					
+//				} else {
+//                    System.err.println("Alt match fail: " + record.getAlt() +  " vs " + bgzfRec.getAlt());
 				}
 		
             }
