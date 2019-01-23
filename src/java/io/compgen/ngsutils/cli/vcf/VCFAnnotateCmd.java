@@ -168,42 +168,34 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
     }
 
 
-    @Option(desc="Add INFO annotation from a VCF file (CSI indexed, add '!' for exact matches)", name="vcf", helpValue="NAME:FIELD:FILENAME{:!}", allowMultiple=true)
+    @Option(desc="Add INFO annotation from a VCF file (CSI indexed, add '!' for exact matches, add '&' for only using records passing filters)", name="vcf", helpValue="NAME:FIELD:FILENAME{:!&}", allowMultiple=true)
     public void setVCF(String vcf) throws CommandArgumentException {
     	String[] spl = vcf.split(":");
-    	if (spl.length == 3) {
-    		try {
-				chain.add(new VCFAnnotation(spl[0], spl[2], spl[1]));
-			} catch (IOException e) {
-	    		throw new CommandArgumentException(e);
-			}
-    	} else if (spl.length == 4) {
-    		try {
-				chain.add(new VCFAnnotation(spl[0], spl[2], spl[1], spl[3].equals("!")));
-			} catch (IOException e) {
-	    		throw new CommandArgumentException(e);
-			}
-    	} else {
-    		throw new CommandArgumentException("Unable to parse argument for --vcf: "+vcf);
-    	}    	
+    	boolean exact = false;
+    	boolean passing = false;
+    	if (spl.length == 4) {
+            passing = spl[3].contains("&");
+            exact = spl[3].contains("!");
+    	}
+        try {
+            chain.add(new VCFAnnotation(spl[0], spl[2], spl[1], exact, passing));
+        } catch (IOException e) {
+            throw new CommandArgumentException("Unable to parse argument for --vcf: "+vcf);
+        }
     }    
     
-    @Option(desc="Flag variants within a VCF file (INFO, CSI indexed, add '!' for exact matches)", name="vcf-flag", helpValue="NAME:FILENAME{:!}", allowMultiple=true)
+    @Option(desc="Flag variants within a VCF file (INFO, CSI indexed, add '!' for exact matches, add '&' for only using records passing filters)", name="vcf-flag", helpValue="NAME:FILENAME{:!&}", allowMultiple=true)
     public void setVCFFlag(String vcf) throws CommandArgumentException {
         String[] spl = vcf.split(":");
-        if (spl.length == 2) {
-            try {
-                chain.add(new VCFAnnotation(spl[0], spl[1], null));
-            } catch (IOException e) {
-                throw new CommandArgumentException(e);
-            }
-        } else if (spl.length == 3) {
-                try {
-                    chain.add(new VCFAnnotation(spl[0], spl[1], null, spl[2].equals("!")));
-                } catch (IOException e) {
-                    throw new CommandArgumentException(e);
-                }
-        } else {
+        boolean exact = false;
+        boolean passing = false;
+        if (spl.length == 3) {
+            passing = spl[2].contains("&");
+            exact = spl[2].contains("!");
+        }
+        try {
+            chain.add(new VCFAnnotation(spl[0], spl[1], null, exact, passing));
+        } catch (IOException e) {
             throw new CommandArgumentException("Unable to parse argument for --vcf-flag: "+vcf);
         }
     }

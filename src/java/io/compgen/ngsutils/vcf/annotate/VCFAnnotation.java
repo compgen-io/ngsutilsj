@@ -24,9 +24,10 @@ public class VCFAnnotation extends AbstractBasicAnnotator {
 	final protected String filename;
 	final protected TabixFile vcfTabix;
 	final protected String infoVal;
-	final protected boolean exactMatch;
+    final protected boolean exactMatch;
+    final protected boolean passingOnly;
 	
-	public VCFAnnotation(String name, String filename, String infoVal, boolean exact) throws IOException {
+	public VCFAnnotation(String name, String filename, String infoVal, boolean exact, boolean passing) throws IOException {
 		this.name = name;
 		this.filename = filename;
 		this.infoVal = infoVal;
@@ -35,11 +36,13 @@ public class VCFAnnotation extends AbstractBasicAnnotator {
 		} else {
 		    this.exactMatch = exact;
 		}
+		
+		this.passingOnly = passing;
 		this.vcfTabix = getTabixFile(filename);
 	}	
 
 	public VCFAnnotation(String name, String filename, String infoVal) throws IOException {
-		this(name, filename, infoVal, false);
+		this(name, filename, infoVal, false, false);
 	}
 	
 	private static TabixFile getTabixFile(String filename) throws IOException {
@@ -55,10 +58,20 @@ public class VCFAnnotation extends AbstractBasicAnnotator {
 		    if (name.equals("@ID")) {
 		        return;
 		    }
+		    
+		    String extra = "";
+		    if (passingOnly && exactMatch) {
+                extra = " (passing, exact match)";
+            } else if (passingOnly) {
+                extra = " (passing)";
+            } else if (exactMatch) {
+                extra = " (exact match)";
+		    }
+		    
 			if (infoVal == null) {
-				header.addInfo(VCFAnnotationDef.info(name, "0", "Flag", "Present in VCF file", filename, null, null, null));
+		        header.addInfo(VCFAnnotationDef.info(name, "0", "Flag", "Present in VCF file"+extra, filename, null, null, null));
 			} else {
-				header.addInfo(VCFAnnotationDef.info(name, "1", "String", infoVal+" from VCF file", filename, null, null, null));
+                header.addInfo(VCFAnnotationDef.info(name, "1", "String", infoVal+" from VCF file"+extra, filename, null, null, null));
 			}
 		} catch (VCFParseException e) {
 			throw new VCFAnnotatorException(e);
@@ -105,6 +118,10 @@ public class VCFAnnotation extends AbstractBasicAnnotator {
 				    
 				    continue;
 				}
+
+                if (passingOnly && bgzfRec.isFiltered()) {
+                    continue;
+                }
 
 				boolean match = !exactMatch;
 				
