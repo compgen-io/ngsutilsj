@@ -1,5 +1,6 @@
 package io.compgen.ngsutils.cli.vcf;
 
+import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -15,7 +16,11 @@ import io.compgen.common.IterUtils;
 import io.compgen.common.StringUtils;
 import io.compgen.common.TabWriter;
 import io.compgen.common.TallyValues;
+import io.compgen.common.progress.FileChannelStats;
+import io.compgen.common.progress.ProgressMessage;
+import io.compgen.common.progress.ProgressUtils;
 import io.compgen.ngsutils.NGSUtils;
+import io.compgen.ngsutils.support.CloseableFinalizer;
 import io.compgen.ngsutils.vcf.VCFHeader;
 import io.compgen.ngsutils.vcf.VCFReader;
 import io.compgen.ngsutils.vcf.VCFRecord;
@@ -229,7 +234,15 @@ public class VCFFilterCmd extends AbstractOutputCommand {
 		TallyValues<String> filterCounts = new TallyValues<String>();
 		TallyValues<String> filterCounts2 = new TallyValues<String>();
 		
-		Iterator<VCFRecord> it = reader.iterator();
+		FileChannel channel = reader.getChannel();
+		
+		Iterator<VCFRecord> it = ProgressUtils.getIterator(reader.getFilename(), reader.iterator(), (channel == null)? null : new FileChannelStats(channel), new ProgressMessage<VCFRecord>() {
+            public String msg(VCFRecord current) {
+                return current.getChrom()+":"+current.getPos();
+            }}, new CloseableFinalizer<VCFRecord>());
+
+
+		
 		long count = 0;
 		long filtered = 0;
 		
