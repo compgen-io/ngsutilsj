@@ -62,43 +62,58 @@ public class VCFAttributeValue {
 
 	public double asDouble(String alleleName) throws VCFAttributeException {
 		if (alleleName == null) {
+		    if (value == null || value.equals("")) {
+		        return Double.NaN;
+		    }
 			return Double.parseDouble(value);
 		} else if (alleleName.equals("sum")) {
 			String[] spl = value.split(",");			
 			double acc = 0.0;
 			for (int i=0; i<spl.length; i++) {
-				acc += Double.parseDouble(spl[i]);
+                if (!spl[i].equals("")) {
+                    acc += Double.parseDouble(spl[i]);
+                }
 			}
 			return acc;
 		} else if (alleleName.equals("nref")) {
 			String[] spl = value.split(",");			
 			double acc = 0.0;
 			for (int i=1; i<spl.length; i++) {
-				acc += Double.parseDouble(spl[i]);
+                if (!spl[i].equals("")) {
+                    acc += Double.parseDouble(spl[i]);
+                }
 			}
 			return acc;
 		} else if (alleleName.equals("min")) {
 			double minVal = Double.NaN;
 			String[] spl = value.split(",");			
 			for (int i=0; i<spl.length; i++) {
-				double d = Double.parseDouble(spl[i]);
-				if (Double.isNaN(minVal) || d < minVal) {
-					minVal = d;
-				}
+                if (!spl[i].equals("")) {
+    				double d = Double.parseDouble(spl[i]);
+    				if (Double.isNaN(minVal) || d < minVal) {
+    					minVal = d;
+    				}
+                }
 			}
 			return minVal;
 		} else if (alleleName.equals("max")) {
 			double maxVal = Double.NaN;
 			String[] spl = value.split(",");			
 			for (int i=0; i<spl.length; i++) {
-				double d = Double.parseDouble(spl[i]);
-				if (Double.isNaN(maxVal) || d > maxVal) {
-					maxVal = d;
-				}
+                if (!spl[i].equals("")) {
+    				double d = Double.parseDouble(spl[i]);
+    				if (Double.isNaN(maxVal) || d > maxVal) {
+    					maxVal = d;
+    				}
+                }
 			}
 			return maxVal;
 		} else {
 			String val = asString(alleleName);
+            if (val == null || val.equals("")) {
+                return Double.NaN;
+            }
+
 			try{
 				return Double.parseDouble(val);
 			} catch (NumberFormatException e) {
