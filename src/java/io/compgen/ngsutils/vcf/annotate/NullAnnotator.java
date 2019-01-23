@@ -16,18 +16,20 @@ public class NullAnnotator implements VCFAnnotator {
     final private Iterator<VCFRecord> it;
     final private FileChannel channel;
 	final private boolean onlyPassing;
-	final private boolean showProgress;
 
 	public NullAnnotator(VCFReader reader, boolean onlyPassing, boolean showProgress) {
 		//this.it = reader.iterator();
 		this.channel = reader.getChannel();
         this.onlyPassing = onlyPassing;
-        this.showProgress = showProgress;
 
-        this.it = ProgressUtils.getIterator(reader.getFilename(), reader.iterator(), (channel == null)? null : new FileChannelStats(channel), new ProgressMessage<VCFRecord>() {
-            public String msg(VCFRecord current) {
-                return current.getChrom()+":"+current.getPos();
-            }}, new CloseableFinalizer<VCFRecord>());
+        if (showProgress) {
+            this.it = ProgressUtils.getIterator(reader.getFilename(), reader.iterator(), (channel == null)? null : new FileChannelStats(channel), new ProgressMessage<VCFRecord>() {
+                public String msg(VCFRecord current) {
+                    return current.getChrom()+":"+current.getPos();
+                }}, new CloseableFinalizer<VCFRecord>());
+        } else {
+            this.it = reader.iterator();
+        }
 
 	}
 
@@ -41,24 +43,13 @@ public class NullAnnotator implements VCFAnnotator {
 
 	@Override
 	public VCFRecord next() throws VCFAnnotatorException {
-	    if (!showProgress) {
-    		while (it.hasNext()) {
-    			VCFRecord rec = it.next();
-    			if (!rec.isFiltered() || !onlyPassing) {
-    				return rec;
-    			}
-    		}
-            return null;
-	    } else {
-	        
-            while (it.hasNext()) {
-                VCFRecord rec = it.next();
-                if (!rec.isFiltered() || !onlyPassing) {
-                    return rec;
-                }
-            }
-            return null;
-	    }
+		while (it.hasNext()) {
+			VCFRecord rec = it.next();
+			if (!rec.isFiltered() || !onlyPassing) {
+				return rec;
+			}
+		}
+        return null;
 	}
 
 	@Override
