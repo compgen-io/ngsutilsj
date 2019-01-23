@@ -42,7 +42,7 @@ public class VCFFilterCmd extends AbstractOutputCommand {
 	List<VCFFilter> filterChain = new ArrayList<VCFFilter>();
 	
     private boolean onlyOutputPass = false;
-	private String statsFilename=null;
+    private String statsFilename=null;
 	
     @Option(desc="Write filter stats to a file", name="stats")
     public void setStatsFilename(String statsFilename) {
@@ -97,18 +97,18 @@ public class VCFFilterCmd extends AbstractOutputCommand {
         }
     }
     
-    @Option(desc="Values for {KEY} is equal to {VAL} (multiple allowed, String or number)", name="eq", helpValue="KEY:VAL:SAMPLEID:ALLELE", allowMultiple=true)
+    @Option(desc="Values for {KEY} is equal to {VAL} (multiple allowed, String or number; set SAMPLEID to 'INFO' to filter on an INFO field)", name="eq", helpValue="KEY:VAL:SAMPLEID:ALLELE", allowMultiple=true)
     public void setEQ(String val) throws CommandArgumentException {
-    	String[] spl = val.split(":");
-		if (spl.length==2) {
-        	filterChain.add(new Equals(spl[0], spl[1], null, null));
-		} else if (spl.length==3) {
-        	filterChain.add(new Equals(spl[0], spl[1], spl[2], null));
-		} else if (spl.length==4) {
-        	filterChain.add(new Equals(spl[0], spl[1], spl[2], spl[3]));
-		} else {
-    		throw new CommandArgumentException("1. Malformed argument. Should be in form => KEY:VAL or KEY:VAL:SAMPLEID or KEY:VAL:SAMPLEID:ALLELE");
-		}
+        String[] spl = val.split(":");
+        if (spl.length==2) {
+            filterChain.add(new Equals(spl[0], spl[1], null, null));
+        } else if (spl.length==3) {
+            filterChain.add(new Equals(spl[0], spl[1], spl[2], null));
+        } else if (spl.length==4) {
+            filterChain.add(new Equals(spl[0], spl[1], spl[2], spl[3]));
+        } else {
+            throw new CommandArgumentException("1. Malformed argument. Should be in form => KEY:VAL or KEY:VAL:SAMPLEID or KEY:VAL:SAMPLEID:ALLELE");
+        }
     }
     
     @Option(desc="Values for {KEY} is less than {VAL} (multiple allowed)", name="lt", helpValue="KEY:VAL:SAMPLEID:ALLELE", allowMultiple=true)
