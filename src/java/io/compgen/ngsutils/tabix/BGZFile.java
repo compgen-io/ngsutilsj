@@ -4,6 +4,7 @@ import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.nio.channels.FileChannel;
 import java.util.Arrays;
 import java.util.zip.DataFormatException;
 import java.util.zip.GZIPInputStream;
@@ -30,6 +31,10 @@ public class BGZFile {
         this.file = raf;
     }
 
+    public FileChannel getChannel() { 
+        return file.getChannel();
+    }
+    
 	public void close() throws IOException {
 		file.close();
 	}

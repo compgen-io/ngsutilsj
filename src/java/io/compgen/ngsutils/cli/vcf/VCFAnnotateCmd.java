@@ -246,8 +246,7 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
 			reader = new VCFReader(filename);
 		}
 		
-		NullAnnotator nullAnn = new NullAnnotator(reader, onlyPassing);
-
+		NullAnnotator nullAnn = new NullAnnotator(reader, onlyPassing, true);
 
         if (altChrom != null) {
             for (int i=0; i< chain.size(); i++) {

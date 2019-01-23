@@ -2,10 +2,10 @@ package io.compgen.ngsutils.vcf;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -19,16 +19,28 @@ public class VCFReader {
 	protected BufferedReader in;
 	protected VCFHeader header=null;
 	private boolean closed = false;
+    private FileChannel channel = null;
+    private String filename = null;
 	
 	public VCFReader(String filename) throws IOException, VCFParseException {
         if (filename.equals("-")) {
+            this.filename = "<stdin>";
             in = new BufferedReader(new InputStreamReader(System.in));
         } else if (BGZFile.isBGZFile(filename)) {
-                in = new BufferedReader(new InputStreamReader(new BGZInputStream(filename)));               
+            this.filename = filename;
+            BGZFile bgzf = new BGZFile(filename);
+            channel = bgzf.getChannel();
+            in = new BufferedReader(new InputStreamReader(new BGZInputStream(bgzf)));               
         } else if (isGZipFile(filename)){
-                in = new BufferedReader(new InputStreamReader(new GZIPInputStream(new FileInputStream(filename))));
+            this.filename = filename;
+            FileInputStream fis = new FileInputStream(filename);
+            channel = fis.getChannel();
+            in = new BufferedReader(new InputStreamReader(new GZIPInputStream(fis)));
         } else {
-            in = new BufferedReader(new FileReader(filename));
+            this.filename = filename;
+            FileInputStream fis = new FileInputStream(filename);
+            channel = fis.getChannel();
+            in = new BufferedReader(new InputStreamReader(fis));
         }
 
 //        if (filename.equals("-")) {
@@ -44,6 +56,14 @@ public class VCFReader {
 //        }
 
         readHeader();
+	}
+	
+
+    public String getFilename() {
+        return this.filename;
+    }
+    public FileChannel getChannel() { 
+	    return channel;
 	}
 
 	public static boolean isGZipFile(String filename) throws IOException {
@@ -141,5 +161,6 @@ public class VCFReader {
 			}
 		};
 	}
+
 	
 }
