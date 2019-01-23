@@ -168,13 +168,13 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
     }
 
 
-    @Option(desc="Add INFO annotation from a VCF file (CSI indexed, add '!' for exact matches, add '&' for only using records passing filters)", name="vcf", helpValue="NAME:FIELD:FILENAME{:!&}", allowMultiple=true)
+    @Option(desc="Add INFO annotation from a VCF file (CSI indexed, add '!' for exact matches, add '@' for only using records passing filters)", name="vcf", helpValue="NAME:FIELD:FILENAME{:!@}", allowMultiple=true)
     public void setVCF(String vcf) throws CommandArgumentException {
     	String[] spl = vcf.split(":");
     	boolean exact = false;
     	boolean passing = false;
     	if (spl.length == 4) {
-            passing = spl[3].contains("&");
+            passing = spl[3].contains("@");
             exact = spl[3].contains("!");
     	}
         try {
@@ -184,13 +184,13 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
         }
     }    
     
-    @Option(desc="Flag variants within a VCF file (INFO, CSI indexed, add '!' for exact matches, add '&' for only using records passing filters)", name="vcf-flag", helpValue="NAME:FILENAME{:!&}", allowMultiple=true)
+    @Option(desc="Flag variants within a VCF file (INFO, CSI indexed, add '!' for exact matches, add '@' for only using records passing filters)", name="vcf-flag", helpValue="NAME:FILENAME{:!@}", allowMultiple=true)
     public void setVCFFlag(String vcf) throws CommandArgumentException {
         String[] spl = vcf.split(":");
         boolean exact = false;
         boolean passing = false;
         if (spl.length == 3) {
-            passing = spl[2].contains("&");
+            passing = spl[2].contains("@");
             exact = spl[2].contains("!");
         }
         try {
