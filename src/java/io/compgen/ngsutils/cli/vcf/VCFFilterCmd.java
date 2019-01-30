@@ -32,10 +32,12 @@ import io.compgen.ngsutils.vcf.filter.GreaterThan;
 import io.compgen.ngsutils.vcf.filter.GreaterThanEqual;
 import io.compgen.ngsutils.vcf.filter.HeterozygousFilter;
 import io.compgen.ngsutils.vcf.filter.HomozygousFilter;
+import io.compgen.ngsutils.vcf.filter.IndelFilter;
 import io.compgen.ngsutils.vcf.filter.LessThan;
 import io.compgen.ngsutils.vcf.filter.LessThanEqual;
 import io.compgen.ngsutils.vcf.filter.NotEquals;
 import io.compgen.ngsutils.vcf.filter.QualityScore;
+import io.compgen.ngsutils.vcf.filter.SNVFilter;
 import io.compgen.ngsutils.vcf.filter.VCFFilter;
 
 
@@ -54,6 +56,16 @@ public class VCFFilterCmd extends AbstractOutputCommand {
     	this.statsFilename = statsFilename;
     }
     
+    @Option(desc="Filter indels", name="indel")
+    public void setIndels() {
+        filterChain.add(new IndelFilter());
+    }
+
+    @Option(desc="Filter SNVs", name="snv")
+    public void setSNVs() {
+        filterChain.add(new SNVFilter());
+    }
+
     @Option(desc="Quality score must be above this value", name="qual")
     public void setQual(double qual) {
         filterChain.add(new QualityScore(qual));
