@@ -72,6 +72,7 @@ import io.compgen.ngsutils.cli.vcf.VCFCount;
 import io.compgen.ngsutils.cli.vcf.VCFExportCmd;
 import io.compgen.ngsutils.cli.vcf.VCFFilterCmd;
 import io.compgen.ngsutils.cli.vcf.VCFStrip;
+import io.compgen.ngsutils.cli.vcf.VCFTsTvRatio;
 import io.compgen.ngsutils.cli.vcf.VCFToBED;
 import io.compgen.ngsutils.cli.vcf.VCFToCount;
 import io.compgen.ngsutils.support.stats.FisherCli;
@@ -165,7 +166,8 @@ public class NGSUtils {
             .addCommand(TabixCat.class)
             .addCommand(TabAnnotate.class)
             .addCommand(YatesChiSqCli.class)
-            .addCommand(FastaTri.class);
+            .addCommand(FastaTri.class)
+            .addCommand(VCFTsTvRatio.class);
 
         try {
             if (args.length == 0) {
