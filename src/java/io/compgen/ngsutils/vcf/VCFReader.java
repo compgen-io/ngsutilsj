@@ -8,8 +8,10 @@ import java.io.InputStreamReader;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.zip.GZIPInputStream;
 
 import io.compgen.ngsutils.tabix.BGZFile;
@@ -22,6 +24,11 @@ public class VCFReader {
     private FileChannel channel = null;
     private String filename = null;
 	
+    protected boolean removeID = false;
+    protected Set<String> removeFilter = null;
+    protected Set<String> removeFormat = null;
+    protected Set<String> removeInfo = null;
+    
 	public VCFReader(String filename) throws IOException, VCFParseException {
         if (filename.equals("-")) {
             this.filename = "<stdin>";
@@ -55,7 +62,6 @@ public class VCFReader {
 //            in = new BufferedReader(new FileReader(filename));
 //        }
 
-        readHeader();
 	}
 	
 
@@ -80,7 +86,7 @@ public class VCFReader {
 	}
 
 	private void readHeader() throws IOException, VCFParseException {
-		String format=null;
+		String fileformat=null;
 		List<String> lines = new ArrayList<String>();
 		String headerLine = null;
 		while (headerLine == null) {
@@ -90,7 +96,7 @@ public class VCFReader {
 				throw new IOException("Bad VCF header? Missing header line?");
 			}
 			if (line.startsWith("##fileformat=")) {
-				format = line;
+				fileformat = line;
 			} else if (line.startsWith("##")) {
 				lines.add(line);
 			} else if (line.startsWith("#CHROM\t")) {
@@ -98,10 +104,14 @@ public class VCFReader {
 			}
 		}
 		
-		header = new VCFHeader(format, lines, headerLine);
+		header = new VCFHeader(fileformat, lines, headerLine, removeFilter, removeInfo, removeFormat);
 	}
 
-	public VCFHeader getHeader() {
+	public VCFHeader getHeader() throws IOException, VCFParseException {
+       if (header == null) {
+            readHeader();
+        }
+
 		return header;
 		
 	}
@@ -113,7 +123,10 @@ public class VCFReader {
 		}
 	}
 	
-	public Iterator<VCFRecord> iterator() {
+	public Iterator<VCFRecord> iterator() throws IOException, VCFParseException {
+	    if (header == null) {
+	        readHeader();
+	    }
 		return new Iterator<VCFRecord> () {
 
 			VCFRecord next = null;
@@ -151,7 +164,7 @@ public class VCFReader {
 						return;
 					}
 					
-					next = VCFRecord.parseLine(line);
+					next = VCFRecord.parseLine(line, removeID, header);
 					
 					
 				} catch (IOException | VCFParseException e) {
@@ -161,6 +174,45 @@ public class VCFReader {
 			}
 		};
 	}
+
+
+    public void setRemoveID(boolean removeID) {
+        this.removeID = removeID;
+    }
+
+
+    public void addRemoveInfo(Set<String> removeInfo) throws VCFParseException {
+        if (header == null) {
+            if (this.removeInfo == null) {
+                this.removeInfo = new HashSet<String>();
+            }
+            this.removeInfo.addAll(removeInfo);
+        } else {
+            throw new VCFParseException("You can't remove info after the VCF header has been read.");
+        }
+    }
+
+    public void addRemoveFormat(Set<String> removeFormat) throws VCFParseException {
+        if (header == null) {
+            if (this.removeFormat == null) {
+                this.removeFormat = new HashSet<String>();
+            }
+            this.removeFormat.addAll(removeFormat);
+        } else {
+            throw new VCFParseException("You can't remove formats after the VCF header has been read.");
+        }
+    }
+
+    public void addRemoveFilter(Set<String> removeFilter) throws VCFParseException {
+        if (header == null) {
+            if (this.removeFilter == null) {
+                this.removeFilter = new HashSet<String>();
+            }
+            this.removeFilter.addAll(removeFilter);
+        } else {
+            throw new VCFParseException("You can't remove filters after the VCF header has been read.");
+        }
+    }
 
 	
 }

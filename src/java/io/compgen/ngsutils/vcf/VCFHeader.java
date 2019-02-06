@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -11,9 +12,10 @@ import java.util.Set;
 
 import io.compgen.common.ListBuilder;
 import io.compgen.common.StringUtils;
+import io.compgen.ngsutils.support.GlobUtils;
 
 public class VCFHeader {
-	protected String format;
+	protected String fileformat;
 	protected Map<String,VCFAnnotationDef> infoDefs = new LinkedHashMap<String, VCFAnnotationDef>();
 	protected Map<String,VCFAnnotationDef> formatDefs = new LinkedHashMap<String, VCFAnnotationDef>();
 	protected Map<String,VCFFilterDef> filterDefs = new LinkedHashMap<String, VCFFilterDef>();
@@ -23,21 +25,71 @@ public class VCFHeader {
 	
 	protected String[] samples = null;
 	
-	public VCFHeader(String format, List<String> input, String headerLine) throws VCFParseException {
-		if (format == null) {
+    private Set<String> removeFilter = null;
+    private Set<String> removeInfo = null;
+    private Set<String> removeFormat = null;
+
+    private Set<String> allowedFilterCache = new HashSet<String>();
+    private Set<String> blockedFilterCache = new HashSet<String>();
+    private Set<String> allowedInfoCache = new HashSet<String>();
+    private Set<String> blockedInfoCache = new HashSet<String>();
+    private Set<String> allowedFormatCache = new HashSet<String>();
+    private Set<String> blockedFormatCache = new HashSet<String>();
+    
+	public VCFHeader(String fileformat, List<String> input, String headerLine, Set<String> removeFilter, Set<String> removeInfo,  Set<String> removeFormat) throws VCFParseException {
+		if (fileformat == null) {
 			throw new VCFParseException("Missing format in header?");
 		}
-		
-		this.format = format;
+
+		this.fileformat = fileformat;
 		this.headerLine = headerLine;
+		
+        this.removeFilter = removeFilter;
+        this.removeInfo = removeInfo;
+        this.removeFormat = removeFormat;
 		
 		for (String line: input) {
 			if (line.startsWith("##INFO=")) {
-				addInfo(VCFAnnotationDef.parseString(line));
+			    VCFAnnotationDef info = VCFAnnotationDef.parseString(line);
+                boolean match = false;
+                if (removeInfo != null) {
+                    for (String remove: removeInfo) {
+                        if (GlobUtils.matches(info.id, remove)) {
+                            match = true;
+                        }
+                    }
+                }
+                if (!match) {
+                    addInfo(info);
+                }
 			} else if (line.startsWith("##FORMAT=")) {
+	             VCFAnnotationDef format = VCFAnnotationDef.parseString(line);
+	                boolean match = false;
+	                if (removeFormat != null) {
+    	                for (String remove: removeFormat) {
+    	                    if (GlobUtils.matches(format.id, remove)) {
+    	                        match = true;
+    	                    }
+    	                }
+	                }
+	                if (!match) {
+	                    addFormat(format);
+	                }
+
 				addFormat(VCFAnnotationDef.parseString(line));
 			} else if (line.startsWith("##FILTER=")) {
-				addFilter(VCFFilterDef.parse(line));
+			    VCFFilterDef filter = VCFFilterDef.parse(line);
+			    boolean match = false;
+			    if (removeFilter != null) {
+    			    for (String remove: removeFilter) {
+    			        if (GlobUtils.matches(filter.id, remove)) {
+    			            match = true;
+    			        }
+    			    }
+			    }
+			    if (!match) {
+			        addFilter(filter);
+			    }
 			} else {
 				lines.add(line);
 			}
@@ -60,55 +112,37 @@ public class VCFHeader {
 	public void addLine(String line) {
 		this.lines.add(line);
 	}
-	public void write(OutputStream out) throws IOException {
-		write(out, true, false);
-		
-	}
 	
-	public void write(OutputStream out, boolean includeAll, boolean strip) throws IOException {
+	public void write(OutputStream out, boolean includeAll) throws IOException {
 
 		if (includeAll) {
-			while (!format.startsWith("##")) {
-				format = "#" + format; 
+			while (!fileformat.startsWith("##")) {
+				fileformat = "#" + fileformat; 
 			}
-			StringUtils.writeOutputStream(out, format + "\n");
+			StringUtils.writeOutputStream(out, fileformat + "\n");
 		}
 		List<String> outlines = new ArrayList<String>();;
 		
-		if (!strip) {
-    		for (VCFAnnotationDef def: infoDefs.values()) {
-    			outlines.add(def.toString());
-    		}
-    		for (VCFFilterDef def: filterDefs.values()) {
-    			outlines.add(def.toString());
-    		}
-    		for (VCFAnnotationDef def: formatDefs.values()) {
-    			outlines.add(def.toString());
-    		}
-            outlines.addAll(lines);
-		} else {
-		    for (String line: lines) {
-		        // when stripping the output, still output all other lines except the sample lines
-		        if (!line.startsWith("##SAMPLE=")) {
-		            outlines.add(line);
-		        }
-		    }
-		}
-		
-		
+        for (VCFAnnotationDef def: infoDefs.values()) {
+            outlines.add(def.toString());
+        }
+        for (VCFFilterDef def: filterDefs.values()) {
+            outlines.add(def.toString());
+        }
+        for (VCFAnnotationDef def: formatDefs.values()) {
+            outlines.add(def.toString());
+        }
+        outlines.addAll(lines);
+
 		for (String line: outlines) {
 			StringUtils.writeOutputStream(out, line + "\n");
 		}
 
 		if (includeAll) {
-		    if (strip) {
-                StringUtils.writeOutputStream(out, "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\n");
-		    } else {
-    			if (!headerLine.startsWith("#")) {
-    				headerLine = "#" + headerLine; 
-    			}
-    			StringUtils.writeOutputStream(out, headerLine + "\n");
-            }
+			if (!headerLine.startsWith("#")) {
+				headerLine = "#" + headerLine; 
+			}
+			StringUtils.writeOutputStream(out, headerLine + "\n");
 		}
 	}
 
@@ -159,6 +193,9 @@ public class VCFHeader {
     public Set<String> getFormatIDs() {
         return formatDefs.keySet();
     }
+    public Set<String> getFilterIDs() {
+        return filterDefs.keySet();
+    }
 
     public VCFAnnotationDef getInfoDef(String id) {
         return infoDefs.get(id);
@@ -168,6 +205,69 @@ public class VCFHeader {
         return infoDefs.keySet();
     }
 
+    public boolean isFilterAllowed(String name) {
+        if (removeFilter == null || removeFilter.size()==0) {
+            return true;
+        }
+        if (allowedFilterCache.contains(name)) {
+            return true;
+        }
+        if (blockedFilterCache.contains(name)) {
+            return false;
+        }
+        for (String remove: removeFilter) {
+            if (GlobUtils.matches(name, remove)) {
+                blockedFilterCache.add(name);
+                return false;
+            }
+        }
+
+        allowedFilterCache.add(name);
+        return true;
+    }
+    
+    public boolean isInfoAllowed(String name) {
+        if (removeInfo == null || removeInfo.size()==0) {
+            return true;
+        }
+        if (allowedInfoCache.contains(name)) {
+            return true;
+        }
+        if (blockedInfoCache.contains(name)) {
+            return false;
+        }
+        for (String remove: removeInfo) {
+            if (GlobUtils.matches(name, remove)) {
+                blockedInfoCache.add(name);
+                return false;
+            }
+        }
+
+        allowedInfoCache.add(name);
+        return true;
+    }
+    
+    public boolean isFormatAllowed(String name) {
+        if (removeFormat == null || removeFormat.size()==0) {
+            return true;
+        }
+        if (allowedFormatCache.contains(name)) {
+            return true;
+        }
+        if (blockedFormatCache.contains(name)) {
+            return false;
+        }
+        for (String remove: removeFormat) {
+            if (GlobUtils.matches(name, remove)) {
+                blockedFormatCache.add(name);
+                return false;
+            }
+        }
+
+        allowedFormatCache.add(name);
+        return true;
+    }
+    
     public List<String> getContigNames() {
         List<String> names = new ArrayList<String>();
         for (String line: lines) {

@@ -1,5 +1,6 @@
 package io.compgen.ngsutils.vcf.annotate;
 
+import java.io.IOException;
 import java.nio.channels.FileChannel;
 import java.util.Iterator;
 
@@ -8,6 +9,7 @@ import io.compgen.common.progress.ProgressMessage;
 import io.compgen.common.progress.ProgressUtils;
 import io.compgen.ngsutils.support.CloseableFinalizer;
 import io.compgen.ngsutils.vcf.VCFHeader;
+import io.compgen.ngsutils.vcf.VCFParseException;
 import io.compgen.ngsutils.vcf.VCFReader;
 import io.compgen.ngsutils.vcf.VCFRecord;
 
@@ -17,7 +19,7 @@ public class NullAnnotator implements VCFAnnotator {
     final private FileChannel channel;
 	final private boolean onlyPassing;
 
-	public NullAnnotator(VCFReader reader, boolean onlyPassing, boolean showProgress) {
+	public NullAnnotator(VCFReader reader, boolean onlyPassing, boolean showProgress) throws IOException, VCFParseException {
 		//this.it = reader.iterator();
 		this.channel = reader.getChannel();
         this.onlyPassing = onlyPassing;

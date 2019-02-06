@@ -28,7 +28,7 @@ import io.compgen.ngsutils.vcf.export.QualExport;
 import io.compgen.ngsutils.vcf.export.VCFExport;
 
 
-@Command(name="vcf-export", desc="Export information from a VCF file", category="vcf")
+@Command(name="vcf-export", desc="Export information from a VCF file as a tab-delimited file", category="vcf")
 public class VCFExportCmd extends AbstractOutputCommand {
 	private String filename = "-";
 	
@@ -183,7 +183,7 @@ public class VCFExportCmd extends AbstractOutputCommand {
     		}
     		
     		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    		header.write(baos, false, false);
+    		header.write(baos, false);
     		baos.close();
     		String headerString = baos.toString();
     		for (String s: headerString.split("\n")) {

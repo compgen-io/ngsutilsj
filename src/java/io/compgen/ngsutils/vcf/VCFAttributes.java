@@ -57,28 +57,32 @@ public class VCFAttributes {
 		return new ArrayList<String>(attributes.keySet());
 	}
 
-	public static VCFAttributes parseString(String s) throws VCFParseException {
+	public static VCFAttributes parseInfo(String s, VCFHeader header) throws VCFParseException {
 		VCFAttributes attrs = new VCFAttributes();
 		
-		for (String el: s.split(";")) {
-			if (el.indexOf("=") == -1) {
-				attrs.put(el, VCFAttributeValue.EMPTY);
-			} else {
-			    try {
-			        String[] kv = el.split("=");				
-			        attrs.put(kv[0], VCFAttributeValue.parse(kv[1]));
-			    } catch (ArrayIndexOutOfBoundsException e) {
-			        e.printStackTrace(System.err);
-                    System.err.println("ERROR: processing attributes string "+ el);
-                    System.err.println("ERROR: "+ s);
-			        System.exit(1);
-			    }
-			}
+        if (!s.equals(VCFAttributeValue.MISSING)) {
+    		for (String el: s.split(";")) {
+    		    if (header.isInfoAllowed(el)) {
+        			if (el.indexOf("=") == -1) {
+        				attrs.put(el, VCFAttributeValue.EMPTY);
+        			} else {
+        			    try {
+        			        String[] kv = el.split("=");				
+        			        attrs.put(kv[0], VCFAttributeValue.parse(kv[1]));
+        			    } catch (ArrayIndexOutOfBoundsException e) {
+        			        e.printStackTrace(System.err);
+                            System.err.println("ERROR: processing attributes string "+ el);
+                            System.err.println("ERROR: "+ s);
+        			        System.exit(1);
+        			    }
+        			}
+    		    }
+		    }
 		}
 		return attrs;
 	}
 	
-	public static VCFAttributes parseString(String s, List<String> format) throws VCFParseException {
+	public static VCFAttributes parseFormat(String s, List<String> format, VCFHeader header) throws VCFParseException {
 		VCFAttributes attrs = new VCFAttributes();
 		
 		String[] spl = s.split(":");
@@ -88,9 +92,10 @@ public class VCFAttributes {
 		}
 		
 		for (int i=0; i< spl.length; i++) {
-			attrs.put(format.get(i), VCFAttributeValue.parse(spl[i]));
+		    if (header.isFormatAllowed(format.get(i))) {
+		        attrs.put(format.get(i), VCFAttributeValue.parse(spl[i]));
+		    }
 		}
-
 		return attrs;
 	}
 
@@ -104,7 +109,11 @@ public class VCFAttributes {
 				outcols.add(kv.getKey()+"="+kv.getValue().toString());
 			}
 		}
-		return StringUtils.join(";", outcols);
+		if (outcols.size()>0) {
+		    return StringUtils.join(";", outcols);
+		} else {
+		    return VCFRecord.MISSING;
+		}
 	}
 
 	// output in GENOTYPE format (with given FORMAT keys)
@@ -115,4 +124,5 @@ public class VCFAttributes {
 		}
 		return StringUtils.join(":", outcols);
 	}
+
 }
