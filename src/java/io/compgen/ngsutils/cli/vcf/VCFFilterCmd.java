@@ -42,7 +42,7 @@ import io.compgen.ngsutils.vcf.filter.VCFFilter;
 
 
 @Command(name="vcf-filter", desc="Filter a VCF file", category="vcf", doc="Note: This command will set filters in the VCF file, "
-        + "which is what you'd normally use to exclude records. Passing records match no filters.")
+        + "which is what you'd normally use to EXCLUDE records. Passing records match no filters.")
 public class VCFFilterCmd extends AbstractOutputCommand {
 	private String filename = "-";
 	
