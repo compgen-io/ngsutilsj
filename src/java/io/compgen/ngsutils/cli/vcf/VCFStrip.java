@@ -29,7 +29,7 @@ public class VCFStrip extends AbstractOutputCommand {
     private Set<String> removeInfo = null;
     private Set<String> removeFormat = null;
   
-    @Option(desc="Only output passing variants", name="passing")
+    @Option(desc="Only output passing variants (warning -- this works on the post-stripped filters)", name="passing")
     public void setOnlyOutputPass(boolean onlyOutputPass) {
         this.onlyOutputPass = onlyOutputPass;
     }
