@@ -83,7 +83,6 @@ public class VCFRecord {
 		
 	    outcols.add(info.toString());
         
-        
 		if (sampleAttributes != null && sampleAttributes.size() > 0) {
 			List<String> keyOrder = sampleAttributes.get(0).getKeys();
             outcols.add(StringUtils.join(":", keyOrder));
@@ -99,6 +98,7 @@ public class VCFRecord {
     public static VCFRecord parseLine(String line) throws VCFParseException {
         return parseLine(line, false, null);
     }
+
     public static VCFRecord parseLine(String line, boolean removeID, VCFHeader header) throws VCFParseException {
 		String[] cols = line.split("\t");
 		if (cols.length< 5) {
@@ -134,7 +134,7 @@ public class VCFRecord {
 		    // if filters is not null, but empty => MISSING
 
 		    for (String f: cols[6].split(";")) {
-				if (!f.equals(MISSING) && header.isFilterAllowed(f)) {
+				if (!f.equals(MISSING) && (header == null || header.isFilterAllowed(f))) {
 	                if (filters == null) {
 	                    filters = new ArrayList<String>();
 	                }

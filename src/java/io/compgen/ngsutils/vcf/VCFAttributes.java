@@ -62,7 +62,7 @@ public class VCFAttributes {
 		
         if (!s.equals(VCFAttributeValue.MISSING)) {
     		for (String el: s.split(";")) {
-    		    if (header.isInfoAllowed(el)) {
+    		    if (header == null || header.isInfoAllowed(el)) {
         			if (el.indexOf("=") == -1) {
         				attrs.put(el, VCFAttributeValue.EMPTY);
         			} else {
@@ -92,7 +92,7 @@ public class VCFAttributes {
 		}
 		
 		for (int i=0; i< spl.length; i++) {
-		    if (header.isFormatAllowed(format.get(i))) {
+		    if (header == null || header.isFormatAllowed(format.get(i))) {
 		        attrs.put(format.get(i), VCFAttributeValue.parse(spl[i]));
 		    }
 		}
