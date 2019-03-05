@@ -18,7 +18,7 @@ import io.compgen.ngsutils.tabix.annotate.TabAnnotator;
 import io.compgen.ngsutils.tabix.annotate.TabixTabAnnotator;
 
 
-@Command(name="tab-annotate", desc="Annotate a tab-delimited file", category="tab")
+@Command(name="tab-annotate", desc="Annotate a tab-delimited file", category="annotation")
 public class TabAnnotate extends AbstractOutputCommand {
 	private String filename = "-";
 	private boolean hasHeader = false;

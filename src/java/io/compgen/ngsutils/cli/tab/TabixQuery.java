@@ -10,7 +10,7 @@ import io.compgen.common.IterUtils;
 import io.compgen.ngsutils.annotation.GenomeSpan;
 import io.compgen.ngsutils.tabix.TabixFile;
 
-@Command(name = "tabix", desc = "Query a tabix file", category = "help", hidden = false)
+@Command(name = "tabix", desc = "Query a tabix file", category = "annotation", hidden = false)
 public class TabixQuery extends AbstractOutputCommand {
     private String filename = "-";
     private GenomeSpan span;
