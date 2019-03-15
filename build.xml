@@ -1,5 +1,5 @@
 <project name="ngsutilsj" default="jar">
-    <property name="version" value="0.4.5"/>
+    <property name="version" value="0.4.6"/>
     <property name="build" value="dev"/>
     <property name="lib.dir" value="lib"/>
     <property name="blib.dir" value="blib"/>

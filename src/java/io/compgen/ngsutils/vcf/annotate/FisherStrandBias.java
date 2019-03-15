@@ -32,6 +32,10 @@ public class FisherStrandBias extends AbstractBasicAnnotator {
 		header.addFormat(getAnnotationType());
 	}
 
+    // 2019-03-03 - mbreese
+    // changed this test to return the strand bias of *ONLY* the alt allele.
+	// the Fisher test is against a theoretical 50%/50% split
+	
 	@Override
 	public void annotate(VCFRecord record) throws VCFAnnotatorException {
 		for (VCFAttributes sampleVals : record.getSampleAttributes()) {
@@ -39,15 +43,19 @@ public class FisherStrandBias extends AbstractBasicAnnotator {
 	            // This should be the strand-level counts for each allele (ref+,ref-,alt1+,alt1-,alt2+,alt2-, etc...)
     			String sacVal = sampleVals.get("SAC").toString();
     			String[] spl = sacVal.split(",");
-    			int refPlus = Integer.parseInt(spl[0]);
-    			int refMinus = Integer.parseInt(spl[1]);
+    			
+//    			int refPlus = Integer.parseInt(spl[0]);
+//    			int refMinus = Integer.parseInt(spl[1]);
     			
     			List<String> fsbOuts = new ArrayList<String>();
     			for (int i=2; i<spl.length; i+=2) {
     				int plus = Integer.parseInt(spl[i]);
     				int minus = Integer.parseInt(spl[i+1]);
     				
-    				fsbOuts.add(""+round(phred(calcFisherStrandBias(refPlus, refMinus, plus, minus)),3));
+    				int total = plus + minus;
+    				int half = total / 2; // this will round down in cases where total is odd.
+    				
+    				fsbOuts.add(""+round(phred(calcFisherStrandBias(half, half, plus, minus)),3));
     			}
     			
     			if (fsbOuts.size() == 0) {
