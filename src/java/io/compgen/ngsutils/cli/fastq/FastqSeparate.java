@@ -22,6 +22,7 @@ public class FastqSeparate extends AbstractCommand {
     private String outfile1 = null;
     private String outfile2 = null;
     private boolean quiet = false;
+    private boolean gzip = false;
     
 	public FastqSeparate() {
 	}
@@ -31,17 +32,23 @@ public class FastqSeparate extends AbstractCommand {
 	    this.filename = filename;
 	}
 
+    @Option(desc="Force gzip compressed output streams", charName="z")
+    public void setGzip(boolean val) {
+        this.gzip = val;
+    }
+
+
     @Option(desc="Quiet output", charName="q")
     public void setQuiet(boolean val) {
         this.quiet = val;
     }
 
-    @Option(desc="Export read 1 to this file (use - for stdout)", name="read1", required=false)
+    @Option(desc="Export read 1 to this file (use - for stdout, if ends in .gz will automatically be compressed)", name="read1", required=false)
     public void setReadOne(String outfile1) {
         this.outfile1 = outfile1;
     }
 
-    @Option(desc="Export read 2 to this file (use - for stdout)", name="read2", required=false)
+    @Option(desc="Export read 2 to this file (use - for stdout, if ends in .gz will automatically be compressed)", name="read2", required=false)
     public void setReadTwo(String outfile2) {
         this.outfile2 = outfile2;
     }
@@ -66,13 +73,13 @@ public class FastqSeparate extends AbstractCommand {
             if (verbose) {
                 System.err.println("Exporting read 1 to " + outfile1);
             }
-            out1 = FileUtils.openOutputStream(outfile1);
+            out1 = FileUtils.openOutputStream(outfile1, gzip);
         }
         if (outfile2 != null) {
             if (verbose) {
                 System.err.println("Exporting read 2 to " + outfile2);
             }
-            out2 = FileUtils.openOutputStream(outfile2);
+            out2 = FileUtils.openOutputStream(outfile2, gzip);
 		}
 
 	    FastqReader reader = Fastq.open(filename, quiet);
