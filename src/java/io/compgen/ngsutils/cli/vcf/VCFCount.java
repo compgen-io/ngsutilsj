@@ -372,7 +372,7 @@ public class VCFCount extends AbstractOutputCommand {
             int vcfRef = 0;
             int vcfAlt = 0;
 
-            if (outputVCFCounts || outputVCFAF) {
+            if (outputVCFCounts || outputVCFAF || outputPvalue) {
                 String ad = "";
                 try {
                     ad = record.getSampleAttributes().get(sampleIdx).get("AD").asString(null);
