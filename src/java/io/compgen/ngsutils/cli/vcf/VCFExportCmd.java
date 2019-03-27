@@ -39,6 +39,8 @@ public class VCFExportCmd extends AbstractOutputCommand {
     private boolean noHeader = false;
     private boolean noVCFHeader = false;
     private boolean onlyOutputPass = false;
+    private boolean onlySNVs = false;
+    private boolean onlyIndel = false;
 	private boolean missingBlank = false;
 	
     @Option(desc="Only output passing variants", name="passing")
@@ -51,6 +53,16 @@ public class VCFExportCmd extends AbstractOutputCommand {
         this.missingBlank = missingBlank;
     }
     
+    @Option(desc="Only export SNVs", name="only-snvs")
+    public void setOnlySNV(boolean onlySNV) {
+        this.onlySNVs = onlySNV;
+    }
+
+    @Option(desc="Only export Indels", name="only-indels")
+    public void setOnlyIndel(boolean onlyIndel) {
+        this.onlyIndel = onlyIndel;
+    }
+
     @Option(desc="Don't export the header line", name="no-header")
     public void setNoHeader(boolean noHeader) {
         this.noHeader = noHeader;
@@ -163,7 +175,12 @@ public class VCFExportCmd extends AbstractOutputCommand {
     }
 
 	@Exec
-	public void exec() throws Exception {		
+	public void exec() throws Exception {
+	       if (onlySNVs && onlyIndel) {
+	            throw new CommandArgumentException("You can't set both --only-snvs and --only-indels at the same time!");
+	        }
+	        
+
 		VCFReader reader;
 		if (filename.equals("-")) {
 			reader = new VCFReader(System.in);
@@ -214,6 +231,14 @@ public class VCFExportCmd extends AbstractOutputCommand {
 				continue;
 			}
 			
+            if (onlySNVs && rec.isIndel()) {
+                continue;               
+            }
+
+            if (onlyIndel && !rec.isIndel()) {
+                continue;          
+            }
+
 			List<String> outs = new ArrayList<String>();
 
 	        for (String k: extras.keySet()) {

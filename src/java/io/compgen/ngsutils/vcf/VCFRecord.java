@@ -256,8 +256,21 @@ public class VCFRecord {
 		sampleAttributes.add(attrs);
 	}
 
-	public boolean isFiltered() {
-		return (filters != null && filters.size() > 0);
-	}
+    public boolean isIndel() {
+        if (ref.length() != 1) {
+            return true;
+        }
+        
+        for (String a: alt) {
+            if (a.length() != 1) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean isFiltered() {
+        return (filters != null && filters.size() > 0);
+    }
 
 }

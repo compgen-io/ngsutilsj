@@ -23,6 +23,7 @@ public class VCFStrip extends AbstractOutputCommand {
 
     private boolean onlyOutputPass = false;
     private boolean onlySNVs = false;
+    private boolean onlyIndel = false;
 
     private boolean removeDBSNP = false;
     private Set<String> removeFilter = null;
@@ -37,6 +38,11 @@ public class VCFStrip extends AbstractOutputCommand {
     @Option(desc="Only output SNVs (no idels)", name="only-snvs")
     public void setOnlySNVs(boolean onlySNVs) {
         this.onlySNVs = onlySNVs;
+    }
+    
+    @Option(desc="Only output Indels", name="only-indels")
+    public void setOnlyIndel(boolean onlyIndel) {
+        this.onlyIndel = onlyIndel;
     }
     
     @Option(desc="Remove ALL annotations", name="all")
@@ -83,6 +89,10 @@ public class VCFStrip extends AbstractOutputCommand {
 	@Exec
 	public void exec() throws Exception {
 
+        if (onlySNVs && onlyIndel) {
+            throw new CommandArgumentException("You can't set both --only-snvs and --only-indels at the same time!");
+        }
+        
 		VCFReader reader;
 		if (filename.equals("-")) {
 			reader = new VCFReader(System.in);
@@ -120,23 +130,16 @@ public class VCFStrip extends AbstractOutputCommand {
             if (onlyOutputPass && rec.isFiltered()) {
                 continue;
             }
-            if (onlySNVs) {
-                if (rec.getRef().length() != 1) {
-                    continue;
-                }
-                boolean altOK = true;
-                for (String alt: rec.getAlt()) {
-                    if (alt.length() != 1) {
-                        // if ANY of the alt's are indels, remove the record
-                        altOK = false;
-                        continue;
-                    }
-                }
-                if (!altOK) {
-                    continue;
-                }
+            
+            if (onlySNVs && rec.isIndel()) {
+                continue;
             }
-	        writer.write(rec);
+
+            if (onlyIndel && !rec.isIndel()) {
+                continue;
+            }
+
+            writer.write(rec);
 		}		
 		reader.close();
 		writer.close();
