@@ -2,6 +2,7 @@ package io.compgen.ngsutils.tabix;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.channels.FileChannel;
 import java.util.Iterator;
 import java.util.zip.DataFormatException;
 
@@ -228,5 +229,9 @@ public class TabixFile {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
+    }
+
+    public FileChannel getChannel() {
+        return bgzf.getChannel();
     }
 }

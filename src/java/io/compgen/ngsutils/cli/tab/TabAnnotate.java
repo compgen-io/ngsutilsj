@@ -2,6 +2,7 @@ package io.compgen.ngsutils.cli.tab;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import io.compgen.cmdline.annotation.Command;
@@ -12,10 +13,15 @@ import io.compgen.cmdline.exceptions.CommandArgumentException;
 import io.compgen.cmdline.impl.AbstractOutputCommand;
 import io.compgen.common.IterUtils;
 import io.compgen.common.StringUtils;
+import io.compgen.common.progress.FileChannelStats;
+import io.compgen.common.progress.ProgressMessage;
+import io.compgen.common.progress.ProgressUtils;
 import io.compgen.ngsutils.NGSUtils;
+import io.compgen.ngsutils.support.CloseableFinalizer;
 import io.compgen.ngsutils.tabix.TabixFile;
 import io.compgen.ngsutils.tabix.annotate.TabAnnotator;
 import io.compgen.ngsutils.tabix.annotate.TabixTabAnnotator;
+import io.compgen.ngsutils.vcf.VCFRecord;
 
 
 @Command(name="tab-annotate", desc="Annotate a tab-delimited file", category="annotation")
@@ -118,11 +124,25 @@ public class TabAnnotate extends AbstractOutputCommand {
 
 	@Exec
 	public void exec() throws Exception {		
-		TabixFile tabix = new TabixFile(filename);
+		final TabixFile tabix = new TabixFile(filename);
 		int lineno = 0;
 		boolean addedHeader = false;
 
-		for (String line: IterUtils.wrap(tabix.lines())) {
+	      Iterator<String> it = ProgressUtils.getIterator(filename, tabix.lines(),  new FileChannelStats(tabix.getChannel()), new ProgressMessage<String>() {
+	            public String msg(String line) {
+	                String[] cols = line.split("\t");
+	                String chrom = cols[tabix.getColSeq()-1];
+	                int start = Integer.parseInt(cols[tabix.getColBegin()-1]);
+	                int end = -1;
+	                if (tabix.getColEnd() > -1) {
+                        return chrom+":"+start+"-"+end;
+	                } else {
+                        return chrom+":"+start;
+	                }
+
+	            }});
+		
+		for (String line: IterUtils.wrap(it)) {
 		    if (lineno < tabix.getSkipLines()) {
 	            lineno++;
                 System.err.println("Skipping line " +lineno );
