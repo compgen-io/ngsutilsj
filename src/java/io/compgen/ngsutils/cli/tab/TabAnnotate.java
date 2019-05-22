@@ -133,9 +133,8 @@ public class TabAnnotate extends AbstractOutputCommand {
 	                String[] cols = line.split("\t");
 	                String chrom = cols[tabix.getColSeq()-1];
 	                int start = Integer.parseInt(cols[tabix.getColBegin()-1]);
-	                int end = -1;
 	                if (tabix.getColEnd() > -1) {
-                        return chrom+":"+start+"-"+end;
+                        return chrom+":"+start+"-"+Integer.parseInt(cols[tabix.getColEnd()-1]);
 	                } else {
                         return chrom+":"+start;
 	                }
