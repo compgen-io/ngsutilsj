@@ -192,7 +192,7 @@ public class FastqCheck extends AbstractCommand {
             reader2 = Fastq.open(dis2, null, null, filename2);
         } else {
             reader1 = Fastq.open(fis1, null, fis1.getChannel(), filename1);
-            reader2 = Fastq.open(dis2, null, null, filename2);
+            reader2 = Fastq.open(fis2, null, null, filename2);
         }
 
 
