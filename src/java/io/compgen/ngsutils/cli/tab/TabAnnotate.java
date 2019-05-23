@@ -17,11 +17,9 @@ import io.compgen.common.progress.FileChannelStats;
 import io.compgen.common.progress.ProgressMessage;
 import io.compgen.common.progress.ProgressUtils;
 import io.compgen.ngsutils.NGSUtils;
-import io.compgen.ngsutils.support.CloseableFinalizer;
 import io.compgen.ngsutils.tabix.TabixFile;
 import io.compgen.ngsutils.tabix.annotate.TabAnnotator;
 import io.compgen.ngsutils.tabix.annotate.TabixTabAnnotator;
-import io.compgen.ngsutils.vcf.VCFRecord;
 
 
 @Command(name="tab-annotate", desc="Annotate a tab-delimited file", category="annotation")

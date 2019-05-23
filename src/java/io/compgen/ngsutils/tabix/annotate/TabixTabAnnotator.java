@@ -2,7 +2,9 @@ package io.compgen.ngsutils.tabix.annotate;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.zip.DataFormatException;
 
 import io.compgen.common.IterUtils;
@@ -10,6 +12,7 @@ import io.compgen.common.StringUtils;
 import io.compgen.ngsutils.tabix.TabixFile;
 
 public class TabixTabAnnotator implements TabAnnotator {
+    private static Map<String, TabixFile> cache = new HashMap<String, TabixFile>();
 
     private String name;
     private TabixFile tabix;
@@ -19,7 +22,7 @@ public class TabixTabAnnotator implements TabAnnotator {
     
     public TabixTabAnnotator(String name, String fname, int col, boolean collapse, boolean first) throws IOException {
         this.name = name;
-        this.tabix = new TabixFile(fname);
+        this.tabix = getTabixFile(fname);
         this.col = col;
         this.collapse = collapse;
         this.first = first;
@@ -28,6 +31,14 @@ public class TabixTabAnnotator implements TabAnnotator {
         this(name, fname, -1, false, false);
     }
 
+    private static TabixFile getTabixFile(String filename) throws IOException {
+        if (!cache.containsKey(filename)) {
+            cache.put(filename, new TabixFile(filename));
+        }
+        return cache.get(filename);
+    }
+
+    
     @Override
     public String getName() {
         return name;
