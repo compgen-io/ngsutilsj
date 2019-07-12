@@ -127,6 +127,7 @@ public class BamBest extends AbstractCommand {
     private String[] outputs = null;
     private OrderedTag[] tags = null;
     private String statsFilename = null;
+    private String unmappedFilename = null;
     
     private boolean lenient = false;
     private boolean silent = false;
@@ -183,6 +184,10 @@ public class BamBest extends AbstractCommand {
     public void setStatsFile(String statsFilename) {
         this.statsFilename=statsFilename;
     }
+    @Option(desc = "Write unmapped reads to a BAM file", name="unmapped", helpValue="fname")
+    public void setUnmappedFile(String unmappedFilename) {
+        this.unmappedFilename=unmappedFilename;
+    }
     @Option(desc = "Which tags/attributes to use to determine the best input (comma-delimited, +/- determine order)", name="tags", defaultValue="AS+,NM-")
     public void setTags(String vals) {
         String[] ar = vals.split(",");
@@ -191,13 +196,6 @@ public class BamBest extends AbstractCommand {
             tags[i] = new OrderedTag(ar[i]);
         }
     }
-
-    /** TODO: Add option for outputting unmapped files??
-    @Option(desc = "Write unmapped reads to this file", name="unmapped")
-    public void setUnmapped(String unmapped) {
-        this.unmapped = unmapped;
-    }
-    **/
 
     @Option(desc = "Drop all reads where the best source cannot be determined", name="no-ties")
     public void setNoTies(boolean noTies) {
@@ -280,6 +278,24 @@ public class BamBest extends AbstractCommand {
         // setup outputs
         SAMFileWriterFactory factory = new SAMFileWriterFactory();
         SAMFileWriter[] writers = new SAMFileWriter[outputs.length];
+        SAMFileWriter unmappedWriter = null;
+        if (unmappedFilename != null) {
+            SAMFileHeader header = readers[0].getFileHeader().clone();
+            if (unsorted) {
+                header.setSortOrder(SortOrder.unsorted);
+            }
+            SAMProgramRecord pg = BamHeaderUtils.buildSAMProgramRecord("bam-best", header);
+            List<SAMProgramRecord> pgRecords = new ArrayList<SAMProgramRecord>(header.getProgramRecords());
+            pgRecords.add(0, pg);
+            header.setProgramRecords(pgRecords);
+
+            if (unmappedFilename.equals("-")) {
+                unmappedWriter = factory.makeBAMWriter(header, true, new BufferedOutputStream(System.out));
+            } else {
+                unmappedWriter = factory.makeBAMWriter(header, true, new File(unmappedFilename));
+            }
+        }
+
 
 // TODO: Fix tmp outputs...
 //        if (tmpDir != null) {
@@ -368,6 +384,9 @@ public class BamBest extends AbstractCommand {
                     if (!keepRead(read)) {
                         if (verbose) {
                             System.err.println("  -- unmapped");
+                        }
+                        if (unmappedWriter != null) {
+                            unmappedWriter.addAlignment(read);
                         }
                         continue;
                     }
@@ -464,6 +483,10 @@ public class BamBest extends AbstractCommand {
 
         for (SAMFileWriter writer: writers) {
             writer.close();
+        }
+        
+        if (unmappedWriter != null) {
+            unmappedWriter.close();
         }
     }
     
