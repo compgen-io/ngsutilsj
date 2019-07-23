@@ -86,7 +86,7 @@ public class FastqFilterCli extends AbstractOutputCommand {
         this.nameSubstr2 = nameSubstr2;
     }
 
-    @Option(desc="Sequence trim filter using default Illumina R1/R2 adapters", name="trim-illumina")
+    @Option(desc="Sequence trim filter using default Illumina R1/R2 adapters (see URL for more options: https://support.illumina.com/bulletins/2016/12/what-sequences-do-i-use-for-adapter-trimming.html)", name="trim-illumina")
     public void setTrimIllumina(boolean trimIllumina) {
         if (trimIllumina) {
             this.trimSeq1 = "AGATCGGAAGAGCACACGTC";
