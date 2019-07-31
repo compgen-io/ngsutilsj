@@ -224,7 +224,7 @@ public class FastqFilterCli extends AbstractOutputCommand {
         }
 
         if (trimSeq != null) {
-            parent = new SeqTrimFilter(parent, verbose, trimSeq1, trimMinOverlap, trimMinPctMatch, -1);
+            parent = new SeqTrimFilter(parent, verbose, trimSeq, trimMinOverlap, trimMinPctMatch, -1);
             filters.add((FastqFilter) parent);            
         }
         
