@@ -123,15 +123,18 @@ public class TabAnnotate extends AbstractOutputCommand {
 	@Exec
 	public void exec() throws Exception {		
 		final TabixFile tabix = new TabixFile(filename);
-		int lineno = 0;
+		final int[] lineno = {0};
 		boolean addedHeader = false;
 
 	      Iterator<String> it = ProgressUtils.getIterator(filename, tabix.lines(),  new FileChannelStats(tabix.getChannel()), new ProgressMessage<String>() {
 	            public String msg(String line) {
+	                if (lineno[0] < tabix.getSkipLines()) {
+	                    return "<skip>";
+	                }
 	                String[] cols = line.split("\t");
 	                String chrom = cols[tabix.getColSeq()-1];
 	                int start = Integer.parseInt(cols[tabix.getColBegin()-1]);
-	                if (tabix.getColEnd() > -1) {
+	                if (tabix.getColEnd() > -1 && tabix.getColEnd() != tabix.getColBegin()) {
                         return chrom+":"+start+"-"+Integer.parseInt(cols[tabix.getColEnd()-1]);
 	                } else {
                         return chrom+":"+start;
@@ -140,11 +143,11 @@ public class TabAnnotate extends AbstractOutputCommand {
 	            }});
 		
 		for (String line: IterUtils.wrap(it)) {
-		    if (lineno < tabix.getSkipLines()) {
-	            lineno++;
-                System.err.println("Skipping line " +lineno );
+		    if (lineno[0] < tabix.getSkipLines()) {
+	            lineno[0]++;
+                System.err.println("Skipping line " +lineno[0] );
 	            
-	            if (lineno == tabix.getSkipLines() && hasHeader && !addedHeader) {
+	            if (lineno[0] == tabix.getSkipLines() && hasHeader && !addedHeader) {
 	                addedHeader = true;
                     System.out.println(tabix.getMeta()+"#ngsutilsj_tab_annotateCommand="+NGSUtils.getArgs());
                     System.out.println(tabix.getMeta()+"#ngsutilsj_tab_annotateVersion="+NGSUtils.getVersion());
