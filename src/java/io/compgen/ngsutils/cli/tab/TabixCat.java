@@ -20,6 +20,9 @@ public class TabixCat extends AbstractOutputCommand {
     @Exec
     public void exec() throws Exception {
         TabixFile file = new TabixFile(infile);
+        if (verbose) {
+            file.dumpIndex();
+        }
         for (String line: IterUtils.wrap(file.lines())) {
             System.out.println(line);
         }
