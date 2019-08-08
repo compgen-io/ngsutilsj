@@ -49,6 +49,7 @@ public class VCFCount extends AbstractOutputCommand {
     private boolean outputVCFCounts = false;
     private boolean outputVCFAF = false;
     private boolean outputAF = false;
+    private boolean outputGT = false;
 
     private int filterFlags = 0;
     private int requiredFlags = 0;
@@ -103,6 +104,11 @@ public class VCFCount extends AbstractOutputCommand {
     @Option(desc="Output alternative allele frequency (from BAM file)", name="af")
     public void setAF(boolean val) {
         this.outputAF = val;
+    }
+
+    @Option(desc="Output genotype (from VCF file)", name="gt")
+    public void setGT(boolean val) {
+        this.outputGT = val;
     }
 
     @Option(desc="BAQ re-calculation (default:false)", name="baq")
@@ -213,6 +219,9 @@ public class VCFCount extends AbstractOutputCommand {
         if (outputPvalue) {
             writer.write("pvalue");
         }
+        if (outputGT) {
+            writer.write("GT");
+        }
         writer.eol();
 
         long total = 0;
@@ -314,7 +323,7 @@ public class VCFCount extends AbstractOutputCommand {
 		writer.close();
 	}
 
-    private void processVariant(VCFRecord record, BAMPileup pileup, TabWriter writer, int sampleIdx) throws IOException {
+    private void processVariant(VCFRecord record, BAMPileup pileup, TabWriter writer, int sampleIdx) throws IOException, VCFAttributeException {
         int pos = record.getPos() - 1; // switch to 0-based
         
         CloseableIterator<PileupRecord> it2 = pileup.pileup(new GenomeSpan(record.getChrom(), pos));
@@ -332,7 +341,7 @@ public class VCFCount extends AbstractOutputCommand {
 
     }
     
-    private void processVariantRecord(VCFRecord record, PileupRecord pileupRecord, TabWriter writer, int sampleIdx) throws IOException {
+    private void processVariantRecord(VCFRecord record, PileupRecord pileupRecord, TabWriter writer, int sampleIdx) throws IOException, VCFAttributeException {
         if (refFilename != null && !pileupRecord.refBase.equals(record.getRef().substring(0, 1))) {
             throw new IOException("Reference bases don't match! "+record.getChrom()+":"+record.getPos());
         }
@@ -434,13 +443,19 @@ public class VCFCount extends AbstractOutputCommand {
                 }
             }
             
+            if (outputGT) {
+                String val = record.getSampleAttributes().get(sampleIdx).get("GT").asString(null);
+
+                writer.write(val);
+            }
+            
             writer.eol();
         }
         
     }
 
 
-    private void processVariants(List<VCFRecord> records, BAMPileup pileup, TabWriter writer, int sampleIdx) throws IOException {
+    private void processVariants(List<VCFRecord> records, BAMPileup pileup, TabWriter writer, int sampleIdx) throws IOException, VCFAttributeException {
         // records must have the same chrom.
         
         int start = records.get(0).getPos() - 1;

@@ -3,6 +3,7 @@ package io.compgen.ngsutils.vcf;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -21,6 +22,8 @@ public class VCFHeader {
 	protected Map<String,VCFFilterDef> filterDefs = new LinkedHashMap<String, VCFFilterDef>();
 	protected List<String> lines = new ArrayList<String>();
 
+	protected Map<String, VCFContigDef> contigDefs = new LinkedHashMap<String, VCFContigDef>();
+	
 	protected String headerLine;
 	
 	protected String[] samples = null;
@@ -77,19 +80,22 @@ public class VCFHeader {
 	                }
 
 				addFormat(VCFAnnotationDef.parseString(line));
-			} else if (line.startsWith("##FILTER=")) {
-			    VCFFilterDef filter = VCFFilterDef.parse(line);
-			    boolean match = false;
-			    if (removeFilter != null) {
-    			    for (String remove: removeFilter) {
-    			        if (GlobUtils.matches(filter.id, remove)) {
-    			            match = true;
-    			        }
-    			    }
-			    }
-			    if (!match) {
-			        addFilter(filter);
-			    }
+            } else if (line.startsWith("##FILTER=")) {
+                VCFFilterDef filter = VCFFilterDef.parse(line);
+                boolean match = false;
+                if (removeFilter != null) {
+                    for (String remove: removeFilter) {
+                        if (GlobUtils.matches(filter.id, remove)) {
+                            match = true;
+                        }
+                    }
+                }
+                if (!match) {
+                    addFilter(filter);
+                }
+            } else if (line.startsWith("##contig=")) {
+                VCFContigDef contig = VCFContigDef.parse(line);
+                addContig(contig);
 			} else {
 				lines.add(line);
 			}
@@ -130,6 +136,9 @@ public class VCFHeader {
             outlines.add(def.toString());
         }
         for (VCFAnnotationDef def: formatDefs.values()) {
+            outlines.add(def.toString());
+        }
+        for (VCFContigDef def: contigDefs.values()) {
             outlines.add(def.toString());
         }
         outlines.addAll(lines);
@@ -182,10 +191,18 @@ public class VCFHeader {
 	public void addFormat(VCFAnnotationDef def) {
 		formatDefs.put(def.id, def);
 	}
-	public void addFilter(VCFFilterDef def) {
-		filterDefs.put(def.id, def);
-	}
-	
+    public void addFilter(VCFFilterDef def) {
+        filterDefs.put(def.id, def);
+    }
+    
+    public void addContig(VCFContigDef def) {
+        contigDefs.put(def.id, def);
+    }
+    
+    public void removeContig(String id) {
+        contigDefs.remove(id);
+    }
+    
 	public VCFAnnotationDef getFormatDef(String id) {
 		return formatDefs.get(id);
 	}
@@ -268,50 +285,56 @@ public class VCFHeader {
         return true;
     }
     
-    public List<String> getContigNames() {
-        List<String> names = new ArrayList<String>();
-        for (String line: lines) {
-            if (line.startsWith("##contig=<") && line.endsWith(">")) {
-                // contig lines are formatted:
-                // ##contig=<ID=name,length=num,...>
-                
-                for (String s: line.substring(10, line.length()-1).split(",")) {
-                    String[] spl = s.split("=");
-                    if (spl[0].toUpperCase().equals("ID")) {
-                        names.add(spl[1]);
-                    }
-                }
-            }
-        }
-        
-        return names;
+    public Set<String> getContigNames() {
+        return Collections.unmodifiableSet(contigDefs.keySet());
+//        List<String> names = new ArrayList<String>();
+//        for (String line: lines) {
+//            if (line.startsWith("##contig=<") && line.endsWith(">")) {
+//                // contig lines are formatted:
+//                // ##contig=<ID=name,length=num,...>
+//                
+//                for (String s: line.substring(10, line.length()-1).split(",")) {
+//                    String[] spl = s.split("=");
+//                    if (spl[0].toUpperCase().equals("ID")) {
+//                        names.add(spl[1]);
+//                    }
+//                }
+//            }
+//        }
+//        
+//        return names;
     }
 
-    public int getContigLength(String name) {
-        for (String line: lines) {
-            if (line.startsWith("##contig=<") && line.endsWith(">")) {
-                // contig lines are formatted:
-                // ##contig=<ID=name,length=num,...>
-                
-                boolean found = false;
-                int length = -1;
-                for (String s: line.substring(10, line.length()-1).split(",")) {
-                    String[] spl = s.split("=");
-                    if (spl[0].toUpperCase().equals("ID")) {
-                        if (spl[1].equals(name)) {
-                            found = true;
-                        }
-                    }
-                    if (spl[0].toUpperCase().equals("LENGTH")) {
-                        length = Integer.parseInt(spl[1]);
-                    }
-                }
-                if (found) { 
-                    return length;
-                }
-            }
+    public long getContigLength(String id) {
+        if (!contigDefs.containsKey(id)) {
+            return -1;
         }
-        return -1;
+        return contigDefs.get(id).getLength();
+        
+//        for (String line: lines) {
+//            if (line.startsWith("##contig=<") && line.endsWith(">")) {
+//                // contig lines are formatted:
+//                // ##contig=<ID=name,length=num,...>
+//                
+//                boolean found = false;
+//                int length = -1;
+//                for (String s: line.substring(10, line.length()-1).split(",")) {
+//                    String[] spl = s.split("=");
+//                    if (spl[0].toUpperCase().equals("ID")) {
+//                        if (spl[1].equals(name)) {
+//                            found = true;
+//                        }
+//                    }
+//                    if (spl[0].toUpperCase().equals("LENGTH")) {
+//                        length = Integer.parseInt(spl[1]);
+//                    }
+//                }
+//                if (found) { 
+//                    return length;
+//                }
+//            }
+//        }
+//        return -1;
     }
 
 	public static String quoteString(String s) {
