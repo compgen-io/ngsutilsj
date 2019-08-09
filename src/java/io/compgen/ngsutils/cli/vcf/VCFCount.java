@@ -1,9 +1,15 @@
 package io.compgen.ngsutils.cli.vcf;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
+import htsjdk.samtools.SAMSequenceRecord;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.util.CloseableIterator;
 import io.compgen.cmdline.annotation.Command;
 import io.compgen.cmdline.annotation.Exec;
@@ -57,6 +63,9 @@ public class VCFCount extends AbstractOutputCommand {
     private int maxBatchLen = -1;
     private boolean hetOnly = false;
     private boolean outputPvalue = false;
+    
+    private boolean skipMissing = false;
+
 
     @Option(desc = "Only keep properly paired reads", name = "proper-pairs")
     public void setProperPairs(boolean val) {
@@ -146,6 +155,11 @@ public class VCFCount extends AbstractOutputCommand {
         this.sampleName = sampleName;
     }
     
+    @Option(desc="Skip missing references/chromosomes", name="skip-missing")
+    public void setSkipMissing(boolean val) {
+        this.skipMissing = val;
+    }
+
     @Option(desc="Reference FASTA file (optional, used to validate variant positions)", name="ref")
     public void setRefFilename(String refFilename) {
         this.refFilename = refFilename;
@@ -177,7 +191,15 @@ public class VCFCount extends AbstractOutputCommand {
         if (sampleName != null) {
             sampleIdx = reader.getHeader().getSamplePosByName(sampleName);
         }
-		
+
+        Set<String> bamReferences = new HashSet<String>();
+        SamReaderFactory readerFactory = SamReaderFactory.makeDefault();
+        SamReader samreader = readerFactory.open(new File(bamFilename));
+        for (SAMSequenceRecord samseq: samreader.getFileHeader().getSequenceDictionary().getSequences()) {
+            bamReferences.add(samseq.getSequenceName());
+        }
+        samreader.close();
+        
 		TabWriter writer = new TabWriter();
 		
         writer.write_line("## program: " + NGSUtils.getVersion());
@@ -267,6 +289,12 @@ public class VCFCount extends AbstractOutputCommand {
 				continue;
 			}
 
+			if (skipMissing && !bamReferences.contains(record.getChrom())) {
+			    continue;
+			} else if (!bamReferences.contains(record.getChrom())) {
+			    throw new Exception("Contig/chromosome present in VCF file missing in BAM file ("+record.getChrom()+")");
+			}
+			
 			if (hetOnly) {
 			    if (!record.getSampleAttributes().get(sampleIdx).contains("GT")) {
 			        throw new CommandArgumentException("Missing GT field");
