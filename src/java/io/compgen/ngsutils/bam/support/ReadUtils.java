@@ -7,6 +7,7 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
+import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMRecord;
@@ -450,5 +451,72 @@ public class ReadUtils {
         }
         
         return false;
+    }
+    
+    public static SAMRecord removeClipping(SAMRecord read) throws InvalidReadException {
+        return removeClipping(read, false);
+    }
+    public static SAMRecord removeClipping(SAMRecord read, boolean writeFlags) throws InvalidReadException {
+        int clip5 = 0;
+        int clip3 = 0;
+        float origLength = read.getReadBases().length;
+        
+        boolean inseq = false;
+        boolean changed = false;
+        
+        Cigar newCigar = new Cigar();
+        
+        for (CigarElement ce: read.getCigar().getCigarElements()) {
+            if (ce.getOperator() == CigarOperator.H) {
+                // skip this element
+                changed = true;
+            } else if (ce.getOperator() == CigarOperator.S) {
+                changed = true;
+                if (!inseq) {
+                    clip5 = ce.getLength();
+                } else {
+                    clip3 = ce.getLength();
+                }
+            } else {
+                inseq = true;
+                newCigar.add(ce);
+            }
+        }
+
+        if (!changed) {
+            return read;
+        }
+        
+        if (read.getReadBases().length != read.getBaseQualities().length) {
+            throw new InvalidReadException("Sequence is not the same length as the base qualities! Did you try to remove clipped bases from a color-space read? (Not supported)");
+        }
+        
+        byte[] newSeq = new byte[read.getReadBases().length - clip3 - clip5];
+        byte[] newQual = new byte[read.getBaseQualities().length - clip3 - clip5];
+
+        int origpos = clip5;
+        int newpos = 0;
+
+        int newlen = read.getReadBases().length - clip5 - clip3;
+
+        while (newpos < newlen) {
+            newSeq[newpos] = read.getReadBases()[origpos];
+            newQual[newpos] = read.getBaseQualities()[origpos];
+            
+            newpos++;
+            origpos++;
+        }
+
+        read.setReadBases(newSeq);
+        read.setBaseQualities(newQual);
+        read.setCigar(newCigar);
+
+        if (writeFlags) {
+            read.setAttribute("ZA", clip5);
+            read.setAttribute("ZB", clip3);
+            read.setAttribute("ZC", (clip5+clip3) / origLength);
+        }
+        
+        return read;
     }
 }

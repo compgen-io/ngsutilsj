@@ -13,6 +13,7 @@ import io.compgen.common.progress.SocketProgress;
 import io.compgen.common.updates.UpdateCheck;
 import io.compgen.ngsutils.cli.annotate.GTFAnnotate;
 import io.compgen.ngsutils.cli.annotate.RepeatAnnotate;
+import io.compgen.ngsutils.cli.bam.BaiExplore;
 import io.compgen.ngsutils.cli.bam.BamBaseCall;
 import io.compgen.ngsutils.cli.bam.BamBest;
 import io.compgen.ngsutils.cli.bam.BamCheck;
@@ -24,6 +25,7 @@ import io.compgen.ngsutils.cli.bam.BamExpressedRegions;
 import io.compgen.ngsutils.cli.bam.BamFilterCli;
 import io.compgen.ngsutils.cli.bam.BamFlagDuplicates;
 import io.compgen.ngsutils.cli.bam.BamReadGroup;
+import io.compgen.ngsutils.cli.bam.BamRemoveClipping;
 import io.compgen.ngsutils.cli.bam.BamSampleReads;
 import io.compgen.ngsutils.cli.bam.BamSplit;
 import io.compgen.ngsutils.cli.bam.BamStats;
@@ -169,7 +171,8 @@ public class NGSUtils {
             .addCommand(YatesChiSqCli.class)
             .addCommand(FastaTri.class)
             .addCommand(VCFTsTvRatio.class)
-            .addCommand(DigestCmd.class);
+            .addCommand(DigestCmd.class)
+            .addCommand(BamRemoveClipping.class);
 
         try {
             if (args.length == 0) {
