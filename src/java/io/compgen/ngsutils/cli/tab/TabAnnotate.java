@@ -176,7 +176,7 @@ public class TabAnnotate extends AbstractOutputCommand {
                 System.out.println(tabix.getMeta()+"#ngsutilsj_tab_annotateVersion="+NGSUtils.getVersion());
 		    }
 		    
-		    String[] cols = line.split("\t");
+		    String[] cols = line.split("\t", -1);
 		    List<String> out = new ArrayList<String>();
 		    for (String s: cols) {
 		        out.add(s);
