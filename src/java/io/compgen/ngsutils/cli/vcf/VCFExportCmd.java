@@ -190,15 +190,15 @@ public class VCFExportCmd extends AbstractOutputCommand {
 
         TabWriter writer = new TabWriter();
 
+        VCFHeader header = reader.getHeader();
+        for (VCFExport export: chain) {
+            export.setHeader(header);
+            if (missingBlank) {
+                export.setMissingValue("");
+            }
+        }
+
         if (!noVCFHeader) {
-    		VCFHeader header = reader.getHeader();
-    		for (VCFExport export: chain) {
-    			export.setHeader(header);
-    			if (missingBlank) {
-    				export.setMissingValue("");
-    			}
-    		}
-    		
     		ByteArrayOutputStream baos = new ByteArrayOutputStream();
     		header.write(baos, false);
     		baos.close();
