@@ -413,6 +413,8 @@ public class VCFCount extends AbstractOutputCommand {
                 String ad = "";
                 try {
                     ad = record.getSampleAttributes().get(sampleIdx).get("AD").asString(null);
+                } catch (NullPointerException e) {
+                    throw new IOException(e);
                 } catch (VCFAttributeException e) {
                     throw new IOException(e);
                 }
