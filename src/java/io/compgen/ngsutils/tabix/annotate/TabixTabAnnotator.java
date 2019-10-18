@@ -45,7 +45,7 @@ public class TabixTabAnnotator implements TabAnnotator {
     }
     
     @Override
-    public String getValue(String ref, int start, int end) throws IOException {
+    public String getValue(String ref, int start, int end, String[] qCols) throws IOException {
         List<String> matches = new ArrayList<String>();
         try{
             for (String s: IterUtils.wrap(tabix.query(ref, start, end))) {

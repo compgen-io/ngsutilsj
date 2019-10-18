@@ -20,6 +20,7 @@ import io.compgen.ngsutils.NGSUtils;
 import io.compgen.ngsutils.tabix.TabixFile;
 import io.compgen.ngsutils.tabix.annotate.TabAnnotator;
 import io.compgen.ngsutils.tabix.annotate.TabixTabAnnotator;
+import io.compgen.ngsutils.tabix.annotate.TabixVCFAnnotator;
 
 
 @Command(name="tab-annotate", desc="Annotate a tab-delimited file", category="annotation")
@@ -68,6 +69,35 @@ public class TabAnnotate extends AbstractOutputCommand {
             throw new CommandArgumentException("Unable to parse argument for --tab: "+tab);
         }       
     }
+    
+    @Option(desc="Add INFO annotation from a VCF file (CSI indexed, add '@' for only using records passing filters, add alt=col and ref=col to specify an alternative allele column in the input tab-delimited file)", name="vcf", helpValue="NAME:INFONAME:FILENAME{:alt=N,ref=N,@}", allowMultiple=true)
+    public void setVCF(String vcf) throws CommandArgumentException {
+        try {
+            String[] spl = vcf.split(":");
+            boolean passing = false;
+            int altCol = -1;
+            int refCol = -1;
+            if (spl.length == 4) {
+                String[] spl2 = spl[3].split(",");
+                for (String s: spl2) {
+                    if (s.equals("@")) {
+                        passing = true;
+                    } else if (s.startsWith("alt=")) {
+                        altCol = Integer.parseInt(s.substring(4));
+                    } else if (s.startsWith("ref=")) {
+                        refCol = Integer.parseInt(s.substring(4));
+                    }
+                }
+            }
+            chain.add(new TabixVCFAnnotator(spl[0], spl[2], spl[1], passing, refCol, altCol));
+        } catch (NumberFormatException e) {
+            throw new CommandArgumentException("Unable to parse argument for --vcf: "+vcf + " ("+e.getMessage()+")");
+        } catch (IOException e) {
+            throw new CommandArgumentException("Unable to parse argument for --vcf: "+vcf + " ("+e.getMessage()+")");
+        }
+    }    
+    
+
     
     @Option(desc="File has a header (only valid if input file has skip-lines set in tabix index)", name="header")
     public void setHeader(boolean val) {
@@ -145,13 +175,12 @@ public class TabAnnotate extends AbstractOutputCommand {
 		for (String line: IterUtils.wrap(it)) {
 		    if (lineno[0] < tabix.getSkipLines()) {
 	            lineno[0]++;
-                System.err.println("Skipping line " +lineno[0] );
+                System.err.println("Skipping line " +lineno[0]);
 	            
 	            if (lineno[0] == tabix.getSkipLines() && hasHeader && !addedHeader) {
 	                addedHeader = true;
                     System.out.println(tabix.getMeta()+"#ngsutilsj_tab_annotateCommand="+NGSUtils.getArgs());
                     System.out.println(tabix.getMeta()+"#ngsutilsj_tab_annotateVersion="+NGSUtils.getVersion());
-
 	                
 	                System.out.print(line);
 	                for (TabAnnotator ann: chain) {
@@ -190,7 +219,7 @@ public class TabAnnotate extends AbstractOutputCommand {
             }
             
             for (TabAnnotator ann: chain) {
-                String val = ann.getValue(chrom, start, end);
+                String val = ann.getValue(chrom, start, end, cols);
                 if (val == null) {
                     out.add("");
                 } else {
