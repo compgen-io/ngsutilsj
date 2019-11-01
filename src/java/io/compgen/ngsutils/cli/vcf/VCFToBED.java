@@ -84,7 +84,7 @@ public class VCFToBED extends AbstractOutputCommand {
 	        }
 	        
 	        if (altPos != null) {
-                pos = rec.getInfo().get(altChrom).asInt();
+                pos = rec.getInfo().get(altPos).asInt();
 	        }
 
 			
