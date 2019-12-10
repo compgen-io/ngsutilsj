@@ -94,7 +94,7 @@ public class LessThan extends VCFAbstractFilter {
 	}
 
 	protected boolean filter(VCFAttributeValue val) throws VCFFilterException {
-	    if (val == null) {
+	    if (val == null || val.isMissing()) {
 	        return false;
 	    }
 		double d;

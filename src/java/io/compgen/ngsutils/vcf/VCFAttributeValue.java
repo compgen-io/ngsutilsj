@@ -17,6 +17,14 @@ public class VCFAttributeValue {
 		return value;
 	}
 
+    public boolean isMissing() {
+        return value.equals(MISSING.value);
+    }
+    
+    public boolean isEmpty() {
+        return value.equals(EMPTY.value);
+    }
+    
 	public double asDouble() throws VCFAttributeException {
 		return asDouble(null);
 	}
