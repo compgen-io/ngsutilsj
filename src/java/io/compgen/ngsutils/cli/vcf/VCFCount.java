@@ -466,7 +466,9 @@ public class VCFCount extends AbstractOutputCommand {
             }
         
             if (outputPvalue) { 
-                if (vcfAlt+vcfRef > 0 && alt+ref > 0) {
+                if (ref == 0 && vcfRef == 0) {
+                    writer.write("1.0");
+                } else if (vcfAlt+vcfRef > 0 && alt+ref > 0) {
                     writer.write(StatUtils.calcProportionalPvalue(vcfAlt, vcfRef, alt, ref));
                 } else {
                     writer.write("");
