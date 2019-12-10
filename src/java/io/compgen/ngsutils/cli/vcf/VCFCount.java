@@ -376,26 +376,50 @@ public class VCFCount extends AbstractOutputCommand {
         
         TallyValuesInt<String> tally = new TallyValuesInt<String>();
 
-        for (PileupBaseCall call: pileupRecord.getSampleRecords(0).calls) {
+        for (int i=0; i<pileupRecord.getSampleRecords(0).calls.size(); i++) {
+            PileupBaseCall call = pileupRecord.getSampleRecords(0).calls.get(i);
+            PileupBaseCall next = null;
+            if (i < pileupRecord.getSampleRecords(0).calls.size()-1) {
+                next = pileupRecord.getSampleRecords(0).calls.get(i+1);
+            }
+
+            
             if (call.op == PileupBaseCallOp.Match) {
-                tally.incr(call.call);
+                /*
+                 * If the next call is an indel, then this should be tagged with that.
+                 * 
+                 * For example, 
+                 * 
+                 * an insert of "AAAT" in a VCF is reported as: A AAAAT
+                 * In a pileup, this is: A+4AAAT
+                 * 
+                 * A deletion in VCF is: GTGT    G
+                 * 
+                 * On a pileup it is: G-3NNN
+                 * 
+                 * We need to be sure to *not* count the reference call here.
+                 * 
+                 */
+                if (next != null && (next.op == PileupBaseCallOp.Ins || next.op == PileupBaseCallOp.Del)) {
+                    continue;
+                } else {
+                    tally.incr(call.call);
+                }
             } else if (call.op == PileupBaseCallOp.Ins) {
                 // NOTE: Indels are always reported out by BAMPileup/samtools mpileup 
                 // Ex: C->CA  is a +1A in the pileup but C/CA in VCF
                 //     chr8    109080640       C       4       ..-1A,, oJA<
                 //     Should be 4 ref (C), 1 alt (-CA)
-
-                tally.incr("ins"+record.getRef()+call.call); 
-//                indel = true;
-
+    
+                tally.incr("ins"+call.call); 
             } else if (call.op == PileupBaseCallOp.Del) {
                 // Ex: CA->C  is a -1A in the pileup but CA/C in VCF
                 //     chr8    109080640       C       4       ..-1A,, oJA<
                 //     Should be 4 ref (C), 1 alt (-CA)
-
+    
                 tally.incr("del"+call.call.length()); 
-//                indel = true;
             }
+
         }
         
         // for each alt-allele...
@@ -445,7 +469,13 @@ public class VCFCount extends AbstractOutputCommand {
             } else if (record.getAlt().get(i).length()>1) {
                 // is an insert
                 ref = tally.getCount(record.getRef());
-                alt = tally.getCount("ins"+record.getAlt().get(i));
+                
+                String altKey = record.getAlt().get(i);
+                if (altKey.startsWith(record.getRef())) {
+                    altKey = altKey.substring(record.getRef().length());
+                }
+                
+                alt = tally.getCount("ins"+altKey);
             } else {
                 // match
                 ref = tally.getCount(record.getRef());
@@ -467,6 +497,8 @@ public class VCFCount extends AbstractOutputCommand {
         
             if (outputPvalue) { 
                 if (ref == 0 && vcfRef == 0) {
+                    writer.write("1.0");
+                } else if (alt == 0 && vcfAlt == 0) {
                     writer.write("1.0");
                 } else if (vcfAlt+vcfRef > 0 && alt+ref > 0) {
                     writer.write(StatUtils.calcProportionalPvalue(vcfAlt, vcfRef, alt, ref));
