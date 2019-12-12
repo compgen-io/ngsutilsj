@@ -353,7 +353,7 @@ public class VCFCount extends AbstractOutputCommand {
 
     private void processVariant(VCFRecord record, BAMPileup pileup, TabWriter writer, int sampleIdx) throws IOException, VCFAttributeException {
         int pos = record.getPos() - 1; // switch to 0-based
-        
+
         CloseableIterator<PileupRecord> it2 = pileup.pileup(new GenomeSpan(record.getChrom(), pos));
         for (PileupRecord pileupRecord: IterUtils.wrap(it2)) {
             if (pileupRecord.ref.equals(record.getChrom()) && pileupRecord.pos > record.getPos()-1) {
@@ -494,7 +494,7 @@ public class VCFCount extends AbstractOutputCommand {
                     writer.write("");
                 }
             }
-        
+            
             if (outputPvalue) { 
                 if (ref == 0 && vcfRef == 0) {
                     writer.write("1.0");
@@ -506,13 +506,13 @@ public class VCFCount extends AbstractOutputCommand {
                     writer.write("");
                 }
             }
-            
+
             if (outputGT) {
                 String val = record.getSampleAttributes().get(sampleIdx).get("GT").asString(null);
-
+                
                 writer.write(val);
             }
-            
+
             writer.eol();
         }
         
@@ -566,7 +566,7 @@ public class VCFCount extends AbstractOutputCommand {
 
     }
 
-    private void processMissingVariant(VCFRecord record, TabWriter writer, int sampleIdx) throws IOException {
+    private void processMissingVariant(VCFRecord record, TabWriter writer, int sampleIdx) throws IOException, VCFAttributeException {
         
         // for each alt-allele...
         for (int i=0; i< record.getAlt().size(); i++) {
@@ -611,7 +611,12 @@ public class VCFCount extends AbstractOutputCommand {
             if (outputPvalue) { 
                 writer.write("");
             }
-            
+
+            if (outputGT) {
+                String val = record.getSampleAttributes().get(sampleIdx).get("GT").asString(null);
+                writer.write(val);
+            }
+
             writer.eol();
         }
         
