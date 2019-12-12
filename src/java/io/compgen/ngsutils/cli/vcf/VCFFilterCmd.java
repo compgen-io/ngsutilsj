@@ -28,6 +28,7 @@ import io.compgen.ngsutils.vcf.VCFWriter;
 import io.compgen.ngsutils.vcf.filter.Equals;
 import io.compgen.ngsutils.vcf.filter.FlagAbsent;
 import io.compgen.ngsutils.vcf.filter.FlagPresent;
+import io.compgen.ngsutils.vcf.filter.FormatValueMissing;
 import io.compgen.ngsutils.vcf.filter.GreaterThan;
 import io.compgen.ngsutils.vcf.filter.GreaterThanEqual;
 import io.compgen.ngsutils.vcf.filter.HeterozygousFilter;
@@ -99,6 +100,16 @@ public class VCFFilterCmd extends AbstractOutputCommand {
     @Option(desc="Record missing INFO flag {KEY}", name="flag-missing", helpValue="KEY", allowMultiple=true)
     public void setFlagAbsent(String val) throws CommandArgumentException {
         filterChain.add(new FlagAbsent(val));
+    }
+    
+    @Option(desc="Value missing {KEY}", name="value-missing", helpValue="KEY:{SAMPLEID}", allowMultiple=true)
+    public void setFormatMissing(String val) throws CommandArgumentException {
+        String[] spl = val.split(":");
+        if (spl.length == 2) {
+            filterChain.add(new FormatValueMissing(spl[0], spl[1]));
+        } else {
+            filterChain.add(new FormatValueMissing(spl[0]));
+        }
     }
     
     @Option(desc="Values for {KEY} is not equal to {VAL} (multiple allowed, String or number)", name="neq", helpValue="KEY:VAL:SAMPLEID:ALLELE", allowMultiple=true)
