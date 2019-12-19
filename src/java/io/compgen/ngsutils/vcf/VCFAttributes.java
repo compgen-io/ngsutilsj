@@ -62,21 +62,24 @@ public class VCFAttributes {
 		
         if (!s.equals(VCFAttributeValue.MISSING)) {
     		for (String el: s.split(";")) {
-    		    if (header == null || header.isInfoAllowed(el)) {
-        			if (el.indexOf("=") == -1) {
-        				attrs.put(el, VCFAttributeValue.EMPTY);
-        			} else {
-        			    try {
-        			        String[] kv = el.split("=");				
-        			        attrs.put(kv[0], VCFAttributeValue.parse(kv[1]));
-        			    } catch (ArrayIndexOutOfBoundsException e) {
-        			        e.printStackTrace(System.err);
-                            System.err.println("ERROR: processing attributes string "+ el);
-                            System.err.println("ERROR: "+ s);
-        			        System.exit(1);
-        			    }
-        			}
-    		    }
+    			if (el.indexOf("=") == -1) {
+                    if (header == null || header.isInfoAllowed(el)) {
+                        attrs.put(el, VCFAttributeValue.EMPTY);
+                    }
+    			} else {
+    			    try {
+    			        String[] kv = el.split("=");				
+                        if (header == null || header.isInfoAllowed(kv[0])) {
+                            attrs.put(kv[0], VCFAttributeValue.parse(kv[1]));
+                        }
+                        } catch (ArrayIndexOutOfBoundsException e) {
+    			        e.printStackTrace(System.err);
+                        System.err.println("ERROR: processing attributes string "+ el);
+                        System.err.println("ERROR: "+ s);
+    			        System.exit(1);
+    			    }
+    			}
+    		    
 		    }
 		}
 		return attrs;
