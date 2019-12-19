@@ -92,10 +92,15 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
     	}
     	
     }
-    @Option(desc="Add flanking bases (ex: ACA) from reference FASTA file (FAI indexed) (INFO:CG_FLANKING)", name="flanking", helpValue="ref.fa")
-    public void setFlanking(String fasta) throws CommandArgumentException {
+    @Option(desc="Add flanking bases (ex: ACA) from reference FASTA file (FAI indexed) (INFO:CG_FLANKING). By default 1 base on either side is used.", name="flanking", helpValue="ref.fa{:num_of_bases}")
+    public void setFlanking(String arg) throws CommandArgumentException {
     	try{
-			chain.add(new FlankingBases(fasta));
+    	    String[] spl = arg.split(":");
+    	    if (spl.length == 1) {
+                chain.add(new FlankingBases(spl[0]));
+    	    } else {
+                chain.add(new FlankingBases(spl[0], Integer.parseInt(spl[1])));
+    	    }
 		} catch (IOException e) {
     		throw new CommandArgumentException(e);
 		}
