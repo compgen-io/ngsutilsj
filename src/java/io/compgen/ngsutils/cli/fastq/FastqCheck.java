@@ -234,6 +234,8 @@ public class FastqCheck extends AbstractCommand {
                 count++;
                 if (out1 != null) {
                     one.write(out1);
+                }
+                if (out2 != null) {
                     two.write(out2);
                 }
             } else {
@@ -258,18 +260,22 @@ public class FastqCheck extends AbstractCommand {
         reader1.close();
         reader2.close();
 
-        if (out1!=null) {
-            out1.flush();
-            out2.flush();
-            out1.close();
-            out2.close();
+        if (out1 != null || out2 != null) {
+            if (out1 != null) {
+                out1.flush();
+                out1.close();
+            }
+            if (out2 != null) {
+                out2.flush();
+                out2.close();
+            }
         } else {
-            // One reader still had reads...
+            // If one reader still had reads...
             if (it1.hasNext() || it2.hasNext()) {
                 return new long[]{-1,0};
             }
             
-            // one reader stopped short
+            // If one reader stopped short...
             if (reader1.hasWarning() || reader2.hasWarning()) {
                 return new long[]{-1,0};
             }
@@ -277,12 +283,14 @@ public class FastqCheck extends AbstractCommand {
         
         if (dis1 != null) {
             String result1 = new BigInteger(1, dis1.getMessageDigest().digest()).toString(16);
-            if (result1.length() % 2 != 0) {
+            // left pad hash/digest with 0
+            while (result1.length() < targetHash1.length()) {
                 result1 = "0" + result1;
             }
             result1 = result1.toLowerCase();
             String result2 = new BigInteger(1, dis2.getMessageDigest().digest()).toString(16);
-            if (result2.length() % 2 != 0) {
+            // left pad hash/digest with 0
+            while (result2.length() < targetHash2.length()) {
                 result2 = "0" + result2;
             }
             result2 = result2.toLowerCase();
