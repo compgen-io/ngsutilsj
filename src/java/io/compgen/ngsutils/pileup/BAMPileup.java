@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.Thread.UncaughtExceptionHandler;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -155,7 +156,7 @@ public class BAMPileup {
         InputStream bis = new BufferedInputStream(proc.getInputStream());
         final PileupReader reader = new PileupReader(bis, minBaseQual, nogaps);
         
-        new Thread(new Runnable() {
+        Thread t = new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
@@ -175,8 +176,18 @@ public class BAMPileup {
                     e.printStackTrace();
                 }
                 proc.destroy();
-            }}).start();
+            }
+        });
+        
+        t.setUncaughtExceptionHandler(new UncaughtExceptionHandler() {
+            @Override
+            public void uncaughtException(Thread t, Throwable e) {
+                System.err.println("ERROR: " + e.getMessage());
+                System.exit(1);
+            }});
 
+        t.start();
+        
         return new CloseableIterator<PileupRecord>(){
             Iterator<PileupRecord> it = reader.iterator();
             @Override
@@ -230,7 +241,7 @@ public class BAMPileup {
             proc.getInputStream().close();
             proc.getOutputStream().close();
             if (proc.exitValue()!=0) {
-                throw new RuntimeException("Error running: "+ StringUtils.join(" ", pb.command()));
+                throw new IOException("Error running: "+ StringUtils.join(" ", pb.command()));
             }
         } catch (InterruptedException e) {
             e.printStackTrace();
