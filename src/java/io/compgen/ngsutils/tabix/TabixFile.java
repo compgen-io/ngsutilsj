@@ -222,6 +222,10 @@ public class TabixFile {
         return index.getSkipLines();
     }
 
+    public boolean isZeroBased() {
+        return index.isZeroBased();
+    }
+
     public void dumpIndex() {
         try {
             index.dump();

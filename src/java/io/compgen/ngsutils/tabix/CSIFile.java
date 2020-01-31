@@ -371,5 +371,10 @@ public class CSIFile implements TabixIndex {
     public int getSkipLines() {
         return skipLines;
     }
+    
+    @Override
+    public boolean isZeroBased() {
+        return (format & 0x10000) == 0x10000;
+    }
 
 }

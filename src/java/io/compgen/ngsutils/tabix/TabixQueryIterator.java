@@ -59,7 +59,7 @@ public class TabixQueryIterator implements Iterator<String> {
                             e = Integer.parseInt(cols[index.getColBegin()-1]);;
                         }
                         
-                        if ((index.getFormat()&0x10000) == 0) {
+                        if (!index.isZeroBased()) {
                             // convert one-based begin coord (in bgzip file)
                             b--;
                         }
@@ -73,6 +73,34 @@ public class TabixQueryIterator implements Iterator<String> {
                         // return if the spans overlap at all -- if necessary, the 
                         // calling function can re-parse.
         
+                        /*
+                         *  b is this record's start
+                         *  e is this record's end
+                         *  
+                         *  start is the query range start
+                         *  end is the query range end
+                         *
+                         * if the record contains the query *or overlaps the edges*, then add this line to the output
+                         *
+                         * YES:
+                         *      |             |
+                         *      |-------------|
+                         *      |   [query]   |
+                         *      [query]
+                         *              [query]
+                         * 
+                         * Also YES:
+                         * 
+                         *      |             |
+                         *      |-------------|
+                         *      |             |
+                         *                 [query]
+                         * [query]
+                         *    [ ===== query===== ]
+                         *    
+                         *    
+                         */
+                        
                         if (
                                 (b <= start && start < e) || // query start is within tabix range
                                 (start <= b && e < end) ||   // tabix range is contained completely by query

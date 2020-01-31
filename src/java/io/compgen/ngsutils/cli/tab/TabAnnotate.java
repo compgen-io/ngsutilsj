@@ -218,6 +218,10 @@ public class TabAnnotate extends AbstractOutputCommand {
                 end = Integer.parseInt(cols[tabix.getColEnd()-1]);
             }
             
+            if (!tabix.isZeroBased()) {
+                start = start - 1;
+            }
+            
             for (TabAnnotator ann: chain) {
                 String val = ann.getValue(chrom, start, end, cols);
                 if (val == null) {

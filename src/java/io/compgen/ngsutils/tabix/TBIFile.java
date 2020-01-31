@@ -161,6 +161,8 @@ public class TBIFile implements TabixIndex {
         return format;
     }
     
+    
+    
     @Override
     public boolean containsSeq(String name) {
         for (String s: seqNames) {
@@ -325,6 +327,11 @@ public class TBIFile implements TabixIndex {
     @Override
     public int getSkipLines() {
         return skipLines;
+    }
+
+    @Override
+    public boolean isZeroBased() {
+        return (format & 0x10000) == 0x10000;
     }
 
 }
