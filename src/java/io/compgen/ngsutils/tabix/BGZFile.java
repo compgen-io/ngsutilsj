@@ -17,115 +17,66 @@ import io.compgen.common.io.DataIO;
 
 public class BGZFile {
 
+    public class BGZBlock {
+        public final long pos;
+        public final int cLength;
+        public final byte[] uBuf;
+        
+        private BGZBlock(long pos, int cLength, byte[] uBuf) {
+            this.pos = pos;
+            this.cLength = cLength;
+            this.uBuf = uBuf;
+        }
+    }
+
     public class BGZFileCache {
-        protected Map<BGZFileOffset, byte[]> blockCache = new HashMap<BGZFileOffset, byte[]>();
-        protected Deque<BGZFileOffset> lru = new LinkedList<BGZFileOffset>();
+        protected Map<Long, BGZBlock> blockCache = new HashMap<Long, BGZBlock>();
+        protected Deque<Long> lru = new LinkedList<Long>();
         protected long size = 0;
         protected long maxSize = 0;
         
-        public BGZFileCache() {
+        private BGZFileCache() {
             this(16 * 1024 * 1024);  // 16 MB cache
         }
         
-        public BGZFileCache(long maxSize) {
+        private BGZFileCache(long maxSize) {
             this.maxSize = maxSize;
         }
         
-        public byte[] get(long cOffsetBegin, int uOffsetBegin, long cOffsetEnd, int uOffsetEnd) {
-            BGZFileOffset key = new BGZFileOffset(cOffsetBegin, uOffsetBegin, cOffsetEnd, uOffsetEnd);
+        private BGZBlock get(long pos) {
 
-            if (!blockCache.containsKey(key)) {
+            if (!blockCache.containsKey(pos)) {
                 return null;
             }
             
-            lru.remove(key);
-            lru.add(key);
+            lru.remove(pos);
+            lru.add(pos);
             
-            return blockCache.get(key);
+            return blockCache.get(pos);
         }
         
-        public void put(long cOffsetBegin, int uOffsetBegin, long cOffsetEnd, int uOffsetEnd, byte[] payload) {
+        private void put(BGZBlock block) {
 
-            while (payload.length + this.size > this.maxSize) {
+            while (block.uBuf.length + this.size > this.maxSize) {
                 removeItem();
             }
             
-            BGZFileOffset key = new BGZFileOffset(cOffsetBegin, uOffsetBegin, cOffsetEnd, uOffsetEnd);
-            blockCache.put(key, payload);
-            lru.add(key);
-            this.size += payload.length;
+            blockCache.put(block.pos, block);
+            lru.add(block.pos);
+            this.size += block.uBuf.length;
             
         }
 
         private void removeItem() {
             if (lru.size() > 0) {
-                BGZFileOffset key = lru.pop();
-                byte[] payload = blockCache.remove(key);
-                this.size = this.size - payload.length;
+                Long key = lru.pop();
+                BGZBlock payload = blockCache.remove(key);
+                this.size = this.size - payload.uBuf.length;
 //                System.err.println("Removed: " + key + " from cache");
             }
         }
     }
     
-    public class BGZFileOffset {
-        @Override
-        public String toString() {
-            return "BGZFileOffset [cOffsetBegin=" + cOffsetBegin + ", uOffsetBegin="
-                    + uOffsetBegin + ", cOffsetEnd=" + cOffsetEnd + ", uOffsetEnd=" + uOffsetEnd
-                    + "]";
-        }
-
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = 1;
-            result = prime * result + getOuterType().hashCode();
-            result = prime * result + (int) (cOffsetBegin ^ (cOffsetBegin >>> 32));
-            result = prime * result + (int) (cOffsetEnd ^ (cOffsetEnd >>> 32));
-            result = prime * result + uOffsetBegin;
-            result = prime * result + uOffsetEnd;
-            return result;
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            if (this == obj)
-                return true;
-            if (obj == null)
-                return false;
-            if (getClass() != obj.getClass())
-                return false;
-            BGZFileOffset other = (BGZFileOffset) obj;
-            if (!getOuterType().equals(other.getOuterType()))
-                return false;
-            if (cOffsetBegin != other.cOffsetBegin)
-                return false;
-            if (cOffsetEnd != other.cOffsetEnd)
-                return false;
-            if (uOffsetBegin != other.uOffsetBegin)
-                return false;
-            if (uOffsetEnd != other.uOffsetEnd)
-                return false;
-            return true;
-        }
-
-        public final long cOffsetBegin;
-        public final int uOffsetBegin;
-        public final long cOffsetEnd;
-        public final int uOffsetEnd;
-        
-        public BGZFileOffset(long cOffsetBegin, int uOffsetBegin, long cOffsetEnd, int uOffsetEnd) {
-            this.cOffsetBegin = cOffsetBegin;
-            this.uOffsetBegin = uOffsetBegin;
-            this.cOffsetEnd = cOffsetEnd;
-            this.uOffsetEnd = uOffsetEnd;
-        }
-
-        private BGZFile getOuterType() {
-            return BGZFile.this;
-        }
-
-    }
     
 //	protected String filename;
 	protected RandomAccessFile file;
@@ -161,26 +112,20 @@ public class BGZFile {
 
 	
 	public byte[] readBlocks(long cOffsetBegin,int uOffsetBegin,long cOffsetEnd, int uOffsetEnd) throws IOException, DataFormatException {
-	    byte[] buf = cache.get(cOffsetBegin, uOffsetBegin, cOffsetEnd, uOffsetEnd);
-	    if (buf != null) {
-//	        System.err.println("offset => " + cOffsetBegin + ","+uOffsetBegin + " => "+ cOffsetEnd + ","+uOffsetEnd + " ** CACHED **");
-            return buf;
-	    }
-//	    System.err.println("offset => " + cOffsetBegin + ","+uOffsetBegin + " => "+ cOffsetEnd + ","+uOffsetEnd + " ** FRESH **");
-        
-	    file.seek(cOffsetBegin);
-
+        long curOffset = cOffsetBegin;
 //		int blockNum = 1;
 		
-		buf = new byte[0];
+		byte[] buf = new byte[0];
 		int pos = 0;
 		
-		while (file.getFilePointer() <= cOffsetEnd) {
-            long curOffset = file.getFilePointer();
-			byte[] cur = readCurrentBlock();
+		while (curOffset <= cOffsetEnd) {
+		    BGZBlock block = readBlock(curOffset);
+			curOffset += block.cLength;
+			
+			byte[] cur = block.uBuf;
 
 //			System.err.println("block["+(blockNum++)+"] "+curOffset+", "+cur.length);
-			
+//			
 			int start = 0;
 			int end = cur.length;
 			
@@ -208,11 +153,27 @@ public class BGZFile {
 		}
 		
 //        System.err.println(" block (complete)");
-		cache.put(cOffsetBegin, uOffsetBegin, cOffsetEnd, uOffsetEnd, buf);
+//        System.err.println(" ====>\n"+new String(buf)+"\n<=====");
 		return buf;
 	}
 
-	protected byte[] readCurrentBlock() throws IOException {
+	public BGZBlock readBlock(long offset) throws IOException {
+	    BGZBlock b = cache.get(offset);
+	    if (b == null) {
+	        if (file.getFilePointer()!=offset) {
+	            if (offset >= file.length()) {
+	                return null;
+	            }
+
+	            file.seek(offset);
+	        }
+	        b = readCurrentBlock();
+	        cache.put(b);
+	    }
+        return b;
+    }
+
+	public BGZBlock readCurrentBlock() throws IOException {
 //		System.err.println("reading chunk -- fname  = " + filename+ ", curpos = " + file.getFilePointer() +", length = " + file.length());
 		
 		long curOffset = file.getFilePointer();
@@ -313,7 +274,7 @@ public class BGZFile {
 
 		in.close();
 //		System.err.println("read chunk -- fname  = " + filename+ ", curpos = " + file.getFilePointer() +", length = " + file.length());
-		return uBuf;
+		return new BGZBlock(curOffset,bsize+1,uBuf);
 	}
 
 //	public void dumpIndex() throws IOException {

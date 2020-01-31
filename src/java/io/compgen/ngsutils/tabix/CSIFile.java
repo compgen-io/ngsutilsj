@@ -11,7 +11,6 @@ import java.util.zip.GZIPInputStream;
 
 import io.compgen.common.StringUtils;
 import io.compgen.common.io.DataIO;
-import io.compgen.ngsutils.support.LogUtils;
 
 public class CSIFile implements TabixIndex {
 
@@ -56,6 +55,8 @@ public class CSIFile implements TabixIndex {
 
     final protected Ref[] refs;
 
+    protected int refIdx = 0;
+    
     protected CSIFile(InputStream is) throws IOException {
         in = new GZIPInputStream(is);
 
@@ -321,16 +322,20 @@ public class CSIFile implements TabixIndex {
     @Override
     public List<Chunk> find(String chrom, int start, int end) throws IOException {
 //        System.out.println("Searching for: "+chrom+":"+start+","+end);
-        int refIdx = 0;
-        while (refIdx < seqNames.length && !seqNames[refIdx].equals(chrom)) {
-            refIdx++;
-        }
 
+//        int refIdx = 0;
         final List<Chunk> chunks = new ArrayList<Chunk>();
-
-        if (refIdx >= seqNames.length) {
-            //LogUtils.printOnce(System.err, "Can't find reference: " + chrom + " in index");
-            return chunks;
+        if (refIdx >= seqNames.length || refIdx < 0 || !seqNames[refIdx].equals(chrom)) {
+            refIdx = 0;
+            while (refIdx < seqNames.length && !seqNames[refIdx].equals(chrom)) {
+                refIdx++;
+            }
+    
+    
+            if (refIdx >= seqNames.length) {
+                //LogUtils.printOnce(System.err, "Can't find reference: " + chrom + " in index");
+                return chunks;
+            }
         }
 
 //        System.out.println("refIdx="+refIdx+" => " + seqNames[refIdx]);

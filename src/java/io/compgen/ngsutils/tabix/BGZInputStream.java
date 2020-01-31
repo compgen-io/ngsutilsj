@@ -4,6 +4,8 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
+import io.compgen.ngsutils.tabix.BGZFile.BGZBlock;
+
 public class BGZInputStream extends InputStream {
 	protected BGZFile bgzf;
 	protected ByteArrayInputStream buf=null;
@@ -23,7 +25,8 @@ public class BGZInputStream extends InputStream {
 	@Override
 	public int read() throws IOException {
 		if (buf == null || buf.available() == 0) {
-		    byte[] cur = bgzf.readCurrentBlock();
+		    BGZBlock block = bgzf.readCurrentBlock();
+		    byte[] cur = block.uBuf;
 		    if (cur == null ) {
 		        return -1;
 		    }

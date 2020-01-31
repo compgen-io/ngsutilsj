@@ -7,6 +7,7 @@ import java.util.Iterator;
 import java.util.zip.DataFormatException;
 
 import io.compgen.ngsutils.support.LogUtils;
+import io.compgen.ngsutils.tabix.BGZFile.BGZBlock;
 
 public class TabixFile {
 	protected String filename;
@@ -150,7 +151,7 @@ public class TabixFile {
                 
                 
                 try {
-                    byte[] block = bgzf.readCurrentBlock();
+                    BGZBlock block = bgzf.readCurrentBlock();
                     if (block == null) {
                         if (buf!=null && pos < buf.length) { 
                             next = new String(buf, pos, buf.length-pos);
@@ -160,22 +161,25 @@ public class TabixFile {
                         }
                         return;
                     }
-                    
+//                    System.err.println(block.pos+", "+block.cLength+", "+block.uBuf.length);
+
+                    byte[] uBuf = block.uBuf;
+
                     if (buf != null) {
-                        byte[] newbuf = new byte[(buf.length-pos) + block.length];
+                        byte[] newbuf = new byte[(buf.length-pos) + uBuf.length];
                         
                         for (int i=0; i+pos<buf.length; i++) {
                             newbuf[i] = buf[pos+i];
                         }
                         int offset = buf.length-pos;
-                        for (int i=0; i<block.length; i++) {
-                            newbuf[offset + i]=block[i];
+                        for (int i=0; i<uBuf.length; i++) {
+                            newbuf[offset + i]=uBuf[i];
                         }
                         pos = 0;
                         buf = newbuf;
                     } else {
                         pos = 0;
-                        buf = block;
+                        buf = uBuf;
                     }
                     populate();
                     
