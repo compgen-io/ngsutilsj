@@ -329,7 +329,7 @@ public class CSIFile implements TabixIndex {
         final List<Chunk> chunks = new ArrayList<Chunk>();
 
         if (refIdx >= seqNames.length) {
-            LogUtils.printOnce(System.err, "Can't find reference: " + chrom + " in index");
+            //LogUtils.printOnce(System.err, "Can't find reference: " + chrom + " in index");
             return chunks;
         }
 
