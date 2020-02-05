@@ -26,6 +26,9 @@ public class BGZInputStream extends InputStream {
 	public int read() throws IOException {
 		if (buf == null || buf.available() == 0) {
 		    BGZBlock block = bgzf.readCurrentBlock();
+		    if (block == null) {
+		        return -1;
+		    }
 		    byte[] cur = block.uBuf;
 		    if (cur == null ) {
 		        return -1;
