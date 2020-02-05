@@ -53,12 +53,13 @@ public class TabixAnnotation extends AbstractBasicAnnotator {
                 header.addInfo(VCFAnnotationDef.info(name, "0", "Flag", "Present in Tabix file",
                         filename, null, null, null));
             } else {
+                // use 1-based indexing here...
                 if (isNumber) {
                     header.addInfo(VCFAnnotationDef.info(name, ".", "Float",
-                            "Column " + colNum + " from file", filename, null, null, null));
+                            "Column " + (colNum+1) + " from file", filename, null, null, null));
                 } else {
                     header.addInfo(VCFAnnotationDef.info(name, ".", "String",
-                            "Column " + colNum + " from file", filename, null, null, null));
+                            "Column " + (colNum+1) + " from file", filename, null, null, null));
                 }
             }
         } catch (VCFParseException e) {
