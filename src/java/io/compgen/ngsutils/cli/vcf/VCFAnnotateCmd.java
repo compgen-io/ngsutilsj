@@ -185,7 +185,7 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
         try {
             chain.add(new VCFAnnotation(spl[0], spl[2], spl[1], exact, passing));
         } catch (IOException e) {
-            throw new CommandArgumentException("Unable to parse argument for --vcf: "+vcf);
+            throw new CommandArgumentException("Unable to parse argument for --vcf: "+vcf+"\n"+e.getMessage());
         }
     }    
     
@@ -201,7 +201,7 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
         try {
             chain.add(new VCFAnnotation(spl[0], spl[1], null, exact, passing));
         } catch (IOException e) {
-            throw new CommandArgumentException("Unable to parse argument for --vcf-flag: "+vcf);
+            throw new CommandArgumentException("Unable to parse argument for --vcf-flag: "+vcf+"\n"+e.getMessage());
         }
     }
     
