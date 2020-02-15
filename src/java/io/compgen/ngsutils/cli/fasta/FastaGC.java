@@ -64,7 +64,12 @@ public class FastaGC extends AbstractOutputCommand {
                     tab.write(ref);
                     tab.write(start);
                     tab.write(end);
-                    tab.write(calcGC(seq));
+                    double d = calcGC(seq);
+                    if (d > -1) {
+                        tab.write(d);
+                    } else {
+                        tab.write("");
+                    }
                     tab.eol();
                 }
             }
@@ -117,7 +122,12 @@ public class FastaGC extends AbstractOutputCommand {
         tab.write(ref);
         tab.write(start);
         tab.write(start + buf.length());
-        tab.write(calcGC(buf));
+        double d = calcGC(buf);
+        if (d > -1) {
+            tab.write(d);
+        } else {
+            tab.write("");
+        }
 //        tab.write(buf);
         tab.eol();
     }
