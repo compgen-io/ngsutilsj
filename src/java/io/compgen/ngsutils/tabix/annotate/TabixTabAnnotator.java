@@ -49,7 +49,7 @@ public class TabixTabAnnotator implements TabAnnotator {
         List<String> matches = new ArrayList<String>();
         try{
             for (String s: IterUtils.wrap(tabix.query(ref, start, end))) {
-                String[] cols = StringUtils.rstrip(s).split("\t");
+                String[] cols = s.split("\t", col+1);
                 if (col > -1 && col < cols.length) {
                     matches.add(cols[col]);
                 } else {
