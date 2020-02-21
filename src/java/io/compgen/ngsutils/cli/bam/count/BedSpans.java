@@ -31,7 +31,7 @@ public class BedSpans extends AbstractLineReader<SpanGroup> implements SpanSourc
         }
         
         String line = reader.readLine();
-        String[] cols = line.split("\\t");
+        String[] cols = line.split("\t");
         this.numCols = cols.length;
         
         reader.close();
@@ -62,7 +62,7 @@ public class BedSpans extends AbstractLineReader<SpanGroup> implements SpanSourc
             return null;
         }
         line = StringUtils.rstrip(line);
-        String[] cols = line.split("\\t", -1);
+        String[] cols = line.split("\t", -1);
         SpanGroup span;
         
         if (cols.length < 3) {
