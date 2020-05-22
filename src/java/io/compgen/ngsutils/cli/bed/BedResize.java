@@ -54,7 +54,7 @@ public class BedResize extends AbstractOutputCommand {
         for (BedRecord record: IterUtils.wrap(BedReader.readFile(filename))) {
             GenomeSpan coord = record.getCoord();
             
-            if (maxLen > 0 && coord.size() >= maxLen) {
+            if (maxLen > 0 && coord.length() >= maxLen) {
                 record.write(out);
                 continue;
             }

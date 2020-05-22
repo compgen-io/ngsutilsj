@@ -38,6 +38,7 @@ import io.compgen.ngsutils.cli.bed.BedCount;
 import io.compgen.ngsutils.cli.bed.BedNearest;
 import io.compgen.ngsutils.cli.bed.BedReduce;
 import io.compgen.ngsutils.cli.bed.BedResize;
+import io.compgen.ngsutils.cli.bed.BedStats;
 import io.compgen.ngsutils.cli.bed.BedToBed3;
 import io.compgen.ngsutils.cli.bed.BedToBed6;
 import io.compgen.ngsutils.cli.bed.BedToFasta;
@@ -173,7 +174,8 @@ public class NGSUtils {
             .addCommand(VCFTsTvRatio.class)
             .addCommand(DigestCmd.class)
             .addCommand(BamRemoveClipping.class)
-            .addCommand(VCFToBEDPE.class);
+            .addCommand(VCFToBEDPE.class)
+            .addCommand(BedStats.class);
 
         try {
             if (args.length == 0) {
