@@ -105,6 +105,7 @@ public class NGSUtils {
             .setCategoryOrder(new String[] { "bam", "bed", "fasta", "fastq", "gtf", "annotation", "vcf", "help"})
             .addCommand(License.class)
             .addCommand(Help.class)
+            .addCommand(Version.class)
             .addCommand(FastqToBam.class)
             .addCommand(FastqToFasta.class)
             .addCommand(FastqSort.class)
