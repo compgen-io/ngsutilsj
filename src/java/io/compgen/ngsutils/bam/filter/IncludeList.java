@@ -9,10 +9,10 @@ import htsjdk.samtools.SAMRecord;
 import io.compgen.common.StringLineReader;
 import io.compgen.common.StringUtils;
 
-public class Whitelist extends AbstractBamFilter {
+public class IncludeList extends AbstractBamFilter {
     final private Set<String> readNames = new HashSet<String>();
     
-    public Whitelist(BamFilter parent, boolean verbose, String filename) throws FileNotFoundException, IOException {
+    public IncludeList(BamFilter parent, boolean verbose, String filename) throws FileNotFoundException, IOException {
         super(parent, verbose);
         for (String s: new StringLineReader(filename)) {
             readNames.add(StringUtils.strip(s));

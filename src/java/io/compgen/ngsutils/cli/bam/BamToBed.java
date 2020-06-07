@@ -39,7 +39,7 @@ public class BamToBed extends AbstractOutputCommand {
     private boolean silent = false;
     private boolean includeUnmapped = false;
 
-    private String whitelist = null;
+    private String includeList = null;
 
     @UnnamedArg(name = "FILE")
     public void setFilename(String filename) {
@@ -61,9 +61,9 @@ public class BamToBed extends AbstractOutputCommand {
         this.silent = silent;
     }    
 
-    @Option(desc="Keep only read names from this whitelist", name="whitelist", helpValue="fname")
-    public void setWhitelist(String whitelist) {
-        this.whitelist = whitelist;
+    @Option(desc="Keep only read names from this include list", name="include", helpValue="fname")
+    public void setIncludeList(String includeList) {
+        this.includeList = includeList;
     }
 
     @Exec
@@ -72,11 +72,11 @@ public class BamToBed extends AbstractOutputCommand {
             throw new CommandArgumentException("You must specify an input BAM filename!");
         }
 
-        Set<String> whitelistReadNames = null;
-        if (whitelist != null) {
-            whitelistReadNames = new HashSet<String>();
-            for (String s: new StringLineReader(whitelist)) {
-                whitelistReadNames.add(StringUtils.strip(s));
+        Set<String> includeReadNames = null;
+        if (includeList != null) {
+            includeReadNames = new HashSet<String>();
+            for (String s: new StringLineReader(includeList)) {
+                includeReadNames.add(StringUtils.strip(s));
             }
         }
 
@@ -125,7 +125,7 @@ public class BamToBed extends AbstractOutputCommand {
                 continue;
             }
             
-            if (whitelistReadNames != null && !whitelistReadNames.contains(read.getReadName())) {
+            if (includeReadNames != null && !includeReadNames.contains(read.getReadName())) {
                 continue;
             }
             
