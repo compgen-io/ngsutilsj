@@ -24,19 +24,14 @@
         <javac
             srcdir="${src.dir}/java"
             destdir="${build.dir}/classes"
-            compiler="com.google.errorprone.ErrorProneAntCompilerAdapter"
             encoding="UTF-8"
             debug="true"
             includeantruntime="false"
             classpathref="classpath"
             debuglevel="lines,vars,source"
-            target="1.7"
-            source="1.7"
-            >
-            <compilerclasspath>
-                <fileset file="${blib.dir}/error_prone_ant-2.0.2-SNAPSHOT.jar"/>
-            </compilerclasspath>
-        </javac>
+            target="1.8"
+            source="1.8"
+            />
 		
     </target>
 
