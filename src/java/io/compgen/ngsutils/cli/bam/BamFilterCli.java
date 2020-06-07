@@ -35,7 +35,7 @@ import io.compgen.ngsutils.bam.filter.BamFilter;
 import io.compgen.ngsutils.bam.filter.BedExclude;
 import io.compgen.ngsutils.bam.filter.BedInclude;
 import io.compgen.ngsutils.bam.filter.FilterFlags;
-import io.compgen.ngsutils.bam.filter.JunctionWhitelist;
+import io.compgen.ngsutils.bam.filter.JunctionIncludeList;
 import io.compgen.ngsutils.bam.filter.NullFilter;
 import io.compgen.ngsutils.bam.filter.PairingSanityFilter;
 import io.compgen.ngsutils.bam.filter.RefExclude;
@@ -47,7 +47,7 @@ import io.compgen.ngsutils.bam.filter.TagMax;
 import io.compgen.ngsutils.bam.filter.TagMin;
 import io.compgen.ngsutils.bam.filter.UniqueMapping;
 import io.compgen.ngsutils.bam.filter.UniqueStart;
-import io.compgen.ngsutils.bam.filter.Whitelist;
+import io.compgen.ngsutils.bam.filter.IncludeList;
 import io.compgen.ngsutils.bam.support.BamHeaderUtils;
 import io.compgen.ngsutils.bam.support.ReadUtils;
 import io.compgen.ngsutils.support.CloseableFinalizer;
@@ -71,8 +71,8 @@ public class BamFilterCli extends AbstractCommand {
     private boolean bedIncludeOnlyWithin = false;
     private boolean bedIncludeReadStartPos = false;
 
-    private String junctionWhitelist = null;
-    private String whitelist = null;
+    private String junctionIncludeList = null;
+    private String includeList = null;
     private String failedFilename = null;
     private String excludeRefs = null;
     private String includeRefs = null;
@@ -117,9 +117,9 @@ public class BamFilterCli extends AbstractCommand {
         pairRef = val;
     }
 
-    @Option(desc = "Require junction-spanning reads to span one of these junctions", name = "junction-whitelist", helpValue = "fname")
-    public void setJunctionWhitelist(String junctionWhitelist) {
-        this.junctionWhitelist = junctionWhitelist;
+    @Option(desc = "Require junction-spanning reads to span one of these junctions", name = "junction-include", helpValue = "fname")
+    public void setJunctionIncludeList(String junctionIncludeList) {
+        this.junctionIncludeList = junctionIncludeList;
     }
 
     @Option(desc = "Remove reads mapping to these references (comma-delimited)", name = "ref-exclude", helpValue = "ref")
@@ -132,9 +132,9 @@ public class BamFilterCli extends AbstractCommand {
         this.includeRefs = includeRefs;
     }
 
-    @Option(desc = "Keep only read names from this whitelist", name = "whitelist", helpValue = "fname")
-    public void setWhitelist(String whitelist) {
-        this.whitelist = whitelist;
+    @Option(desc = "Keep only read names from this include list", name = "include", helpValue = "fname")
+    public void setIncludeList(String includeList) {
+        this.includeList = includeList;
     }
 
     @Option(desc = "Write failed reads to this file (BAM)", name = "failed", helpValue = "fname")
@@ -510,17 +510,17 @@ public class BamFilterCli extends AbstractCommand {
                 System.err.println("RefExclude: " + excludeRefs);
             }
         }
-        if (junctionWhitelist != null) {
-            parent = new JunctionWhitelist(parent, false, junctionWhitelist);
+        if (junctionIncludeList != null) {
+            parent = new JunctionIncludeList(parent, false, junctionIncludeList);
             if (verbose) {
-                System.err.println("JuntionWhitelist: " + junctionWhitelist);
+                System.err.println("Juntion include list: " + junctionIncludeList);
             }
         }
 
-        if (whitelist != null) {
-            parent = new Whitelist(parent, false, whitelist);
+        if (includeList != null) {
+            parent = new IncludeList(parent, false, includeList);
             if (verbose) {
-                System.err.println("Whitelist: " + whitelist);
+                System.err.println("IncludeList: " + includeList);
             }
         }
 

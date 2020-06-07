@@ -13,10 +13,10 @@ import io.compgen.ngsutils.bam.Orientation;
 import io.compgen.ngsutils.bam.Strand;
 import io.compgen.ngsutils.bam.support.ReadUtils;
 
-public class JunctionWhitelist extends AbstractBamFilter {
+public class JunctionIncludeList extends AbstractBamFilter {
     final private Set<String> junctions = new HashSet<String>();
     
-    public JunctionWhitelist(BamFilter parent, boolean verbose, String filename) throws FileNotFoundException, IOException {
+    public JunctionIncludeList(BamFilter parent, boolean verbose, String filename) throws FileNotFoundException, IOException {
         super(parent, verbose);
         for (String s: new StringLineReader(filename)) {
             junctions.add(StringUtils.strip(s));

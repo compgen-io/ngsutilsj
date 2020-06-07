@@ -8,9 +8,9 @@ import java.util.Set;
 
 import io.compgen.ngsutils.fastq.FastqRead;
 
-public class WhitelistFilter extends AbstractSingleReadFilter {
+public class IncludeListFilter extends AbstractSingleReadFilter {
 	private Set<String> names = new HashSet<String>();
-	public WhitelistFilter(Iterable<FastqRead> parent, boolean verbose, String listFilename) throws FilteringException, IOException {
+	public IncludeListFilter(Iterable<FastqRead> parent, boolean verbose, String listFilename) throws FilteringException, IOException {
 		super(parent, verbose);
 
 		BufferedReader br = new BufferedReader(new FileReader(listFilename));
@@ -20,7 +20,7 @@ public class WhitelistFilter extends AbstractSingleReadFilter {
 		br.close();
 		
         if (verbose) {
-            System.err.println("["+this.getClass().getSimpleName()+"] Whitelist: " + listFilename + " (N=" + names.size() +")");
+            System.err.println("["+this.getClass().getSimpleName()+"] include list: " + listFilename + " (N=" + names.size() +")");
         }
 	}
 	@Override

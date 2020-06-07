@@ -29,7 +29,7 @@ import io.compgen.common.progress.ProgressMessage;
 import io.compgen.common.progress.ProgressUtils;
 import io.compgen.ngsutils.support.CloseableFinalizer;
 
-@Command(name="bam-sample", desc="Create a whitelist of read names sampled randomly from a file", category="bam", experimental=true)
+@Command(name="bam-sample", desc="Create a list of read names sampled randomly from a file", category="bam", experimental=true)
 public class BamSampleReads extends AbstractCommand {
     private String filename = null;
     private boolean lenient = false;

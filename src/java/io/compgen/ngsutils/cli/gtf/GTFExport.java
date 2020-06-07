@@ -34,7 +34,7 @@ import io.compgen.ngsutils.bam.Strand;
 @Command(name="gtf-export", desc="Export gene annotations from a GTF file as BED regions", category="gtf")
 public class GTFExport extends AbstractOutputCommand {
     private String filename=null;
-    private String whitelist = null;
+    private String includeList = null;
     
     private boolean exportGene = false;
     private boolean exportExon = false;
@@ -59,9 +59,9 @@ public class GTFExport extends AbstractOutputCommand {
         this.filename = filename;
     }
 
-    @Option(desc="Whitelist of gene names to use (filename or comma-separated list)", name="whitelist")
-    public void setWhitelist(String whitelist) {
-        this.whitelist = whitelist;
+    @Option(desc="List of gene names to include (filename or comma-separated list)", name="include")
+    public void setIncludeList(String includeList) {
+        this.includeList = includeList;
     }
 
     @Option(desc="Combine overlapping exons/introns. For TSS, export at most one TSS per gene. ", name="combine")
@@ -195,21 +195,21 @@ public class GTFExport extends AbstractOutputCommand {
 
         TabWriter writer = new TabWriter(out);
 
-        Set<String> whitelistSet = null;
-        if (whitelist!=null) {
+        Set<String> includeListSet = null;
+        if (includeList!=null) {
             if (verbose) {
-                System.err.print("Reading whitelist: "+whitelist);
+                System.err.print("Reading include list: "+includeList);
             }
             
-            whitelistSet = new HashSet<String>();
+            includeListSet = new HashSet<String>();
             
-            if (new File(whitelist).exists()) {
-                for (final String line : new StringLineReader(whitelist)) {
-                    whitelistSet.add(StringUtils.strip(line));
+            if (new File(includeList).exists()) {
+                for (final String line : new StringLineReader(includeList)) {
+                    includeListSet.add(StringUtils.strip(line));
                 }
             } else {
-                for (String gene: whitelist.split(",")) {
-                    whitelistSet.add(gene);
+                for (String gene: includeList.split(",")) {
+                    includeListSet.add(gene);
                 }
             }
             
@@ -230,8 +230,8 @@ public class GTFExport extends AbstractOutputCommand {
         for (GenomeAnnotation<GTFGene> ga:IterUtils.wrap(ann.iterator())) {
             GTFGene gene = ga.getValue();
 
-            if (whitelistSet != null) {
-                if (!whitelistSet.contains(gene.getGeneName())) {
+            if (includeListSet != null) {
+                if (!includeListSet.contains(gene.getGeneName())) {
                     continue;
                 }
             }

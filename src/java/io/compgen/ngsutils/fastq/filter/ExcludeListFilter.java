@@ -8,9 +8,9 @@ import java.util.Set;
 
 import io.compgen.ngsutils.fastq.FastqRead;
 
-public class BlacklistFilter extends AbstractSingleReadFilter {
+public class ExcludeListFilter extends AbstractSingleReadFilter {
 	private Set<String> names = new HashSet<String>();
-	public BlacklistFilter(Iterable<FastqRead> parent, boolean verbose, String listFilename) throws FilteringException, IOException {
+	public ExcludeListFilter(Iterable<FastqRead> parent, boolean verbose, String listFilename) throws FilteringException, IOException {
 		super(parent, verbose);
 
 		BufferedReader br = new BufferedReader(new FileReader(listFilename));
@@ -20,7 +20,7 @@ public class BlacklistFilter extends AbstractSingleReadFilter {
 		br.close();
 		
         if (verbose) {
-            System.err.println("["+this.getClass().getSimpleName()+"] Blacklist: " + listFilename + " (N=" + names.size() +")");
+            System.err.println("["+this.getClass().getSimpleName()+"] exclude list: " + listFilename + " (N=" + names.size() +")");
         }
 	}
 	@Override

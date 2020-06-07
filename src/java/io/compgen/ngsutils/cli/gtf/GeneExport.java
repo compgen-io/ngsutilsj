@@ -26,7 +26,7 @@ import io.compgen.ngsutils.annotation.GenomeAnnotation;
 @Command(name="gtf-geneinfo", desc="Calculate information about genes (based on GTF model)", category="gtf", experimental=true)
 public class GeneExport extends AbstractOutputCommand {
     private String filename=null;
-    private String whitelist = null;
+    private String includeList = null;
     
     private boolean exportGenomicSize = false;
     private boolean exportTranscriptSize = false;
@@ -40,9 +40,9 @@ public class GeneExport extends AbstractOutputCommand {
         this.filename = filename;
     }
 
-    @Option(desc="Whitelist of gene names to use", name="whitelist")
-    public void setWhitelist(String whitelist) {
-        this.whitelist = whitelist;
+    @Option(desc="List of gene names to include", name="include")
+    public void setIncludeList(String includeList) {
+        this.includeList = includeList;
     }
 
     @Option(desc="Export the maximum genomic size (unspliced)", name="size-genomic")
@@ -103,21 +103,21 @@ public class GeneExport extends AbstractOutputCommand {
         
         writer.eol();
 
-        Set<String> whitelistSet = null;
-        if (whitelist!=null) {
+        Set<String> includeListSet = null;
+        if (includeList!=null) {
             if (verbose) {
-                System.err.print("Reading whitelist: "+whitelist);
+                System.err.print("Reading include list: "+includeList);
             }
             
-            whitelistSet = new HashSet<String>();
+            includeListSet = new HashSet<String>();
             
-            if (new File(whitelist).exists()) {
-                for (final String line : new StringLineReader(whitelist)) {
-                    whitelistSet.add(StringUtils.strip(line));
+            if (new File(includeList).exists()) {
+                for (final String line : new StringLineReader(includeList)) {
+                    includeListSet.add(StringUtils.strip(line));
                 }
             } else {
-                for (String gene: whitelist.split(",")) {
-                    whitelistSet.add(gene);
+                for (String gene: includeList.split(",")) {
+                    includeListSet.add(gene);
                 }
             }
             
@@ -138,8 +138,8 @@ public class GeneExport extends AbstractOutputCommand {
         for (GenomeAnnotation<GTFGene> ga:IterUtils.wrap(ann.iterator())) {
             GTFGene gene = ga.getValue();
 
-            if (whitelistSet != null) {
-                if (!whitelistSet.contains(gene.getGeneName())) {
+            if (includeListSet != null) {
+                if (!includeListSet.contains(gene.getGeneName())) {
                     continue;
                 }
             }

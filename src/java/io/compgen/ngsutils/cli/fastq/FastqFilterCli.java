@@ -16,7 +16,7 @@ import io.compgen.cmdline.impl.AbstractOutputCommand;
 import io.compgen.ngsutils.fastq.Fastq;
 import io.compgen.ngsutils.fastq.FastqRead;
 import io.compgen.ngsutils.fastq.FastqReader;
-import io.compgen.ngsutils.fastq.filter.BlacklistFilter;
+import io.compgen.ngsutils.fastq.filter.ExcludeListFilter;
 import io.compgen.ngsutils.fastq.filter.FastqFilter;
 import io.compgen.ngsutils.fastq.filter.FilteringException;
 import io.compgen.ngsutils.fastq.filter.NameSubstring;
@@ -27,7 +27,7 @@ import io.compgen.ngsutils.fastq.filter.SeqTrimFilter;
 import io.compgen.ngsutils.fastq.filter.SizeFilter;
 import io.compgen.ngsutils.fastq.filter.SuffixQualFilter;
 import io.compgen.ngsutils.fastq.filter.SuffixTrimFilter;
-import io.compgen.ngsutils.fastq.filter.WhitelistFilter;
+import io.compgen.ngsutils.fastq.filter.IncludeListFilter;
 import io.compgen.ngsutils.fastq.filter.WildcardFilter;
 
 @Command(name = "fastq-filter", desc = "Filters reads from a FASTQ file.", category="fastq")
@@ -46,8 +46,8 @@ public class FastqFilterCli extends AbstractOutputCommand {
     private int trimMinOverlap = 6;
     private double trimMinPctMatch = 0.9;
     
-    private String whitelist = null;
-    private String blacklist = null;
+    private String includeList = null;
+    private String excludeList = null;
     
     private String nameSubstr1 = null;
     private String nameSubstr2 = null;
@@ -159,20 +159,20 @@ public class FastqFilterCli extends AbstractOutputCommand {
         this.maxWildcard = maxWildcard;
     }
 
-    @Option(desc="Blacklist filename (text file, one read name per line)", name="blacklist")
-    public void setBlacklist(String blacklist) {
-        this.blacklist = blacklist;
+    @Option(desc="Exclude list filename (text file, one read name per line to exclude)", name="exclude")
+    public void setExcludeList(String excludeList) {
+        this.excludeList = excludeList;
     }
 
-    @Option(desc="Whitelist filename (text file, one read name per line)", name="whitelist")
-    public void setWhitelist(String whitelist) {
-        this.whitelist = whitelist;
+    @Option(desc="Include list filename (text file, one read name per line to keep)", name="include")
+    public void setIncludeList(String includeList) {
+        this.includeList = includeList;
     }
     
     @Exec
     public void exec() throws IOException, CommandArgumentException, FilteringException {
-        if (whitelist != null && blacklist != null) {
-            throw new CommandArgumentException("You can not specify both a whitelist and a blacklist!");
+        if (includeList != null && excludeList != null) {
+            throw new CommandArgumentException("You can not specify both an include and exclude list!");
         }
         
         FastqReader reader = Fastq.open(filename);
@@ -193,13 +193,13 @@ public class FastqFilterCli extends AbstractOutputCommand {
             filters.add((FastqFilter) parent);
         }
 
-        if (whitelist!=null) {
-            parent = new WhitelistFilter(parent, verbose, whitelist);
+        if (includeList!=null) {
+            parent = new IncludeListFilter(parent, verbose, includeList);
             filters.add((FastqFilter) parent);
         }
 
-        if (blacklist!=null) {
-            parent = new BlacklistFilter(parent, verbose, blacklist);
+        if (excludeList!=null) {
+            parent = new ExcludeListFilter(parent, verbose, excludeList);
             filters.add((FastqFilter) parent);
         }
 
