@@ -289,7 +289,7 @@ public class BamFilterCli extends AbstractCommand {
         requiredFlags |= flag;
     }
 
-    @Option(desc = "Minimum tag value (tag:val, ex: AS:100,MAPQ:1)", name = "tag-min")
+    @Option(desc = "Minimum tag value (tag:val, ex: AS:100,MAPQ:1, possible: TLEN, MAPQ, or SAM tags)", name = "tag-min")
     public void setMinTagValue(String vals) {
         if (minTagValues == null) {
             minTagValues = new HashMap<String, Integer>();

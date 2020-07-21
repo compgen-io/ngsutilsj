@@ -17,19 +17,31 @@ import io.compgen.ngsutils.vcf.VCFReader;
 import io.compgen.ngsutils.vcf.VCFRecord;
 
 
-@Command(name="vcf-tocount", desc="Convert a VCF to a count file using the AD format field", category="vcf")
+@Command(name="vcf-tocount", desc="Convert a VCF to a count file using the AD (or RO/AO) format field", category="vcf")
 public class VCFToCount extends AbstractOutputCommand {
     private String vcfFilename=null;
     private String sampleName=null;
 	
     private boolean onlyOutputPass = false;
     private boolean outputAF = false;
+    private boolean outputTotal = false;
+    private boolean useROAO = false;
 
     private boolean hetOnly = false;
 
-    @Option(desc = "Only count heterozygous variants (requires format GT=0/1)", name = "het")
+    @Option(desc = "Only count heterozygous variants (requires format GT=0/1, only two values allowed)", name = "het")
     public void setHeterozygous(boolean hetOnly) {
         this.hetOnly = hetOnly;
+    }
+
+    @Option(desc="Use RO/AO format fields (default is to use AD)", name="use-ro-ao")
+    public void setROAO(boolean val) {
+        this.useROAO = val;
+    }
+
+    @Option(desc="Output total allele count", name="total")
+    public void setOutputTotal(boolean val) {
+        this.outputTotal = val;
     }
 
     @Option(desc="Output alternative allele frequency (from AD field)", name="af")
@@ -61,8 +73,17 @@ public class VCFToCount extends AbstractOutputCommand {
 			reader = new VCFReader(vcfFilename);
 		}
 
-		if (!reader.getHeader().getFormatIDs().contains("AD")) {
-		    throw new CommandArgumentException("The VCF file must contain the \"AD\" format annotation to output allele frequencies from the VCF file.");
+		if (!useROAO) {
+			if (!reader.getHeader().getFormatIDs().contains("AD")) {
+			    throw new CommandArgumentException("The VCF file must contain the \"AD\" format annotation to output allele frequencies from the VCF file.");
+			}
+		} else {
+			if (!reader.getHeader().getFormatIDs().contains("RO")) {
+			    throw new CommandArgumentException("The VCF file must contain the \"RO\" format annotation to output reference allele counts from the VCF file.");
+			}
+			if (!reader.getHeader().getFormatIDs().contains("AO")) {
+			    throw new CommandArgumentException("The VCF file must contain the \"AO\" format annotation to output alternative allele counts from the VCF file.");
+			}
 		}
 
 		int sampleIdx = 0;
@@ -84,6 +105,9 @@ public class VCFToCount extends AbstractOutputCommand {
         writer.write("alt_count");
         if (outputAF) {
             writer.write("alt_freq");
+        }
+        if (outputTotal) {
+        	writer.write("total_count");
         }
         writer.eol();
 
@@ -143,22 +167,57 @@ public class VCFToCount extends AbstractOutputCommand {
 
 			for (int i=0; i<record.getAlt().size(); i++) {
 			    String alt = record.getAlt().get(i);
-			    if (!record.getSampleAttributes().get(sampleIdx).contains("AD")) {
-                    throw new CommandArgumentException("Missing AD field ("+record+")");
+			    int refCount = -1;
+			    int altCount = -1;
+			    int totalCount = 0;
+			    		
+			    if (!useROAO) {
+				    if (!record.getSampleAttributes().get(sampleIdx).contains("AD")) {
+	                    throw new CommandArgumentException("Missing AD field ("+record+")");
+				    }
+				    String[] ad = record.getSampleAttributes().get(sampleIdx).get("AD").asString(null).split(",");
+                    refCount = Integer.parseInt(ad[0]);
+                    altCount = Integer.parseInt(ad[i+1]);
+                    
+                    totalCount = refCount;
+                    for (int j=1; j<ad.length; j++) {
+                    	totalCount += Integer.parseInt(ad[j]);
+                    }
+                     
+			    } else {
+				    if (!record.getSampleAttributes().get(sampleIdx).contains("RO")) {
+	                    throw new CommandArgumentException("Missing RO field ("+record+")");
+				    }
+				    if (!record.getSampleAttributes().get(sampleIdx).contains("AO")) {
+	                    throw new CommandArgumentException("Missing AO field ("+record+")");
+				    }
+
+				    String ro = record.getSampleAttributes().get(sampleIdx).get("RO").asString(null);
+				    String[] ao = record.getSampleAttributes().get(sampleIdx).get("AO").asString(null).split(",");
+
+                    refCount = Integer.parseInt(ro);
+                    altCount = Integer.parseInt(ao[i]);
+
+                    totalCount = refCount;
+                    for (int j=0; j<ao.length; j++) {
+                    	totalCount += Integer.parseInt(ao[j]);
+                    }
+                     
+
 			    }
-			    String[] ad = record.getSampleAttributes().get(sampleIdx).get("AD").asString(null).split(",");
-			    			    
-                writer.write(record.getChrom());
+
+			    writer.write(record.getChrom());
                 writer.write(record.getPos());
 			    writer.write(record.getRef());
 			    writer.write(alt);
-                writer.write(ad[0]);
-                writer.write(ad[i+1]);
+                writer.write(refCount);
+                writer.write(altCount);
                 
                 if (outputAF) {
-                    int altCount = Integer.parseInt(ad[i+1]);
-                    int refCount = Integer.parseInt(ad[0]);
                     writer.write(((double) altCount) / (altCount + refCount));
+                }
+                if (outputTotal) {
+                    writer.write(totalCount);
                 }
                 writer.eol();
 			}

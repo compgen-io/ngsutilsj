@@ -6,3 +6,4 @@ dist/
 *.class
 .zedstate
 .DS_Store
+/bin/

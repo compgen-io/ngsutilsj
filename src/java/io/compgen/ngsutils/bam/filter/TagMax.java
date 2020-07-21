@@ -21,6 +21,8 @@ public class TagMax extends AbstractBamFilter {
 
             if (tag.equals("MAPQ")) {
                 readval = read.getMappingQuality();
+            } else if (tag.equals("TLEN")) {
+            	readval = Math.abs(read.getInferredInsertSize());
             } else if (read.getAttribute(tag) != null) { 
                 readval = read.getIntegerAttribute(tag);
             }
