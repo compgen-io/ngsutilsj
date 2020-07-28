@@ -25,6 +25,7 @@ import io.compgen.ngsutils.vcf.VCFHeader;
 import io.compgen.ngsutils.vcf.VCFReader;
 import io.compgen.ngsutils.vcf.VCFRecord;
 import io.compgen.ngsutils.vcf.VCFWriter;
+import io.compgen.ngsutils.vcf.filter.Contains;
 import io.compgen.ngsutils.vcf.filter.Equals;
 import io.compgen.ngsutils.vcf.filter.FlagAbsent;
 import io.compgen.ngsutils.vcf.filter.FlagPresent;
@@ -36,6 +37,7 @@ import io.compgen.ngsutils.vcf.filter.HomozygousFilter;
 import io.compgen.ngsutils.vcf.filter.IndelFilter;
 import io.compgen.ngsutils.vcf.filter.LessThan;
 import io.compgen.ngsutils.vcf.filter.LessThanEqual;
+import io.compgen.ngsutils.vcf.filter.NotContains;
 import io.compgen.ngsutils.vcf.filter.NotEquals;
 import io.compgen.ngsutils.vcf.filter.QualityScore;
 import io.compgen.ngsutils.vcf.filter.SNVFilter;
@@ -121,6 +123,34 @@ public class VCFFilterCmd extends AbstractOutputCommand {
             filterChain.add(new NotEquals(spl[0], spl[1], spl[2], null));
         } else if (spl.length==4) {
             filterChain.add(new NotEquals(spl[0], spl[1], spl[2], spl[3]));
+        } else {
+            throw new CommandArgumentException("1. Malformed argument. Should be in form => KEY:VAL or KEY:VAL:SAMPLEID or KEY:VAL:SAMPLEID:ALLELE");
+        }
+    }
+    
+    @Option(desc="Values for {KEY} contain {VAL} (multiple allowed, String or number; set SAMPLEID to 'INFO' to filter on an INFO field)", name="contain", helpValue="KEY:VAL:SAMPLEID:ALLELE", allowMultiple=true)
+    public void setContains(String val) throws CommandArgumentException {
+        String[] spl = val.split(":");
+        if (spl.length==2) {
+            filterChain.add(new Contains(spl[0], spl[1], null, null));
+        } else if (spl.length==3) {
+            filterChain.add(new Contains(spl[0], spl[1], spl[2], null));
+        } else if (spl.length==4) {
+            filterChain.add(new Contains(spl[0], spl[1], spl[2], spl[3]));
+        } else {
+            throw new CommandArgumentException("1. Malformed argument. Should be in form => KEY:VAL or KEY:VAL:SAMPLEID or KEY:VAL:SAMPLEID:ALLELE");
+        }
+    }
+    
+    @Option(desc="Values for {KEY} does not contain {VAL} (multiple allowed, String or number; set SAMPLEID to 'INFO' to filter on an INFO field)", name="not-contain", helpValue="KEY:VAL:SAMPLEID:ALLELE", allowMultiple=true)
+    public void setNotContain(String val) throws CommandArgumentException {
+        String[] spl = val.split(":");
+        if (spl.length==2) {
+            filterChain.add(new NotContains(spl[0], spl[1], null, null));
+        } else if (spl.length==3) {
+            filterChain.add(new NotContains(spl[0], spl[1], spl[2], null));
+        } else if (spl.length==4) {
+            filterChain.add(new NotContains(spl[0], spl[1], spl[2], spl[3]));
         } else {
             throw new CommandArgumentException("1. Malformed argument. Should be in form => KEY:VAL or KEY:VAL:SAMPLEID or KEY:VAL:SAMPLEID:ALLELE");
         }

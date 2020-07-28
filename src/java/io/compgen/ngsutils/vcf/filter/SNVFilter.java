@@ -10,7 +10,10 @@ public class SNVFilter extends VCFAbstractFilter {
 
 	@Override
 	protected boolean innerFilter(VCFRecord record) throws VCFFilterException {
-	    if (record.getRef().length()==1) {
+		
+		// Variant is an SNV *IIF* ref.len == 1 and *all* alt.len == 1
+		
+	    if (record.getRef().length()!=1) {
 	        return false;
 	    }
 	    for (String alt: record.getAlt()) {
