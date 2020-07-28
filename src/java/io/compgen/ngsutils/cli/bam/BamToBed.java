@@ -30,14 +30,14 @@ import io.compgen.ngsutils.support.CloseableFinalizer;
 
 @Command(name="bam-tobed", desc="Writes read positions to a BED6 file", category="bam", experimental=true, 
 doc="The mapped position of a read is writen to a 6 column BED file.\n" 
-  + "If the file is paired end, then only the first read of the pair\n"
-  + "will be written to the file.")
+  + "If the file is paired end, then by default only the first read\n"
+  + "of the pair will be written to the file (this is configurable).")
 
 public class BamToBed extends AbstractOutputCommand {
     private String filename = null;
     private boolean lenient = false;
     private boolean silent = false;
-    private boolean includeUnmapped = false;
+    private boolean second = false;
 
     private String includeList = null;
 
@@ -46,9 +46,9 @@ public class BamToBed extends AbstractOutputCommand {
         this.filename = filename;
     }
 
-    @Option(desc = "Also output unmapped reads", name="unmapped")
-    public void setUnmapped(boolean includeUnmapped) {
-        this.includeUnmapped = includeUnmapped;
+    @Option(desc = "Output second read (R2, default is to only output R1 if paired)", name="second-read")
+    public void setSecond(boolean second) {
+        this.second = second;
     }
 
     @Option(desc = "Use lenient validation strategy", name="lenient")
@@ -104,7 +104,6 @@ public class BamToBed extends AbstractOutputCommand {
         TabWriter writer = new TabWriter(out);
         writer.write_line("## program: " + NGSUtils.getVersion());
         writer.write_line("## cmd: " + NGSUtils.getArgs());
-        writer.write_line("## include-unmapped: " + includeUnmapped);
 
 
         Iterator<SAMRecord> it = ProgressUtils.getIterator(name, reader.iterator(), (channel == null)? null : new FileChannelStats(channel), new ProgressMessage<SAMRecord>() {
@@ -117,12 +116,21 @@ public class BamToBed extends AbstractOutputCommand {
         long i = 0;
         while (it.hasNext()) {
             SAMRecord read = it.next();
-            if (read.getReadUnmappedFlag() && !includeUnmapped) {
+            if (read.getReadUnmappedFlag()) {
                 continue;
             }
             
-            if (read.isSecondaryOrSupplementary() || (read.getReadPairedFlag() && !read.getFirstOfPairFlag())) {
-                continue;
+            if (read.isSecondaryOrSupplementary()) {
+            	continue;
+            }
+            
+            if (read.getReadPairedFlag()) {
+            	if (second && read.getFirstOfPairFlag()) {
+                    continue;
+            	}
+            	if (!second && !read.getFirstOfPairFlag()) {
+                    continue;
+            	}
             }
             
             if (includeReadNames != null && !includeReadNames.contains(read.getReadName())) {
