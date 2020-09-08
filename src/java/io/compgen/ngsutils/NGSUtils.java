@@ -24,6 +24,7 @@ import io.compgen.ngsutils.cli.bam.BamExpressedRegions;
 import io.compgen.ngsutils.cli.bam.BamFilterCli;
 import io.compgen.ngsutils.cli.bam.BamFlagDuplicates;
 import io.compgen.ngsutils.cli.bam.BamReadGroup;
+import io.compgen.ngsutils.cli.bam.BamRefCount;
 import io.compgen.ngsutils.cli.bam.BamRemoveClipping;
 import io.compgen.ngsutils.cli.bam.BamSampleReads;
 import io.compgen.ngsutils.cli.bam.BamSplit;
@@ -176,7 +177,8 @@ public class NGSUtils {
             .addCommand(DigestCmd.class)
             .addCommand(BamRemoveClipping.class)
             .addCommand(VCFToBEDPE.class)
-            .addCommand(BedStats.class);
+            .addCommand(BedStats.class)
+        	.addCommand(BamRefCount.class);
 
         try {
             if (args.length == 0) {
