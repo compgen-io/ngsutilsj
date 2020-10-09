@@ -57,7 +57,7 @@ public class ExportFormatField implements VCFExport {
         if (sample != null) {
             for (String id: ids) {
                 if (newSampleName != null) {
-                    outs.add(newSampleName+":"+id); 
+                    outs.add(newSampleName); 
                 } else {
                     outs.add(sample+":"+id); 
                 }
