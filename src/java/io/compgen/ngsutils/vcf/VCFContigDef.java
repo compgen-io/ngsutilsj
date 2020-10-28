@@ -19,7 +19,10 @@ public class VCFContigDef {
 		}
 		String s = "##contig=<";
 		s += "ID="+id;
-		s += ",length="+length+">";
+		if (length > 0) {
+			s += ",length="+length;
+		}
+		s += ">";
 		return s;
 	}
 	
@@ -29,7 +32,12 @@ public class VCFContigDef {
 			String id = vals.remove("ID");
 			String len = vals.remove("length");
 			
-			return build(id, Long.parseLong(len), line);
+			long lenInt = -1;
+			if (len != null) {
+				lenInt = Long.parseLong(len);
+			}
+			
+			return build(id, lenInt, line);
 			
 		}
 		throw new VCFParseException("Can't parse the line: "+ line);
