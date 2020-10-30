@@ -54,6 +54,7 @@ public class VCFCount extends AbstractOutputCommand {
     private boolean onlyOutputPass = false;
     private boolean outputVCFCounts = false;
     private boolean outputVCFAF = false;
+    private boolean outputVCFID = false;
     private boolean outputAF = false;
     private boolean outputGT = false;
 
@@ -99,6 +100,12 @@ public class VCFCount extends AbstractOutputCommand {
     public void setRequiredFlags(int flag) {
         requiredFlags = flag;
     }
+
+    @Option(desc="Output ID field from the VCF file", name="vcf-id")
+    public void setVCFID(boolean val) {
+        this.outputVCFID = val;
+    }
+
 
     @Option(desc="Output variant allele frequency from the VCF file (requires AD FORMAT field)", name="vcf-af")
     public void setVCFAF(boolean val) {
@@ -224,6 +231,9 @@ public class VCFCount extends AbstractOutputCommand {
 
         writer.write("chrom");
         writer.write("pos");
+        if (outputVCFID) {
+        	writer.write("ID");
+        }
         writer.write("ref");
         writer.write("alt");
         if (outputVCFCounts) {
@@ -257,17 +267,23 @@ public class VCFCount extends AbstractOutputCommand {
         final VCFHeader header = reader.getHeader();
         final long totalF = total;
         
-		for (VCFRecord record: IterUtils.wrap(ProgressUtils.getIterator(vcfFilename.equals("-") ? "variants <stdin>": vcfFilename, reader.iterator(), new ProgressStats(){
+        ProgressStats progressStats = null;
+        ProgressMessage<VCFRecord> progressMessage = null;
+        
+        if (total > 0) {
+        	progressStats = new ProgressStats(){
 
-            @Override
-            public long size() {
-                return totalF;
-            }
+                @Override
+                public long size() {
+                    return totalF;
+                }
 
-            @Override
-            public long position() {
-                return offset[0] + offset[1];
-            }}, new ProgressMessage<VCFRecord>(){
+                @Override
+                public long position() {
+                    return offset[0] + offset[1];
+                }};
+                
+            progressMessage = new ProgressMessage<VCFRecord>(){
 
                 String curChrom = "";
                 
@@ -284,7 +300,10 @@ public class VCFCount extends AbstractOutputCommand {
                     offset[1] = current.getPos();
                     
                     return current.getChrom()+":"+current.getPos();
-                }}))) {
+                }};
+        }
+        
+		for (VCFRecord record: IterUtils.wrap(ProgressUtils.getIterator(vcfFilename.equals("-") ? "variants <stdin>": vcfFilename, reader.iterator(), progressStats, progressMessage))) {
 			if (onlyOutputPass && record.isFiltered()) {
 				continue;
 			}
@@ -425,6 +444,9 @@ public class VCFCount extends AbstractOutputCommand {
         // for each alt-allele...
         for (int i=0; i< record.getAlt().size(); i++) {
             writer.write(record.getChrom());
+            if (outputVCFID) {
+            	writer.write(record.getDbSNPID());
+            }
             writer.write(record.getPos());
         
             writer.write(record.getRef());
