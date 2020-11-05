@@ -335,7 +335,9 @@ public class VCFCount extends AbstractOutputCommand {
                 }
 			}
 			
-			if (maxBatchLen > 0) {			
+			if (maxBatchLen > 0) {
+				// Batch processing
+				
                 if (recordBlock.size() > 0) {
                     if (!recordBlock.get(0).getChrom().equals(record.getChrom())) {
                         processVariants(recordBlock, pileup, writer, sampleIdx);
@@ -348,7 +350,19 @@ public class VCFCount extends AbstractOutputCommand {
     			
                 recordBlock.add(record);
 			} else {
-			    processVariant(record, pileup, writer, sampleIdx);
+				// Single variant processing, but each pos could have multiple variants (lines), so we track this too
+                if (recordBlock.size() > 0) {
+                    if (!recordBlock.get(0).getChrom().equals(record.getChrom())) {
+                        processVariants(recordBlock, pileup, writer, sampleIdx);
+                        recordBlock.clear();
+                    } else if (record.getPos() != recordBlock.get(0).getPos()) {
+                        processVariants(recordBlock, pileup, writer, sampleIdx);
+                        recordBlock.clear();
+                    }
+                }
+    			
+                recordBlock.add(record);
+//			    processVariant(record, pileup, writer, sampleIdx);
 			}
             
 
@@ -369,25 +383,25 @@ public class VCFCount extends AbstractOutputCommand {
 		reader.close();
 		writer.close();
 	}
-
-    private void processVariant(VCFRecord record, BAMPileup pileup, TabWriter writer, int sampleIdx) throws IOException, VCFAttributeException {
-        int pos = record.getPos() - 1; // switch to 0-based
-
-        CloseableIterator<PileupRecord> it2 = pileup.pileup(new GenomeSpan(record.getChrom(), pos));
-        for (PileupRecord pileupRecord: IterUtils.wrap(it2)) {
-            if (pileupRecord.ref.equals(record.getChrom()) && pileupRecord.pos > record.getPos()-1) {
-                processMissingVariant(record, writer, sampleIdx);
-            } else if (pileupRecord.ref.equals(record.getChrom()) && pileupRecord.pos == pos) {
-                if (refFilename != null && !pileupRecord.refBase.equals(record.getRef().subSequence(0, 1))) {
-                    throw new IOException("Reference bases don't match! "+record.getChrom()+":"+record.getPos());
-                }
-                processVariantRecord(record, pileupRecord, writer, sampleIdx);
-            }
-        }
-        it2.close();       
-
-    }
-    
+//
+//    private void processVariant(VCFRecord record, BAMPileup pileup, TabWriter writer, int sampleIdx) throws IOException, VCFAttributeException {
+//        int pos = record.getPos() - 1; // switch to 0-based
+//
+//        CloseableIterator<PileupRecord> it2 = pileup.pileup(new GenomeSpan(record.getChrom(), pos));
+//        for (PileupRecord pileupRecord: IterUtils.wrap(it2)) {
+//            if (pileupRecord.ref.equals(record.getChrom()) && pileupRecord.pos > record.getPos()-1) {
+//                processMissingVariant(record, writer, sampleIdx);
+//            } else if (pileupRecord.ref.equals(record.getChrom()) && pileupRecord.pos == pos) {
+//                if (refFilename != null && !pileupRecord.refBase.equals(record.getRef().subSequence(0, 1))) {
+//                    throw new IOException("Reference bases don't match! "+record.getChrom()+":"+record.getPos());
+//                }
+//                processVariantRecord(record, pileupRecord, writer, sampleIdx);
+//            }
+//        }
+//        it2.close();       
+//
+//    }
+//    
     private void processVariantRecord(VCFRecord record, PileupRecord pileupRecord, TabWriter writer, int sampleIdx) throws IOException, VCFAttributeException {
         if (refFilename != null && !pileupRecord.refBase.equals(record.getRef().substring(0, 1))) {
             throw new IOException("Reference bases don't match! "+record.getChrom()+":"+record.getPos());
@@ -563,7 +577,7 @@ public class VCFCount extends AbstractOutputCommand {
                     break;
                 }
             }
-            if (pileupRecord.ref.equals(curRecord.getChrom()) && pileupRecord.pos == curRecord.getPos()-1) {
+            while (pileupRecord.ref.equals(curRecord.getChrom()) && pileupRecord.pos == curRecord.getPos()-1) {
                 processVariantRecord(curRecord, pileupRecord, writer, sampleIdx);
                 if (idx < records.size()) {
                     curRecord = records.get(idx++);
