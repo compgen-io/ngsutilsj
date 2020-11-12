@@ -7,6 +7,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.zip.DataFormatException;
 
+import org.apache.commons.math3.stat.StatUtils;
+import org.apache.commons.math3.stat.descriptive.rank.Median;
+
 import io.compgen.common.IterUtils;
 import io.compgen.common.StringUtils;
 import io.compgen.ngsutils.tabix.TabixFile;
@@ -19,16 +22,30 @@ public class TabixTabAnnotator implements TabAnnotator {
     private int col;
     private boolean collapse;
     private boolean first;
+    private boolean mean;
+    private boolean median;
+    private boolean count;
     
-    public TabixTabAnnotator(String name, String fname, int col, boolean collapse, boolean first) throws IOException {
+    public TabixTabAnnotator(String name, String fname, int col) throws IOException {
         this.name = name;
         this.tabix = getTabixFile(fname);
         this.col = col;
-        this.collapse = collapse;
-        this.first = first;
     }
+
+    public TabixTabAnnotator(String name, String fname, String colName) throws IOException {
+        this.name = name;
+        this.tabix = getTabixFile(fname);
+        
+        int col = this.tabix.findColumnByName(colName);
+        if (col == -1) {
+        	throw new IOException("Unknown column name: "+ colName);
+        }
+        
+        this.col = col;
+    }
+
     public TabixTabAnnotator(String name, String fname) throws IOException {
-        this(name, fname, -1, false, false);
+        this(name, fname, -1);
     }
 
     private static TabixFile getTabixFile(String filename) throws IOException {
@@ -39,8 +56,66 @@ public class TabixTabAnnotator implements TabAnnotator {
     }
 
     
+    public void setShowAll() {
+    	this.collapse = false;
+    	this.first = false;
+    	this.mean = false;
+    	this.median = false;
+    	this.count = false;
+    }
+    
+    public void setCollapse() {
+    	this.collapse = true;
+
+    	this.first = false;
+    	this.mean = false;
+    	this.median = false;
+    	this.count = false;
+    }
+    public void setFirst() {
+    	this.first = true;
+
+    	this.collapse = false;
+    	this.mean = false;
+    	this.median = false;
+    	this.count = false;
+    }
+    public void setMean() {
+    	this.mean = true;
+
+    	this.first = false;
+    	this.collapse = false;
+    	this.median = false;
+    	this.count = false;
+    }
+    public void setMedian() {
+    	this.median = true;
+
+    	this.first = false;
+    	this.collapse = false;
+    	this.mean = false;
+    	this.count = false;
+    }
+    public void setCount() {
+    	this.count = true;
+
+    	this.first = false;
+    	this.collapse = false;
+    	this.mean = false;
+    	this.median = false;
+    }
+    
     @Override
     public String getName() {
+    	if (mean) {
+    		return name+"_mean";
+    	}
+    	if (median) {
+    		return name+"_median";
+    	}
+    	if (count) {
+    		return name+"_count";
+    	}
         return name;
     }
     
@@ -66,11 +141,28 @@ public class TabixTabAnnotator implements TabAnnotator {
             }
         }
 
+        if (count) {
+            return "" + matches.size();
+        }
         if (first && matches.size() > 1) {
             return matches.get(0);
         }
         if (collapse) {
             return StringUtils.join(",", StringUtils.unique(matches));
+        }
+        if ((mean || median) && matches.size() > 1) {
+        	double[] vals = new double[matches.size()];
+        	for (int i=0; i<vals.length; i++) {
+        		vals[i] = Double.parseDouble(matches.get(i));
+        	}
+        	
+        	if (mean) {
+        		return ""+StatUtils.mean(vals);
+        	}
+        	if (median) {
+        		Median med = new Median();
+        		return "" + med.evaluate(vals);
+        	}
         }
         
         

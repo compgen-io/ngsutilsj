@@ -6,6 +6,7 @@ import java.nio.channels.FileChannel;
 import java.util.Iterator;
 import java.util.zip.DataFormatException;
 
+import io.compgen.common.StringLineReader;
 import io.compgen.ngsutils.support.LogUtils;
 import io.compgen.ngsutils.tabix.BGZFile.BGZBlock;
 
@@ -14,14 +15,18 @@ public class TabixFile {
 	protected BGZFile bgzf;
 	protected TabixIndex index;
     	
+	private String[] headerNames = null;
     private boolean checkChr = false;
     private boolean addChr = false;
     private boolean removeChr = false;
+    
+    private boolean closed = false;
         
 	public TabixFile(String filename) throws IOException {
 		this.filename = filename;
 		this.bgzf = new BGZFile(filename);
         this.index = null;
+        
         if (new File(filename+".csi").exists()) {
             this.index = new CSIFile(new File(filename+".csi"));
         } else if (new File(filename+".tbi").exists()) {
@@ -33,8 +38,44 @@ public class TabixFile {
 	
 	public void close() throws IOException {
 	    bgzf.close();
+	    this.closed = true;
 	}
 
+	
+	public int findColumnByName(String name) throws IOException {
+		if (index == null) {
+			throw new IOException("Missing TBI or CSI index file! (Index needed for name-based column access)");
+		}
+		if (headerNames == null) {
+			StringLineReader reader = new StringLineReader(new BGZInputStream(this.filename));
+			Iterator<String> it = reader.iterator();
+			
+			int lineNo = 0;
+			String line = null;
+			
+			while (lineNo < index.getSkipLines()) {
+				line = it.next();
+				lineNo++;
+			}
+
+			if (line.charAt(0) == index.getMeta()) {
+				line = line.substring(1);
+			}
+
+			headerNames = line.split("\t");
+			reader.close();
+			
+		}
+		
+		for (int i=0; i<headerNames.length; i++) {
+			if (headerNames[i].equals(name)) {
+				return i;
+			}
+		}
+		
+		return -1;
+	}
+	
 //	public InputStream queryInputStream(String ref, int start) throws IOException, DataFormatException {
 //		return queryInputStream(ref, start, start+1);
 //	}
@@ -62,6 +103,9 @@ public class TabixFile {
 	 * @throws DataFormatException
 	 */
 	public Iterator<String> query(String ref, int start) throws IOException, DataFormatException {
+		if (closed) {
+			throw new IOException("File closed");
+		}
 		return query(ref, start, start+1);
 	}
 	
@@ -94,6 +138,9 @@ public class TabixFile {
 	 */
 
     public Iterator<String> query(String ref, int start, int end) throws IOException, DataFormatException {
+		if (closed) {
+			throw new IOException("File closed");
+		}
 		if (index == null) {
 			throw new IOException("Missing TBI or CSI index file!");
 		}
@@ -119,7 +166,10 @@ public class TabixFile {
         return new TabixQueryIterator(ref, start, end, index, bgzf);
 	}
 
-    public Iterator<String> lines() {
+    public Iterator<String> lines() throws IOException {
+		if (closed) {
+			throw new IOException("File closed");
+		}
         return new Iterator<String>() {
 
             byte[] buf = null;
@@ -148,7 +198,6 @@ public class TabixFile {
                         }
                     }
                 }
-                
                 
                 try {
                     BGZBlock block = bgzf.readCurrentBlock();

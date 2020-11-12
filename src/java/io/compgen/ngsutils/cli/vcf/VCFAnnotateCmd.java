@@ -130,6 +130,10 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
             try {
                 String fname = null;
                 int col = -1;
+                
+                String colName = null;
+                String altName = null;
+                
                 boolean isNumber = false;
                 int altCol = -1;
                 boolean collapse = false;
@@ -142,15 +146,31 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
                     } else if (t.equals("collapse")) {
                         collapse = true;
                     } else if (t.startsWith("alt=")) {
-                        altCol = Integer.parseInt(t.substring(4))-1;
+                    	try {
+                            altCol = Integer.parseInt(t.substring(4))-1;
+	                    } catch (NumberFormatException e) {
+	                    	altName = t;
+	                    }
                     } else if (col == -1) {
-                        col = Integer.parseInt(t)-1;
+                    	try {
+	                        col = Integer.parseInt(t)-1;
+	                    } catch (NumberFormatException e) {
+	                    	colName = t;
+	                    }
                     }
                 }
 
-                chain.add(new TabixAnnotation(spl[0], fname, col, isNumber, altCol, collapse));
+                if (colName != null && altName != null) {
+                	chain.add(new TabixAnnotation(spl[0], fname, colName, isNumber, altName, collapse));
+                } else if (colName != null) {
+                	chain.add(new TabixAnnotation(spl[0], fname, colName, isNumber, altCol, collapse));
+                } else if (altName != null) {
+                	chain.add(new TabixAnnotation(spl[0], fname, col, isNumber, altName, collapse));
+                } else {
+                	chain.add(new TabixAnnotation(spl[0], fname, col, isNumber, altCol, collapse));
+                }
                 
-            } catch (NumberFormatException | IOException  e) {
+            } catch (IOException  e) {
                 throw new CommandArgumentException(e);
             }
         } else {

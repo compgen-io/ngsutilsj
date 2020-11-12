@@ -41,8 +41,12 @@ public class TabAnnotate extends AbstractOutputCommand {
             try {
                 String fname = null;
                 int col = -1;
+                String colName = null;
                 boolean collapse = false;
                 boolean first = false;
+                boolean mean = false;
+                boolean median = false;
+                boolean count = false;
                 
                 for (String t:spl2) {
                     if (fname == null) {
@@ -52,17 +56,51 @@ public class TabAnnotate extends AbstractOutputCommand {
                             collapse = true;
                         } else if (t.equals("first")) {
                             first = true;
+                        } else if (t.equals("mean")) {
+                            mean = true;
+                        } else if (t.equals("median")) {
+                            median = true;
+                        } else if (t.equals("count")) {
+                            count = true;
                         } else if (col == -1) {
-                            col = Integer.parseInt(t)-1;
+                        	try {                        	
+                        		col = Integer.parseInt(t)-1;
+	                        } catch (NumberFormatException e) {
+	                        	colName = t;
+	                        }
                         }
                     }
                 }
-                if (col > -1) {
-                    chain.add(new TabixTabAnnotator(spl[0], fname, col, collapse, first));
+                
+                TabixTabAnnotator tta = null;
+                
+                if (colName != null) {
+                    tta = new TabixTabAnnotator(spl[0], fname, colName);
+                } else if (col > -1) {
+                    tta = new TabixTabAnnotator(spl[0], fname, col);
                 } else {
-                    chain.add(new TabixTabAnnotator(spl[0], fname));
+                    tta = new TabixTabAnnotator(spl[0], fname);
                 }
-            } catch (NumberFormatException | IOException  e) {
+
+                if (collapse) {
+                	tta.setCollapse();
+                }
+                if (first) {
+                	tta.setFirst();
+                }
+                if (mean) {
+                	tta.setMean();
+                }
+                if (median) {
+                	tta.setMedian();
+                }
+                if (count) {
+                	tta.setCount();
+                }
+                
+                chain.add(tta);
+                
+            } catch (IOException  e) {
                 throw new CommandArgumentException(e);
             }
         } else {

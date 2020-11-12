@@ -38,6 +38,61 @@ public class TabixAnnotation extends AbstractBasicAnnotator {
         this.collapse = collapse;
     }
 
+    public TabixAnnotation(String name, String filename, String colName, boolean isNumber, String altColName, boolean collapse)
+            throws IOException {
+        this.name = name;
+        this.filename = filename;
+        this.isNumber = isNumber;
+        this.tabix = getTabixFile(filename);
+        this.collapse = collapse;
+        
+
+        int altColNum = this.tabix.findColumnByName(altColName);
+        if (altColNum == -1) {
+        	throw new IOException("Unknown column name: "+ altColName);
+        }
+        this.altColNum = altColNum;
+
+        int colNum = this.tabix.findColumnByName(colName);
+        if (colNum == -1) {
+        	throw new IOException("Unknown column name: "+ colName);
+        }
+        this.colNum = colNum;
+    }
+
+    public TabixAnnotation(String name, String filename, String colName, boolean isNumber, int altColNum, boolean collapse)
+            throws IOException {
+        this.name = name;
+        this.filename = filename;
+        this.isNumber = isNumber;
+        this.altColNum = altColNum;
+        this.tabix = getTabixFile(filename);
+        this.collapse = collapse;
+        
+        int colNum = this.tabix.findColumnByName(colName);
+        if (colNum == -1) {
+        	throw new IOException("Unknown column name: "+ colName);
+        }
+
+        
+        this.colNum = colNum;
+    }
+
+    public TabixAnnotation(String name, String filename, int colNum, boolean isNumber, String altColName, boolean collapse)
+            throws IOException {
+        this.name = name;
+        this.filename = filename;
+        this.isNumber = isNumber;
+        this.tabix = getTabixFile(filename);
+        this.collapse = collapse;
+        this.colNum = colNum;
+        int altColNum = this.tabix.findColumnByName(altColName);
+        if (altColNum == -1) {
+        	throw new IOException("Unknown column name: "+ altColName);
+        }
+        this.altColNum = altColNum;
+    }
+
 
     private static TabixFile getTabixFile(String filename) throws IOException {
         if (!cache.containsKey(filename)) {
