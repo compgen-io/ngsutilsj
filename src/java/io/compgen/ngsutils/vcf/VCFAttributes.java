@@ -60,7 +60,7 @@ public class VCFAttributes {
 	public static VCFAttributes parseInfo(String s, VCFHeader header) throws VCFParseException {
 		VCFAttributes attrs = new VCFAttributes();
 		
-        if (!s.equals(VCFAttributeValue.MISSING)) {
+        if (!s.equals(VCFAttributeValue.MISSING.toString())) {
     		for (String el: s.split(";")) {
     			if (el.indexOf("=") == -1) {
                     if (header == null || header.isInfoAllowed(el)) {

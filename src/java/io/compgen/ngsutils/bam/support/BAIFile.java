@@ -38,7 +38,10 @@ public class BAIFile {
                     System.out.println("      [magic bin unmapped_begin="+ begin + ", unmapped_end="+ end +", n_mapped="+ mapped + ", n_unmapped="+ unmapped +"]");
                 } else {
                     for (int k=0; k<nChunk; k++) {
-                        long begin = DataIO.readUint64(is);
+                        @SuppressWarnings("unused")
+						long begin = DataIO.readUint64(is);
+
+                        @SuppressWarnings("unused")
                         long end = DataIO.readUint64(is);
         //                System.out.println("      [chunk " + k + ", begin="+ begin + ", end="+ end +"]");
                     }

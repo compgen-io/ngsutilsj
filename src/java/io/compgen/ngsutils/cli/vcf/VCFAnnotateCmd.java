@@ -300,12 +300,13 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
 			header.addLine("##ngsutilsj_vcf_annotateVersion="+NGSUtils.getVersion());
 		}
 		
-		VCFWriter writer;
-		if (out.equals("-")) {
-			writer = new VCFWriter(System.out, header);
-		} else {
-			writer = new VCFWriter(out, header);
-		}
+		VCFWriter writer = new VCFWriter(out, header);
+//		VCFWriter writer;
+//		if (out.equals("-")) {
+//			writer = new VCFWriter(System.out, header);
+//		} else {
+//			writer = new VCFWriter(out, header);
+//		}
 
 		VCFRecord rec = chain.get(chain.size()-1).next();
 		while (rec != null) {

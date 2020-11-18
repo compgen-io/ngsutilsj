@@ -54,7 +54,7 @@ public class InfoInFile extends AbstractBasicAnnotator {
 			} catch (VCFAttributeException e) {
 				throw new VCFAnnotatorException(e);
 			}
-			if (!val.equals(VCFAttributeValue.MISSING) && set.contains(val.trim())) {
+			if (!val.equals(VCFAttributeValue.MISSING.toString()) && set.contains(val.trim())) {
 				record.getInfo().put(flagName, VCFAttributeValue.EMPTY);
 			}
 		}

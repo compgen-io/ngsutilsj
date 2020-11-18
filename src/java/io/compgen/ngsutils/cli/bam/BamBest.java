@@ -460,7 +460,8 @@ public class BamBest extends AbstractCommand {
         }
         
         if (statsFilename != null) {
-            PrintStream stats = new PrintStream(new FileOutputStream(statsFilename));
+            @SuppressWarnings("resource")
+			PrintStream stats = new PrintStream(new FileOutputStream(statsFilename));
             for (i=0; i<inputs.length; i++) {
                 stats.println(inputs[i]+"\t"+inputCounts[i]);
             }

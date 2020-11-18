@@ -278,12 +278,13 @@ public class VCFFilterCmd extends AbstractOutputCommand {
 			header.addLine("##ngsutilsj__filterVersion="+NGSUtils.getVersion());
 		}
 		
-		VCFWriter writer;
-		if (out.equals("-")) {
-			writer = new VCFWriter(System.out, header);
-		} else {
-			writer = new VCFWriter(out, header);
-		}
+		VCFWriter writer = new VCFWriter(out, header);
+//		VCFWriter writer;
+//		if (out.equals("-")) {
+//			writer = new VCFWriter(System.out, header);
+//		} else {
+//			writer = new VCFWriter(out, header);
+//		}
 		
 		TallyValues<String> filterCounts = new TallyValues<String>();
 		TallyValues<String> filterCounts2 = new TallyValues<String>();

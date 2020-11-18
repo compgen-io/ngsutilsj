@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.InvocationTargetException;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.List;
@@ -16,7 +17,7 @@ public class Fastq {
     
     public static void registerSource(Class<? extends FastqReaderSource> clazz) {
         try {
-            FastqReaderSource newsrc = clazz.newInstance();
+            FastqReaderSource newsrc = clazz.getDeclaredConstructor().newInstance();
             int i=0;
             for (FastqReaderSource source: sources) {
                 if (newsrc.getPriority() < source.getPriority()) {
@@ -25,7 +26,7 @@ public class Fastq {
                 i++;
             }
             sources.add(i, newsrc);
-        } catch (InstantiationException | IllegalAccessException e) {
+        } catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException | SecurityException e) {
         }
     }
     

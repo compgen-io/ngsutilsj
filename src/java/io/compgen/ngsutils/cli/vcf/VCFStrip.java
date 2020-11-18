@@ -119,12 +119,13 @@ public class VCFStrip extends AbstractOutputCommand {
 		    header.addLine("##ngsutilsj_vcf_stripVersion="+NGSUtils.getVersion());
 		}
 	
-		VCFWriter writer;
-		if (out.equals("-")) {
-			writer = new VCFWriter(System.out, header);
-		} else {
-			writer = new VCFWriter(out, header);
-		}
+		VCFWriter writer = new VCFWriter(out, header);
+//		VCFWriter writer;
+//		if (out.equals("-")) {
+//			writer = new VCFWriter(System.out, header);
+//		} else {
+//			writer = new VCFWriter(out, header);
+//		}
 
 		for (VCFRecord rec: IterUtils.wrap(reader.iterator())) {
             if (onlyOutputPass && rec.isFiltered()) {
