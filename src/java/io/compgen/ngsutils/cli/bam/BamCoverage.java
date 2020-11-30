@@ -1,5 +1,6 @@
 package io.compgen.ngsutils.cli.bam;
 
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Iterator;
 
@@ -26,6 +27,7 @@ import io.compgen.ngsutils.pileup.PileupRecord;
 public class BamCoverage extends AbstractOutputCommand {
     private String filename = null;
     private String bedFilename = null;
+    private String all = null;
     
     private GenomeSpan region = null;
     
@@ -37,7 +39,6 @@ public class BamCoverage extends AbstractOutputCommand {
     private int filterFlags = 1796;
     
     private boolean paired = false;
-    private boolean all = false;
     private boolean nogaps = false;
 
     @UnnamedArg(name = "FILE")
@@ -62,9 +63,9 @@ public class BamCoverage extends AbstractOutputCommand {
         }
     }
 
-    @Option(desc="Output all coverage values (default: a summary of quantiles)", name="all")
-    public void setAll(boolean val) {
-        this.all = val;
+    @Option(desc="Output all coverage values (default: a summary of quantiles)", name="all", helpValue="fname")
+    public void setAll(String fname) {
+        this.all = fname;
     }
 
     @Option(desc="Don't count gaps (RNA)", name="no-gaps")
@@ -175,14 +176,15 @@ public class BamCoverage extends AbstractOutputCommand {
             }
         }
 
-        if (all) {
-            tally.write(out);
-        } else {
-            out.write(("Min\t"+tally.getMin()+"\n").getBytes());
-            for (double pct: new double[]{0.05, 0.25, 0.5, 0.75, 0.95}) {
-                out.write((pct+"\t" + tally.getQuantile(pct)+"\n").getBytes());
-            }
-            out.write(("Max\t"+tally.getMax()+"\n").getBytes());
+        if (all != null) {
+        	FileOutputStream allOut = new FileOutputStream(all);
+            tally.write(allOut);
+            allOut.close();
         }
+        out.write(("Min\t"+tally.getMin()+"\n").getBytes());
+        for (double pct: new double[]{0.05, 0.25, 0.5, 0.75, 0.95}) {
+            out.write((pct+"\t" + tally.getQuantile(pct)+"\n").getBytes());
+        }
+        out.write(("Max\t"+tally.getMax()+"\n").getBytes());
     }
 }
