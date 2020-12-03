@@ -56,10 +56,6 @@ public class BamCount extends AbstractOutputCommand {
     private int filterFlags = 0;
     private int requiredFlags = 0;
     
-
-    // VCF options
-
-
     private Orientation orient = Orientation.UNSTRANDED;
 
     @Option(desc = "Only keep properly paired reads", name = "proper-pairs")

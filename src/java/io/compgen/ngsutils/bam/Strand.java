@@ -24,6 +24,15 @@ public enum Strand {
         return NONE;
     }
 
+    public boolean matches(Strand val) {
+    	if (this == NONE || val == NONE) {
+    		return true;
+    	}
+    	
+    	return val == this;
+    }
+
+    
     public Strand getOpposite() {
         if (this == PLUS) {
             return MINUS;

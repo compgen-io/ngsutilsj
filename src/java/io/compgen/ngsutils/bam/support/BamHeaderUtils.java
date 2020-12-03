@@ -32,6 +32,8 @@ public class BamHeaderUtils {
             pgID = pgTemplate + i;
             if (records!=null) {
                 for (SAMProgramRecord record: records) {
+                	
+                	// This might be off...
                     if (mostRecent == null && (record.getPreviousProgramGroupId() == null || record.getPreviousProgramGroupId().equals(""))) {
                        mostRecent = record;
                     }

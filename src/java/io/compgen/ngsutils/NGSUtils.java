@@ -21,6 +21,7 @@ import io.compgen.ngsutils.cli.bam.BamCount;
 import io.compgen.ngsutils.cli.bam.BamCoverage;
 import io.compgen.ngsutils.cli.bam.BamDiscord;
 import io.compgen.ngsutils.cli.bam.BamExpressedRegions;
+import io.compgen.ngsutils.cli.bam.BamExtract;
 import io.compgen.ngsutils.cli.bam.BamFilterCli;
 import io.compgen.ngsutils.cli.bam.BamFlagDuplicates;
 import io.compgen.ngsutils.cli.bam.BamReadGroup;
@@ -74,6 +75,7 @@ import io.compgen.ngsutils.cli.vcf.VCFChrFix;
 import io.compgen.ngsutils.cli.vcf.VCFCount;
 import io.compgen.ngsutils.cli.vcf.VCFExportCmd;
 import io.compgen.ngsutils.cli.vcf.VCFFilterCmd;
+import io.compgen.ngsutils.cli.vcf.VCFSVToFASTA;
 import io.compgen.ngsutils.cli.vcf.VCFStrip;
 import io.compgen.ngsutils.cli.vcf.VCFToBED;
 import io.compgen.ngsutils.cli.vcf.VCFToBEDPE;
@@ -178,7 +180,9 @@ public class NGSUtils {
             .addCommand(BamRemoveClipping.class)
             .addCommand(VCFToBEDPE.class)
             .addCommand(BedStats.class)
-        	.addCommand(BamRefCount.class);
+        	.addCommand(BamRefCount.class)
+        	.addCommand(VCFSVToFASTA.class)
+        	.addCommand(BamExtract.class);
 
         try {
             if (args.length == 0) {
