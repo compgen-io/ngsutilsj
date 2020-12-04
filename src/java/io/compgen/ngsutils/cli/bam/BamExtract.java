@@ -53,6 +53,7 @@ public class BamExtract extends AbstractOutputCommand {
 
     private boolean stranded = false;
     private boolean contained = false;
+    private boolean spanning = false;
     private boolean lenient = false;
     private boolean silent = false;
     private boolean paired = false;
@@ -126,6 +127,11 @@ public class BamExtract extends AbstractOutputCommand {
         if (this.region == null) {
         	throw new CommandArgumentException("Unable to parse region: "+region);
         }
+    }
+
+    @Option(desc="Only return reads that span a variant/region (default: false)", name="spanning")
+    public void setSpanning(boolean spanning) {
+        this.spanning = spanning;
     }
 
     @Option(desc="Only return reads that are completely contained with the region (default: false, Not valid for VCF input)", name="contained")
@@ -363,22 +369,62 @@ public class BamExtract extends AbstractOutputCommand {
             	}
             }
 
+            
         	// this is R1
     		if (!readsWritten.contains(read.getReadName())) {
         		if (paired) {
                 	SAMRecord mate = reader2.queryMate(read);
                 	if (mate != null) {
-                		readsWritten.add(read.getReadName());
-                        writer.addAlignment(read);
-                        writer.addAlignment(mate);	                    		
+
+                    	boolean passing = !spanning;
+                        if (spanning) {
+                        	if (read.getAlignmentStart() <= start && read.getAlignmentEnd() >= end) {
+                        		// split read
+                        		passing = true;
+                        	}
+                        	if (mate.getAlignmentStart() <= start && mate.getAlignmentEnd() >= end) {
+                        		// split read
+                        		passing = true;
+                        	}
+                        	
+                        	if (read.getReferenceName().equals(mate.getReferenceName())) {
+                        		if (read.getAlignmentStart() < mate.getAlignmentStart()) {
+                                	if (read.getAlignmentStart() <= start && mate.getAlignmentEnd() >= end) {
+                                		// split read
+                                		passing = true;
+                                	}
+                        		} else {
+                                	if (mate.getAlignmentStart() <= start && read.getAlignmentEnd() >= end) {
+                                		// split read
+                                		passing = true;
+                                	}
+                        		}
+                        	}
+                        }
+
+                        if (passing) {
+	                		readsWritten.add(read.getReadName());
+	                        writer.addAlignment(read);
+	                        writer.addAlignment(mate);
+                        }
                 	} else {
                 		if (verbose) {
                         	System.err.println("Read missing pair (not written): " + read.getReadName());
                 		}
                 	}
         		} else {
-            		readsWritten.add(read.getReadName());
-                    writer.addAlignment(read);
+                	boolean passing = !spanning;
+                    if (spanning) {
+                    	if (read.getAlignmentStart() <= start && read.getAlignmentEnd() >= end) {
+                    		// split read
+                    		passing = true;
+                    	}
+                    }
+
+                    if (passing) {
+	        			readsWritten.add(read.getReadName());
+	                    writer.addAlignment(read);
+                    }
         		}
     		}
         }
