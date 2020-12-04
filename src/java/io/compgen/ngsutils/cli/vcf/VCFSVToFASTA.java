@@ -153,7 +153,7 @@ public class VCFSVToFASTA extends AbstractOutputCommand {
 	                	ps.println(fasta.fetchSequence(chrom, pos2 - this.flankingLength, pos2 + this.flankingLength));
                 	} else {
 	                	ps.println(">ref|" + chrom2 + "|" + (pos2 + this.flankingLength) + "|" + (pos2 - this.flankingLength) + "|" + rec.getDbSNPID() + "|" + svTypeValue + "|" + ctValue + "|B");
-	                	ps.println(SeqUtils.revcomp(fasta.fetchSequence(chrom, pos2 - this.flankingLength, pos2 + this.flankingLength)));
+	                	ps.println(SeqUtils.revcomp(fasta.fetchSequence(chrom2, pos2 - this.flankingLength, pos2 + this.flankingLength)));
 	            	}
             	}
 
