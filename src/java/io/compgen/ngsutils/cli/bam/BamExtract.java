@@ -94,7 +94,7 @@ public class BamExtract extends AbstractOutputCommand {
         this.tmpDir = tmpDir;
     }
 
-    @Option(desc = "Basews of extra flanking sequence to include", name = "flanking")
+    @Option(desc = "Bases of extra flanking sequence to include", name = "flanking")
     public void setFlanking(int flanking) {
         this.flanking = flanking;
     }
