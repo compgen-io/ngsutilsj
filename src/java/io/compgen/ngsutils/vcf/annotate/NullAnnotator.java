@@ -65,4 +65,8 @@ public class NullAnnotator implements VCFAnnotator {
     @Override
     public void setAltPos(String key) throws VCFAnnotatorException {
     }
+
+	@Override
+	public void setEndPos(String endPos) throws VCFAnnotatorException {
+	}
 }

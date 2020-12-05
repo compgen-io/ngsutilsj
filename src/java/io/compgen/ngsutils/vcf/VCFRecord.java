@@ -15,7 +15,7 @@ public class VCFRecord {
 	public static final String MISSING = ".";
 	
 	protected String chrom;
-	protected int pos;
+	protected int pos; // one-based
 	protected String dbSNPID = "";
 	protected String ref = "";
 	protected List<String> alt = null;

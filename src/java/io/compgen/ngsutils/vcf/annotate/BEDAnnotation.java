@@ -64,11 +64,10 @@ public class BEDAnnotation extends AbstractBasicAnnotator {
 
 	@Override
 	public void annotate(VCFRecord record) throws VCFAnnotatorException {
-
 	    GenomeSpan pos;
         
 	    try {
-	        pos = new GenomeSpan(getChrom(record), getPos(record));
+	        pos = new GenomeSpan(getChrom(record), getPos(record)-1, getEndPos(record)); // VCF pos are 1-based
 	    } catch (VCFAnnotatorMissingAltException ex) {
 	        return;
 	    }

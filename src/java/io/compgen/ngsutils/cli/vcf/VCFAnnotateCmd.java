@@ -37,6 +37,7 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
 	private boolean onlyPassing = false;
 	private String altChrom = null;
 	private String altPos = null;
+	private String endPos = null;
 	
 	List<VCFAnnotator> chain = new ArrayList<VCFAnnotator>();
 	
@@ -53,6 +54,11 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
     @Option(desc="Use an alternate INFO field for the position (ex: SV). If missing, skip annotation.", name="alt-pos")
     public void setAltPos(String key) throws CommandArgumentException {
         this.altPos = key;
+    }
+    
+    @Option(desc="Use an INFO field for the end of the variant (ex: CNA). Only useful for BED annotations.", name="end-pos")
+    public void setEndPos(String key) throws CommandArgumentException {
+        this.endPos = key;
     }
     
     @Option(desc="Add distance to nearest variant (INFO:CG_VARDIST)", name="vardist")
@@ -285,6 +291,12 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
             }
         }
 
+        if (endPos != null) {
+            for (int i=0; i< chain.size(); i++) {
+                chain.get(i).setEndPos(endPos);
+            }
+        }
+        
 		VCFHeader header = reader.getHeader();
 		for (int i=0; i< chain.size(); i++) {
 			chain.get(i).setHeader(header);

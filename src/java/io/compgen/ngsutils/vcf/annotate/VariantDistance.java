@@ -91,13 +91,12 @@ public class VariantDistance implements VCFAnnotator {
 
     @Override
     public void setAltChrom(String key) throws VCFAnnotatorException {
-        // TODO Auto-generated method stub
-        
     }
 
     @Override
     public void setAltPos(String key) throws VCFAnnotatorException {
-        // TODO Auto-generated method stub
-        
     }
+	@Override
+	public void setEndPos(String endPos) throws VCFAnnotatorException {
+	}
 }

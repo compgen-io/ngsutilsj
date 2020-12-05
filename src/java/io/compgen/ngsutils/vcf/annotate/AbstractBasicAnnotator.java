@@ -10,6 +10,7 @@ public abstract class AbstractBasicAnnotator implements VCFAnnotator {
 	protected VCFHeader header = null;
     protected String altChrom = null;
     protected String altPos = null;
+    protected String endPosKey = null;
 	
 	protected abstract void annotate(VCFRecord record) throws VCFAnnotatorException;
 	public abstract void setHeaderInner(VCFHeader header) throws VCFAnnotatorException;
@@ -53,6 +54,10 @@ public abstract class AbstractBasicAnnotator implements VCFAnnotator {
         this.altPos=key;
     }
 
+    public void setEndPos(String key) throws VCFAnnotatorException {
+        this.endPosKey=key;
+    }
+
     protected String getChrom(VCFRecord rec) throws VCFAnnotatorMissingAltException {
         if (altChrom == null) {
             return rec.getChrom();
@@ -69,8 +74,14 @@ public abstract class AbstractBasicAnnotator implements VCFAnnotator {
 
     protected int getPos(VCFRecord rec) throws VCFAnnotatorMissingAltException {
         if (altPos == null) {
-            return rec.getPos();
+        	if (rec.getRef().length()==1) {
+        		return rec.getPos();
+        	} else {
+        		// this is a deletion, so the variant is actually the next base
+        		return rec.getPos()+1; 
+        	}
         }
+        
         VCFAttributeValue pos = rec.getInfo().get(altPos);
         
         if (pos == null) {
@@ -82,5 +93,33 @@ public abstract class AbstractBasicAnnotator implements VCFAnnotator {
             throw new VCFAnnotatorMissingAltException(e);
         }
     }
-    
+
+    protected int getEndPos(VCFRecord rec) throws VCFAnnotatorMissingAltException {
+        if (endPosKey == null) {
+        	
+        	if (rec.getRef().length()==1) {
+        		return rec.getPos();
+        	}
+        	
+        	// if this is a deletion, the "endpos" is further down the chrom.
+        	//
+        	// ref = CATCGA
+        	// alt = C
+        	// length of variant = 5
+        	
+            return rec.getPos() - 1 + rec.getRef().length();
+        }
+        
+        VCFAttributeValue pos = rec.getInfo().get(endPosKey);
+        
+        if (pos == null) {
+            throw new VCFAnnotatorMissingAltException("Missing key: "+endPosKey);
+        }
+        try {
+            return pos.asInt();
+        } catch (NumberFormatException e) {
+            throw new VCFAnnotatorMissingAltException(e);
+        }
+    }
+
 }

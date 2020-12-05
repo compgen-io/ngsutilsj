@@ -11,4 +11,5 @@ public interface VCFAnnotator {
 	
     public void setAltChrom(String key) throws VCFAnnotatorException;
     public void setAltPos(String key) throws VCFAnnotatorException;
+	public void setEndPos(String endPos) throws VCFAnnotatorException;
 }
