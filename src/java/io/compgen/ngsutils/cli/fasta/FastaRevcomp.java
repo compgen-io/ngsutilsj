@@ -66,11 +66,15 @@ public class FastaRevcomp extends AbstractOutputCommand {
 	
 	public class FASTAFileReader implements FASTAStreamReader {
 		private final int buflen;
-		private final BufferedInputStream in;
+		private final InputStream in;
 		
 		public FASTAFileReader(String fname, int buflen) throws FileNotFoundException {
 			this.buflen = buflen;
-			this.in = new BufferedInputStream(new FileInputStream(fname));
+			if (fname.equals("-")) {
+				this.in = System.in;
+			} else {
+				this.in = new BufferedInputStream(new FileInputStream(fname));
+			}
 		}
 		
 		public FASTAFileReader(String fname) throws FileNotFoundException {
@@ -136,7 +140,9 @@ public class FastaRevcomp extends AbstractOutputCommand {
 
 		@Override
 		public void close() throws IOException {
-			this.in.close();
+			if (this.in != System.in) { 
+				this.in.close();
+			}
 		}
 	}
 	
