@@ -31,7 +31,7 @@ public abstract class AbstractBamFilter implements BamFilter, Iterable<SAMRecord
     protected SAMRecord nextRead = null;
 //    protected Map<String, SAMRecord> pairs = new HashMap<String, SAMRecord>();
 //    protected Set<String> keptpairs = new HashSet<String>();
-    protected Deque<SAMRecord> goodBuffer = new ArrayDeque<SAMRecord>();;
+    protected Deque<SAMRecord> nextReadBuffer = new ArrayDeque<SAMRecord>();;
     protected SAMRecord nextNextRead = null;
     
     public BamFilter getParent() {
@@ -41,8 +41,14 @@ public abstract class AbstractBamFilter implements BamFilter, Iterable<SAMRecord
     protected void checkNext() {
         if (pairedKeep || pairedRemove) {
             while (nextRead == null) {
-                if (goodBuffer.size()>0) {
-                    nextRead = goodBuffer.removeFirst();
+            	// For --pair-keep and --pair-remove, we keep track of all reads by their names
+            	// So, all reads with the same name are pulled from the parent and processed together.
+            	// Then if one read passes or fails, we apply the same to the rest of the set.
+            	//
+            	// GoodBuffer is what holds the list of good next reads.
+            	
+                if (nextReadBuffer.size()>0) {
+                    nextRead = nextReadBuffer.removeFirst();
                     return;
                 }
                         
@@ -53,12 +59,14 @@ public abstract class AbstractBamFilter implements BamFilter, Iterable<SAMRecord
                     return;
                 }
 
-                goodBuffer.add(nextNextRead);
+                nextReadBuffer.add(nextNextRead);
+                nextNextRead = null;
                 
                 while (parent.hasNext()) {
                     SAMRecord curRead = parent.next();
-                    if (curRead.getReadName().equals(nextNextRead.getReadName())) {
-                        goodBuffer.add(curRead);
+                	total++;
+                    if (curRead.getReadName().equals(nextReadBuffer.getFirst().getReadName())) {
+                        nextReadBuffer.add(curRead);
                     } else {
                         nextNextRead = curRead;
                         break;
@@ -67,31 +75,33 @@ public abstract class AbstractBamFilter implements BamFilter, Iterable<SAMRecord
 
                 boolean failed = false;
                 boolean passed = false;
-                for (SAMRecord read: goodBuffer) {
+                for (SAMRecord read: nextReadBuffer) {
                     if (keepRead(read)) {
                         passed = true;
                     } else {
                         failed = true;
                     }
                 }
-                
+
                 if (pairedKeep) {
                     if (!passed) {
-                        for (SAMRecord read: goodBuffer) {
+                        for (SAMRecord read: nextReadBuffer) {
                             failedRead(read);
+                            removed++;
                         }
-                        goodBuffer.clear();
+                        nextReadBuffer.clear();
                     }
                 } else if (pairedRemove) {
                     if (failed) {
-                        for (SAMRecord read: goodBuffer) {
+                        for (SAMRecord read: nextReadBuffer) {
                             failedRead(read);
+                            removed++;
                         }
                     }
                 }
-                
-                if (nextRead == null && goodBuffer.size()>0) {
-                    nextRead = goodBuffer.removeFirst();
+
+                if (nextRead == null && nextReadBuffer.size()>0) {
+                    nextRead = nextReadBuffer.removeFirst();
                     return;
                 }
             }

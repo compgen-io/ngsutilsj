@@ -251,6 +251,13 @@ public class BamFilterCli extends AbstractCommand {
         }
     }
 
+    @Option(desc = "Keep all mapped reads (even if the mate is unmapped)", name = "mapped-orphan")
+    public void setMappedOrphan(boolean val) {
+        if (val) {
+            filterFlags |= ReadUtils.READ_UNMAPPED_FLAG;
+        }
+    }
+
     @Option(desc = "Only keep unmapped reads", name = "unmapped")
     public void setUnmapped(boolean val) {
         if (val) {
@@ -424,7 +431,7 @@ public class BamFilterCli extends AbstractCommand {
         } else {
             out = factory.makeBAMWriter(header, true, outStream);
         }
-
+        
         SAMFileWriter failedWriter = null;
         if (failedFilename != null) {
             failedWriter = factory.makeBAMWriter(header, true, new File(failedFilename));
