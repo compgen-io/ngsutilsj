@@ -19,6 +19,7 @@ import io.compgen.ngsutils.fastq.FastqReader;
 import io.compgen.ngsutils.fastq.filter.ExcludeListFilter;
 import io.compgen.ngsutils.fastq.filter.FastqFilter;
 import io.compgen.ngsutils.fastq.filter.FilteringException;
+import io.compgen.ngsutils.fastq.filter.FlankingWildcardFilter;
 import io.compgen.ngsutils.fastq.filter.NameSubstring;
 import io.compgen.ngsutils.fastq.filter.PairedFilter;
 import io.compgen.ngsutils.fastq.filter.PrefixQualFilter;
@@ -33,6 +34,7 @@ import io.compgen.ngsutils.fastq.filter.WildcardFilter;
 @Command(name = "fastq-filter", desc = "Filters reads from a FASTQ file.", category="fastq")
 public class FastqFilterCli extends AbstractOutputCommand {
     private boolean paired = false;
+    private boolean flankingwild = false;
     private int suffixQuality = -1;
     private int prefixQuality = -1;
     private int prefixTrimLength = -1;
@@ -124,6 +126,11 @@ public class FastqFilterCli extends AbstractOutputCommand {
         this.trimMinPctMatch = trimMinPctMatch;
     }
     
+    @Option(desc="Remove flanking wildcard (5' and 3')", name="flanking-wildcard")
+    public void setFlankingWild(boolean flankingwild) {
+        this.flankingwild = flankingwild;
+    }
+
     @Option(desc="Paired filter (for interleaved files) (default: not used)", name="paired")
     public void setPaired(boolean paired) {
         this.paired = paired;
@@ -210,6 +217,11 @@ public class FastqFilterCli extends AbstractOutputCommand {
 
         if (suffixTrimLength > 0) {
             parent = new SuffixTrimFilter(parent, verbose, suffixTrimLength);
+            filters.add((FastqFilter) parent);
+        }
+        
+        if (flankingwild) {
+            parent = new FlankingWildcardFilter(parent, verbose);
             filters.add((FastqFilter) parent);
         }
 
