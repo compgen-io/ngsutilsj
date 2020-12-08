@@ -1,5 +1,6 @@
 package io.compgen.ngsutils.cli.fastq;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -36,6 +37,14 @@ public class FastqOverlap extends AbstractCommand {
     @UnnamedArg(name = "R1.fastq [R2.fastq]", required=true)
     public void setFilename(String[] filenames) throws CommandArgumentException {
         this.filenames = filenames;
+
+        for (String filename: filenames) {
+	        if (!filename.equals("-")) {
+	            if (!new File(filename).exists()) {
+	                throw new CommandArgumentException("Missing file: "+filename);
+	            }
+	        }
+        }
     }
 
     @Option(name="interleaved", desc="Input FASTQ file is interleaved")
@@ -48,22 +57,22 @@ public class FastqOverlap extends AbstractCommand {
         this.minOverlap = minOverlap;
     }
     
-    @Option(name="overlap", charName="o", desc="Write all overlapping reads to this FASTQ file (filenames ending in .gz will be compressed)", required=true)
+    @Option(name="overlap", charName="o", desc="Write all overlapping reads to this FASTQ file (filenames ending in .gz will be compressed, - for stdout)", required=true, helpValue="fname")
     public void setOverlap(String overlap) throws IOException {
         this.overlapFilename = overlap;
     }
     
-    @Option(name="split", desc="Write all split reads to this (interleaved) FASTQ file (filenames ending in .gz will be compressed)")
+    @Option(name="split", desc="Write all split reads to this (interleaved) FASTQ file (filenames ending in .gz will be compressed)", helpValue="fname")
     public void setSplit(String split) throws IOException {
         this.splitFilename = split;
     }
     
-    @Option(name="split1", desc="Write all split R1 reads to this FASTQ file (filenames ending in .gz will be compressed)")
+    @Option(name="split1", desc="Write all split R1 reads to this FASTQ file (filenames ending in .gz will be compressed)", helpValue="fname")
     public void setSplit1(String split) throws IOException {
         this.splitFilename1 = split;
     }
     
-    @Option(name="split2", desc="Write all split R2 reads to this FASTQ file (filenames ending in .gz will be compressed)")
+    @Option(name="split2", desc="Write all split R2 reads to this FASTQ file (filenames ending in .gz will be compressed)", helpValue="fname")
     public void setSplit2(String split) throws IOException {
         this.splitFilename2 = split;
     }
@@ -86,79 +95,84 @@ public class FastqOverlap extends AbstractCommand {
 	        }
 	        
 	        if (filenames[0].equals("-") || filenames[1].equals("-") ) {
-	        	throw new CommandArgumentException("R1 and R2 files can not be read from stdin");
+	        	throw new CommandArgumentException("R1 and R2 files can not be read from stdin (stdin input is only allowed for interleaved FASTQ)");
 	        }
 		} else {
 	        if (filenames.length != 1) {
 	        	throw new CommandArgumentException("You must specify one (and only one) interleaved FASTQ file");
 	        }
 	        
-	        if (filenames[0].equals("-")) {
-	        	throw new CommandArgumentException("FASTQ file can not be read from stdin");
-	        }
 	        if (splitFilename != null && (splitFilename1 != null || splitFilename2 != null)) {
 	        	throw new CommandArgumentException("You cannot specify both --split and --split1/--split2");
 	        }
 		}
-        
         
         OutputStream outOverlap = null;
         OutputStream outSplit = null;
         OutputStream outSplit1 = null;
         OutputStream outSplit2 = null;
 
-        if (gzip || overlapFilename.endsWith(".gz")) {
+        if (overlapFilename.equals("-")) {
+        	outOverlap = System.out;
+        } else if (gzip || overlapFilename.endsWith(".gz")) {
         	outOverlap = new GZIPOutputStream(new FileOutputStream(overlapFilename));
         } else {
         	outOverlap = new FileOutputStream(overlapFilename);
         }
 
-        if (splitFilename != null && (gzip || splitFilename.endsWith(".gz"))) {
-        	outSplit = new GZIPOutputStream(new FileOutputStream(splitFilename));
-        } else {
-        	outSplit = new FileOutputStream(splitFilename);
+        if (splitFilename != null) {
+        	if (gzip || splitFilename.endsWith(".gz")) {
+	        	outSplit = new GZIPOutputStream(new FileOutputStream(splitFilename));
+	        } else {
+	        	outSplit = new FileOutputStream(splitFilename);
+	        }
         }
 
-        if (splitFilename1 != null && (gzip || splitFilename1.endsWith(".gz"))) {
-        	outSplit1 = new GZIPOutputStream(new FileOutputStream(splitFilename1));
-        } else {
-        	outSplit1 = new FileOutputStream(splitFilename1);
+        if (splitFilename1 != null) { 
+        	if (gzip || splitFilename1.endsWith(".gz")) {
+	        	outSplit1 = new GZIPOutputStream(new FileOutputStream(splitFilename1));
+	        } else {
+	        	outSplit1 = new FileOutputStream(splitFilename1);
+	        }
         }
 
-        if (splitFilename2 != null && (gzip || splitFilename2.endsWith(".gz"))) {
-        	outSplit2 = new GZIPOutputStream(new FileOutputStream(splitFilename2));
-        } else {
-        	outSplit2 = new FileOutputStream(splitFilename2);
+        if (splitFilename2 != null) {
+        	if (gzip || splitFilename2.endsWith(".gz")) {
+	        	outSplit2 = new GZIPOutputStream(new FileOutputStream(splitFilename2));
+	        } else {
+	        	outSplit2 = new FileOutputStream(splitFilename2);
+	        }
         }
 
         final FastqReader reader1;
         final FastqReader reader2;
-        FileInputStream fis1 = new FileInputStream(filenames[0]);
-        FileInputStream fis2 = new FileInputStream(filenames[1]);
 
-        reader1 = Fastq.open(fis1, null, fis1.getChannel(), filenames[0]);
+        if (filenames[0].equals("-")) {
+	        reader1 = Fastq.open(filenames[0]);
+        } else {
+	        FileInputStream fis1 = new FileInputStream(filenames[0]);
+	        reader1 = Fastq.open(fis1, null, fis1.getChannel(), filenames[0]);
+        }
+
         if (interleaved) {
         	reader2 = null; 
         } else {
+            FileInputStream fis2 = new FileInputStream(filenames[1]);
         	reader2 = Fastq.open(fis2, null, null, filenames[1]);
         }
-        
+
         Iterator<FastqRead> it1 = reader1.iterator();
         Iterator<FastqRead> it2 = null;
         
         if (interleaved) {
+        	it2 = it1;
+        } else {
         	it2 = reader2.iterator();
         }
         
-        while ((interleaved && it1.hasNext()) || (it1.hasNext() && it2.hasNext())) {
+        while (it1.hasNext() && it2.hasNext()) {
             FastqRead one = it1.next();
-            FastqRead two;
-            
-            if (interleaved) {
-            	two = it1.next();
-            } else {
-            	two = it2.next();
-            }
+            FastqRead two = it2.next();
 
             if (!one.getName().equals(two.getName())) {
             	throw new IOException("Unpaired FASTQ file(s) found!");
@@ -189,9 +203,13 @@ public class FastqOverlap extends AbstractCommand {
         
         
         reader1.close();
-        reader2.close();
+        if (reader2 != null) {
+        	reader2.close();
+        }
         
-        outOverlap.close();
+        if (outOverlap != System.out) {
+        	outOverlap.close();
+        }
         
         if (outSplit != null) {
         	outSplit.close();
@@ -215,7 +233,7 @@ public class FastqOverlap extends AbstractCommand {
 		
 		
 		String oneS = one.getSeq();
-		String twoC = SeqUtils.compliment(two.getSeq());
+		String twoC = SeqUtils.revcomp(two.getSeq());
 
 //		System.err.println("Two  : " + two.getSeq());
 //		System.err.println("Two-c: " + twoC);
