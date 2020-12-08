@@ -60,6 +60,7 @@ import io.compgen.ngsutils.cli.fastq.FastqCheck;
 import io.compgen.ngsutils.cli.fastq.FastqDemux;
 import io.compgen.ngsutils.cli.fastq.FastqFilterCli;
 import io.compgen.ngsutils.cli.fastq.FastqMerge;
+import io.compgen.ngsutils.cli.fastq.FastqOverlap;
 import io.compgen.ngsutils.cli.fastq.FastqSeparate;
 import io.compgen.ngsutils.cli.fastq.FastqSort;
 import io.compgen.ngsutils.cli.fastq.FastqSplit;
@@ -184,7 +185,8 @@ public class NGSUtils {
         	.addCommand(BamRefCount.class)
         	.addCommand(VCFSVToFASTA.class)
         	.addCommand(BamExtract.class)
-        	.addCommand(FastaRevcomp.class);
+        	.addCommand(FastaRevcomp.class)
+        	.addCommand(FastqOverlap.class);
 
         try {
             if (args.length == 0) {
