@@ -9,10 +9,13 @@ import io.compgen.cmdline.annotation.UnnamedArg;
 import io.compgen.cmdline.exceptions.CommandArgumentException;
 import io.compgen.cmdline.impl.AbstractOutputCommand;
 import io.compgen.common.IterUtils;
+import io.compgen.common.StringUtils;
 import io.compgen.common.TabWriter;
 import io.compgen.ngsutils.NGSUtils;
 import io.compgen.ngsutils.vcf.VCFReader;
 import io.compgen.ngsutils.vcf.VCFRecord;
+import io.compgen.ngsutils.vcf.VCFRecord.VCFAltPos;
+import io.compgen.ngsutils.vcf.VCFRecord.VCFVarType;
 
 
 @Command(name="vcf-tobedpe", desc="Convert a SV VCF file to BEDPE format", category="vcf")
@@ -25,12 +28,13 @@ public class VCFToBEDPE extends AbstractOutputCommand {
     private String nameKey = null;
     private String scoreKey = null;
     
-    @Option(desc="Use an alternate INFO field for the chromosome (ex: SV). If missing, skip annotation.", name="alt-chrom", defaultValue="CHR2")
+   
+    @Option(desc="Use an alternate INFO field for the chromosome (ex: SV). If missing, value is calculated from alt field.", name="alt-chrom")
     public void setAltChrom(String key) throws CommandArgumentException {
         this.altChrom = key;
     }
     
-    @Option(desc="Use an alternate INFO field for the position (ex: SV). If missing, skip annotation.", name="alt-pos", defaultValue="END")
+    @Option(desc="Use an alternate INFO field for the position (ex: END). For BNDs, this is calculated from the alt field.", name="alt-pos", defaultValue="END")
     public void setAltPos(String key) throws CommandArgumentException {
         this.altPos = key;
     }
@@ -103,9 +107,7 @@ public class VCFToBEDPE extends AbstractOutputCommand {
         writer.write("chrom2");
         writer.write("start2");
         writer.write("stop2");
-        if (nameKey != null || scoreKey != null) {
-            writer.write("name");
-        }
+        writer.write("name");
         
         if (scoreKey != null) {
             writer.write("score");
@@ -121,41 +123,58 @@ public class VCFToBEDPE extends AbstractOutputCommand {
             String chrom = rec.getChrom();
             int pos = rec.getPos();
 
-            String chrom2 = rec.getInfo().get(altChrom).toString();
-            int pos2 = rec.getInfo().get(altPos).asInt();
-			
-			
-            writer.write(chrom);
-            writer.write(((pos-1)));
-            writer.write((pos));
-
-            writer.write(chrom2);
-            writer.write(((pos2-1)));
-            writer.write((pos2));
-
-			if (nameKey != null) {
-			    if (nameKey.equals("@ID")) {
-			        writer.write(rec.getDbSNPID());
-			    } else {
-			        writer.write(rec.getInfo().get(nameKey).toString());
-			    }
-			}
-			
-			if (scoreKey2 != null) {
-			    if (nameKey == null) {
-			        // pad the output if necessary
-			        writer.write("");
-			    }
-			    
-			    if (scoreSample == null || scoreSample.equals("INFO")) {
-
-                    writer.write(rec.getInfo().get(scoreKey2).toString());
-			    } else {
-                    writer.write(rec.getSampleAttributes().get(scoreSampleIdx).get(scoreKey2).asString(scoreAllele));
-			    }
-			}
-			
-			writer.eol();
+            for (VCFAltPos altPos : rec.getAltPos(altChrom, altPos, null, null)) {
+	            writer.write(chrom);
+	            
+	            if (altPos.type == VCFVarType.DEL) {
+	            	// deletions are offset by one
+		            writer.write(pos);
+		            writer.write((pos+1));
+		            writer.write(altPos.chrom);
+		            writer.write((altPos.pos-1));
+		            writer.write((altPos.pos));
+	            } else if (altPos.type == VCFVarType.INS) {
+	            	// insertions are points
+		            writer.write((pos-1));
+		            writer.write(pos);
+		            writer.write(altPos.chrom);
+		            writer.write((altPos.pos-1));
+		            writer.write(altPos.pos);
+	            } else {
+		            writer.write((pos-1));
+		            writer.write((pos));
+		            writer.write(altPos.chrom);
+		            writer.write((altPos.pos-1));
+		            writer.write(altPos.pos);
+	            }
+	
+	
+				if (nameKey != null) {
+				    if (nameKey.equals("@ID")) {
+				        writer.write(rec.getDbSNPID());
+				    } else {
+				        writer.write(rec.getInfo().get(nameKey).toString());
+				    }
+				} else {
+					if (altPos.type == VCFVarType.DEL) {
+						writer.write("<DEL>");
+					} else if (altPos.type == VCFVarType.INS) {
+						writer.write("<INS>");
+					} else {
+						writer.write(StringUtils.join(",",rec.getAlt()));
+					}
+				}
+				
+				if (scoreKey2 != null) {
+				    if (scoreSample == null || scoreSample.equals("INFO")) {
+	                    writer.write(rec.getInfo().get(scoreKey2).toString());
+				    } else {
+	                    writer.write(rec.getSampleAttributes().get(scoreSampleIdx).get(scoreKey2).asString(scoreAllele));
+				    }
+				}
+				
+				writer.eol();
+            }
 		}
 		
 		reader.close();

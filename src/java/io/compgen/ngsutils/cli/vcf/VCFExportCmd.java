@@ -99,73 +99,77 @@ public class VCFExportCmd extends AbstractOutputCommand {
     }
     
     @Option(desc="Export FORMAT field", name="format", helpValue="KEY{:SAMPLE:ALLELE}", allowMultiple=true)
-    public void setFormat(String val) throws CommandArgumentException {
-        boolean ignoreMissing = true;
-        
-        if (val.endsWith(":!")) {
-            ignoreMissing = false;
-            val = val.substring(0,  val.length()-2);
-        } else if (val.endsWith(":?")) {
-            ignoreMissing = true;
-            val = val.substring(0,  val.length()-2);
-        }
-        
-        String key=null;
-        String sample=null;
-        String allele=null;
-        String newName=null;
-        
-        
-        String[] spl = val.split(":");
-        
-        for (String s: spl) {
-            if (key == null) {
-                key = s;
-            } else if (sample == null) {
-                sample = s;
-            } else if (allele == null) {
-                allele = s;
-            } else if (newName == null) {
-                newName = s;
-            }
-        }
-
-        if (key == null || key.equals("")) {
-            throw new CommandArgumentException("Missing argument for --format!");
-        }
-        if (sample != null && sample.equals("")) {
-            sample = null;
-        }
-        if (allele != null && allele.equals("")) {
-            allele = null;
-        }
-        if (newName != null && newName.equals("")) {
-            newName = null;
-        }
-
-        if (newName != null && sample == null) {
-            throw new CommandArgumentException("Invalid argument for --format! You must specify a SAMPLE is ALIAS is given.");
-        }
-        
-        chain.add(new ExportFormatField(key, sample, allele, ignoreMissing, newName));
+    public void setFormat(String vals) throws CommandArgumentException {
+    	for (String val: vals.split(",")) {
+	        boolean ignoreMissing = true;
+	        
+	        if (val.endsWith(":!")) {
+	            ignoreMissing = false;
+	            val = val.substring(0,  val.length()-2);
+	        } else if (val.endsWith(":?")) {
+	            ignoreMissing = true;
+	            val = val.substring(0,  val.length()-2);
+	        }
+	        
+	        String key=null;
+	        String sample=null;
+	        String allele=null;
+	        String newName=null;
+	        
+	        
+	        String[] spl = val.split(":");
+	        
+	        for (String s: spl) {
+	            if (key == null) {
+	                key = s;
+	            } else if (sample == null) {
+	                sample = s;
+	            } else if (allele == null) {
+	                allele = s;
+	            } else if (newName == null) {
+	                newName = s;
+	            }
+	        }
+	
+	        if (key == null || key.equals("")) {
+	            throw new CommandArgumentException("Missing argument for --format!");
+	        }
+	        if (sample != null && sample.equals("")) {
+	            sample = null;
+	        }
+	        if (allele != null && allele.equals("")) {
+	            allele = null;
+	        }
+	        if (newName != null && newName.equals("")) {
+	            newName = null;
+	        }
+	
+	        if (newName != null && sample == null) {
+	            throw new CommandArgumentException("Invalid argument for --format! You must specify a SAMPLE is ALIAS is given.");
+	        }
+	        
+	        chain.add(new ExportFormatField(key, sample, allele, ignoreMissing, newName));
+    	}
     }
         
     @Option(desc="Export INFO field", name="info", helpValue="KEY{:ALLELE}", allowMultiple=true)
-    public void setInfo(String val) throws CommandArgumentException {
-    	boolean ignoreMissing = true;
-        if (val.endsWith(":!")) {
-            ignoreMissing = false;
-            val = val.substring(0,  val.length()-2);
-        } else if (val.endsWith(":?")) {
-            ignoreMissing = true;
-            val = val.substring(0,  val.length()-2);
-        }
-
-        String[] spl = val.split(":");
-    	if (spl.length == 1) {
-    		chain.add(new ExportInfoField(spl[0], null, ignoreMissing));
-    	} else {
-    		chain.add(new ExportInfoField(spl[0], spl[1], ignoreMissing));
+    public void setInfo(String vals) throws CommandArgumentException {
+    	for (String val: vals.split(",")) {
+	    	boolean ignoreMissing = true;
+	        if (val.endsWith(":!")) {
+	            ignoreMissing = false;
+	            val = val.substring(0,  val.length()-2);
+	        } else if (val.endsWith(":?")) {
+	            ignoreMissing = true;
+	            val = val.substring(0,  val.length()-2);
+	        }
+	
+	        String[] spl = val.split(":");
+	    	if (spl.length == 1) {
+	    		chain.add(new ExportInfoField(spl[0], null, ignoreMissing));
+	    	} else {
+	    		chain.add(new ExportInfoField(spl[0], spl[1], ignoreMissing));
+	    	}
     	}
     }
     

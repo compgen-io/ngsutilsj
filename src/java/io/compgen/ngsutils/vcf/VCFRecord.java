@@ -9,7 +9,89 @@ import io.compgen.common.StringUtils;
 
 public class VCFRecord {
 
-    // passing filter
+    public enum VCFSVConnection {
+    	NA,
+    	FiveToFive,
+    	FiveToThree,
+    	ThreeToThree,
+    	ThreeToFive,
+    	NToN,
+    	UNK;    	
+
+    	public static VCFSVConnection parse(String val) {
+    		if (val.toLowerCase().equals("5to5")) {
+    			return FiveToFive;
+    		} else if (val.toLowerCase().equals("5to3")) {
+    			return FiveToThree;
+    		} else if (val.toLowerCase().equals("3to3")) {
+    			return ThreeToThree;
+    		} else if (val.toLowerCase().equals("3to5")) {
+    			return ThreeToFive;
+    		} else if (val.toLowerCase().equals("NtoN")) {
+    			return NToN;
+    		} else {
+    			return NA;
+    		}
+    	}
+	}
+
+    public enum VCFVarType {
+    	SNV,
+    	BND,
+    	DEL,
+    	INS,
+    	INV,
+    	DUP,
+    	CNV,
+    	UNK;
+
+    	public static VCFVarType parse(String val) {
+    		if (val.equals("DEL")) {
+    			return DEL;
+    		} else if (val.equals("BND")) {
+    			return BND;
+    		} else if (val.equals("TRA")) {
+    			return BND;
+    		} else if (val.equals("INS")) {
+    			return INS;
+    		} else if (val.equals("INV")) {
+    			return INV;
+    		} else if (val.equals("DUP")) {
+    			return DUP;
+    		} else if (val.equals("CNV")) {
+    			return CNV;
+    		} else {
+    			return UNK;
+    		}
+    	}
+	}
+
+	public class VCFAltPos {
+    	public final String chrom;
+    	public final int pos;
+    	public final VCFVarType type;
+    	public final VCFSVConnection connType;
+    	public final String alt;
+    	
+    	public VCFAltPos(String chrom, int pos, VCFVarType type, VCFSVConnection connType, String alt) {
+    		this.chrom = chrom;
+    		this.pos = pos;
+    		this.alt = alt;
+    		if (type != null) {
+    			this.type = type;
+    		} else {
+    			this.type = VCFVarType.SNV;
+    		}
+
+    		if (connType != null) {
+    			this.connType = connType;
+    		} else {
+    			this.connType = VCFSVConnection.NA;
+    		}
+    	}
+	}
+
+	// passing filter
 	public static final String PASS = "PASS";
 	// missing value marker
 	public static final String MISSING = ".";
@@ -19,6 +101,7 @@ public class VCFRecord {
 	protected String dbSNPID = "";
 	protected String ref = "";
 	protected List<String> alt = null;
+	protected String altOrig = null;
 	protected double qual = -1;
 	protected List<String> filters = null;
 
@@ -32,7 +115,7 @@ public class VCFRecord {
 	}
 	
 	public VCFRecord(String chrom, int pos, String dbSNPID, String ref, List<String> alt, double qual,
-			List<String> filters, VCFAttributes info, List<VCFAttributes> sampleAttributes) {
+			List<String> filters, VCFAttributes info, List<VCFAttributes> sampleAttributes, String altFull) {
 		this.chrom = chrom;
 		this.pos = pos;
 		this.dbSNPID = dbSNPID;
@@ -42,6 +125,7 @@ public class VCFRecord {
 		this.filters = filters;
 		this.info = info;
 		this.sampleAttributes = sampleAttributes;
+		this.altOrig = altFull;
 	}
 
     public void write(OutputStream out) throws IOException{
@@ -113,6 +197,7 @@ public class VCFRecord {
 		}
 		
 		String ref = cols[3];
+		String altOrig = cols[4];
 		List<String> alts = null;
 		for (String a: cols[4].split(",")) {
 			if (!a.equals(MISSING)) {
@@ -164,7 +249,7 @@ public class VCFRecord {
 			}
 		}
 		
-		return new VCFRecord(chrom, pos, dbSNPID, ref, alts, qual, filters, info, samples);
+		return new VCFRecord(chrom, pos, dbSNPID, ref, alts, qual, filters, info, samples, altOrig);
 	}
 
 	public String getChrom() {
@@ -213,6 +298,11 @@ public class VCFRecord {
 	public void clearAlt() {
 		this.alt = null;
 	}
+
+	public String getAltOrig() {
+		return altOrig;
+	}
+
 	
 	public double getQual() {
 		return qual;
@@ -272,5 +362,148 @@ public class VCFRecord {
     public boolean isFiltered() {
         return (filters != null && filters.size() > 0);
     }
+
+	public List<VCFAltPos> getAltPos() {
+		return getAltPos(null, null, null, null);
+	}
+
+	/** 
+	 * 
+	 * Parse the Alt values to determine where the end of the variant is (for SVs this is complex)
+	 * 
+	 * Default INFO keys:
+	 * altChromKey = none -- determined from alt
+	 * altPosKey = END
+	 * typeKey = SVTYPE
+	 * connKey = none -- determined from alt (for evething except INV)
+	 */
+	
+	public List<VCFAltPos> getAltPos(String altChromKey, String altPosKey, String typeKey, String connKey) {
+		if (altPosKey == null) {
+			altPosKey = "END";
+		}
+		if (typeKey == null) {
+			typeKey = "SVTYPE";
+		}
+		
+		List<VCFAltPos> ret = new ArrayList<VCFAltPos>();
+		
+		if (altChromKey != null) {
+			// If there is an alt-chrom key given, only one alt will be returned.
+			
+			if (getInfo().get(altChromKey) == null || getInfo().get(altPosKey) == null) {
+				return ret;
+			}
+			
+			String altChrom = getInfo().get(altChromKey).toString();
+            int altPos = getInfo().get(altPosKey).asInt();
+
+			VCFVarType altType = VCFVarType.SNV;
+			VCFSVConnection altConn = VCFSVConnection.NA;
+
+            if (typeKey != null && getInfo().get(typeKey) != null) {
+	            altType = VCFVarType.parse(getInfo().get(typeKey).toString());
+			}
+            if (connKey != null && getInfo().get(connKey) != null) {
+            	altConn = VCFSVConnection.parse(getInfo().get(connKey).toString());
+			}
+            
+            ret.add(new VCFAltPos(altChrom, altPos, altType, altConn, this.altOrig));
+            return ret;
+		}
+		
+		for (String alt: getAlt()) {
+			VCFVarType altType = VCFVarType.SNV;
+			VCFSVConnection altConn = VCFSVConnection.NA;
+            String altChrom = this.chrom;
+            int altPos = this.pos;
+
+        	if (alt.startsWith("[") || alt.startsWith("]") || alt.endsWith("[") || alt.endsWith("]")) {
+        		//BND
+        		String sub="";
+        		if (alt.startsWith("[")) {
+        			altType = VCFVarType.BND;
+        			altConn = VCFSVConnection.FiveToFive;
+        			sub = alt.substring(1,alt.indexOf("[", 2)-1);
+        		} else if (alt.startsWith("]")) {
+        			altType = VCFVarType.BND;
+        			altConn = VCFSVConnection.FiveToThree;
+        			sub = alt.substring(1,alt.indexOf("]", 2)-1);
+        		} else if (alt.endsWith("[")) {
+        			altType = VCFVarType.BND;
+        			altConn = VCFSVConnection.ThreeToFive;
+        			sub = alt.substring(alt.indexOf("[")+1,alt.length()-1);
+        		} else if (alt.endsWith("]")) {
+        			altType = VCFVarType.BND;
+        			altConn = VCFSVConnection.ThreeToThree;
+        			sub = alt.substring(alt.indexOf("]")+1,alt.length()-1);
+        		}
+
+        		String[] spl = sub.split(":");
+        		altChrom = spl[0];
+        		altPos = Integer.parseInt(spl[1]);
+        		
+        		
+        	} else if (alt.startsWith("<") && !alt.startsWith("<INS")) {
+        		// DEL, DUP, INV, CNV
+        		altChrom = chrom;
+
+        		if (alt.startsWith("<CNV")) {
+        			altType = VCFVarType.CNV;
+        			altConn = VCFSVConnection.NA;
+        		} else if (alt.startsWith("<INV")) {
+            		altType = VCFVarType.INV;
+        			altConn = VCFSVConnection.UNK;
+            	} else if (alt.startsWith("<DEL")) {
+            		altType = VCFVarType.DEL;
+        			altConn = VCFSVConnection.ThreeToFive;
+        		} else if (alt.startsWith("<DUP")) {
+            		altType = VCFVarType.DUP;
+        			altConn = VCFSVConnection.FiveToThree;
+        		}
+
+        		// These must specify an END value
+            	altPos = getInfo().get(altPosKey).asInt();
+
+        	} else {
+        		// INS or SNV
+        		if (alt.startsWith("<INS") || alt.length() > 1) {
+            		altChrom = chrom;
+        			altPos = pos;
+        			altType = VCFVarType.INS;
+        			altConn = VCFSVConnection.NToN;
+        		} else if (ref.length() > 1) {
+        			// this is an in-place deletion
+            		altChrom = chrom;
+        			altPos = pos + ref.length(); // VCF pos is 1-based... ug...        			
+        			altType = VCFVarType.DEL;
+        			altConn = VCFSVConnection.ThreeToFive;
+        		} else {
+            		altChrom = chrom;
+            		altPos = pos;
+            		altType = VCFVarType.SNV;
+        			altConn = VCFSVConnection.NA;
+        		}
+        	}
+
+        	if (altPosKey != null && getInfo().get(altPosKey)!= null) {
+        		altPos = getInfo().get(altPosKey).asInt();
+			}
+        	
+        	if (typeKey != null && getInfo().get(typeKey) != null) {
+	            altType = VCFVarType.parse(getInfo().get(typeKey).toString());
+			}
+            if (connKey != null && getInfo().get(connKey) != null) {
+            	altConn = VCFSVConnection.parse(getInfo().get(connKey).toString());
+			}
+
+
+            ret.add(new VCFAltPos(altChrom, altPos, altType, altConn, alt));
+            
+		}
+		
+		
+		return ret;
+	}
 
 }

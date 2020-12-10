@@ -1,6 +1,7 @@
 package io.compgen.ngsutils.cli.vcf;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Iterator;
 
@@ -15,6 +16,9 @@ import io.compgen.ngsutils.fasta.FastaReader;
 import io.compgen.ngsutils.support.SeqUtils;
 import io.compgen.ngsutils.vcf.VCFReader;
 import io.compgen.ngsutils.vcf.VCFRecord;
+import io.compgen.ngsutils.vcf.VCFRecord.VCFAltPos;
+import io.compgen.ngsutils.vcf.VCFRecord.VCFSVConnection;
+import io.compgen.ngsutils.vcf.VCFRecord.VCFVarType;
 
 
 @Command(name="vcf-svtofasta", desc="Extract SV flanking sequences and write them to a FASTA file.", category="vcf")
@@ -30,18 +34,20 @@ public class VCFSVToFASTA extends AbstractOutputCommand {
     private String altChrom = null;
     private String altPos = null;
     
+    private boolean bnd = false;
     
-    @Option(desc="Use an alternate INFO field for the chromosome (ex: SV). If missing, skip annotation.", name="alt-chrom", defaultValue="CHR2")
+    
+    @Option(desc="Use an alternate INFO field for the chromosome (ex: CHR2; default: extracted from alt field)", name="alt-chrom")
     public void setAltChrom(String key) throws CommandArgumentException {
         this.altChrom = key;
     }
     
-    @Option(desc="Use an alternate INFO field for the position (ex: SV). If missing, skip annotation.", name="alt-pos", defaultValue="END")
+    @Option(desc="Use an alternate INFO field for the position", name="alt-pos", defaultValue="END")
     public void setAltPos(String key) throws CommandArgumentException {
         this.altPos = key;
     }
 
-    @Option(desc="Use an alternate INFO field for the connection type (valid: 5to5,5to3,3to3,3to5). If missing, skip annotation.", name="ct", defaultValue="CT")
+    @Option(desc="Use an alternate INFO field for the connection type (valid: 5to5,5to3,3to3,3to5; default: extracted from alt field)", name="ct")
     public void setCT(String key) throws CommandArgumentException {
         this.svCT = key;
     }
@@ -64,6 +70,11 @@ public class VCFSVToFASTA extends AbstractOutputCommand {
     @Option(desc="Also write wild-type reference sequences", name="include-ref")
     public void setIncludeReference(boolean includeReference) {
         this.includeReference = includeReference;
+    }
+    
+    @Option(desc="Export breakend/translocations", name="bnf")
+    public void setBND(boolean bnd) {
+        this.bnd = bnd;
     }
     
     @UnnamedArg(name = "genome.fa input.vcf", required=true)
@@ -95,68 +106,11 @@ public class VCFSVToFASTA extends AbstractOutputCommand {
 			if (onlyOutputPass && rec.isFiltered()) {
 				continue;
 			}
-
-            String chrom = rec.getChrom();
-            int pos = rec.getPos() - 1;
-
-            if (rec.getInfo().get(altPos) == null) {
-            	continue;
-            }
             
-            String chrom2 = rec.getInfo().get(altChrom).toString();
-            int pos2 = rec.getInfo().get(altPos).asInt()-1;
-
-            String svTypeValue = rec.getInfo().get(svType).toString();
-            String ctValue = rec.getInfo().get(svCT).toString();
-            
-            if (chrom2 == null || svTypeValue == null || ctValue == null) {
-            	continue;
-            }
-            
-            if (svTypeValue.equals("BND") || svTypeValue.equals("TRA")) {
-            	String flankA;
-            	String flankB;
-            	String seq = "";
-            	
-            	if (ctValue.equals("3to5")) {
-            		flankA = fasta.fetchSequence(chrom, pos - this.flankingLength, pos);
-            		flankB = fasta.fetchSequence(chrom2, pos2, pos2 + this.flankingLength);
-            		seq = flankA + flankB;
-
-            	} else if (ctValue.equals("5to3")) {
-            		flankA = fasta.fetchSequence(chrom, pos, pos + this.flankingLength);
-            		flankB = fasta.fetchSequence(chrom2, pos2 - this.flankingLength, pos2);
-            		seq = flankB + flankA;
-
-            	} else if (ctValue.equals("5to5")) {
-            		flankA = fasta.fetchSequence(chrom, pos, pos + this.flankingLength);
-            		flankB = fasta.fetchSequence(chrom2, pos2, pos2 + this.flankingLength);
-            		seq = SeqUtils.revcomp(flankB) + flankA;
-
-            	} else if (ctValue.equals("3to3")) {
-            		flankA = fasta.fetchSequence(chrom, pos - this.flankingLength, pos);
-            		flankB = fasta.fetchSequence(chrom2, pos2 - this.flankingLength, pos2);
-            		seq = flankA + SeqUtils.revcomp(flankB);
-            		
-            	} else {
-            		continue;
-            	}
-            	
-            	ps.println(">sv|" + chrom + "|" + pos + "|" + chrom2 + "|" + pos2 + "|" + rec.getDbSNPID() + "|" + svTypeValue + "|" + ctValue);
-            	ps.println(seq);
-            	
-            	if (includeReference) {
-                	ps.println(">ref|" + chrom + "|" + (pos - this.flankingLength) + "|" + (pos + this.flankingLength) + "|" + rec.getDbSNPID() + "|" + svTypeValue + "|" + ctValue + "|A");
-                	ps.println(fasta.fetchSequence(chrom, pos - this.flankingLength, pos + this.flankingLength));
-                	if (ctValue.equals("3to5") || ctValue.equals("5to3")) {
-	                	ps.println(">ref|" + chrom2 + "|" + (pos2 - this.flankingLength) + "|" + (pos2 + this.flankingLength) + "|" + rec.getDbSNPID() + "|" + svTypeValue + "|" + ctValue + "|B");
-	                	ps.println(fasta.fetchSequence(chrom, pos2 - this.flankingLength, pos2 + this.flankingLength));
-                	} else {
-	                	ps.println(">ref|" + chrom2 + "|" + (pos2 + this.flankingLength) + "|" + (pos2 - this.flankingLength) + "|" + rec.getDbSNPID() + "|" + svTypeValue + "|" + ctValue + "|B");
-	                	ps.println(SeqUtils.revcomp(fasta.fetchSequence(chrom2, pos2 - this.flankingLength, pos2 + this.flankingLength)));
-	            	}
-            	}
-
+            for (VCFAltPos alt: rec.getAltPos(altChrom, altPos, svType, svCT)) {
+                if (bnd && alt.type == VCFVarType.BND) {
+                	writeBND(ps, fasta, rec, alt);
+                }
             }
             
 		}
@@ -164,6 +118,57 @@ public class VCFSVToFASTA extends AbstractOutputCommand {
 		reader.close();
 		fasta.close();
 		ps.close();
+	}
+
+	private void writeBND(PrintStream ps, FastaReader fasta, VCFRecord rec, VCFAltPos alt) throws IOException {
+		String chrom = rec.getChrom();
+		String chrom2 = alt.chrom;
+		int pos = rec.getPos();
+		int pos2 = alt.pos;
+		
+    	String flankA;
+    	String flankB;
+    	String seq = "";
+    	
+    	if (alt.connType == VCFSVConnection.ThreeToFive) {
+    		flankA = fasta.fetchSequence(chrom, pos - this.flankingLength, pos);
+    		flankB = fasta.fetchSequence(chrom2, pos2, pos2 + this.flankingLength);
+    		seq = flankA + flankB;
+
+    	} else if (alt.connType == VCFSVConnection.FiveToThree) {
+    		flankA = fasta.fetchSequence(chrom, pos, pos + this.flankingLength);
+    		flankB = fasta.fetchSequence(chrom2, pos2 - this.flankingLength, pos2);
+    		seq = flankB + flankA;
+
+    	} else if (alt.connType == VCFSVConnection.FiveToFive) {
+    		flankA = fasta.fetchSequence(chrom, pos, pos + this.flankingLength);
+    		flankB = fasta.fetchSequence(chrom2, pos2, pos2 + this.flankingLength);
+    		seq = SeqUtils.revcomp(flankB) + flankA;
+
+    	} else if (alt.connType == VCFSVConnection.ThreeToThree) {
+    		flankA = fasta.fetchSequence(chrom, pos - this.flankingLength, pos);
+    		flankB = fasta.fetchSequence(chrom2, pos2 - this.flankingLength, pos2);
+    		seq = flankA + SeqUtils.revcomp(flankB);
+    		
+    	} else {
+    		return;
+    	}
+    	
+    	ps.println(">sv|" + chrom + "|" + pos + "|" + chrom2 + "|" + pos2 + "|" + rec.getDbSNPID() + "|" + alt.type + "|" + alt.connType);
+    	ps.println(seq);
+    	
+    	if (includeReference) {
+        	ps.println(">ref|" + chrom + "|" + (pos - this.flankingLength) + "|" + (pos + this.flankingLength) + "|" + rec.getDbSNPID() + "|" + alt.type + "|" + alt.connType + "|A");
+        	ps.println(fasta.fetchSequence(chrom, pos - this.flankingLength, pos + this.flankingLength));
+        	if (alt.connType == VCFSVConnection.FiveToThree || alt.connType == VCFSVConnection.ThreeToFive) {
+            	ps.println(">ref|" + chrom2 + "|" + (pos2 - this.flankingLength) + "|" + (pos2 + this.flankingLength) + "|" + rec.getDbSNPID() + "|" + alt.type + "|" + alt.connType + "|B");
+            	ps.println(fasta.fetchSequence(chrom, pos2 - this.flankingLength, pos2 + this.flankingLength));
+        	} else {
+            	ps.println(">ref|" + chrom2 + "|" + (pos2 + this.flankingLength) + "|" + (pos2 - this.flankingLength) + "|" + rec.getDbSNPID() + "|" + alt.type + "|" + alt.connType + "|B");
+            	ps.println(SeqUtils.revcomp(fasta.fetchSequence(chrom2, pos2 - this.flankingLength, pos2 + this.flankingLength)));
+        	}
+    	}
+		
 	}
 
 }
