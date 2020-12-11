@@ -28,6 +28,7 @@ import io.compgen.ngsutils.cli.bam.BamReadGroup;
 import io.compgen.ngsutils.cli.bam.BamRefCount;
 import io.compgen.ngsutils.cli.bam.BamRemoveClipping;
 import io.compgen.ngsutils.cli.bam.BamSampleReads;
+import io.compgen.ngsutils.cli.bam.BamSoftClip;
 import io.compgen.ngsutils.cli.bam.BamSplit;
 import io.compgen.ngsutils.cli.bam.BamStats;
 import io.compgen.ngsutils.cli.bam.BamToBed;
@@ -186,7 +187,8 @@ public class NGSUtils {
         	.addCommand(VCFSVToFASTA.class)
         	.addCommand(BamExtract.class)
         	.addCommand(FastaRevcomp.class)
-        	.addCommand(FastqOverlap.class);
+        	.addCommand(FastqOverlap.class)
+    		.addCommand(BamSoftClip.class);
 
         try {
             if (args.length == 0) {
