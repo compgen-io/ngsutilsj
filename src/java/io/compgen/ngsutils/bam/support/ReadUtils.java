@@ -205,10 +205,9 @@ public class ReadUtils {
                 refpos += el.getLength();
 //                readpos += el.getLength();
                 break;
-            case I:
+            case D: // NOTE: changed this 2020-12-11, was case I, but that was wrong...
                 refpos += el.getLength();
                 break;
-//            case D:
 //            case S:
 //                readpos += el.getLength();
 //                break;
