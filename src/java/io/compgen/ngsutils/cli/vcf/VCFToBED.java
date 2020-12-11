@@ -13,6 +13,7 @@ import io.compgen.common.TabWriter;
 import io.compgen.ngsutils.NGSUtils;
 import io.compgen.ngsutils.vcf.VCFReader;
 import io.compgen.ngsutils.vcf.VCFRecord;
+import io.compgen.ngsutils.vcf.VCFRecord.VCFAltPos;
 
 
 @Command(name="vcf-tobed", desc="Export allele positions from a VCF file to BED format", category="vcf")
@@ -25,12 +26,12 @@ public class VCFToBED extends AbstractOutputCommand {
     private String altChrom = null;
     private String altPos = null;
     
-    @Option(desc="Use an alternate INFO field for the chromosome (ex: SV). If missing, skip annotation.", name="alt-chrom")
+    @Option(desc="Use an alternate INFO field for the chromosome (ex: SV).  (Default: extracted from alt field).", name="alt-chrom")
     public void setAltChrom(String key) throws CommandArgumentException {
         this.altChrom = key;
     }
     
-    @Option(desc="Use an alternate INFO field for the position (ex: SV). If missing, skip annotation.", name="alt-pos")
+    @Option(desc="Use an alternate INFO field for the position (ex: END). (Default: extracted from alt field, or END).", name="alt-pos")
     public void setAltPos(String key) throws CommandArgumentException {
         this.altPos = key;
     }
@@ -79,22 +80,33 @@ public class VCFToBED extends AbstractOutputCommand {
 			String chrom = rec.getChrom();
 			int pos = rec.getPos();
 			
-	        if (altChrom != null) {
-	            chrom = rec.getInfo().get(altChrom).toString();
-	        }
-	        
-	        if (altPos != null) {
-                pos = rec.getInfo().get(altPos).asInt();
-	        }
+			for (VCFAltPos alt: rec.getAltPos(altChrom, altPos, null, null)) {
+				String chrom2 = alt.chrom;
+		        if (altChrom != null && rec.getInfo().get(altChrom) != null) {
+		            chrom2 = rec.getInfo().get(altChrom).toString();
+		        }
+		        
+	            if (!chrom2.equals(chrom)) {
+	            	// you can't export BND's between different chromosomes in a BED file.
+	            	continue;
+	            }
 
-			
-			writer.write(chrom);
-			writer.write(((pos-1)-padding));
-			writer.write((pos+padding));
-			if (includePos) {
-				writer.write(rec.getChrom()+"_"+rec.getPos());
+		        int endpos = alt.pos;
+		        
+		        if (altPos != null && rec.getInfo().get(altPos) != null) {
+	                endpos = rec.getInfo().get(altPos).asInt();
+		        }
+				
+				writer.write(chrom);
+				writer.write(((pos-1)-padding));
+				writer.write((endpos + padding));
+				if (includePos) {
+					writer.write(rec.getChrom()+"_"+rec.getPos());
+				} else {
+					writer.write(alt.type.toString());
+				}
+				writer.eol();
 			}
-			writer.eol();
 		}
 		
 		reader.close();
