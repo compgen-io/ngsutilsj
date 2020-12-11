@@ -32,10 +32,10 @@ import io.compgen.ngsutils.bam.support.BamHeaderUtils;
 import io.compgen.ngsutils.bam.support.ReadUtils;
 import io.compgen.ngsutils.bed.BedReader;
 import io.compgen.ngsutils.bed.BedRecord;
-import io.compgen.ngsutils.vcf.VCFAttributeValue;
 import io.compgen.ngsutils.vcf.VCFParseException;
 import io.compgen.ngsutils.vcf.VCFReader;
 import io.compgen.ngsutils.vcf.VCFRecord;
+import io.compgen.ngsutils.vcf.VCFRecord.VCFAltPos;
 
 @Command(name="bam-extract", desc="Extract reads from a BAM file using either VCF or BED file coordinates", category="bam", experimental=true)
 public class BamExtract extends AbstractOutputCommand {
@@ -48,6 +48,7 @@ public class BamExtract extends AbstractOutputCommand {
     private String bedFile = null;
     private GenomeSpan region = null;
     
+    private boolean vcfAlt = false;
     private String vcfAltRef = null;
     private String vcfAltPos = null;
 
@@ -106,13 +107,20 @@ public class BamExtract extends AbstractOutputCommand {
         this.vcfFile = vcfFile;
     }
 
-    @Option(desc="Also use this secondary ref (SV VCF INFO value, ex: CHR2)", name="vcf-ref2")
+    @Option(desc="Also export reads from the alt position (SV end)", name="vcf-alt")
+    public void setVCFAlt(boolean val) {
+    	this.vcfAlt = val;
+    }
+
+    @Option(desc="If extracting from the SV alt position, use this INFO value as the secondary chromosome (default: auto extracted)", name="vcf-ref2")
     public void setVCFAltRef(String vcfAltRef) {
+    	this.vcfAlt = true;
         this.vcfAltRef = vcfAltRef;
     }
 
-    @Option(desc="Also use this secondary pos (SV VCF INFO value, ex: END)", name="vcf-pos2")
+    @Option(desc="If extracting from the SV alt position, use this INFO value as the secondary position (default: auto extracted, END)", name="vcf-pos2")
     public void setVCFAltPos(String vcfAltPos) {
+    	this.vcfAlt = true;
         this.vcfAltPos = vcfAltPos;
     }
 
@@ -307,18 +315,12 @@ public class BamExtract extends AbstractOutputCommand {
         		VCFRecord rec = it.next();
             	extractReads(rec.getChrom(), rec.getPos()-1, rec.getPos());
             	
-            	if (vcfAltRef != null) {
-            		VCFAttributeValue altRef = rec.getInfo().get(vcfAltRef);
-            		VCFAttributeValue altPos = rec.getInfo().get(vcfAltPos);
-            		
-            		if (altRef != null && altPos != null) {
-            			String altRefV = altRef.toString();
-            			int altPosV = altPos.asInt();
-            			
-                    	extractReads(altRefV, altPosV-1, altPosV);
-            			
+            	if (vcfAlt) {
+            		for (VCFAltPos alt: rec.getAltPos(vcfAltRef,  vcfAltPos, null, null)) {
+                    	extractReads(alt.chrom, alt.pos-1, alt.pos);
             		}
             	}
+            	
         	}
         	vcfReader.close();
         }
