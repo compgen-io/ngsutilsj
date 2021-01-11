@@ -35,6 +35,7 @@ import io.compgen.ngsutils.bam.Strand;
 public class GTFExport extends AbstractOutputCommand {
     private String filename=null;
     private String includeList = null;
+    private String excludeList = null;
     
     private boolean exportGene = false;
     private boolean exportExon = false;
@@ -57,6 +58,11 @@ public class GTFExport extends AbstractOutputCommand {
     @UnnamedArg(name = "FILE")
     public void setFilename(String filename) {
         this.filename = filename;
+    }
+
+    @Option(desc="List of gene names to exclude (filename or comma-separated list)", name="exclude")
+    public void setExcludeList(String excludeList) {
+        this.excludeList = excludeList;
     }
 
     @Option(desc="List of gene names to include (filename or comma-separated list)", name="include")
@@ -193,6 +199,10 @@ public class GTFExport extends AbstractOutputCommand {
             System.err.println("Combining overlapping regions");
         }
 
+        if (excludeList!=null && includeList !=null) {
+            throw new CommandArgumentException("You can't specify both --include and --exclude");
+        }
+        
         TabWriter writer = new TabWriter(out);
 
         Set<String> includeListSet = null;
@@ -217,6 +227,32 @@ public class GTFExport extends AbstractOutputCommand {
                 System.err.println(" [done]");
             }
         }
+
+        Set<String> excludeListSet = null;
+        if (excludeList!=null) {
+            if (verbose) {
+                System.err.print("Reading exclude list: "+excludeList);
+            }
+            
+            excludeListSet = new HashSet<String>();
+            
+            if (new File(excludeList).exists()) {
+                for (final String line : new StringLineReader(excludeList)) {
+                	excludeListSet.add(StringUtils.strip(line));
+                }
+            } else {
+                for (String gene: excludeList.split(",")) {
+                	excludeListSet.add(gene);
+                }
+            }
+            
+            if (verbose) {
+                System.err.println(" [done]");
+            }
+        }
+
+        
+        
         if (verbose) {
             System.err.print("Reading GTF annotation file: "+filename);
         }
@@ -232,6 +268,11 @@ public class GTFExport extends AbstractOutputCommand {
 
             if (includeListSet != null) {
                 if (!includeListSet.contains(gene.getGeneName())) {
+                    continue;
+                }
+            }
+            if (excludeListSet != null) {
+                if (excludeListSet.contains(gene.getGeneName())) {
                     continue;
                 }
             }
