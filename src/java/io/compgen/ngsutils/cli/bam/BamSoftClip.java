@@ -40,6 +40,7 @@ public class BamSoftClip extends AbstractOutputCommand {
     private boolean lenient = false;
     private boolean silent = false;
 
+    private int minLength = 0;
     private boolean unique = false;
     private int filterFlags = 0;
     private int requiredFlags = 0;
@@ -50,6 +51,11 @@ public class BamSoftClip extends AbstractOutputCommand {
     @UnnamedArg(name = "FILE")
     public void setFilename(String filename) {
         this.filename = filename;
+    }
+
+    @Option(desc = "Minimum length of clipping to count", name="min", defaultValue="1")
+    public void setMinLength(int minLength) {
+        this.minLength = minLength;
     }
 
     @Option(desc = "Use lenient validation strategy", name="lenient")
@@ -75,8 +81,6 @@ public class BamSoftClip extends AbstractOutputCommand {
         this.tmpDir = tmpDir;
     }
 
-    
-    
     @Option(desc = "Only keep properly paired reads", name = "proper-pairs")
     public void setProperPairs(boolean val) {
         if (val) {
@@ -262,22 +266,22 @@ public class BamSoftClip extends AbstractOutputCommand {
 					refpos += el.getLength();
 					break;
 				case S:
-					clipped = true;
-					counter.incr(refpos);
+					if (el.getLength()>= minLength) {
+						clipped = true;
+						counter.incr(refpos);
+					}
 					break;
 				default:
 					break;
 				}
 			}
 			
-			if (!clipped) {
-				continue;
-			}
-			  
-			clippedCount++;
-			
-			if (outBam!=null) {
-			    outBam.addAlignment(read);
+			if (clipped) {
+				clippedCount++;
+				
+				if (outBam!=null) {
+				    outBam.addAlignment(read);
+				}
 			}
         }
 
@@ -290,6 +294,7 @@ public class BamSoftClip extends AbstractOutputCommand {
     		tab.eol();
     	}
 
+    	tab.close();    	
         reader.close();
         if (outBam != null) {
         	outBam.close();
