@@ -506,4 +506,54 @@ public class VCFRecord {
 		return ret;
 	}
 
+	/**
+	 * 
+	 * @param rec
+	 * @return -1 if Transition (Ts), 1 if Transversion (Tv), 0 if otherwise ignored (MNV, indel, etc...)
+	 */
+	public int calcTsTv() {
+	    if (getRef().length() != 1) {
+	        // ignore indel
+	    	return 0;
+	    }
+	    if (getAlt().size() > 1) {
+	        // ignore multi-variant positions
+	    	return 0;
+	    }
+	    if (getAlt().get(0).length() != 1) {
+	        // ignore indel
+	    	return 0;
+	    }
+	    
+	               
+	    switch (getRef().toUpperCase()) {
+	    case "A":
+	        if (getAlt().get(0).toUpperCase().equals("G")) {
+	        	return -1;
+	        } else {
+	        	return 1;
+	        }
+	    case "G":
+	        if (getAlt().get(0).toUpperCase().equals("A")) {
+	        	return -1;
+	        } else {
+	        	return 1;
+	        }
+	    case "C":
+	        if (getAlt().get(0).toUpperCase().equals("T")) {
+	        	return -1;
+	        } else {
+	        	return 1;
+	        }
+	    case "T":
+	        if (getAlt().get(0).toUpperCase().equals("C")) {
+	        	return -1;
+	        } else {
+	        	return 1;
+	        }
+	    }
+
+	    return 0;
+	}
+	
 }
