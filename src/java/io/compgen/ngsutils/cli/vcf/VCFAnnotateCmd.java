@@ -23,8 +23,10 @@ import io.compgen.ngsutils.vcf.annotate.GTFGene;
 import io.compgen.ngsutils.vcf.annotate.Indel;
 import io.compgen.ngsutils.vcf.annotate.InfoInFile;
 import io.compgen.ngsutils.vcf.annotate.MinorStrandPct;
+import io.compgen.ngsutils.vcf.annotate.NormalizedSubstitution;
 import io.compgen.ngsutils.vcf.annotate.NullAnnotator;
 import io.compgen.ngsutils.vcf.annotate.TabixAnnotation;
+import io.compgen.ngsutils.vcf.annotate.TransitionTransversion;
 import io.compgen.ngsutils.vcf.annotate.VCFAnnotation;
 import io.compgen.ngsutils.vcf.annotate.VCFAnnotator;
 import io.compgen.ngsutils.vcf.annotate.VariantAlleleFrequency;
@@ -79,6 +81,16 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
     @Option(desc="Add Fisher strand bias by sample (FORMAT:CG_FSB, requires SAC)", name="fisher-sb")
     public void setFisherStrandBias() throws CommandArgumentException {
     	chain.add(new FisherStrandBias());
+    }
+    
+    @Option(desc="Add a TS, TV annotations (TS: A<->G, C<->T)", name="tstv")
+    public void setTsTv() throws CommandArgumentException {
+    	chain.add(new TransitionTransversion());
+    }
+    
+    @Option(desc="Add a normalized substitution (A>*, C>*)", name="norm-sub")
+    public void setNormalizedSubtitution() throws CommandArgumentException {
+    	chain.add(new NormalizedSubstitution());
     }
     
     @Option(desc="Add minor strand pct (FORMAT:CG_SBPCT, requires SAC)", name="minor-strand")
