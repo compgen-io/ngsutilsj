@@ -75,10 +75,12 @@ import io.compgen.ngsutils.cli.tab.TabixCat;
 import io.compgen.ngsutils.cli.tab.TabixQuery;
 import io.compgen.ngsutils.cli.vcf.VCFAnnotateCmd;
 import io.compgen.ngsutils.cli.vcf.VCFChrFix;
+import io.compgen.ngsutils.cli.vcf.VCFClearFilter;
 import io.compgen.ngsutils.cli.vcf.VCFCount;
 import io.compgen.ngsutils.cli.vcf.VCFExportCmd;
 import io.compgen.ngsutils.cli.vcf.VCFFilterCmd;
 import io.compgen.ngsutils.cli.vcf.VCFSVToFASTA;
+import io.compgen.ngsutils.cli.vcf.VCFStats;
 import io.compgen.ngsutils.cli.vcf.VCFStrip;
 import io.compgen.ngsutils.cli.vcf.VCFToBED;
 import io.compgen.ngsutils.cli.vcf.VCFToBEDPE;
@@ -188,7 +190,9 @@ public class NGSUtils {
         	.addCommand(BamExtract.class)
         	.addCommand(FastaRevcomp.class)
         	.addCommand(FastqOverlap.class)
-    		.addCommand(BamSoftClip.class);
+    		.addCommand(BamSoftClip.class)
+    		.addCommand(VCFStats.class)
+    		.addCommand(VCFClearFilter.class);
 
         try {
             if (args.length == 0) {

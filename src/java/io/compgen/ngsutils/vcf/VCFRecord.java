@@ -525,6 +525,11 @@ public class VCFRecord {
 	    	return 0;
 	    }
 	    
+	    // this shouldn't happen for variants...
+	    if (getRef().toUpperCase().equals(getAlt().get(0).toUpperCase())) {
+	    	return 0;
+	    }
+	    
 	               
 	    switch (getRef().toUpperCase()) {
 	    case "A":
