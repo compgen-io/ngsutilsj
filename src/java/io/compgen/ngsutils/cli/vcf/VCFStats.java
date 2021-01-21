@@ -63,9 +63,11 @@ public class VCFStats extends AbstractOutputCommand {
 
 		
 		long count = 0;
+		long passing = 0;
 		long filtered = 0;
 		long tsCount = 0;
 		long tvCount = 0;
+		long indel = 0;
 
 		TallyValues<String> filterCounts = new TallyValues<String>();
 		TallyValues<String> fullFilterCounts = new TallyValues<String>();
@@ -89,6 +91,12 @@ public class VCFStats extends AbstractOutputCommand {
 					continue;
 				}
 			}
+
+			passing++;
+			
+			if (rec.isIndel()) {
+				indel++;
+			}
 			
             int tstv = rec.calcTsTv();
 
@@ -103,22 +111,26 @@ public class VCFStats extends AbstractOutputCommand {
 		
 		System.out.println("Total variants:\t" + count);
 		System.out.println("Filtered variants:\t" + filtered);
-		System.out.println("Passing variants:\t" + (count - filtered));
+		System.out.println("Passing variants:\t" + passing);
+		System.out.println();
+		System.out.println("SNV:\t" + (passing - indel));
+		System.out.println("Indels:\t" + indel);
 		System.out.println();
 		System.out.println("Transitions:\t" + tsCount);
 		System.out.println("Transversions:\t" + tvCount);
 		System.out.println("Ts/Tv ratio:\t" + ((double) tsCount / tvCount));
 		System.out.println();
-		System.out.println("[Filters]");
-		for (String filter: filterCounts.keySet()) {
-			System.out.println(filter+": " +filterCounts.getCount(filter));
-		}
 		
 		if (showFullFilters) {
 			System.out.println();
 			System.out.println("[Filter combinations]");
 			for (String filter: fullFilterCounts.keySet()) {
 				System.out.println(filter+": " +fullFilterCounts.getCount(filter));
+			}
+		} else {
+			System.out.println("[Filters]");
+			for (String filter: filterCounts.keySet()) {
+				System.out.println(filter+": " +filterCounts.getCount(filter));
 			}
 		}
 
