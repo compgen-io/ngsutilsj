@@ -44,6 +44,7 @@ import io.compgen.ngsutils.cli.bed.BedResize;
 import io.compgen.ngsutils.cli.bed.BedStats;
 import io.compgen.ngsutils.cli.bed.BedToBed3;
 import io.compgen.ngsutils.cli.bed.BedToBed6;
+import io.compgen.ngsutils.cli.bed.BedToBedGraph;
 import io.compgen.ngsutils.cli.bed.BedToFasta;
 import io.compgen.ngsutils.cli.fasta.FastaFilter;
 import io.compgen.ngsutils.cli.fasta.FastaGC;
@@ -192,7 +193,8 @@ public class NGSUtils {
         	.addCommand(FastqOverlap.class)
     		.addCommand(BamSoftClip.class)
     		.addCommand(VCFStats.class)
-    		.addCommand(VCFClearFilter.class);
+    		.addCommand(VCFClearFilter.class)
+    		.addCommand(BedToBedGraph.class);
 
         try {
             if (args.length == 0) {
