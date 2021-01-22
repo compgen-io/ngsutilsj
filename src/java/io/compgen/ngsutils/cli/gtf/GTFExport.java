@@ -655,7 +655,11 @@ public class GTFExport extends AbstractOutputCommand {
             if (exportExon) {
                 if (!combine) {
                     int i=1;
-                    for (GenomeSpan exon:gene.getExonRegions(codingOnly)) {
+                    List<GenomeSpan> exonRegions = gene.getExonRegions(codingOnly);
+                    if (gene.getStrand().matches(Strand.MINUS)) {
+                    	i = exonRegions.size();
+                    }
+                    for (GenomeSpan exon:exonRegions) {
 //                        String name = gene.getGeneName();
 //                        if (useGeneId) {
 //                            name = gene.getGeneId()+"-"+exon.getParent().getTranscriptId();
@@ -669,7 +673,11 @@ public class GTFExport extends AbstractOutputCommand {
                         writer.write(0);
                         writer.write(exon.strand.toString());
                         writer.eol();
-                        i++;
+                        if (gene.getStrand().matches(Strand.MINUS)) {
+                        	i--;
+                        } else {
+                        	i++;
+                        }
                     }
                 } else {
                     // combine overlapping exons
@@ -702,6 +710,9 @@ public class GTFExport extends AbstractOutputCommand {
 
                     Collections.sort(exons);
                     int i=1;
+                    if (gene.getStrand().matches(Strand.MINUS)) {
+                    	i = exons.size();
+                    }
                     for (GenomeSpan exon:exons) {
                         writer.write(exon.ref);
                         writer.write(exon.start);
@@ -710,7 +721,11 @@ public class GTFExport extends AbstractOutputCommand {
                         writer.write(0);
                         writer.write(exon.strand.toString());
                         writer.eol();
-                        i++;
+                        if (gene.getStrand().matches(Strand.MINUS)) {
+                        	i--;
+                        } else {
+                        	i++;
+                        }
                     }
                 }
             }
@@ -728,6 +743,9 @@ public class GTFExport extends AbstractOutputCommand {
                         }
                     }
                     int i = 1;
+                    if (gene.getStrand().matches(Strand.MINUS)) {
+                    	i = introns.size();
+                    }
                     for (GenomeSpan intron:introns) {
                         writer.write(intron.ref);
                         writer.write(intron.start);
@@ -736,7 +754,11 @@ public class GTFExport extends AbstractOutputCommand {
                         writer.write(0);
                         writer.write(intron.strand.toString());
                         writer.eol();
-                        i++;
+                        if (gene.getStrand().matches(Strand.MINUS)) {
+                        	i--;
+                        } else {
+                        	i++;
+                        }
                     }
                 } else {
                     // Look for introns that don't overlap *any* exons
@@ -778,6 +800,9 @@ public class GTFExport extends AbstractOutputCommand {
                     }
                     Collections.sort(geneRegions);
                     int i=1;
+                    if (gene.getStrand().matches(Strand.MINUS)) {
+                    	i = geneRegions.size();
+                    }
                     for (GenomeSpan intron:geneRegions) {
                         writer.write(intron.ref);
                         writer.write(intron.start);
@@ -786,7 +811,11 @@ public class GTFExport extends AbstractOutputCommand {
                         writer.write(0);
                         writer.write(intron.strand.toString());
                         writer.eol();
-                        i++;
+                        if (gene.getStrand().matches(Strand.MINUS)) {
+                        	i--;
+                        } else {
+                        	i++;
+                        }
                     }
                 }
             }
