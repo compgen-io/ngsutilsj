@@ -351,10 +351,12 @@ public class VCFRecord {
             return true;
         }
         
-        for (String a: alt) {
-            if (a.length() != 1) {
-                return true;
-            }
+        if (alt != null) { 
+	        	for (String a: alt) {
+	            if (a.length() != 1) {
+	                return true;
+	            }
+	        }
         }
         return false;
     }
@@ -516,7 +518,7 @@ public class VCFRecord {
 	        // ignore indel
 	    	return 0;
 	    }
-	    if (getAlt().size() > 1) {
+	    if (getAlt() == null || getAlt().size() > 1) {
 	        // ignore multi-variant positions
 	    	return 0;
 	    }
