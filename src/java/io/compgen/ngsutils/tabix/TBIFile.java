@@ -120,7 +120,11 @@ public class TBIFile implements TabixIndex {
             refs[i] = new Ref(bins);
         }
 
-        nNoCoor = DataIO.readUint64(in);
+        if (in.available()>0) {
+        	nNoCoor = DataIO.readUint64(in);
+        } else {
+        	nNoCoor = 0;
+        }
 
     }
 
