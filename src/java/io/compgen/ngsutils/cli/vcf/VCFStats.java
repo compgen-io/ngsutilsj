@@ -95,8 +95,8 @@ public class VCFStats extends AbstractOutputCommand {
 		TallyValues<String> fullFilterCounts = new TallyValues<String>();
 		
 		List<TallyValues<String>> infoTally = new ArrayList<TallyValues<String>>();
-		int[] infoTallyPresent = new int[infoPresentFields.size()];
-		int[] infoTallyMissing = new int[infoPresentFields.size()];
+		int[] infoTallyPresent = new int[infoPresentFields == null ? 0:infoPresentFields.size()];
+		int[] infoTallyMissing = new int[infoPresentFields == null ? 0:infoPresentFields.size()];
 		
 		if (infoFields != null) {
 			for (int i=0; i< infoFields.size(); i++) {
