@@ -99,7 +99,7 @@ public class VCFRecord {
 	protected String chrom;
 	protected int pos; // one-based
 	protected String dbSNPID = "";
-	protected String ref = "";
+	protected String ref = ""; // reference base
 	protected List<String> alt = null;
 	protected String altOrig = null;
 	protected double qual = -1;

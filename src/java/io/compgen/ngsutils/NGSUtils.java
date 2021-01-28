@@ -80,6 +80,7 @@ import io.compgen.ngsutils.cli.vcf.VCFClearFilter;
 import io.compgen.ngsutils.cli.vcf.VCFCount;
 import io.compgen.ngsutils.cli.vcf.VCFExportCmd;
 import io.compgen.ngsutils.cli.vcf.VCFFilterCmd;
+import io.compgen.ngsutils.cli.vcf.VCFMerge;
 import io.compgen.ngsutils.cli.vcf.VCFSVToFASTA;
 import io.compgen.ngsutils.cli.vcf.VCFStats;
 import io.compgen.ngsutils.cli.vcf.VCFStrip;
@@ -194,7 +195,8 @@ public class NGSUtils {
     		.addCommand(BamSoftClip.class)
     		.addCommand(VCFStats.class)
     		.addCommand(VCFClearFilter.class)
-    		.addCommand(BedToBedGraph.class);
+    		.addCommand(BedToBedGraph.class)
+    		.addCommand(VCFMerge.class);
 
         try {
             if (args.length == 0) {

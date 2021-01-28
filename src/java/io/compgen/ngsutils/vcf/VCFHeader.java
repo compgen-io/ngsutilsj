@@ -118,6 +118,9 @@ public class VCFHeader {
 	public void addLine(String line) {
 		this.lines.add(line);
 	}
+	public List<String> getLines() {
+		return Collections.unmodifiableList(this.lines);
+	}
 	
 	public void write(OutputStream out, boolean includeAll) throws IOException {
 
@@ -212,6 +215,10 @@ public class VCFHeader {
     }
     public Set<String> getFilterIDs() {
         return filterDefs.keySet();
+    }
+
+    public VCFFilterDef getFilterDef(String id) {
+        return filterDefs.get(id);
     }
 
     public VCFAnnotationDef getInfoDef(String id) {
