@@ -44,12 +44,6 @@ public class FlankingBases extends AbstractBasicAnnotator {
 			return;
 		}
 		
-		for (String alt: record.getAlt()) {
-			if (alt.length()>1) {
-				return;
-			}
-		}
-
 		try {
 			String refSeq = ref.fetchSequence(record.getChrom(), record.getPos()-1-size, record.getPos()+size);
 			record.getInfo().put("CG_FLANKING", new VCFAttributeValue(refSeq));
@@ -67,6 +61,9 @@ public class FlankingBases extends AbstractBasicAnnotator {
 			
             List<String> outs = new ArrayList<String>();
 			for (String alt: record.getAlt()) {
+				if (alt.length()>1) {
+					continue;
+				}
 			    if (revcomp) {
 			        alt = SeqUtils.revcomp(alt);
 			    }

@@ -23,7 +23,6 @@ import io.compgen.ngsutils.vcf.annotate.GTFGene;
 import io.compgen.ngsutils.vcf.annotate.Indel;
 import io.compgen.ngsutils.vcf.annotate.InfoInFile;
 import io.compgen.ngsutils.vcf.annotate.MinorStrandPct;
-import io.compgen.ngsutils.vcf.annotate.NormalizedSubstitution;
 import io.compgen.ngsutils.vcf.annotate.NullAnnotator;
 import io.compgen.ngsutils.vcf.annotate.TabixAnnotation;
 import io.compgen.ngsutils.vcf.annotate.TransitionTransversion;
@@ -88,11 +87,6 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
     	chain.add(new TransitionTransversion());
     }
     
-    @Option(desc="Add a normalized substitution (A>*, C>*)", name="norm-sub")
-    public void setNormalizedSubtitution() throws CommandArgumentException {
-    	chain.add(new NormalizedSubstitution());
-    }
-    
     @Option(desc="Add minor strand pct (FORMAT:CG_SBPCT, requires SAC)", name="minor-strand")
     public void setMinorStrandPct() throws CommandArgumentException {
     	chain.add(new MinorStrandPct());
@@ -110,7 +104,7 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
     	}
     	
     }
-    @Option(desc="Add flanking bases (ex: ACA) from reference FASTA file (FAI indexed) (INFO:CG_FLANKING). By default 1 base on either side is used.", name="flanking", helpValue="ref.fa{:num_of_bases}")
+    @Option(desc="Add flanking bases/normalized mutation (ex: A[C>A]A) from reference FASTA file (FAI indexed) (INFO:CG_FLANKING). By default 1 base on either side is used.", name="flanking", helpValue="ref.fa{:num_of_bases}")
     public void setFlanking(String arg) throws CommandArgumentException {
     	try{
     	    String[] spl = arg.split(":");
