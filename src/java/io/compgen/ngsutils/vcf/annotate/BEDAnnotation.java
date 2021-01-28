@@ -82,9 +82,10 @@ public class BEDAnnotation extends AbstractBasicAnnotator {
 				record.getInfo().put(name, VCFAttributeValue.EMPTY);
 			}
 		} else {		
-			if (geneNames.size() == 0) {
-				record.getInfo().put(name, VCFAttributeValue.MISSING);
-			} else {
+			if (geneNames.size() > 0) {
+				// don't add an empty annotation
+//				record.getInfo().put(name, VCFAttributeValue.MISSING);
+//			} else {
 				record.getInfo().put(name, new VCFAttributeValue(StringUtils.join(",", geneNames)));
 			}
 		}

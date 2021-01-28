@@ -212,9 +212,10 @@ public class TabixAnnotation extends AbstractBasicAnnotator {
                     // this is just a flag
                     record.getInfo().put(name, VCFAttributeValue.EMPTY);
                 } else {
-                    if (vals.size() == 0) {
-                        record.getInfo().put(name, VCFAttributeValue.MISSING);
-                    } else {
+                    if (vals.size() > 0) {
+                    	// don't add empty annotations
+//                        record.getInfo().put(name, VCFAttributeValue.MISSING);
+//                    } else {
                         if (collapse) {
                             record.getInfo().put(name, new VCFAttributeValue(StringUtils.join(",", StringUtils.unique(vals))));
                         } else {
