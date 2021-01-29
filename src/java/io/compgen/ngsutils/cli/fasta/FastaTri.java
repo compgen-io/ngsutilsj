@@ -19,7 +19,7 @@ import io.compgen.common.progress.ProgressMessage;
 import io.compgen.ngsutils.fasta.FastaReader;
 import io.compgen.ngsutils.support.SeqUtils;
 
-@Command(name="fasta-tri", desc="Determine the trinucleotide counts for a genome", category="fasta")
+@Command(name="fasta-tri", desc="Determine the trinucleotide counts for a genome (DNA)", category="fasta")
 public class FastaTri extends AbstractOutputCommand {
     private String filename = null;
     private String bedFilename = null;

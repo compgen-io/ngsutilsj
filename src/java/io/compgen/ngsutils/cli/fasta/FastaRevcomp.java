@@ -24,7 +24,7 @@ import io.compgen.cmdline.exceptions.CommandArgumentException;
 import io.compgen.cmdline.impl.AbstractOutputCommand;
 import io.compgen.ngsutils.support.SeqUtils;
 
-@Command(name="fasta-revcomp", desc="Reverse compliment the sequences in a FASTA file", category="fasta", experimental=true)
+@Command(name="fasta-revcomp", desc="Reverse compliment the sequences in a FASTA file (DNA)", category="fasta", experimental=true)
 public class FastaRevcomp extends AbstractOutputCommand {
 	
 	public interface FASTAStreamReader extends Iterable<String> {
