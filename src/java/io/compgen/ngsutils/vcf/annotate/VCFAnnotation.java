@@ -108,6 +108,7 @@ public class VCFAnnotation extends AbstractBasicAnnotator {
 			
 			List<String> vals = new ArrayList<String>();
 
+//			System.err.println("VCF query: " + chrom+":" + pos);
 			for (String line: IterUtils.wrap(vcfTabix.query(chrom, pos-1))) {
 				VCFRecord bgzfRec = VCFRecord.parseLine(line);
 
