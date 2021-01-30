@@ -121,7 +121,13 @@ public class TBIFile implements TabixIndex {
         }
 
         if (in.available()>0) {
-        	nNoCoor = DataIO.readUint64(in);
+        	long val;
+        	try {
+        		val = DataIO.readUint64(in);
+        	} catch (NullPointerException ex) {
+        		val = 0;
+        	}
+    		nNoCoor = val;
         } else {
         	nNoCoor = 0;
         }
