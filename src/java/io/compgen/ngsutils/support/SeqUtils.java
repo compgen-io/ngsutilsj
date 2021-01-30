@@ -1,5 +1,7 @@
 package io.compgen.ngsutils.support;
 
+import java.util.Random;
+
 public class SeqUtils {
     public static String revcomp(String seq) {
         String out = "";
@@ -212,4 +214,51 @@ public class SeqUtils {
         
         return out;
     }
+    
+    /**
+     * Generates a random DNA sequence
+     * 
+     * By default uses human DNA frequencies ACGT: 0.2, 0.3, 0.3, 0.2 
+     * @param len
+     * @return
+     */
+    public static String generateRandomSeq(int len) {
+    	return generateRandomSeq(len, new Random());
+    }
+
+    public static String generateRandomSeq(int len, Random rand) {
+    	return generateRandomSeq(len, new char[] {'A','C','G','T'}, new double[] {0.2,0.3,0.3,0.2}, rand);
+    }
+
+    public static String generateRandomSeq(int len, char[] alpha, double[] bg) {
+    	return generateRandomSeq(len, alpha, bg, new Random());
+    }        
+    public static String generateRandomSeq(int len, char[] alpha, double[] bg, Random rand) {
+        	String s = "";
+    	if (rand == null) {
+    		rand = new Random();
+    	}
+    	double[] thres = new double[bg.length+1];
+    	double acc = 0;
+    	for (int i=0; i< bg.length; i++) {
+    		thres[i] = acc;
+    		acc += bg[i];
+    	}
+    	thres[bg.length] = 1;
+    	
+//    	System.out.println(StringUtils.join(";", thres));
+    	
+    	while (s.length() < len) {
+    		double val = rand.nextDouble();
+//    		System.out.println(val);
+        	for (int i=0; i< thres.length-1; i++) {
+        		if (val > thres[i] && val < thres[i+1]) {
+        			s += alpha[i];
+        		}
+        	}
+    	}
+    	
+    	return s;
+    }
+
 }
