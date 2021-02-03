@@ -32,7 +32,7 @@ import io.compgen.ngsutils.bam.support.BamHeaderUtils;
 import io.compgen.ngsutils.bam.support.ReadUtils;
 import io.compgen.ngsutils.support.CloseableFinalizer;
 
-@Command(name="bam-discord", desc="Extract all discordant reads from a BAM file", category="bam")
+@Command(name="bam-discord", desc="Extract all discordant reads from a BAM file", category="bam", doc="Note: for paired-end reads, both reads must be mapped.")
 public class BamDiscord extends AbstractCommand {
     private String filename = null;
     private boolean lenient = false;
@@ -201,8 +201,13 @@ public class BamDiscord extends AbstractCommand {
         long discordCount = 0;
         
         while (it.hasNext()) {
-            totalCount++;
             SAMRecord read = it.next();
+            
+            if (read.getReadPairedFlag() && (read.getMateUnmappedFlag() || read.getReadUnmappedFlag())) {
+            	continue;
+            }
+
+            totalCount++;
             
             if (ReadUtils.isDiscordant(read, intraChromDistance, !noIntraChrom)) {
                 discordCount++;
