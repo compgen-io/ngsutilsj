@@ -129,7 +129,7 @@ public class TabixQueryIterator implements Iterator<String> {
                             lineCOffset = remainingCOffset;
                             remainingBuf = null;                            
                         }
-                        System.err.println("["+lineCOffset+"," + lineUOffset+ "; "+uBufStartPos + ","+uBufIdx+"] " + line);
+//                        System.err.println("["+lineCOffset+"," + lineUOffset+ "; "+uBufStartPos + ","+uBufIdx+"] " + line);
 
                         if (!line.startsWith(""+index.getMeta())) {
 
