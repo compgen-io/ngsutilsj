@@ -11,7 +11,6 @@ import java.util.Set;
 import java.util.zip.DataFormatException;
 
 import io.compgen.common.Pair;
-import io.compgen.common.StringUtils;
 import io.compgen.ngsutils.tabix.BGZFile.BGZBlock;
 import io.compgen.ngsutils.tabix.TabixIndex.Chunk;
 
