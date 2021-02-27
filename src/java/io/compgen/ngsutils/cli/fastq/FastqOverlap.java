@@ -30,6 +30,7 @@ public class FastqOverlap extends AbstractCommand {
     private int minOverlap = 10;
     private boolean gzip = false;
     private boolean interleaved = false;
+    private boolean dovetail = false;
 
 	public FastqOverlap() {
 	}
@@ -45,6 +46,12 @@ public class FastqOverlap extends AbstractCommand {
 	            }
 	        }
         }
+    }
+
+    @Option(name="dovetail", desc="Allow dovetailed reads")
+    public void setDovetail(boolean dovetail) throws IOException, CommandArgumentException {
+    	throw new CommandArgumentException("--dovetail is not yet implemented");
+//        this.dovetail = dovetail;
     }
 
     @Option(name="interleaved", desc="Input FASTQ file is interleaved")
@@ -178,7 +185,7 @@ public class FastqOverlap extends AbstractCommand {
             	throw new IOException("Unpaired FASTQ file(s) found!");
             }
             
-            FastqRead overlapRead = findOverlapRead(one, two, this.minOverlap);
+            FastqRead overlapRead = findOverlapRead(one, two, this.minOverlap, this.dovetail);
             
             if (overlapRead != null) {
             	// we found an overlapping read... write it out
@@ -224,7 +231,7 @@ public class FastqOverlap extends AbstractCommand {
         }
 	}
 
-	static public FastqRead findOverlapRead(FastqRead one, FastqRead two, int minOverlap) {
+	static public FastqRead findOverlapRead(FastqRead one, FastqRead two, int minOverlap, boolean dovetail) {
 		// this is a slow algorithm that walks each read across looking for the best overlap
 		// if there is a match, return a new FastqRead object that represents the overlapping sequence and qual values
 		
@@ -241,50 +248,54 @@ public class FastqOverlap extends AbstractCommand {
 		
 		int bestLength = -1;
 		
-		for (int i = minOverlap; i <= one.getSeq().length() && i <= two.getSeq().length(); i++) {
-//			System.err.println("=======================================");
-			
-//			System.err.println(oneS);
-//			for (int k=0; k < oneS.length() - i; k++ ) {
-//				System.err.print(" ");
-//			}
-//			System.err.println(twoC);
-			
-			boolean match = true;
-			for (int j=0; j < i; j++) {
-//				System.err.print(""+oneS.charAt(one.getSeq().length()-i+j) + "==" + twoC.charAt(j) + "? ") ;
-				if (oneS.charAt(one.getSeq().length()-i+j) != twoC.charAt(j)) {
-//					System.err.println("no");
-					match = false;
-					break;
-//				} else {
-//					System.err.println("yes");
+		if (!dovetail) {
+		
+			for (int i = minOverlap; i <= one.getSeq().length() && i <= two.getSeq().length(); i++) {
+	//			System.err.println("=======================================");
+				
+	//			System.err.println(oneS);
+	//			for (int k=0; k < oneS.length() - i; k++ ) {
+	//				System.err.print(" ");
+	//			}
+	//			System.err.println(twoC);
+				
+				boolean match = true;
+				for (int j=0; j < i; j++) {
+	//				System.err.print(""+oneS.charAt(one.getSeq().length()-i+j) + "==" + twoC.charAt(j) + "? ") ;
+					if (oneS.charAt(one.getSeq().length()-i+j) != twoC.charAt(j)) {
+	//					System.err.println("no");
+						match = false;
+						break;
+	//				} else {
+	//					System.err.println("yes");
+					}
 				}
+				
+				if (match) {
+	//				System.err.println("match: " + i);
+					bestLength = i;
+				}
+				
+			}
+	
+	//		System.err.println("best-match: " + bestLength);
+			if (bestLength > 0) {
+	//			System.err.println(oneS);
+	//			for (int k=0; k < oneS.length() - bestLength; k++ ) {
+	//				System.err.print(" ");
+	//			}
+	//			System.err.println(twoC);
+	
+				
+				String seq = oneS + twoC.substring(bestLength);
+				String qual = one.getQual() + two.getQual().substring(bestLength);
+	
+	//			System.err.println(seq);
+	//			System.err.println(qual);
+	
+				return new FastqRead(one.getName(), seq, qual);
 			}
 			
-			if (match) {
-//				System.err.println("match: " + i);
-				bestLength = i;
-			}
-			
-		}
-
-//		System.err.println("best-match: " + bestLength);
-		if (bestLength > 0) {
-//			System.err.println(oneS);
-//			for (int k=0; k < oneS.length() - bestLength; k++ ) {
-//				System.err.print(" ");
-//			}
-//			System.err.println(twoC);
-
-			
-			String seq = oneS + twoC.substring(bestLength);
-			String qual = one.getQual() + two.getQual().substring(bestLength);
-
-//			System.err.println(seq);
-//			System.err.println(qual);
-
-			return new FastqRead(one.getName(), seq, qual);
 		}
 		
 		return null;
