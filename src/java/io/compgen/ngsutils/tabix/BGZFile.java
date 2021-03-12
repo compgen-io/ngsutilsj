@@ -285,9 +285,9 @@ public class BGZFile {
 	
 	public static boolean isBGZFile(String filename) {
 //		System.err.println("Checking file: "+filename);
-
 		try {
 			FileInputStream fis = new FileInputStream(filename);
+			
 			int magic1 = DataIO.readByte(fis);
 			int magic2 = DataIO.readByte(fis);
 			
@@ -300,12 +300,39 @@ public class BGZFile {
 				return false;
 			}
 			
-			DataIO.readRawBytes(fis, 8);
+			
+			
+//			int cm = DataIO.readByte(fis);
+//			int flg = DataIO.readByte(fis);
+//			long mtime = DataIO.readUint32(fis);
+//			int xfl = DataIO.readByte(fis);
+//			int os = DataIO.readByte(fis);
+			DataIO.readByte(fis);
+			DataIO.readByte(fis);
+			DataIO.readUint32(fis);
+			int xfl = DataIO.readByte(fis);
+			DataIO.readByte(fis);
+
+			if (xfl != 4) {
+				fis.close();
+				return false;
+			}
+			
 			int xlen = DataIO.readUint16(fis);
-			
 			byte[] extra = DataIO.readRawBytes(fis, xlen);
-			ByteArrayInputStream bais = new ByteArrayInputStream(extra);
 			
+//			System.out.println("magic1: "+ magic1);
+//			System.out.println("magic2: "+ magic2);
+//			System.out.println("cm    : "+ cm);
+//			System.out.println("flg   : "+ flg);
+//			System.out.println("mtime : "+ mtime);
+//			System.out.println("xfl   : "+ xfl);
+//			System.out.println("os    : "+ os);
+//			System.out.println("xlen  : "+ xlen);
+//			
+			
+			ByteArrayInputStream bais = new ByteArrayInputStream(extra);
+
 			int s1 = 0;
 			int s2 = 0;
 			
@@ -313,12 +340,13 @@ public class BGZFile {
 				s1 = DataIO.readByte(bais);
 				s2 = DataIO.readByte(bais);
 				if (s1 == 66 && s2 == 67) {
-//					System.err.println("magic matches");
+					// good match
+					bais.close();
 					fis.close();
 					return true;
 				}
 			}
-
+			bais.close();
 			fis.close();
 
 		} catch (IOException e) {
@@ -346,7 +374,17 @@ public class BGZFile {
 	                return false;
 	            }
 	            
-	            DataIO.readRawBytes(fis, 8);
+				DataIO.readByte(fis);
+				DataIO.readByte(fis);
+				DataIO.readUint32(fis);
+				int xfl = DataIO.readByte(fis);
+				DataIO.readByte(fis);
+
+				if (xfl != 4) {
+                    fis.seek(offset);
+					return false;
+				}
+				
 	            int xlen = DataIO.readUint16(fis);
 	            
 	            byte[] extra = DataIO.readRawBytes(fis, xlen);
