@@ -257,7 +257,7 @@ public class VCFRecord {
 	            System.err.println("ERROR: processing VCF record ("+ e + ")");
 	            System.err.println("ERROR: " + line);
 			}
-            System.exit(1);
+            System.exit(2);
 		}
 		
 		throw new VCFParseException("Unknown parse exception");
