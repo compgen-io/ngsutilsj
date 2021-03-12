@@ -1,6 +1,7 @@
 package io.compgen.ngsutils.vcf.annotate;
 
 import io.compgen.ngsutils.vcf.VCFAnnotationDef;
+import io.compgen.ngsutils.vcf.VCFAttributeException;
 import io.compgen.ngsutils.vcf.VCFAttributeValue;
 import io.compgen.ngsutils.vcf.VCFHeader;
 import io.compgen.ngsutils.vcf.VCFParseException;
@@ -21,11 +22,14 @@ public class TransitionTransversion extends AbstractBasicAnnotator {
 	protected void annotate(VCFRecord record) throws VCFAnnotatorException {
 		int tstv = record.calcTsTv();
 		
-		if (tstv == -1) {
-			record.getInfo().put("CG_TSTV", new VCFAttributeValue("TS"));
-		} else if (tstv == 1) {
-			record.getInfo().put("CG_TSTV", new VCFAttributeValue("TV"));
-
+		try {
+			if (tstv == -1) {
+				record.getInfo().put("CG_TSTV", new VCFAttributeValue("TS"));
+			} else if (tstv == 1) {
+				record.getInfo().put("CG_TSTV", new VCFAttributeValue("TV"));
+			}
+		} catch (VCFAttributeException e) {
+			// won't happen -- vcf attributes above are hard-coded to be good values
 		}
 	}
 }

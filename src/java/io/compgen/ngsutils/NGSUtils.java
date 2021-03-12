@@ -77,6 +77,7 @@ import io.compgen.ngsutils.cli.tab.TabAnnotate;
 import io.compgen.ngsutils.cli.tab.TabixCat;
 import io.compgen.ngsutils.cli.tab.TabixQuery;
 import io.compgen.ngsutils.cli.vcf.VCFAnnotateCmd;
+import io.compgen.ngsutils.cli.vcf.VCFCheck;
 import io.compgen.ngsutils.cli.vcf.VCFChrFix;
 import io.compgen.ngsutils.cli.vcf.VCFClearFilter;
 import io.compgen.ngsutils.cli.vcf.VCFCount;
@@ -200,7 +201,8 @@ public class NGSUtils {
     		.addCommand(BedToBedGraph.class)
     		.addCommand(VCFMerge.class)
     		.addCommand(FastaPWM.class)
-			.addCommand(FastaRandom.class);
+			.addCommand(FastaRandom.class)
+			.addCommand(VCFCheck.class);
 
         try {
             if (args.length == 0) {

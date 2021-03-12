@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import io.compgen.common.StringUtils;
+import io.compgen.ngsutils.cli.vcf.VCFCheck;
 
 public class VCFRecord {
 
@@ -230,26 +231,36 @@ public class VCFRecord {
 
 //		System.err.println("FILTER: " + cols[6] + " => " + (filters == null ? "<null>": "?"+StringUtils.join(",", filters)));
 		
-        VCFAttributes info = VCFAttributes.parseInfo(cols[7], header);
+		try {
+	        VCFAttributes info = VCFAttributes.parseInfo(cols[7], header);
 		
-//		System.err.println(info.toString());
-		
-		List<VCFAttributes> samples = null;
-		
-		if (cols.length>8) {
-			List<String> format = new ArrayList<String>();
-			for (String k: cols[8].split(":")) {
-			        format.add(k);
-			}
+	//		System.err.println(info.toString());
 			
-			samples = new ArrayList<VCFAttributes>();
+			List<VCFAttributes> samples = null;
 			
-			for (int i=9; i<cols.length; i++) {
-				samples.add(VCFAttributes.parseFormat(cols[i], format, header));
+			if (cols.length>8) {
+				List<String> format = new ArrayList<String>();
+				for (String k: cols[8].split(":")) {
+				        format.add(k);
+				}
+				
+				samples = new ArrayList<VCFAttributes>();
+				
+				for (int i=9; i<cols.length; i++) {
+					samples.add(VCFAttributes.parseFormat(cols[i], format, header));
+				}
 			}
+			return new VCFRecord(chrom, pos, dbSNPID, ref, alts, qual, filters, info, samples, altOrig);
+
+		} catch (VCFParseException | VCFAttributeException e) {
+			if (!VCFCheck.isQuiet()) {
+	            System.err.println("ERROR: processing VCF record ("+ e + ")");
+	            System.err.println("ERROR: " + line);
+			}
+            System.exit(1);
 		}
 		
-		return new VCFRecord(chrom, pos, dbSNPID, ref, alts, qual, filters, info, samples, altOrig);
+		throw new VCFParseException("Unknown parse exception");
 	}
 
 	public String getChrom() {

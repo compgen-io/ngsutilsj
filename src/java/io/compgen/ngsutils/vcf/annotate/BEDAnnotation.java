@@ -11,6 +11,7 @@ import io.compgen.ngsutils.annotation.BedAnnotationSource;
 import io.compgen.ngsutils.annotation.GenomeSpan;
 import io.compgen.ngsutils.bed.BedRecord;
 import io.compgen.ngsutils.vcf.VCFAnnotationDef;
+import io.compgen.ngsutils.vcf.VCFAttributeException;
 import io.compgen.ngsutils.vcf.VCFAttributeValue;
 import io.compgen.ngsutils.vcf.VCFHeader;
 import io.compgen.ngsutils.vcf.VCFParseException;
@@ -72,21 +73,25 @@ public class BEDAnnotation extends AbstractBasicAnnotator {
 	        return;
 	    }
 
-        List<String> geneNames = new ArrayList<String>();
+        List<String> bedNames = new ArrayList<String>();
 		for (BedRecord rec : bed.findAnnotation(pos)) {
-			geneNames.add(rec.getName());
+			bedNames.add(rec.getName());
 		}
 		
 		if (flag) {
-			if (geneNames.size() > 0) {
-				record.getInfo().put(name, VCFAttributeValue.EMPTY);
+			if (bedNames.size() > 0) {
+				record.getInfo().putFlag(name);
 			}
 		} else {		
-			if (geneNames.size() > 0) {
+			if (bedNames.size() > 0) {
 				// don't add an empty annotation
 //				record.getInfo().put(name, VCFAttributeValue.MISSING);
 //			} else {
-				record.getInfo().put(name, new VCFAttributeValue(StringUtils.join(",", geneNames)));
+				try {
+					record.getInfo().put(name, new VCFAttributeValue(StringUtils.join(",", bedNames)));
+				} catch (VCFAttributeException e) {
+					throw new VCFAnnotatorException(e);
+				}
 			}
 		}
 	}

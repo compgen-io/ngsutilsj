@@ -8,6 +8,7 @@ import io.compgen.common.StringUtils;
 import io.compgen.ngsutils.fasta.IndexedFastaFile;
 import io.compgen.ngsutils.support.SeqUtils;
 import io.compgen.ngsutils.vcf.VCFAnnotationDef;
+import io.compgen.ngsutils.vcf.VCFAttributeException;
 import io.compgen.ngsutils.vcf.VCFAttributeValue;
 import io.compgen.ngsutils.vcf.VCFHeader;
 import io.compgen.ngsutils.vcf.VCFParseException;
@@ -70,9 +71,11 @@ public class FlankingBases extends AbstractBasicAnnotator {
                 outs.add(pre + "[" + var + ">" + alt + "]" + post);
 			}
 			
-            record.getInfo().put("CG_FLANKING_SUB", new VCFAttributeValue(StringUtils.join(",", outs)));
+			if (outs.size()>0) {
+				record.getInfo().put("CG_FLANKING_SUB", new VCFAttributeValue(StringUtils.join(",", outs)));
+			}
 			
-		} catch (IOException e) {
+		} catch (IOException|VCFAttributeException e) {
 			throw new VCFAnnotatorException(e);
 		}
 	}

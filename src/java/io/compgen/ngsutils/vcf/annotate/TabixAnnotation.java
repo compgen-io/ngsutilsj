@@ -11,6 +11,7 @@ import io.compgen.common.IterUtils;
 import io.compgen.common.StringUtils;
 import io.compgen.ngsutils.tabix.TabixFile;
 import io.compgen.ngsutils.vcf.VCFAnnotationDef;
+import io.compgen.ngsutils.vcf.VCFAttributeException;
 import io.compgen.ngsutils.vcf.VCFAttributeValue;
 import io.compgen.ngsutils.vcf.VCFHeader;
 import io.compgen.ngsutils.vcf.VCFParseException;
@@ -183,6 +184,7 @@ public class TabixAnnotation extends AbstractBasicAnnotator {
                                 if (spl.length <= colNum) {
                                     throw new VCFAnnotatorException("Missing column for line: " + line);
                                 }
+                                // TODO: HERE
                                 vals.add(spl[colNum]);
                             }
                         }
@@ -200,6 +202,7 @@ public class TabixAnnotation extends AbstractBasicAnnotator {
                         if (spl.length <= colNum) {
                             throw new VCFAnnotatorException("Missing column for line: " + line);
                         }
+                        // TODO: HERE
                         if (!spl[colNum].equals("")) {
                             vals.add(spl[colNum]);
                         }
@@ -210,17 +213,22 @@ public class TabixAnnotation extends AbstractBasicAnnotator {
             if (found) {
                 if (colNum == -1) {
                     // this is just a flag
-                    record.getInfo().put(name, VCFAttributeValue.EMPTY);
+                    record.getInfo().putFlag(name);
                 } else {
                     if (vals.size() > 0) {
                     	// don't add empty annotations
 //                        record.getInfo().put(name, VCFAttributeValue.MISSING);
 //                    } else {
-                        if (collapse) {
-                            record.getInfo().put(name, new VCFAttributeValue(StringUtils.join(",", StringUtils.unique(vals))));
-                        } else {
-                            record.getInfo().put(name, new VCFAttributeValue(StringUtils.join(",", vals)));
-                        }
+                        // TODO: replace empty strings for missing?
+                    	try {
+	                        if (collapse) {
+	                            record.getInfo().put(name, new VCFAttributeValue(StringUtils.join(",", StringUtils.unique(vals))));
+	                        } else {
+	                            record.getInfo().put(name, new VCFAttributeValue(StringUtils.join(",", vals)));
+	                        }
+	            		} catch (VCFAttributeException e) {
+	            			throw new VCFAnnotatorException(e);
+	            		}
                     }
                 }
             }
