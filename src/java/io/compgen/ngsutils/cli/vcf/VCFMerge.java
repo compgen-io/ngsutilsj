@@ -112,14 +112,18 @@ public class VCFMerge extends AbstractOutputCommand {
 					}
 				}
 				
-				for (String a: rec.getAlt()) {
-					for (String b: next.getAlt()) {
-						if (!a.equals(b)) {
-							throw new Exception("Variants out of order! Expected: "+ rec.getChrom() + ":" + rec.getPos() + ":" + StringUtils.join(",", rec.getAlt()) + ", got: " + next.getChrom() + ":" + next.getPos() + ":" + StringUtils.join(",", next.getAlt()));
-						}
+				if (rec.getAlt().size() != next.getAlt().size()) {
+					throw new Exception("Variants out of order! Expected: "+ rec.getChrom() + ":" + rec.getPos() + ":" + StringUtils.join(",", rec.getAlt()) + ", got: " + next.getChrom() + ":" + next.getPos() + ":" + StringUtils.join(",", next.getAlt()));
+				}
+				
+				for (int i=0; i<rec.getAlt().size(); i++) {
+					String a = rec.getAlt().get(i);
+					String b = next.getAlt().get(i);
+					if (!a.equals(b)) {
+						throw new Exception("Variants out of order! Expected: "+ rec.getChrom() + ":" + rec.getPos() + ":" + StringUtils.join(",", rec.getAlt()) + ", got: " + next.getChrom() + ":" + next.getPos() + ":" + StringUtils.join(",", next.getAlt()));
 					}
 				}
-
+				
 				if (next.getFilters() != null) {
 					for (String filter: next.getFilters()) {
 						if (rec.getFilters() == null || rec.getFilters().contains(filter)) {
