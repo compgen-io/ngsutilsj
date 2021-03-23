@@ -46,7 +46,8 @@ import io.compgen.ngsutils.vcf.filter.VCFFilter;
 
 @Command(name="vcf-filter", desc="Filter a VCF file", category="vcf", doc="Note: This command will set filters in the VCF file, "
         + "which is what you'd normally use to EXCLUDE records. Passing records match no filters.\n\nFor arguments that take a value in the form"
-        + "of KEY:VAL:SAMPLEID:ALLELE, the only required values are KEY:VALUE. The other two are optional.")
+        + "of KEY:VAL:SAMPLEID:ALLELE, the only required values are KEY:VALUE. The other two are optional. For ALLELE options, possible allele "
+        + "values are: sum, min, max, ref, nref (not the ref alleles) or alt1 (the first alt allele)")
 public class VCFFilterCmd extends AbstractOutputCommand {
 	private String filename = "-";
 	
