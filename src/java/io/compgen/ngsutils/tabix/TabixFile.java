@@ -23,8 +23,11 @@ public class TabixFile {
     private boolean closed = false;
         
 	public TabixFile(String filename) throws IOException {
+		this(filename, false);
+	}
+	public TabixFile(String filename, boolean verbose) throws IOException {
 		this.filename = filename;
-		this.bgzf = new BGZFile(filename);
+		this.bgzf = new BGZFile(filename, verbose);
         this.index = null;
         
         if (new File(filename+".csi").exists()) {

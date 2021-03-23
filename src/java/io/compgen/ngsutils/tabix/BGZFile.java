@@ -82,13 +82,18 @@ public class BGZFile {
 	protected RandomAccessFile file;
 	protected BGZFileCache cache;
 	
-    public BGZFile(String filename) throws IOException {
-        if (!isBGZFile(filename)) {
+    public BGZFile(String filename, boolean verbose) throws IOException {
+        if (!isBGZFile(filename, verbose)) {
             throw new IOException("File: "+filename+" is not a valid BGZ file!");
         }
 //        this.filename = filename;
         this.file = new RandomAccessFile(filename, "r");
         this.cache = new BGZFileCache();
+    }
+
+
+    public BGZFile(String filename) throws IOException {
+    	this(filename, false);
     }
 
     public BGZFile(RandomAccessFile raf) throws IOException {
@@ -284,7 +289,12 @@ public class BGZFile {
 //	}
 	
 	public static boolean isBGZFile(String filename) {
-//		System.err.println("Checking file: "+filename);
+		return isBGZFile(filename, false);
+	}
+	public static boolean isBGZFile(String filename, boolean verbose) {
+		if (verbose) {
+			System.err.println("Checking file: "+filename);
+		}
 		try {
 			FileInputStream fis = new FileInputStream(filename);
 			
@@ -293,43 +303,48 @@ public class BGZFile {
 			
 			if (magic1 != 31) {
 				fis.close();
+				if (verbose) {
+					System.err.println("Bad magic 1");
+				}
 				return false;
 			}
 			if (magic2 != 139) {
 				fis.close();
+				if (verbose) {
+					System.err.println("Bad magic 2");
+				}
 				return false;
 			}
 			
 			
 			
-//			int cm = DataIO.readByte(fis);
-//			int flg = DataIO.readByte(fis);
-//			long mtime = DataIO.readUint32(fis);
-//			int xfl = DataIO.readByte(fis);
-//			int os = DataIO.readByte(fis);
-			DataIO.readByte(fis);
-			DataIO.readByte(fis);
-			DataIO.readUint32(fis);
+			int cm = DataIO.readByte(fis);
+			int flg = DataIO.readByte(fis);
+			long mtime = DataIO.readUint32(fis);
 			int xfl = DataIO.readByte(fis);
-			DataIO.readByte(fis);
+			int os = DataIO.readByte(fis);
 
-			if (xfl != 4) {
-				fis.close();
-				return false;
-			}
-			
 			int xlen = DataIO.readUint16(fis);
 			byte[] extra = DataIO.readRawBytes(fis, xlen);
 			
-//			System.out.println("magic1: "+ magic1);
-//			System.out.println("magic2: "+ magic2);
-//			System.out.println("cm    : "+ cm);
-//			System.out.println("flg   : "+ flg);
-//			System.out.println("mtime : "+ mtime);
-//			System.out.println("xfl   : "+ xfl);
-//			System.out.println("os    : "+ os);
-//			System.out.println("xlen  : "+ xlen);
-//			
+			if (verbose) {
+				System.err.println("magic1: "+ magic1);
+				System.err.println("magic2: "+ magic2);
+				System.err.println("cm    : "+ cm);
+				System.err.println("flg   : "+ flg);
+				System.err.println("mtime : "+ mtime);
+				System.err.println("xfl   : "+ xfl);
+				System.err.println("os    : "+ os);
+				System.err.println("xlen  : "+ xlen);
+			}			
+
+			if (flg != 4) {
+				fis.close();
+				if (verbose) {
+					System.err.println("Bad Flag value: "+flg);
+				}
+				return false;
+			}
 			
 			ByteArrayInputStream bais = new ByteArrayInputStream(extra);
 
@@ -350,8 +365,13 @@ public class BGZFile {
 			fis.close();
 
 		} catch (IOException e) {
+			if (verbose) {
+				e.printStackTrace(System.err);
+			}
 		}
-
+		if (verbose) {
+			System.err.println("Missing BGZ extra header");
+		}
 		return false;		
 	}
 
@@ -375,12 +395,12 @@ public class BGZFile {
 	            }
 	            
 				DataIO.readByte(fis);
-				DataIO.readByte(fis);
+				int flg = DataIO.readByte(fis);
 				DataIO.readUint32(fis);
-				int xfl = DataIO.readByte(fis);
+				DataIO.readByte(fis);
 				DataIO.readByte(fis);
 
-				if (xfl != 4) {
+				if (flg != 4) {
                     fis.seek(offset);
 					return false;
 				}
