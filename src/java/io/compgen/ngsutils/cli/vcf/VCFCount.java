@@ -51,6 +51,7 @@ public class VCFCount extends AbstractOutputCommand {
     private boolean disableBAQ = true;
     private boolean extendedBAQ = false;
     
+    private boolean onlySNVs = false;
     private boolean onlyOutputPass = false;
     private boolean outputVCFCounts = false;
     private boolean outputVCFAF = false;
@@ -74,6 +75,11 @@ public class VCFCount extends AbstractOutputCommand {
             requiredFlags |= ReadUtils.PROPER_PAIR_FLAG;
             filterFlags |= ReadUtils.MATE_UNMAPPED_FLAG;
         }
+    }
+
+    @Option(desc = "Only count SNVs", name = "snvs")
+    public void setOnlySNVs(boolean val) {
+    	this.onlySNVs = val;
     }
 
     @Option(desc = "Batch variants into blocks of size {val} for mpileup (limits mpileup calls)", name = "batchlen")
@@ -308,6 +314,10 @@ public class VCFCount extends AbstractOutputCommand {
 				continue;
 			}
 
+			if (onlySNVs && record.isIndel()) {
+				continue;
+			}
+			
 			if (skipMissing && !bamReferences.contains(record.getChrom())) {
 			    continue;
 			} else if (!bamReferences.contains(record.getChrom())) {
