@@ -185,7 +185,9 @@ public class TabixAnnotation extends AbstractBasicAnnotator {
                                     throw new VCFAnnotatorException("Missing column for line: " + line);
                                 }
                                 // TODO: HERE
-                                vals.add(spl[colNum]);
+                                if (!spl[colNum].equals("")) {
+                                	vals.add(spl[colNum]);
+                                }
                             }
                         }
                     }
