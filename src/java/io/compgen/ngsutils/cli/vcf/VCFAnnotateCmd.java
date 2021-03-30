@@ -16,6 +16,7 @@ import io.compgen.ngsutils.vcf.VCFReader;
 import io.compgen.ngsutils.vcf.VCFRecord;
 import io.compgen.ngsutils.vcf.VCFWriter;
 import io.compgen.ngsutils.vcf.annotate.BEDAnnotation;
+import io.compgen.ngsutils.vcf.annotate.ConstantTag;
 import io.compgen.ngsutils.vcf.annotate.CopyNumberLogRatio;
 import io.compgen.ngsutils.vcf.annotate.FisherStrandBias;
 import io.compgen.ngsutils.vcf.annotate.FlankingBases;
@@ -268,6 +269,18 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
 			throw new CommandArgumentException(e);
 		}    	
     }
+
+    @Option(desc="Add a constant INFO annotation to each record (KEY:VALUE or FLAG)", name="tag", helpValue="KEY{:VALUE}")
+    public void setTag(String arg) throws CommandArgumentException {
+    	if (arg.contains(":")) {
+    		String[] spl = arg.split(":");
+			chain.add(new ConstantTag(spl[0], spl[1]));
+
+    	} else {
+			chain.add(new ConstantTag(arg));
+    	}
+    }
+
     
     @UnnamedArg(name = "input.vcf", required=true)
     public void setFilename(String filename) throws CommandArgumentException {
