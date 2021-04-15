@@ -388,7 +388,7 @@ public class VCFRecord {
 	 * altChromKey = none -- determined from alt
 	 * altPosKey = END
 	 * typeKey = SVTYPE
-	 * connKey = none -- determined from alt (for evething except INV)
+	 * connKey = none -- determined from alt (for everything except INV)
 	 */
 	
 	public List<VCFAltPos> getAltPos(String altChromKey, String altPosKey, String typeKey, String connKey) {
