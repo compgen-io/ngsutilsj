@@ -31,6 +31,7 @@ public class VCFHeader {
     private Set<String> removeFilter = null;
     private Set<String> removeInfo = null;
     private Set<String> removeFormat = null;
+//    private Set<String> removeSample = null;
 
     private Set<String> allowedFilterCache = new HashSet<String>();
     private Set<String> blockedFilterCache = new HashSet<String>();
@@ -39,7 +40,7 @@ public class VCFHeader {
     private Set<String> allowedFormatCache = new HashSet<String>();
     private Set<String> blockedFormatCache = new HashSet<String>();
     
-	public VCFHeader(String fileformat, List<String> input, String headerLine, Set<String> removeFilter, Set<String> removeInfo,  Set<String> removeFormat) throws VCFParseException {
+	public VCFHeader(String fileformat, List<String> input, String headerLine, Set<String> removeFilter, Set<String> removeInfo, Set<String> removeFormat, Set<String> removeSample) throws VCFParseException {
 		if (fileformat == null) {
 			throw new VCFParseException("Missing format in header?");
 		}
@@ -50,6 +51,7 @@ public class VCFHeader {
         this.removeFilter = removeFilter;
         this.removeInfo = removeInfo;
         this.removeFormat = removeFormat;
+//        this.removeSample = removeSample;
 		
 		for (String line: input) {
 			if (line.startsWith("##INFO=")) {
@@ -93,6 +95,20 @@ public class VCFHeader {
                 if (!match) {
                     addFilter(filter);
                 }
+            } else if (line.startsWith("##SAMPLE=")) {
+    			Map<String, String> vals = VCFHeader.parseQuotedLine(line.substring(10, line.length()-1));
+
+                boolean match = false;
+                if (removeSample != null) {
+                    for (String remove: removeSample) {
+                        if (GlobUtils.matches(vals.get("ID"), remove)) {
+                            match = true;
+                        }
+                    }
+                }
+                if (!match) {
+                	lines.add(line);
+                }
             } else if (line.startsWith("##contig=")) {
                 VCFContigDef contig = VCFContigDef.parse(line);
                 addContig(contig);
@@ -104,10 +120,24 @@ public class VCFHeader {
 		String[] spl = headerLine.split("\t");
 		
 		if (spl.length > 9) {
-			samples = new String[spl.length-9];
+			
+			List<String> sampleList = new ArrayList<String>();
 			for (int i=9; i< spl.length; i++) {
-				samples[i-9]=spl[i];
+                boolean match = false;
+                if (removeSample != null) {
+                    for (String remove: removeSample) {
+                        if (GlobUtils.matches(spl[i], remove)) {
+                            match = true;
+                        }
+                    }
+                }
+                if (!match) {
+                	sampleList.add(spl[i]);
+//    				samples[i-9]=spl[i];
+                }
 			}
+			
+			samples = sampleList.toArray(new String[] {});
 		}
 	}
 
@@ -151,10 +181,18 @@ public class VCFHeader {
 		}
 
 		if (includeAll) {
-			if (!headerLine.startsWith("#")) {
-				headerLine = "#" + headerLine; 
+			String header = "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT";
+			
+			for (String sample: samples) {
+				header = header + "\t" + sample;
 			}
-			StringUtils.writeOutputStream(out, headerLine + "\n");
+
+			StringUtils.writeOutputStream(out,  header + "\n");
+			
+//			if (!headerLine.startsWith("#")) {
+//				headerLine = "#" + headerLine; 
+//			}
+//			StringUtils.writeOutputStream(out, headerLine + "\n");
 		}
 	}
 
