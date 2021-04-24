@@ -208,23 +208,27 @@ public class VCFRecord {
 				alts.add(a);
 			}
 		}
-		
+
 		double qual = -1;
-		if (!cols[5].equals(MISSING)) {
-			qual = Double.parseDouble(cols[5]);
+		if (cols.length > 5) {
+			if (!cols[5].equals(MISSING)) {
+				qual = Double.parseDouble(cols[5]);
+			}
 		}
 		
 		List<String> filters = null;
-		if (!cols[6].equals(PASS)) {
-		    // if filters is null => PASS
-		    // if filters is not null, but empty => MISSING
-
-		    for (String f: cols[6].split(";")) {
-				if (!f.equals(MISSING) && (header == null || header.isFilterAllowed(f))) {
-	                if (filters == null) {
-	                    filters = new ArrayList<String>();
-	                }
-				    filters.add(f);
+		if (cols.length > 6) {
+			if (!cols[6].equals(PASS)) {
+			    // if filters is null => PASS
+			    // if filters is not null, but empty => MISSING
+	
+			    for (String f: cols[6].split(";")) {
+					if (!f.equals(MISSING) && (header == null || header.isFilterAllowed(f))) {
+		                if (filters == null) {
+		                    filters = new ArrayList<String>();
+		                }
+					    filters.add(f);
+					}
 				}
 			}
 		}
@@ -232,22 +236,26 @@ public class VCFRecord {
 //		System.err.println("FILTER: " + cols[6] + " => " + (filters == null ? "<null>": "?"+StringUtils.join(",", filters)));
 		
 		try {
-	        VCFAttributes info = VCFAttributes.parseInfo(cols[7], header);
-		
-	//		System.err.println(info.toString());
-			
 			List<VCFAttributes> samples = null;
+			VCFAttributes info = new VCFAttributes();
+
+			if (cols.length > 7) {
+		        info = VCFAttributes.parseInfo(cols[7], header);
 			
-			if (cols.length>8) {
-				List<String> format = new ArrayList<String>();
-				for (String k: cols[8].split(":")) {
-				        format.add(k);
-				}
+		//		System.err.println(info.toString());
 				
-				samples = new ArrayList<VCFAttributes>();
 				
-				for (int i=9; i<cols.length; i++) {
-					samples.add(VCFAttributes.parseFormat(cols[i], format, header));
+				if (cols.length>8) {
+					List<String> format = new ArrayList<String>();
+					for (String k: cols[8].split(":")) {
+					        format.add(k);
+					}
+					
+					samples = new ArrayList<VCFAttributes>();
+					
+					for (int i=9; i<cols.length; i++) {
+						samples.add(VCFAttributes.parseFormat(cols[i], format, header));
+					}
 				}
 			}
 			return new VCFRecord(chrom, pos, dbSNPID, ref, alts, qual, filters, info, samples, altOrig);
