@@ -183,8 +183,10 @@ public class VCFHeader {
 		if (includeAll) {
 			String header = "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT";
 			
-			for (String sample: samples) {
-				header = header + "\t" + sample;
+			if (samples != null) {
+				for (String sample: samples) {
+					header = header + "\t" + sample;
+				}
 			}
 
 			StringUtils.writeOutputStream(out,  header + "\n");
