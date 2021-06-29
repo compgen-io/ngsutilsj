@@ -434,7 +434,9 @@ public class BamFilterCli extends AbstractCommand {
         
         SAMFileWriter failedWriter = null;
         if (failedFilename != null) {
-            failedWriter = factory.makeBAMWriter(header, true, new File(failedFilename));
+        	SAMFileHeader failedHeader = header.clone();
+        	failedHeader.setSortOrder(SortOrder.unsorted);
+            failedWriter = factory.makeBAMWriter(failedHeader, true, new File(failedFilename));
         }
 
         BamFilter parent;
