@@ -1,6 +1,7 @@
 package io.compgen.ngsutils.vcf.annotate;
 
 import io.compgen.ngsutils.vcf.VCFAnnotationDef;
+import io.compgen.ngsutils.vcf.VCFAttributeException;
 import io.compgen.ngsutils.vcf.VCFAttributeValue;
 import io.compgen.ngsutils.vcf.VCFHeader;
 import io.compgen.ngsutils.vcf.VCFParseException;
@@ -74,7 +75,11 @@ public class VariantDistance implements VCFAnnotator {
 	}
 
 	private void annotate(VCFRecord record, long l) {
-		record.getInfo().put("CG_VARDIST", new VCFAttributeValue(""+l));
+		try {
+			record.getInfo().put("CG_VARDIST", new VCFAttributeValue(""+l));
+		} catch (VCFAttributeException e) {
+			// won't happen, as this will always be a valid value
+		}
 	}
 
 	private long calcDist(VCFRecord one, VCFRecord two) {

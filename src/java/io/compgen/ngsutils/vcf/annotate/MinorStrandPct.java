@@ -5,6 +5,7 @@ import java.util.List;
 
 import io.compgen.common.StringUtils;
 import io.compgen.ngsutils.vcf.VCFAnnotationDef;
+import io.compgen.ngsutils.vcf.VCFAttributeException;
 import io.compgen.ngsutils.vcf.VCFAttributeValue;
 import io.compgen.ngsutils.vcf.VCFAttributes;
 import io.compgen.ngsutils.vcf.VCFHeader;
@@ -30,7 +31,7 @@ public class MinorStrandPct extends AbstractBasicAnnotator {
 		header.addFormat(getAnnotationType());
 	}
 	
-	protected void annotate(VCFRecord record) {	
+	protected void annotate(VCFRecord record) throws VCFAnnotatorException {	
 		for (VCFAttributes sampleVals : record.getSampleAttributes()) {
 		    if (sampleVals.contains("SAC")) {
 	            // This should be the strand-level counts for each allele (ref+,ref-,alt1+,alt1-,alt2+,alt2-, etc...)
@@ -50,11 +51,14 @@ public class MinorStrandPct extends AbstractBasicAnnotator {
     					outs.add(""+FisherStrandBias.round(((double)plus) / (plus+minus), 3));
     				}
     			}
-    			
-    			if (outs.size() == 0) {
-    				sampleVals.put("CG_SBPCT", VCFAttributeValue.MISSING);	
-    			} else {
-    				sampleVals.put("CG_SBPCT", new VCFAttributeValue(StringUtils.join(",", outs)));	
+    			try {
+	    			if (outs.size() == 0) {
+	    				sampleVals.put("CG_SBPCT", VCFAttributeValue.MISSING);	
+	    			} else {
+	    				sampleVals.put("CG_SBPCT", new VCFAttributeValue(StringUtils.join(",", outs)));	
+	    			}
+    			} catch (VCFAttributeException e) {
+    				throw new VCFAnnotatorException(e);
     			}
 		    }
 		}

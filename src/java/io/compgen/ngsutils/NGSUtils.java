@@ -44,12 +44,15 @@ import io.compgen.ngsutils.cli.bed.BedResize;
 import io.compgen.ngsutils.cli.bed.BedStats;
 import io.compgen.ngsutils.cli.bed.BedToBed3;
 import io.compgen.ngsutils.cli.bed.BedToBed6;
+import io.compgen.ngsutils.cli.bed.BedToBedGraph;
 import io.compgen.ngsutils.cli.bed.BedToFasta;
 import io.compgen.ngsutils.cli.fasta.FastaFilter;
 import io.compgen.ngsutils.cli.fasta.FastaGC;
 import io.compgen.ngsutils.cli.fasta.FastaGenerateReads;
 import io.compgen.ngsutils.cli.fasta.FastaMask;
 import io.compgen.ngsutils.cli.fasta.FastaNames;
+import io.compgen.ngsutils.cli.fasta.FastaPWM;
+import io.compgen.ngsutils.cli.fasta.FastaRandom;
 import io.compgen.ngsutils.cli.fasta.FastaRevcomp;
 import io.compgen.ngsutils.cli.fasta.FastaSplit;
 import io.compgen.ngsutils.cli.fasta.FastaSubseq;
@@ -74,11 +77,15 @@ import io.compgen.ngsutils.cli.tab.TabAnnotate;
 import io.compgen.ngsutils.cli.tab.TabixCat;
 import io.compgen.ngsutils.cli.tab.TabixQuery;
 import io.compgen.ngsutils.cli.vcf.VCFAnnotateCmd;
+import io.compgen.ngsutils.cli.vcf.VCFCheck;
 import io.compgen.ngsutils.cli.vcf.VCFChrFix;
+import io.compgen.ngsutils.cli.vcf.VCFClearFilter;
 import io.compgen.ngsutils.cli.vcf.VCFCount;
 import io.compgen.ngsutils.cli.vcf.VCFExportCmd;
 import io.compgen.ngsutils.cli.vcf.VCFFilterCmd;
+import io.compgen.ngsutils.cli.vcf.VCFMerge;
 import io.compgen.ngsutils.cli.vcf.VCFSVToFASTA;
+import io.compgen.ngsutils.cli.vcf.VCFStats;
 import io.compgen.ngsutils.cli.vcf.VCFStrip;
 import io.compgen.ngsutils.cli.vcf.VCFToBED;
 import io.compgen.ngsutils.cli.vcf.VCFToBEDPE;
@@ -188,7 +195,14 @@ public class NGSUtils {
         	.addCommand(BamExtract.class)
         	.addCommand(FastaRevcomp.class)
         	.addCommand(FastqOverlap.class)
-    		.addCommand(BamSoftClip.class);
+    		.addCommand(BamSoftClip.class)
+    		.addCommand(VCFStats.class)
+    		.addCommand(VCFClearFilter.class)
+    		.addCommand(BedToBedGraph.class)
+    		.addCommand(VCFMerge.class)
+    		.addCommand(FastaPWM.class)
+			.addCommand(FastaRandom.class)
+			.addCommand(VCFCheck.class);
 
         try {
             if (args.length == 0) {

@@ -120,7 +120,17 @@ public class TBIFile implements TabixIndex {
             refs[i] = new Ref(bins);
         }
 
-        nNoCoor = DataIO.readUint64(in);
+        if (in.available()>0) {
+        	long val;
+        	try {
+        		val = DataIO.readUint64(in);
+        	} catch (NullPointerException ex) {
+        		val = 0;
+        	}
+    		nNoCoor = val;
+        } else {
+        	nNoCoor = 0;
+        }
 
     }
 

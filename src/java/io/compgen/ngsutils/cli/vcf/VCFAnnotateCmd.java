@@ -16,6 +16,7 @@ import io.compgen.ngsutils.vcf.VCFReader;
 import io.compgen.ngsutils.vcf.VCFRecord;
 import io.compgen.ngsutils.vcf.VCFWriter;
 import io.compgen.ngsutils.vcf.annotate.BEDAnnotation;
+import io.compgen.ngsutils.vcf.annotate.ConstantTag;
 import io.compgen.ngsutils.vcf.annotate.CopyNumberLogRatio;
 import io.compgen.ngsutils.vcf.annotate.FisherStrandBias;
 import io.compgen.ngsutils.vcf.annotate.FlankingBases;
@@ -25,6 +26,7 @@ import io.compgen.ngsutils.vcf.annotate.InfoInFile;
 import io.compgen.ngsutils.vcf.annotate.MinorStrandPct;
 import io.compgen.ngsutils.vcf.annotate.NullAnnotator;
 import io.compgen.ngsutils.vcf.annotate.TabixAnnotation;
+import io.compgen.ngsutils.vcf.annotate.TransitionTransversion;
 import io.compgen.ngsutils.vcf.annotate.VCFAnnotation;
 import io.compgen.ngsutils.vcf.annotate.VCFAnnotator;
 import io.compgen.ngsutils.vcf.annotate.VariantAlleleFrequency;
@@ -81,6 +83,11 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
     	chain.add(new FisherStrandBias());
     }
     
+    @Option(desc="Add a TS, TV annotations (TS: A<->G, C<->T)", name="tstv")
+    public void setTsTv() throws CommandArgumentException {
+    	chain.add(new TransitionTransversion());
+    }
+    
     @Option(desc="Add minor strand pct (FORMAT:CG_SBPCT, requires SAC)", name="minor-strand")
     public void setMinorStrandPct() throws CommandArgumentException {
     	chain.add(new MinorStrandPct());
@@ -98,7 +105,7 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
     	}
     	
     }
-    @Option(desc="Add flanking bases (ex: ACA) from reference FASTA file (FAI indexed) (INFO:CG_FLANKING). By default 1 base on either side is used.", name="flanking", helpValue="ref.fa{:num_of_bases}")
+    @Option(desc="Add flanking bases/normalized mutation (ex: A[C>A]A) from reference FASTA file (FAI indexed) (INFO:CG_FLANKING). By default 1 base on either side is used.", name="flanking", helpValue="ref.fa{:num_of_bases}")
     public void setFlanking(String arg) throws CommandArgumentException {
     	try{
     	    String[] spl = arg.split(":");
@@ -262,6 +269,18 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
 			throw new CommandArgumentException(e);
 		}    	
     }
+
+    @Option(desc="Add a constant INFO annotation to each record (KEY:VALUE or FLAG)", name="tag", helpValue="KEY{:VALUE}")
+    public void setTag(String arg) throws CommandArgumentException {
+    	if (arg.contains(":")) {
+    		String[] spl = arg.split(":");
+			chain.add(new ConstantTag(spl[0], spl[1]));
+
+    	} else {
+			chain.add(new ConstantTag(arg));
+    	}
+    }
+
     
     @UnnamedArg(name = "input.vcf", required=true)
     public void setFilename(String filename) throws CommandArgumentException {

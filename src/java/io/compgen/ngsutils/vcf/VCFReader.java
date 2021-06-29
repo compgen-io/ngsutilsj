@@ -28,6 +28,7 @@ public class VCFReader {
     protected Set<String> removeFilter = null;
     protected Set<String> removeFormat = null;
     protected Set<String> removeInfo = null;
+    protected Set<String> removeSample = null;
     
 	public VCFReader(String filename) throws IOException, VCFParseException {
         if (filename.equals("-")) {
@@ -104,7 +105,7 @@ public class VCFReader {
 			}
 		}
 		
-		header = new VCFHeader(fileformat, lines, headerLine, removeFilter, removeInfo, removeFormat);
+		header = new VCFHeader(fileformat, lines, headerLine, removeFilter, removeInfo, removeFormat, removeSample);
 	}
 
 	public VCFHeader getHeader() throws IOException, VCFParseException {
@@ -213,6 +214,18 @@ public class VCFReader {
             throw new VCFParseException("You can't remove filters after the VCF header has been read.");
         }
     }
+
+
+	public void addRemoveSample(Set<String> removeSample) throws VCFParseException {
+        if (header == null) {
+            if (this.removeSample == null) {
+                this.removeSample = new HashSet<String>();
+            }
+            this.removeSample.addAll(removeSample);
+        } else {
+            throw new VCFParseException("You can't remove samples after the VCF header has been read.");
+        }
+	}
 
 	
 }

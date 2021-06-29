@@ -134,6 +134,7 @@ public class TabixQueryIterator implements Iterator<String> {
 
                             // split into columns
                             String[] cols = line.split("\t");
+//                            System.err.println(StringUtils.join(" | ", cols));
                             
                             // is this the reference we are looking for?
                             if (cols[index.getColSeq()-1].equals(ref)) {

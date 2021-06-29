@@ -15,16 +15,16 @@ class FastqOverlapTest {
     	FastqRead tre = new FastqRead("test_one", "ACGTAAAAAAAAAAA", "123456789012345");
     	FastqRead qua = new FastqRead("test_one", "TTTGCACCCCCCCCC", "abcdefghijklmno");
     	
-    	FastqRead over1 = FastqOverlap.findOverlapRead(one,  one,  5);
+    	FastqRead over1 = FastqOverlap.findOverlapRead(one,  one,  5, false);
     	assertNull(over1);
 
-    	FastqRead over2 = FastqOverlap.findOverlapRead(one,  two,  5);
+    	FastqRead over2 = FastqOverlap.findOverlapRead(one,  two,  5, false);
     	assertNull(over2);
     	
-    	FastqRead over3 = FastqOverlap.findOverlapRead(one,  tre,  5);
+    	FastqRead over3 = FastqOverlap.findOverlapRead(one,  tre,  5, false);
     	assertNull(over3);
     	
-    	FastqRead over4 = FastqOverlap.findOverlapRead(one,  qua,  5);
+    	FastqRead over4 = FastqOverlap.findOverlapRead(one,  qua,  5, false);
     	assertNotNull(over4);
     	assertEquals(over4.getSeq(),  "AAAAAAAAAAAACGTGGGGGGGGG");
     	assertEquals(over4.getQual(), "123456789012345ghijklmno");

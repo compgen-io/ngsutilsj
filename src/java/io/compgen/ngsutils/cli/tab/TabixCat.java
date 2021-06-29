@@ -19,7 +19,7 @@ public class TabixCat extends AbstractOutputCommand {
 
     @Exec
     public void exec() throws Exception {
-        TabixFile file = new TabixFile(infile);
+        TabixFile file = new TabixFile(infile, verbose);
         if (verbose) {
             file.dumpIndex();
         }

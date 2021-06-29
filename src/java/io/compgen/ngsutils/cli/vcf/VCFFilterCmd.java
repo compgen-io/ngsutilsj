@@ -46,13 +46,15 @@ import io.compgen.ngsutils.vcf.filter.VCFFilter;
 
 @Command(name="vcf-filter", desc="Filter a VCF file", category="vcf", doc="Note: This command will set filters in the VCF file, "
         + "which is what you'd normally use to EXCLUDE records. Passing records match no filters.\n\nFor arguments that take a value in the form"
-        + "of KEY:VAL:SAMPLEID:ALLELE, the only required values are KEY:VALUE. The other two are optional.")
+        + "of KEY:VAL:SAMPLEID:ALLELE, the only required values are KEY:VALUE. The other two are optional. For ALLELE options, possible allele "
+        + "values are: sum, min, max, ref, nref (not the ref alleles) or alt1 (the first alt allele)")
 public class VCFFilterCmd extends AbstractOutputCommand {
 	private String filename = "-";
 	
 	List<VCFFilter> filterChain = new ArrayList<VCFFilter>();
 	
     private boolean onlyOutputPass = false;
+    private boolean onlyOutputFail = false;
     private String statsFilename=null;
 	
     @Option(desc="Write filter stats to a file", name="stats")
@@ -92,6 +94,11 @@ public class VCFFilterCmd extends AbstractOutputCommand {
     @Option(desc="Only output passing variants", name="passing")
     public void setOnlyOutputPass(boolean onlyOutputPass) {
         this.onlyOutputPass = onlyOutputPass;
+    }
+    
+    @Option(desc="Only output filtered/failing variants", name="failing")
+    public void setOnlyOutputFail(boolean onlyOutputFail) {
+        this.onlyOutputFail = onlyOutputFail;
     }
     
     @Option(desc="Record contains INFO flag {KEY}", name="flag-present", helpValue="KEY", allowMultiple=true)
@@ -279,12 +286,6 @@ public class VCFFilterCmd extends AbstractOutputCommand {
 		}
 		
 		VCFWriter writer = new VCFWriter(out, header);
-//		VCFWriter writer;
-//		if (out.equals("-")) {
-//			writer = new VCFWriter(System.out, header);
-//		} else {
-//			writer = new VCFWriter(out, header);
-//		}
 		
 		TallyValues<String> filterCounts = new TallyValues<String>();
 		TallyValues<String> filterCounts2 = new TallyValues<String>();
@@ -312,12 +313,17 @@ public class VCFFilterCmd extends AbstractOutputCommand {
 			}
 			
 //			System.err.println(rec+" ;; " + !onlyOutputPass+" ;; "+!rec.isFiltered());
-			if (!onlyOutputPass || !rec.isFiltered()) {
-				count++;
-				writer.write(rec);
+			if (!rec.isFiltered()) {
+				if (!onlyOutputFail) {
+					count++;
+					writer.write(rec);
+				}
 			}
 			if (rec.isFiltered()) {
 				filtered++;
+				if (!onlyOutputPass) {
+					writer.write(rec);
+				}
 				for (String filter: rec.getFilters()) {
 					filterCounts.incr(filter);
 				}

@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import io.compgen.common.StringUtils;
+import io.compgen.ngsutils.cli.vcf.VCFCheck;
 
 public class VCFRecord {
 
@@ -99,7 +100,7 @@ public class VCFRecord {
 	protected String chrom;
 	protected int pos; // one-based
 	protected String dbSNPID = "";
-	protected String ref = "";
+	protected String ref = ""; // reference base
 	protected List<String> alt = null;
 	protected String altOrig = null;
 	protected double qual = -1;
@@ -207,49 +208,67 @@ public class VCFRecord {
 				alts.add(a);
 			}
 		}
-		
+
 		double qual = -1;
-		if (!cols[5].equals(MISSING)) {
-			qual = Double.parseDouble(cols[5]);
+		if (cols.length > 5) {
+			if (!cols[5].equals(MISSING)) {
+				qual = Double.parseDouble(cols[5]);
+			}
 		}
 		
 		List<String> filters = null;
-		if (!cols[6].equals(PASS)) {
-		    // if filters is null => PASS
-		    // if filters is not null, but empty => MISSING
-
-		    for (String f: cols[6].split(";")) {
-				if (!f.equals(MISSING) && (header == null || header.isFilterAllowed(f))) {
-	                if (filters == null) {
-	                    filters = new ArrayList<String>();
-	                }
-				    filters.add(f);
+		if (cols.length > 6) {
+			if (!cols[6].equals(PASS)) {
+			    // if filters is null => PASS
+			    // if filters is not null, but empty => MISSING
+	
+			    for (String f: cols[6].split(";")) {
+					if (!f.equals(MISSING) && (header == null || header.isFilterAllowed(f))) {
+		                if (filters == null) {
+		                    filters = new ArrayList<String>();
+		                }
+					    filters.add(f);
+					}
 				}
 			}
 		}
 
 //		System.err.println("FILTER: " + cols[6] + " => " + (filters == null ? "<null>": "?"+StringUtils.join(",", filters)));
 		
-        VCFAttributes info = VCFAttributes.parseInfo(cols[7], header);
-		
-//		System.err.println(info.toString());
-		
-		List<VCFAttributes> samples = null;
-		
-		if (cols.length>8) {
-			List<String> format = new ArrayList<String>();
-			for (String k: cols[8].split(":")) {
-			        format.add(k);
-			}
+		try {
+			List<VCFAttributes> samples = null;
+			VCFAttributes info = new VCFAttributes();
+
+			if (cols.length > 7) {
+		        info = VCFAttributes.parseInfo(cols[7], header);
 			
-			samples = new ArrayList<VCFAttributes>();
-			
-			for (int i=9; i<cols.length; i++) {
-				samples.add(VCFAttributes.parseFormat(cols[i], format, header));
+		//		System.err.println(info.toString());
+				
+				
+				if (cols.length>8) {
+					List<String> format = new ArrayList<String>();
+					for (String k: cols[8].split(":")) {
+					        format.add(k);
+					}
+					
+					samples = new ArrayList<VCFAttributes>();
+					
+					for (int i=9; i<cols.length; i++) {
+						samples.add(VCFAttributes.parseFormat(cols[i], format, header));
+					}
+				}
 			}
+			return new VCFRecord(chrom, pos, dbSNPID, ref, alts, qual, filters, info, samples, altOrig);
+
+		} catch (VCFParseException | VCFAttributeException e) {
+			if (!VCFCheck.isQuiet()) {
+	            System.err.println("ERROR: processing VCF record ("+ e + ")");
+	            System.err.println("ERROR: " + line);
+			}
+            System.exit(2);
 		}
 		
-		return new VCFRecord(chrom, pos, dbSNPID, ref, alts, qual, filters, info, samples, altOrig);
+		throw new VCFParseException("Unknown parse exception");
 	}
 
 	public String getChrom() {
@@ -351,10 +370,12 @@ public class VCFRecord {
             return true;
         }
         
-        for (String a: alt) {
-            if (a.length() != 1) {
-                return true;
-            }
+        if (alt != null) { 
+	        	for (String a: alt) {
+	            if (a.length() != 1) {
+	                return true;
+	            }
+	        }
         }
         return false;
     }
@@ -375,7 +396,7 @@ public class VCFRecord {
 	 * altChromKey = none -- determined from alt
 	 * altPosKey = END
 	 * typeKey = SVTYPE
-	 * connKey = none -- determined from alt (for evething except INV)
+	 * connKey = none -- determined from alt (for everything except INV)
 	 */
 	
 	public List<VCFAltPos> getAltPos(String altChromKey, String altPosKey, String typeKey, String connKey) {
@@ -506,4 +527,59 @@ public class VCFRecord {
 		return ret;
 	}
 
+	/**
+	 * 
+	 * @param rec
+	 * @return -1 if Transition (Ts), 1 if Transversion (Tv), 0 if otherwise ignored (MNV, indel, etc...)
+	 */
+	public int calcTsTv() {
+	    if (getRef().length() != 1) {
+	        // ignore indel
+	    	return 0;
+	    }
+	    if (getAlt() == null || getAlt().size() > 1) {
+	        // ignore multi-variant positions
+	    	return 0;
+	    }
+	    if (getAlt().get(0).length() != 1) {
+	        // ignore indel
+	    	return 0;
+	    }
+	    
+	    // this shouldn't happen for variants...
+	    if (getRef().toUpperCase().equals(getAlt().get(0).toUpperCase())) {
+	    	return 0;
+	    }
+	    
+	               
+	    switch (getRef().toUpperCase()) {
+	    case "A":
+	        if (getAlt().get(0).toUpperCase().equals("G")) {
+	        	return -1;
+	        } else {
+	        	return 1;
+	        }
+	    case "G":
+	        if (getAlt().get(0).toUpperCase().equals("A")) {
+	        	return -1;
+	        } else {
+	        	return 1;
+	        }
+	    case "C":
+	        if (getAlt().get(0).toUpperCase().equals("T")) {
+	        	return -1;
+	        } else {
+	        	return 1;
+	        }
+	    case "T":
+	        if (getAlt().get(0).toUpperCase().equals("C")) {
+	        	return -1;
+	        } else {
+	        	return 1;
+	        }
+	    }
+
+	    return 0;
+	}
+	
 }

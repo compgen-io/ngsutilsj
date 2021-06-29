@@ -9,6 +9,7 @@ import io.compgen.ngsutils.annotation.GTFAnnotationSource;
 import io.compgen.ngsutils.annotation.GenicRegion;
 import io.compgen.ngsutils.annotation.GenomeSpan;
 import io.compgen.ngsutils.vcf.VCFAnnotationDef;
+import io.compgen.ngsutils.vcf.VCFAttributeException;
 import io.compgen.ngsutils.vcf.VCFAttributeValue;
 import io.compgen.ngsutils.vcf.VCFHeader;
 import io.compgen.ngsutils.vcf.VCFParseException;
@@ -73,20 +74,24 @@ public class GTFGene extends AbstractBasicAnnotator {
 			strands.add(gene.getStrand().toString());
 		}
 		
-		if (geneNames.size() == 0) {
-			record.getInfo().put("CG_GENE", VCFAttributeValue.MISSING);
-			record.getInfo().put("CG_GENE_REGION", VCFAttributeValue.MISSING);
-			record.getInfo().put("CG_GENE_STRAND", VCFAttributeValue.MISSING);
-		} else {
-			GenicRegion region = gtf.findGenicRegionForPos(pos);
-			String geneRegionName = ".";
-			if (region != null) {
-				geneRegionName = region.name;
+		try {
+			if (geneNames.size() == 0) {
+				record.getInfo().put("CG_GENE", VCFAttributeValue.MISSING);
+				record.getInfo().put("CG_GENE_REGION", VCFAttributeValue.MISSING);
+				record.getInfo().put("CG_GENE_STRAND", VCFAttributeValue.MISSING);
+			} else {
+				GenicRegion region = gtf.findGenicRegionForPos(pos);
+				String geneRegionName = ".";
+				if (region != null) {
+					geneRegionName = region.name;
+				}
+				
+				record.getInfo().put("CG_GENE", new VCFAttributeValue(StringUtils.join(",", geneNames)));
+				record.getInfo().put("CG_GENE_REGION", new VCFAttributeValue(geneRegionName));
+				record.getInfo().put("CG_GENE_STRAND", new VCFAttributeValue(StringUtils.join(",", strands)));
 			}
-			
-			record.getInfo().put("CG_GENE", new VCFAttributeValue(StringUtils.join(",", geneNames)));
-			record.getInfo().put("CG_GENE_REGION", new VCFAttributeValue(geneRegionName));
-			record.getInfo().put("CG_GENE_STRAND", new VCFAttributeValue(StringUtils.join(",", strands)));
+		} catch (VCFAttributeException e) {
+			throw new VCFAnnotatorException(e);
 		}
 	}
 }

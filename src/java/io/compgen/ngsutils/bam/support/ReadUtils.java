@@ -429,6 +429,10 @@ public class ReadUtils {
         return false;
     }
 
+    public static boolean isOrphan(SAMRecord read) {
+    	return (read.getReadPairedFlag() && (read.getMateUnmappedFlag()));
+    }
+    
     public static boolean isDiscordant(SAMRecord read, int maxDist) {
         return isDiscordant(read, maxDist, true);
     }

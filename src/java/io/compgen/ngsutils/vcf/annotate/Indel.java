@@ -1,6 +1,7 @@
 package io.compgen.ngsutils.vcf.annotate;
 
 import io.compgen.ngsutils.vcf.VCFAnnotationDef;
+import io.compgen.ngsutils.vcf.VCFAttributeException;
 import io.compgen.ngsutils.vcf.VCFAttributeValue;
 import io.compgen.ngsutils.vcf.VCFHeader;
 import io.compgen.ngsutils.vcf.VCFParseException;
@@ -47,16 +48,19 @@ public class Indel extends AbstractBasicAnnotator {
 			}
 		}
 		
-		
-		if (insert) {
-			record.getInfo().put("CG_INSERT", VCFAttributeValue.EMPTY);
-            record.getInfo().put("CG_INSLEN", new VCFAttributeValue(""+insLen));
-            record.getInfo().put("CG_INDELLEN", new VCFAttributeValue(""+insLen));
-		}
-		if (deletion) {
-			record.getInfo().put("CG_DELETE", VCFAttributeValue.EMPTY);
-			record.getInfo().put("CG_DELLEN", new VCFAttributeValue(""+delLen));
-            record.getInfo().put("CG_INDELLEN", new VCFAttributeValue("-"+delLen));
+		try {		
+			if (insert) {
+				record.getInfo().putFlag("CG_INSERT");
+	            record.getInfo().put("CG_INSLEN", new VCFAttributeValue(""+insLen));
+	            record.getInfo().put("CG_INDELLEN", new VCFAttributeValue(""+insLen));
+			}
+			if (deletion) {
+				record.getInfo().putFlag("CG_DELETE");
+				record.getInfo().put("CG_DELLEN", new VCFAttributeValue(""+delLen));
+	            record.getInfo().put("CG_INDELLEN", new VCFAttributeValue("-"+delLen));
+			}
+		} catch (VCFAttributeException e) {
+			throw new VCFAnnotatorException(e);
 		}
 	}
 }

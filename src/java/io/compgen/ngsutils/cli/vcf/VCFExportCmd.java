@@ -28,7 +28,7 @@ import io.compgen.ngsutils.vcf.export.QualExport;
 import io.compgen.ngsutils.vcf.export.VCFExport;
 
 
-@Command(name="vcf-export", desc="Export information from a VCF file as a tab-delimited file", category="vcf")
+@Command(name="vcf-export", desc="Export information from a VCF file as a tab-delimited file", category="vcf", doc="For --format, possible allele values are: sum, min, max, ref, or alt1 (the first alt allele)")
 public class VCFExportCmd extends AbstractOutputCommand {
 	private String filename = "-";
 	

@@ -12,7 +12,7 @@ import io.compgen.common.IterUtils;
 import io.compgen.common.StringLineReader;
 import io.compgen.common.progress.ProgressMessage;
 
-@Command(name="fasta-genreads", desc="Generate mock reads from a reference FASTA file", category="fasta", experimental=true)
+@Command(name="fasta-genreads", desc="Generate mock reads from a reference FASTA file (DNA)", category="fasta", experimental=true)
 public class FastaGenerateReads extends AbstractOutputCommand {
     private String filename = null;
     private int readLength = 100;

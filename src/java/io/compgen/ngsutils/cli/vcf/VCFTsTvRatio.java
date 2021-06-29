@@ -36,63 +36,27 @@ public class VCFTsTvRatio extends AbstractOutputCommand {
 			reader = new VCFReader(filename);
 		}
 
-		long tiCount = 0;
+		long tsCount = 0;
 		long tvCount = 0;
 		
 		for (VCFRecord rec: IterUtils.wrap(reader.iterator())) {
             if (onlyUsePasssing && rec.isFiltered()) {
                 continue;
             }
-            if (rec.getRef().length() != 1) {
-                // ignore indel
-                continue;
-            }
-            if (rec.getAlt().size() > 1) {
-                // ignore multi-variant positions
-                continue;
-            }
-            if (rec.getAlt().get(0).length() != 1) {
-                // ignore indel
-                continue;
-            }
             
-                       
-            switch (rec.getRef().toUpperCase()) {
-            case "A":
-                if (rec.getAlt().get(0).toUpperCase().equals("G")) {
-                    tiCount ++;
-                } else {
-                    tvCount ++;
-                }
-                break;
-            case "G":
-                if (rec.getAlt().get(0).toUpperCase().equals("A")) {
-                    tiCount ++;
-                } else {
-                    tvCount ++;
-                }
-                break;
-            case "C":
-                if (rec.getAlt().get(0).toUpperCase().equals("T")) {
-                    tiCount ++;
-                } else {
-                    tvCount ++;
-                }
-                break;
-            case "T":
-                if (rec.getAlt().get(0).toUpperCase().equals("C")) {
-                    tiCount ++;
-                } else {
-                    tvCount ++;
-                }
-                break;
+            int tstv = rec.calcTsTv();
+            if (tstv == -1) {
+            	tsCount++;
+            } else if (tstv == 1) {
+            	tvCount++;
             }
             
 		}		
 		reader.close();
-        System.out.println("Transitions (Ts)\t"+tiCount);
+        System.out.println("Transitions (Ts)\t"+tsCount);
         System.out.println("Transversions (Tv)\t"+tvCount);
-        System.out.println("Ts/Tv ratio\t"+((double)tiCount)/tvCount);
+        System.out.println("Ts/Tv ratio\t"+((double)tsCount)/tvCount);
 	}
+
 
 }

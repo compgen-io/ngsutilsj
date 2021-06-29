@@ -13,7 +13,7 @@ import io.compgen.common.StringLineReader;
 import io.compgen.common.TabWriter;
 import io.compgen.ngsutils.fasta.FastaReader;
 
-@Command(name="fasta-gc", desc="Determine the GC% for a given region or bins", category="fasta")
+@Command(name="fasta-gc", desc="Determine the GC% for a given region or bins (DNA)", category="fasta")
 public class FastaGC extends AbstractOutputCommand {
     private String filename = null;
     private String bedFilename = null;

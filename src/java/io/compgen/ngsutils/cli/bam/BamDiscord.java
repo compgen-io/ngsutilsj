@@ -32,7 +32,7 @@ import io.compgen.ngsutils.bam.support.BamHeaderUtils;
 import io.compgen.ngsutils.bam.support.ReadUtils;
 import io.compgen.ngsutils.support.CloseableFinalizer;
 
-@Command(name="bam-discord", desc="Extract all discordant reads from a BAM file", category="bam")
+@Command(name="bam-discord", desc="Extract all discordant reads from a BAM file", category="bam", doc="Note: for paired-end reads, both reads must be mapped. No unmapped reads are included in the outputs.")
 public class BamDiscord extends AbstractCommand {
     private String filename = null;
     private boolean lenient = false;
@@ -42,6 +42,7 @@ public class BamDiscord extends AbstractCommand {
     
     private String concordFilename = null;
     private String discordFilename = null;
+    private String orphanFilename = null;
     private String tmpDir = null;
     
     private boolean noIntraChrom = false;
@@ -76,6 +77,11 @@ public class BamDiscord extends AbstractCommand {
         this.noIntraChrom = noIntraChrom;
     }    
 
+    @Option(desc = "Orphan read output BAM (where R1 or R2 is unmapped)", name="orphan", helpValue="fname")
+    public void setOrphanFile(String orphanFilename) {
+        this.orphanFilename = orphanFilename;
+    }    
+
     @Option(desc = "Discordant read output BAM", name="discord", helpValue="fname")
     public void setDiscordFilename(String discordFilename) {
         this.discordFilename = discordFilename;
@@ -96,8 +102,18 @@ public class BamDiscord extends AbstractCommand {
             throw new CommandArgumentException("You must specify --discord or --concord (or both)!");
         }
         
-        if (concordFilename != null && concordFilename.equals("-") && discordFilename != null && discordFilename.equals("-")) {
-            throw new CommandArgumentException("You cannot write both --discord and --concord to stdout (-)!");
+        int stdoutCt = 0;
+        if (concordFilename != null && concordFilename.equals("-")) {
+        	stdoutCt++;
+        }
+        if (discordFilename != null && discordFilename.equals("-")) {
+        	stdoutCt++;
+        }
+        if (orphanFilename != null && orphanFilename.equals("-")) {
+        	stdoutCt++;
+        }
+        if (stdoutCt > 1) {
+            throw new CommandArgumentException("You cannot write multiple files to stdout (-)!");
         }
         
         SamReaderFactory readerFactory = SamReaderFactory.makeDefault();
@@ -123,6 +139,7 @@ public class BamDiscord extends AbstractCommand {
 
         SAMFileWriter concord = null;
         SAMFileWriter discord = null;
+        SAMFileWriter orphan = null;
 
         if (concordFilename != null) {
             SAMFileWriterFactory factory = new SAMFileWriterFactory();
@@ -189,6 +206,40 @@ public class BamDiscord extends AbstractCommand {
                 discord = factory.makeBAMWriter(header,  true,  outStream);
             }
         }
+        
+        if (orphanFilename != null) {
+            SAMFileWriterFactory factory = new SAMFileWriterFactory();
+    
+            File outfile = null;
+            OutputStream outStream = null;
+            
+            if (orphanFilename.equals("-")) {
+                outStream = new BufferedOutputStream(System.out);
+            } else {
+                outfile = new File(orphanFilename);
+            }
+            
+            if (tmpDir != null) {
+                factory.setTempDirectory(new File(tmpDir));
+            } else if (outfile == null || outfile.getParent() == null) {
+                factory.setTempDirectory(new File(".").getCanonicalFile());
+            } else if (outfile!=null) {
+                factory.setTempDirectory(outfile.getParentFile());
+            }
+    
+            SAMFileHeader header = reader.getFileHeader().clone();
+            SAMProgramRecord pg = BamHeaderUtils.buildSAMProgramRecord("bam-discord", header);
+            List<SAMProgramRecord> pgRecords = new ArrayList<SAMProgramRecord>(header.getProgramRecords());
+            pgRecords.add(0, pg);
+            header.setProgramRecords(pgRecords);
+    
+            if (outfile != null) {
+                orphan = factory.makeBAMWriter(header, true, outfile);
+            } else {
+            	orphan = factory.makeBAMWriter(header,  true,  outStream);
+            }
+        }
+
 
         Iterator<SAMRecord> it = ProgressUtils.getIterator(name, reader.iterator(), (channel == null)? null : new FileChannelStats(channel), new ProgressMessage<SAMRecord>() {
             long i = 0;
@@ -199,12 +250,23 @@ public class BamDiscord extends AbstractCommand {
             }}, new CloseableFinalizer<SAMRecord>());
         long totalCount = 0;
         long discordCount = 0;
+        long orphanCount = 0;
         
         while (it.hasNext()) {
-            totalCount++;
-            SAMRecord read = it.next();
+        	SAMRecord read = it.next();
+        	
+        	if (read.getReadUnmappedFlag()) {
+        		continue;
+        	}
+
+        	totalCount++;
             
-            if (ReadUtils.isDiscordant(read, intraChromDistance, !noIntraChrom)) {
+            if (ReadUtils.isOrphan(read)) {
+            	orphanCount++;
+            	if (orphan != null) {
+            		orphan.addAlignment(read);
+            	}
+            } else if (ReadUtils.isDiscordant(read, intraChromDistance, !noIntraChrom)) {
                 discordCount++;
                 if (discord != null) {
                     discord.addAlignment(read);
@@ -213,14 +275,22 @@ public class BamDiscord extends AbstractCommand {
                 concord.addAlignment(read);
             }
         }
+        
         reader.close();
+        
         if (discord != null) {
             discord.close();
         }
         if (concord != null) {
             concord.close();
         }
+        if (orphan != null) {
+        	orphan.close();
+        }
+        
         System.err.println("Total reads     : "+totalCount);
+        System.err.println("Concordant reads: "+(totalCount-discordCount));
         System.err.println("Discordant reads: "+discordCount);
+        System.err.println("Orphan reads    : "+orphanCount);
     }
 }

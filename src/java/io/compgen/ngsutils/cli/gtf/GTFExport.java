@@ -38,6 +38,7 @@ public class GTFExport extends AbstractOutputCommand {
     private String excludeList = null;
     
     private boolean exportGene = false;
+    private boolean exportTranscript = false;
     private boolean exportExon = false;
     private boolean exportIntron = false;
     private boolean codingOnly = false;
@@ -53,7 +54,7 @@ public class GTFExport extends AbstractOutputCommand {
     private boolean exportORF = false;
     
     private boolean combine = false;
-//    private boolean useGeneId = false;
+    private boolean useGeneId = false;
     
     @UnnamedArg(name = "FILE")
     public void setFilename(String filename) {
@@ -84,15 +85,21 @@ public class GTFExport extends AbstractOutputCommand {
     public void setNonCoding(boolean val) {
         nonCodingOnly = val;
     }
-//
-//    @Option(desc="Export gene/transcript ID instead of gene name", name="genes")
-//    public void setUseGeneId(boolean val) {
-//        useGeneId = val;
-//    }
 
-    @Option(desc="Export whole gene region", name="genes")
+    @Option(desc="Export whole gene region (by geneid)", name="geneid")
+    public void setUseGeneId(boolean val) {
+        exportGene = val;
+        useGeneId = val;
+    }
+
+    @Option(desc="Export whole gene region (by name)", name="genes")
     public void setGene(boolean val) {
         exportGene = val;
+    }
+
+    @Option(desc="Export transcript regions", name="transcripts")
+    public void setTranscript(boolean val) {
+    	exportTranscript = val;
     }
 
     @Option(desc="Export splice junction donor sites", name="donors")
@@ -161,6 +168,9 @@ public class GTFExport extends AbstractOutputCommand {
         if (exportGene) {
             exportCount++;
         }
+        if (exportTranscript) {
+            exportCount++;
+        }
         if (exportIntron) {
             exportCount++;
         }
@@ -192,7 +202,7 @@ public class GTFExport extends AbstractOutputCommand {
             exportCount++;
         }
         if (exportCount != 1) {
-            throw new CommandArgumentException("You must specify only one type of region to export (gene, intron, exon, etc)");
+            throw new CommandArgumentException("You must specify only one type of region to export at a time (gene, intron, exon, etc)");
         }
 
         if (verbose && combine) {
@@ -292,16 +302,39 @@ public class GTFExport extends AbstractOutputCommand {
                 writer.write(gene.getRef());
                 writer.write(gene.getStart());
                 writer.write(gene.getEnd());
-//                if (useGeneId) {
-//                    writer.write(gene.getGeneId());
-//                } else {
+                if (useGeneId) {
+                    writer.write(gene.getGeneId());
+                } else {
                     writer.write(gene.getGeneName());
-//                }
+                }
                 writer.write(0);
                 writer.write(gene.getStrand().toString());
                 writer.eol();
             }
+            if (exportTranscript) {
+                for (GTFTranscript txpt: gene.getTranscripts(codingOnly, nonCodingOnly)) {
+                    boolean isCoding = false;
+	                if (codingOnly) {
+                        if (txpt.hasCDS()) {
+                            isCoding = true;
+                            break;
+                        }
+                    }
+                    if (!isCoding) {
+                        continue;
+                    }
+	                    
+	                writer.write(gene.getRef());
+	                writer.write(txpt.getStart());
+	                writer.write(txpt.getEnd());
+                    writer.write(txpt.getTranscriptId());
+	                writer.write(0);
+	                writer.write(gene.getStrand().toString());
+	                writer.eol();
+                }
+            }
             
+
             if (exportJunctions) {
                 Set<String> junctions = new HashSet<String>();
                 for (GTFTranscript txpt: gene.getTranscripts(codingOnly, nonCodingOnly)) {
@@ -655,7 +688,11 @@ public class GTFExport extends AbstractOutputCommand {
             if (exportExon) {
                 if (!combine) {
                     int i=1;
-                    for (GenomeSpan exon:gene.getExonRegions(codingOnly)) {
+                    List<GenomeSpan> exonRegions = gene.getExonRegions(codingOnly);
+                    if (gene.getStrand().matches(Strand.MINUS)) {
+                    	i = exonRegions.size();
+                    }
+                    for (GenomeSpan exon:exonRegions) {
 //                        String name = gene.getGeneName();
 //                        if (useGeneId) {
 //                            name = gene.getGeneId()+"-"+exon.getParent().getTranscriptId();
@@ -669,7 +706,11 @@ public class GTFExport extends AbstractOutputCommand {
                         writer.write(0);
                         writer.write(exon.strand.toString());
                         writer.eol();
-                        i++;
+                        if (gene.getStrand().matches(Strand.MINUS)) {
+                        	i--;
+                        } else {
+                        	i++;
+                        }
                     }
                 } else {
                     // combine overlapping exons
@@ -702,6 +743,9 @@ public class GTFExport extends AbstractOutputCommand {
 
                     Collections.sort(exons);
                     int i=1;
+                    if (gene.getStrand().matches(Strand.MINUS)) {
+                    	i = exons.size();
+                    }
                     for (GenomeSpan exon:exons) {
                         writer.write(exon.ref);
                         writer.write(exon.start);
@@ -710,7 +754,11 @@ public class GTFExport extends AbstractOutputCommand {
                         writer.write(0);
                         writer.write(exon.strand.toString());
                         writer.eol();
-                        i++;
+                        if (gene.getStrand().matches(Strand.MINUS)) {
+                        	i--;
+                        } else {
+                        	i++;
+                        }
                     }
                 }
             }
@@ -728,6 +776,9 @@ public class GTFExport extends AbstractOutputCommand {
                         }
                     }
                     int i = 1;
+                    if (gene.getStrand().matches(Strand.MINUS)) {
+                    	i = introns.size();
+                    }
                     for (GenomeSpan intron:introns) {
                         writer.write(intron.ref);
                         writer.write(intron.start);
@@ -736,7 +787,11 @@ public class GTFExport extends AbstractOutputCommand {
                         writer.write(0);
                         writer.write(intron.strand.toString());
                         writer.eol();
-                        i++;
+                        if (gene.getStrand().matches(Strand.MINUS)) {
+                        	i--;
+                        } else {
+                        	i++;
+                        }
                     }
                 } else {
                     // Look for introns that don't overlap *any* exons
@@ -778,6 +833,9 @@ public class GTFExport extends AbstractOutputCommand {
                     }
                     Collections.sort(geneRegions);
                     int i=1;
+                    if (gene.getStrand().matches(Strand.MINUS)) {
+                    	i = geneRegions.size();
+                    }
                     for (GenomeSpan intron:geneRegions) {
                         writer.write(intron.ref);
                         writer.write(intron.start);
@@ -786,7 +844,11 @@ public class GTFExport extends AbstractOutputCommand {
                         writer.write(0);
                         writer.write(intron.strand.toString());
                         writer.eol();
-                        i++;
+                        if (gene.getStrand().matches(Strand.MINUS)) {
+                        	i--;
+                        } else {
+                        	i++;
+                        }
                     }
                 }
             }

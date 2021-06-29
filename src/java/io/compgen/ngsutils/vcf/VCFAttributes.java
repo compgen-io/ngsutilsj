@@ -12,7 +12,10 @@ import io.compgen.ngsutils.support.GlobUtils;
 public class VCFAttributes {
 	public Map<String, VCFAttributeValue> attributes = new LinkedHashMap<String, VCFAttributeValue>();
 	
-	public void put(String key, VCFAttributeValue value) {
+	public void put(String key, VCFAttributeValue value) throws VCFAttributeException {
+		if (value.equals(VCFAttributeValue.EMPTY.value) && value != VCFAttributeValue.EMPTY) {
+			throw new VCFAttributeException("You cannot set an empty VCF attribute (INFO/FORMAT) value ("+key+")");
+		}
 		attributes.put(key, value);
 	}
 	
@@ -57,7 +60,7 @@ public class VCFAttributes {
 		return new ArrayList<String>(attributes.keySet());
 	}
 
-	public static VCFAttributes parseInfo(String s, VCFHeader header) throws VCFParseException {
+	public static VCFAttributes parseInfo(String s, VCFHeader header) throws VCFParseException, VCFAttributeException {
 		VCFAttributes attrs = new VCFAttributes();
 		
         if (!s.equals(VCFAttributeValue.MISSING.toString())) {
@@ -72,20 +75,16 @@ public class VCFAttributes {
                         if (header == null || header.isInfoAllowed(kv[0])) {
                             attrs.put(kv[0], VCFAttributeValue.parse(kv[1]));
                         }
-                        } catch (ArrayIndexOutOfBoundsException e) {
-    			        e.printStackTrace(System.err);
-                        System.err.println("ERROR: processing attributes string "+ el);
-                        System.err.println("ERROR: "+ s);
-    			        System.exit(1);
+                    } catch (ArrayIndexOutOfBoundsException e) {
+                     	throw new VCFParseException(e);
     			    }
     			}
-    		    
 		    }
 		}
 		return attrs;
 	}
 	
-	public static VCFAttributes parseFormat(String s, List<String> format, VCFHeader header) throws VCFParseException {
+	public static VCFAttributes parseFormat(String s, List<String> format, VCFHeader header) throws VCFParseException, VCFAttributeException {
 		VCFAttributes attrs = new VCFAttributes();
 		
 		String[] spl = s.split(":");
@@ -126,6 +125,14 @@ public class VCFAttributes {
 			outcols.add(val.toString());
 		}
 		return StringUtils.join(":", outcols);
+	}
+
+	public void putFlag(String name) {
+		try {
+			put(name, VCFAttributeValue.EMPTY);
+		} catch (VCFAttributeException e) {
+			// the exception looks for this specific case, so it will never be thrown
+		}
 	}
 
 }

@@ -29,6 +29,7 @@ public class VCFStrip extends AbstractOutputCommand {
     private Set<String> removeFilter = null;
     private Set<String> removeInfo = null;
     private Set<String> removeFormat = null;
+    private Set<String> removeSample = null;
   
     @Option(desc="Only output passing variants (warning -- this works on the post-stripped filters)", name="passing")
     public void setOnlyOutputPass(boolean onlyOutputPass) {
@@ -51,6 +52,7 @@ public class VCFStrip extends AbstractOutputCommand {
         setStripInfo("*");
         setStripFormat("*");
         setStripFilter("*");
+        setStripSample("*");
     }
     
     @Option(desc="Remove specific INFO annotations (multiple allowed, wildcard '*' allowed)", name="info")
@@ -67,6 +69,14 @@ public class VCFStrip extends AbstractOutputCommand {
             removeFormat = new HashSet<String>();
         }
         removeFormat.add(remove);
+    }
+    
+    @Option(desc="Remove specific SAMPLE annotations (multiple allowed, wildcard '*' allowed)", name="sample")
+    public void setStripSample(String remove) {
+        if (removeSample == null) {
+        	removeSample = new HashSet<String>();
+        }
+        removeSample.add(remove);
     }
     
     @Option(desc="Remove specific FILTER annotations (multiple allowed, wildcard '*' allowed)", name="filter")
@@ -111,6 +121,10 @@ public class VCFStrip extends AbstractOutputCommand {
         }
         if (removeInfo != null) {
             reader.addRemoveInfo(removeInfo);
+        }
+		
+        if (removeSample != null) {
+            reader.addRemoveSample(removeSample);
         }
 		
 		VCFHeader header = reader.getHeader();

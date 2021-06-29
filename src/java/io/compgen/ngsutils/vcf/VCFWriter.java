@@ -21,6 +21,10 @@ public class VCFWriter {
 	}
 
 	public void close() throws IOException {
+		if (!headerWritten) {
+			header.write(out, true);
+			headerWritten = true;
+		}
 		out.flush();
 		out.close();
 	}

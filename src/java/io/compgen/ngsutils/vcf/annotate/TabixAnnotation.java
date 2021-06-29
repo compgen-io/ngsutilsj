@@ -11,6 +11,7 @@ import io.compgen.common.IterUtils;
 import io.compgen.common.StringUtils;
 import io.compgen.ngsutils.tabix.TabixFile;
 import io.compgen.ngsutils.vcf.VCFAnnotationDef;
+import io.compgen.ngsutils.vcf.VCFAttributeException;
 import io.compgen.ngsutils.vcf.VCFAttributeValue;
 import io.compgen.ngsutils.vcf.VCFHeader;
 import io.compgen.ngsutils.vcf.VCFParseException;
@@ -27,6 +28,8 @@ public class TabixAnnotation extends AbstractBasicAnnotator {
     final protected boolean isNumber;
     final protected boolean collapse;
 
+    final protected String colDefString;
+    
     public TabixAnnotation(String name, String filename, int colNum, boolean isNumber, int altColNum, boolean collapse)
             throws IOException {
         this.name = name;
@@ -36,6 +39,7 @@ public class TabixAnnotation extends AbstractBasicAnnotator {
         this.altColNum = altColNum;
         this.tabix = getTabixFile(filename);
         this.collapse = collapse;
+        this.colDefString = null;
     }
 
     public TabixAnnotation(String name, String filename, String colName, boolean isNumber, String altColName, boolean collapse)
@@ -58,6 +62,7 @@ public class TabixAnnotation extends AbstractBasicAnnotator {
         	throw new IOException("Unknown column name: "+ colName);
         }
         this.colNum = colNum;
+        this.colDefString = colName;
     }
 
     public TabixAnnotation(String name, String filename, String colName, boolean isNumber, int altColNum, boolean collapse)
@@ -73,9 +78,9 @@ public class TabixAnnotation extends AbstractBasicAnnotator {
         if (colNum == -1) {
         	throw new IOException("Unknown column name: "+ colName);
         }
-
         
         this.colNum = colNum;
+        this.colDefString = colName;
     }
 
     public TabixAnnotation(String name, String filename, int colNum, boolean isNumber, String altColName, boolean collapse)
@@ -91,6 +96,7 @@ public class TabixAnnotation extends AbstractBasicAnnotator {
         	throw new IOException("Unknown column name: "+ altColName);
         }
         this.altColNum = altColNum;
+        this.colDefString = null;
     }
 
 
@@ -108,14 +114,24 @@ public class TabixAnnotation extends AbstractBasicAnnotator {
                 header.addInfo(VCFAnnotationDef.info(name, "0", "Flag", "Present in Tabix file",
                         filename, null, null, null));
             } else {
+            	if (this.colDefString != null) {
                 // use 1-based indexing here...
-                if (isNumber) {
-                    header.addInfo(VCFAnnotationDef.info(name, ".", "Float",
-                            "Column " + (colNum+1) + " from file", filename, null, null, null));
-                } else {
-                    header.addInfo(VCFAnnotationDef.info(name, ".", "String",
-                            "Column " + (colNum+1) + " from file", filename, null, null, null));
-                }
+	                if (isNumber) {
+	                    header.addInfo(VCFAnnotationDef.info(name, ".", "Float",
+	                            "Column " + VCFHeader.quoteString(colDefString) + " from file", filename, null, null, null));
+	                } else {
+	                    header.addInfo(VCFAnnotationDef.info(name, ".", "String",
+	                            "Column " + VCFHeader.quoteString(colDefString) + " from file", filename, null, null, null));
+	                }
+            	} else {
+	                if (isNumber) {
+	                    header.addInfo(VCFAnnotationDef.info(name, ".", "Float",
+	                            "Column " + (colNum+1) + " from file", filename, null, null, null));
+	                } else {
+	                    header.addInfo(VCFAnnotationDef.info(name, ".", "String",
+	                            "Column " + (colNum+1) + " from file", filename, null, null, null));
+	                }
+            	}
             }
         } catch (VCFParseException e) {
             throw new VCFAnnotatorException(e);
@@ -168,7 +184,10 @@ public class TabixAnnotation extends AbstractBasicAnnotator {
                                 if (spl.length <= colNum) {
                                     throw new VCFAnnotatorException("Missing column for line: " + line);
                                 }
-                                vals.add(spl[colNum]);
+                                // TODO: HERE
+                                if (!spl[colNum].equals("")) {
+                                	vals.add(spl[colNum]);
+                                }
                             }
                         }
                     }
@@ -185,6 +204,7 @@ public class TabixAnnotation extends AbstractBasicAnnotator {
                         if (spl.length <= colNum) {
                             throw new VCFAnnotatorException("Missing column for line: " + line);
                         }
+                        // TODO: HERE
                         if (!spl[colNum].equals("")) {
                             vals.add(spl[colNum]);
                         }
@@ -195,16 +215,22 @@ public class TabixAnnotation extends AbstractBasicAnnotator {
             if (found) {
                 if (colNum == -1) {
                     // this is just a flag
-                    record.getInfo().put(name, VCFAttributeValue.EMPTY);
+                    record.getInfo().putFlag(name);
                 } else {
-                    if (vals.size() == 0) {
-                        record.getInfo().put(name, VCFAttributeValue.MISSING);
-                    } else {
-                        if (collapse) {
-                            record.getInfo().put(name, new VCFAttributeValue(StringUtils.join(",", StringUtils.unique(vals))));
-                        } else {
-                            record.getInfo().put(name, new VCFAttributeValue(StringUtils.join(",", vals)));
-                        }
+                    if (vals.size() > 0) {
+                    	// don't add empty annotations
+//                        record.getInfo().put(name, VCFAttributeValue.MISSING);
+//                    } else {
+                        // TODO: replace empty strings for missing?
+                    	try {
+	                        if (collapse) {
+	                            record.getInfo().put(name, new VCFAttributeValue(StringUtils.join(",", StringUtils.unique(vals))));
+	                        } else {
+	                            record.getInfo().put(name, new VCFAttributeValue(StringUtils.join(",", vals)));
+	                        }
+	            		} catch (VCFAttributeException e) {
+	            			throw new VCFAnnotatorException(e);
+	            		}
                     }
                 }
             }

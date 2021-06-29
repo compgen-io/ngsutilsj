@@ -2,13 +2,27 @@ package io.compgen.ngsutils.vcf;
 
 public class VCFAttributeValue {
 	
-	public static final VCFAttributeValue MISSING = new VCFAttributeValue(".");
-	public static final VCFAttributeValue EMPTY = new VCFAttributeValue("");
+	public static final VCFAttributeValue MISSING = new VCFAttributeValue(true, false);
+	public static final VCFAttributeValue EMPTY = new VCFAttributeValue(false, true);
 	
-	protected String value;
+	final protected String value;
+
+	private VCFAttributeValue(boolean missing, boolean empty) {
+		if (missing) {
+			this.value = ".";
+		} else if (empty) {
+			this.value = "";
+		} else {
+			this.value = null;
+		}
+	}
 	
 	public VCFAttributeValue(String value) {
-		this.value = value;
+		if (value.equals(MISSING.value)) {
+			this.value = MISSING.value;
+		} else {
+			this.value = value;
+		}
 	}
 	
 	public String toString() {

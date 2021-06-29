@@ -6,6 +6,7 @@ import java.util.List;
 import io.compgen.common.StringUtils;
 import io.compgen.ngsutils.support.stats.FisherExact;
 import io.compgen.ngsutils.vcf.VCFAnnotationDef;
+import io.compgen.ngsutils.vcf.VCFAttributeException;
 import io.compgen.ngsutils.vcf.VCFAttributeValue;
 import io.compgen.ngsutils.vcf.VCFAttributes;
 import io.compgen.ngsutils.vcf.VCFHeader;
@@ -58,11 +59,15 @@ public class FisherStrandBias extends AbstractBasicAnnotator {
     				fsbOuts.add(""+round(phred(calcFisherStrandBias(half, half, plus, minus)),3));
     			}
     			
-    			if (fsbOuts.size() == 0) {
-    				sampleVals.put("CG_FSB", VCFAttributeValue.MISSING);	
-    			} else {
-    				sampleVals.put("CG_FSB", new VCFAttributeValue(StringUtils.join(",", fsbOuts)));	
-    			}
+				try {
+	    			if (fsbOuts.size() == 0) {
+							sampleVals.put("CG_FSB", VCFAttributeValue.MISSING);
+	    			} else {
+	    				sampleVals.put("CG_FSB", new VCFAttributeValue(StringUtils.join(",", fsbOuts)));	
+	    			}
+				} catch (VCFAttributeException e) {
+					throw new VCFAnnotatorException(e);
+				}	
 		    }
 		}
 	}

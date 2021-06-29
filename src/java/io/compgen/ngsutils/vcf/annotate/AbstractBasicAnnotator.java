@@ -98,7 +98,7 @@ public abstract class AbstractBasicAnnotator implements VCFAnnotator {
         if (endPosKey == null) {
         	
         	if (rec.getRef().length()==1) {
-        		return rec.getPos();
+        		return getPos(rec);
         	}
         	
         	// if this is a deletion, the "endpos" is further down the chrom.
@@ -107,7 +107,8 @@ public abstract class AbstractBasicAnnotator implements VCFAnnotator {
         	// alt = C
         	// length of variant = 5
         	
-            return rec.getPos() - 1 + rec.getRef().length();
+        	// this would be odd for a alt-annotated END would be an indel
+            return getPos(rec) - 1 + rec.getRef().length();
         }
         
         VCFAttributeValue pos = rec.getInfo().get(endPosKey);
