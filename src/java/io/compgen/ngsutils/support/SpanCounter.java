@@ -70,7 +70,7 @@ public class SpanCounter {
 	 */
 	public void incr(long start, long end) throws Exception {
 		if (start < curpos) {
-			throw new Exception("Past counter position. Pointer: "+curpos);
+			throw new Exception("Past counter position. Pointer: "+curpos + ", start="+start + ", unsorted input?");
 		}
 //		System.err.println("incr("+start+","+end+")");
 		BufferPos curBuf = head;
