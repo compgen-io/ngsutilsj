@@ -261,7 +261,17 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
     	}
     }
     
-    @Option(desc="Add gene annotations (INFO: CG_GENE, CG_GENE_STRAND, CG_GENE_REGION)", name="gtf", helpValue="filename.gtf")
+//    @Option(desc="Add peptide annotation for SNVs", name="gtf", helpValue="filename.gtf")
+//    public void setGTFPeptide(String filename) throws CommandArgumentException {
+//		try {
+//			chain.add(new GTFGene(filename));
+//		} catch (IOException e) {
+//			throw new CommandArgumentException(e);
+//		}    	
+//    }
+
+    
+    @Option(desc="Add peptide annotation", name="gtf", helpValue="filename.gtf")
     public void setGTF(String filename) throws CommandArgumentException {
 		try {
 			chain.add(new GTFGene(filename));
@@ -269,6 +279,7 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
 			throw new CommandArgumentException(e);
 		}    	
     }
+
 
     @Option(desc="Add a constant INFO annotation to each record (KEY:VALUE or FLAG)", name="tag", helpValue="KEY{:VALUE}")
     public void setTag(String arg) throws CommandArgumentException {

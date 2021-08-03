@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Set;
 
 import htsjdk.samtools.SAMFileHeader;
+import htsjdk.samtools.SAMFileHeader.SortOrder;
 import htsjdk.samtools.SAMFileWriter;
 import htsjdk.samtools.SAMFileWriterFactory;
 import htsjdk.samtools.SAMProgramRecord;
@@ -41,6 +42,7 @@ import io.compgen.ngsutils.vcf.VCFRecord.VCFAltPos;
 public class BamExtract extends AbstractOutputCommand {
     
     private String inBamFname = null;
+    private String bamFname2 = null;
     private String outBamFname = null;
     private String tmpDir = null;
 
@@ -64,6 +66,7 @@ public class BamExtract extends AbstractOutputCommand {
     private SAMFileWriter writer = null;
     private SamReader reader = null;
     private SamReader reader2 = null;
+    private SamReader readerBam2 = null;
 
     private Set<String> readsWritten = new HashSet<String>();
     private boolean unique = false;
@@ -72,10 +75,6 @@ public class BamExtract extends AbstractOutputCommand {
     private int filterFlags = 0;
     private int requiredFlags = 0;
 
-    
-    // TODO: Add these
-    //private int filterFlags = 0;
-    //private int requiredFlags = 0;
 
     @UnnamedArg(name = "INFILE OUTFILE")
     public void setFilenames(String[] filenames) throws CommandArgumentException {
@@ -127,6 +126,11 @@ public class BamExtract extends AbstractOutputCommand {
     @Option(desc="Extract reads using these BED coordinates", name="bed")
     public void setBED(String bedFile) {
         this.bedFile = bedFile;
+    }
+
+    @Option(desc="If paired reads aren't found in the primary BAM file, look in this secondary BAM file.", name="bam2")
+    public void setBAM2(String bamFile2) {
+        this.bamFname2 = bamFile2;
     }
 
     @Option(desc="Extract reads with these coordinates", name="region")
@@ -217,6 +221,13 @@ public class BamExtract extends AbstractOutputCommand {
         }
     }
 
+    @Option(desc = "No supplementary mappings", name = "no-supplementary")
+    public void setNoSupplementary(boolean val) {
+        if (val) {
+            filterFlags |= ReadUtils.SUPPLEMENTARY_ALIGNMENT_FLAG;
+        }
+    }
+
     @Option(desc = "No PCR duplicates", name = "no-pcrdup")
     public void setNoPCRDuplicates(boolean val) {
         if (val) {
@@ -265,6 +276,10 @@ public class BamExtract extends AbstractOutputCommand {
             reader2 = readerFactory.open(new File(inBamFname));
         }
         
+        if (bamFname2 != null) {
+        	this.readerBam2 = readerFactory.open(new File(bamFname2));
+        }
+        
         
         final SAMFileWriterFactory factory = new SAMFileWriterFactory();
 
@@ -291,23 +306,38 @@ public class BamExtract extends AbstractOutputCommand {
                 header.getProgramRecords());
         pgRecords.add(0, pg);
         header.setProgramRecords(pgRecords);
+        header.setSortOrder(SortOrder.unsorted);
 
         if (outfile != null) {
             writer = factory.makeBAMWriter(header, true, outfile);
         } else {
             writer = factory.makeBAMWriter(header, true, outStream);
         }
-
+        
 
         
         if (region != null) {
         	extractReads(region.ref, region.start, region.end);
         } else if (bedFile != null) {
         	Iterator<BedRecord> it = BedReader.readFile(bedFile);
+//        	int lastRecLen = 0;
+        	
         	while (it.hasNext()) {
         		BedRecord rec = it.next();
-            	extractReads(region.ref, region.start, region.end, rec.getCoord().strand);
+//        		for (int i=0; i<lastRecLen;i++) {
+//        			System.err.write('\b');
+//        		}
+//        		for (int i=0; i<lastRecLen;i++) {
+//        			System.err.write(' ');
+//        		}
+//        		for (int i=0; i<lastRecLen;i++) {
+//        			System.err.write('\b');
+//        		}
+//        		System.err.print(rec);
+//        		lastRecLen = rec.toString().length();
+            	extractReads(rec.getCoord().ref, rec.getCoord().start, rec.getCoord().end, rec.getCoord().strand);
         	}
+        	System.err.println("Done");
         } else if (vcfFile != null) {
         	VCFReader vcfReader = new VCFReader(vcfFile);
         	Iterator<VCFRecord> it = vcfReader.iterator();
@@ -330,6 +360,9 @@ public class BamExtract extends AbstractOutputCommand {
         if (reader2 != null) {
         	reader2.close();
         }
+        if (readerBam2 != null) {
+        	readerBam2.close();
+        }
     }
     
     protected void extractReads(String ref, int start, int end) {
@@ -344,7 +377,7 @@ public class BamExtract extends AbstractOutputCommand {
         while (it.hasNext()) {
             SAMRecord read = it.next();
             
-            if (strand != null && stranded) {
+            if (strand != null && strand != Strand.NONE && stranded) {
             	Strand readStrand = ReadUtils.getFragmentEffectiveStrand(read, orient);
             	if (!readStrand.matches(strand)) {
             		continue;                    		
@@ -375,11 +408,17 @@ public class BamExtract extends AbstractOutputCommand {
         	// this is R1
     		if (!readsWritten.contains(read.getReadName())) {
         		if (paired) {
-                	SAMRecord mate = reader2.queryMate(read);
+        			SAMRecord mate = ReadUtils.findMate(reader2, read, filterFlags, requiredFlags);
+        			if (mate == null && readerBam2 != null) {
+        				// mate wasn't in the primary BAM file, so look in the secondary one...
+            			mate = ReadUtils.findMate(readerBam2, read, filterFlags, requiredFlags);
+        			}
+//                	SAMRecord mate = reader2.queryMate(read);
                 	if (mate != null) {
 
-                    	boolean passing = !spanning;
+                    	boolean passing = true;
                         if (spanning) {
+                        	passing = false;
                         	if (read.getAlignmentStart() <= start && read.getAlignmentEnd() >= end) {
                         		// split read
                         		passing = true;
@@ -415,8 +454,9 @@ public class BamExtract extends AbstractOutputCommand {
                 		}
                 	}
         		} else {
-                	boolean passing = !spanning;
+                	boolean passing = true;
                     if (spanning) {
+                    	passing = false;
                     	if (read.getAlignmentStart() <= start && read.getAlignmentEnd() >= end) {
                     		// split read
                     		passing = true;

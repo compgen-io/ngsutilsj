@@ -144,7 +144,7 @@ public class FastaMask extends AbstractOutputCommand {
         
         for (String line: IterUtils.wrap(reader.iterator())) {
             if (line.charAt(0) == '>') {
-                currentName = line.substring(1).split("\\W",2)[0];
+                currentName = line.substring(1).split("\\s",2)[0];
                 pos = 0;
 
                 if (masks.containsKey(currentName)) {

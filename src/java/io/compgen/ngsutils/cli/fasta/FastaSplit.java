@@ -41,7 +41,7 @@ public class FastaSplit extends AbstractCommand {
         
         for (String line: IterUtils.wrap(reader.iterator())) {
             if (line.charAt(0) == '>') {
-                String name = line.substring(1).split("\\W",2)[0];
+                String name = line.substring(1).split("\\s",2)[0];
                 
                 if (bos != null) {
                     bos.close();

@@ -54,7 +54,7 @@ public class FastaWrap extends AbstractOutputCommand {
                     out.write((buffer+"\n").getBytes());
                     buffer = "";
                 }
-                current[0] = line.substring(1).split("\\W",2)[0];
+                current[0] = line.substring(1).split("\\s",2)[0];
                 out.write((line+"\n").getBytes());
             } else {
                 buffer += line;
