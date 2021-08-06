@@ -38,7 +38,7 @@ import io.compgen.ngsutils.vcf.VCFReader;
 import io.compgen.ngsutils.vcf.VCFRecord;
 import io.compgen.ngsutils.vcf.VCFRecord.VCFAltPos;
 
-@Command(name="bam-extract", desc="Extract reads from a BAM file using either VCF or BED file coordinates", category="bam", experimental=true)
+@Command(name="bam-extract", desc="Extract reads from a BAM file using either VCF or BED file coordinates", category="bam", experimental=true, doc="Note: This can take a lot of memory as it keeps track of which reads have been written to avoid duplicating output records")
 public class BamExtract extends AbstractOutputCommand {
     
     private String inBamFname = null;
@@ -51,6 +51,7 @@ public class BamExtract extends AbstractOutputCommand {
     private GenomeSpan region = null;
     
     private boolean vcfAlt = false;
+    private boolean vcfPassing = false;
     private String vcfAltRef = null;
     private String vcfAltPos = null;
 
@@ -104,6 +105,11 @@ public class BamExtract extends AbstractOutputCommand {
     @Option(desc="Extract reads using these VCF coordinates", name="vcf")
     public void setVCF(String vcfFile) {
         this.vcfFile = vcfFile;
+    }
+
+    @Option(desc="Only export variants that pass VCF filters", name="vcf-passing")
+    public void setVCFPassing(boolean val) {
+    	this.vcfPassing = val;
     }
 
     @Option(desc="Also export reads from the alt position (SV end)", name="vcf-alt")
@@ -261,6 +267,21 @@ public class BamExtract extends AbstractOutputCommand {
     		throw new CommandArgumentException("You must specify both --vcf-alt-ref and --vcf-alt-pos!");
     	}
     	
+    	int tmpCount = 0;
+    	if (region != null) {
+    		tmpCount++;
+    	}
+    	if (bedFile != null) {
+    		tmpCount++;
+    	}
+    	if (vcfFile != null) {
+    		tmpCount++;
+    	}
+    	
+    	if (tmpCount != 1) {
+    		throw new CommandArgumentException("You can only specify one location source (--region, --vcf, --bed)");
+    	}
+
     	
         SamReaderFactory readerFactory = SamReaderFactory.makeDefault();
         if (lenient) {
@@ -320,29 +341,20 @@ public class BamExtract extends AbstractOutputCommand {
         	extractReads(region.ref, region.start, region.end);
         } else if (bedFile != null) {
         	Iterator<BedRecord> it = BedReader.readFile(bedFile);
-//        	int lastRecLen = 0;
-        	
         	while (it.hasNext()) {
         		BedRecord rec = it.next();
-//        		for (int i=0; i<lastRecLen;i++) {
-//        			System.err.write('\b');
-//        		}
-//        		for (int i=0; i<lastRecLen;i++) {
-//        			System.err.write(' ');
-//        		}
-//        		for (int i=0; i<lastRecLen;i++) {
-//        			System.err.write('\b');
-//        		}
-//        		System.err.print(rec);
-//        		lastRecLen = rec.toString().length();
             	extractReads(rec.getCoord().ref, rec.getCoord().start, rec.getCoord().end, rec.getCoord().strand);
         	}
-        	System.err.println("Done");
         } else if (vcfFile != null) {
         	VCFReader vcfReader = new VCFReader(vcfFile);
         	Iterator<VCFRecord> it = vcfReader.iterator();
         	while (it.hasNext()) {
         		VCFRecord rec = it.next();
+        		
+        		if (vcfPassing && rec.isFiltered()) {
+        			continue;
+        		}
+        		
             	extractReads(rec.getChrom(), rec.getPos()-1, rec.getPos());
             	
             	if (vcfAlt) {

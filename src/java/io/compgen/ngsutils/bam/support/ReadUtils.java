@@ -539,7 +539,8 @@ public class ReadUtils {
             it = reader.query(read.getMateReferenceName(), read.getMateAlignmentStart(), read.getMateAlignmentStart(), false);
         }
         
-        while (it.hasNext()) {
+        while (it.hasNext() && mate == null) {
+
             SAMRecord q = it.next();
             if (filterFlags > 0) {
             	if ((q.getFlags() & filterFlags) != 0) {
@@ -585,9 +586,9 @@ public class ReadUtils {
             		}
             	}
             	if (found) {
-            		if (mate != null) {
-                        throw new IllegalArgumentException("findMate found multiple records for read: "+read.getReadName());
-            		}
+//            		if (mate != null) {
+//                        throw new IllegalArgumentException("findMate found multiple records for read: "+read.getReadName());
+//            		}
             		mate = q;
             	}
             }

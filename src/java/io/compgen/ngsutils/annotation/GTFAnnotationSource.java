@@ -85,6 +85,7 @@ public class GTFAnnotationSource extends AbstractAnnotationSource<GTFGene> {
     public class GTFTranscript {
         final private GTFGene parent;
         final private String transcriptId;
+//        private String[] attributes; // just an array in { KEY1, VALUE1, KEY2, VALUE2 } order
 
         private int start = -1;
         private int end = -1;
