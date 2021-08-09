@@ -1,5 +1,6 @@
 package io.compgen.ngsutils.bam.support;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -17,6 +18,8 @@ import htsjdk.samtools.SamReader;
 import io.compgen.ngsutils.annotation.GenomeSpan;
 import io.compgen.ngsutils.bam.Orientation;
 import io.compgen.ngsutils.bam.Strand;
+import io.compgen.ngsutils.fasta.IndexedFastaFile;
+import io.compgen.ngsutils.vcf.VCFRecord;
 
 public class ReadUtils {
     public static final int READ_PAIRED_FLAG = 0x1;
@@ -595,5 +598,140 @@ public class ReadUtils {
 		}
         it.close();
 		return mate;
+	}
+
+	public static boolean containsVariant(SAMRecord read, VCFRecord rec, String allele, IndexedFastaFile fasta) throws IOException {
+		if (!read.getReferenceName().equals(rec.getChrom())) {
+			return false;
+		}
+		
+		int refpos = read.getAlignmentStart() - 1; // HTSJDK is 1-based
+		int readpos = 0;
+		int recpos = rec.getPos() - 1; // VCFs are 1-based
+
+		boolean isInsert = false;
+		boolean isDel = false;
+		
+		if (rec.getRef().length() > 1) {
+			// AAAC > A
+			isDel = true; 
+		} else if (allele.length()>1) {
+			isInsert = true;
+		}
+		
+		
+		
+//		boolean indel = isInsert | isDel;
+		String flankBase = "";
+		
+		
+//		if (indel && read.getReadName().equals("MG01HX10:127:H7FFGCCXY:7:1102:31416:39387")) {
+//		System.err.println("Read : " + read.getReadName());
+//		System.err.println("pos  : " + refpos);
+//		System.err.println("seq  : " + read.getReadString());
+//		System.err.println("CIGAR: " + read.getCigarString());
+//		}
+		for (CigarElement e: read.getCigar().getCigarElements()) {
+			if (e.getOperator() == CigarOperator.M || e.getOperator() == CigarOperator.X || e.getOperator() == CigarOperator.EQ) {
+				if (refpos + e.getLength() < recpos) {
+					// variant is outside this span
+//					if (indel && read.getReadName().equals("MG01HX10:127:H7FFGCCXY:7:1102:31416:39387")) {
+//					System.err.println("Skipping "+e.getLength()+" bases");
+//					}
+					readpos += e.getLength();
+					refpos += e.getLength();
+				} else {
+//
+					// variant is in this span
+//					if (indel && read.getReadName().equals("MG01HX10:127:H7FFGCCXY:7:1102:31416:39387")) {
+//						for (int i=0; i< e.getLength(); i++) {
+//							if (refpos + i == recpos) {
+//								System.err.println((refpos+i)+":"+read.getReadString().charAt(readpos+i) +" *");
+//							} else {
+//								System.err.println((refpos+i)+":"+read.getReadString().charAt(readpos+i));    						
+//							}
+//							
+//							if (refpos + i == recpos + allele.length()-1) {
+//								break;
+//							}
+//						}
+//					}
+
+//					System.err.println("");
+//					System.err.println("recpos: "+ recpos);
+//					System.err.println("refpos: "+ refpos);
+//					System.err.println("readpos: "+ readpos);
+//					System.err.println("offset: "+ offset);
+//					System.err.println("offset + readpos: "+ (offset + readpos));
+//					System.err.println("recpos - refpos + readpos: "+ (recpos - refpos + readpos));
+										
+					
+//					System.err.println("");
+//					System.err.println((refpos + recpos)+":"+(recpos - refpos + readpos)+":"+base);
+					
+					int offset = recpos - refpos + readpos;
+					
+					if (offset + allele.length() < read.getReadString().length()) {
+						if (isDel) {
+							String base = "" + read.getReadString().substring(offset, offset+allele.length());
+							if (allele.length() == base.length()) {
+								// this is the ref side of an del...
+//								System.err.println(allele + " =? " + base);
+								return allele.equals(base);
+							}
+							flankBase = base;
+						} else if (isInsert) {
+							// indels include a flanking base for the ref or alt, so we need to push through.
+							String base = "" + read.getReadString().substring(offset, offset+rec.getRef().length());
+							if (allele.length() == base.length()) {
+								// this is the ref side of an insert...
+//								System.err.println(allele + " =? " + base);
+								return allele.equals(base);
+							}
+//							flankBase = base;
+						} else {
+							// if we aren't an indel, so just match directly
+							String base = "" + read.getReadString().substring(offset, offset+allele.length());
+							return allele.equals(base);
+						}
+
+						// we fell through an indel...
+						readpos += e.getLength();
+						refpos += e.getLength();
+						
+					} else {
+						return false;
+					}
+					
+				}
+			} else if (e.getOperator() == CigarOperator.I) {
+//				System.err.println("insertion: " + readpos + " + "+ e.getLength());
+				if (refpos == recpos + rec.getRef().length()) {
+					String insert = read.getReadString().substring(readpos - rec.getRef().length(), readpos + allele.length() - rec.getRef().length());
+//					System.err.println("insert: " + insert);
+					return insert.equals(allele);
+				}
+
+				readpos += e.getLength();
+			} else if (e.getOperator() == CigarOperator.D) {
+				if (refpos == recpos + allele.length()) {
+					String del = fasta.fetchSequence(rec.getChrom(), refpos, refpos + rec.getRef().length() - allele.length());
+//					System.err.println("flank/del: " + flankBase + "/" + del);
+					return (flankBase + del).equals(rec.getRef()) && flankBase.equals(allele);
+				}
+				
+				refpos += e.getLength();
+			} else if (e.getOperator() == CigarOperator.N) {
+				// long gap
+				refpos += e.getLength();
+			} else if (e.getOperator() == CigarOperator.S) {
+				// soft clip -- skip these bases in read
+				readpos += e.getLength();
+			} else {
+				throw new IOException("Unsupported CIGAR element: " + e.getOperator()+ " / "+ read.getCigarString());
+			}
+		}
+		
+		return false;
 	}
 }

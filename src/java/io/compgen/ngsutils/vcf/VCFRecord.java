@@ -271,6 +271,10 @@ public class VCFRecord {
 		throw new VCFParseException("Unknown parse exception");
 	}
 
+    public String toString() {
+    	return chrom + ":" + pos +":"+ref+">"+altOrig;
+    }
+    
 	public String getChrom() {
 		return chrom;
 	}

@@ -453,6 +453,76 @@ public class SeqUtils {
     	
     	return peptide;
     }
+
+	public static String ambiguousNucleotide(String bases) {
+		int acc = 0;
+		
+		bases = bases.toUpperCase();
+
+		for (int i=0; i<bases.length(); i++) {
+			if (bases.charAt(i) == 'A') {        // A              1
+				acc = acc | 0x1;
+			} else if (bases.charAt(i) == 'C') { // C              2
+				acc = acc | 0x2;
+			} else if (bases.charAt(i) == 'M') { // A or C         1 + 2
+				acc = acc | 0x3;
+			} else if (bases.charAt(i) == 'G') { // G              4
+				acc = acc | 0x4;
+			} else if (bases.charAt(i) == 'R') { // A or G         1 + 4
+				acc = acc | 0x5;
+			} else if (bases.charAt(i) == 'S') { // C or G         2 + 4
+				acc = acc | 0x6;
+			} else if (bases.charAt(i) == 'M') { // A or C or G    1 + 2 + 4
+				acc = acc | 0x7;
+			} else if (bases.charAt(i) == 'T') { // T              8
+				acc = acc | 0x8;
+			} else if (bases.charAt(i) == 'W') { // A or T         1 + 8
+				acc = acc | 0x9;
+			} else if (bases.charAt(i) == 'Y') { // C or T         2 + 8
+				acc = acc | 0xA;
+			} else if (bases.charAt(i) == 'H') { // A or C or T    1 + 2 + 8
+				acc = acc | 0xB;
+			} else if (bases.charAt(i) == 'K') { // G or T         4 + 8
+				acc = acc | 0xC;
+			} else if (bases.charAt(i) == 'D') { // A or G or T    1 + 4 + 8
+				acc = acc | 0xD;
+			} else if (bases.charAt(i) == 'B') { // C or G or T    2 + 4 + 8
+				acc = acc | 0xE;
+			} else {
+				return "N"; // unknown... 1 + 2 + 4 + 8
+			}
+		}
+
+		if (acc == 0) {
+			return "";
+		}
+		
+		String ambiguous = ".ACMGRSMTWYHKDBN"; 
+		
+		
+		return ""+ambiguous.charAt(acc);
+	}
  
-    
+	/**
+	 * Determine if two bases match each other -- allowing for ambiguities.  MUST BE UPPER CASE
+	 * @param query
+	 * @param ref
+	 * @return
+	 */
+    public static boolean nucleotideMatch(char one, char two) {
+    	if (one == two) {
+    		return true;
+    	}
+
+		String ambiguous = ".ACMGRSMTWYHKDBN";
+		int oneIdx = ambiguous.indexOf(one);
+		int twoIdx = ambiguous.indexOf(two);
+		
+		if (oneIdx == -1 || twoIdx == -1) {
+			return false;
+		}
+		
+		return (oneIdx & twoIdx) > 0;
+    }
+
 }

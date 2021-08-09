@@ -25,6 +25,7 @@ import io.compgen.ngsutils.cli.bam.BamExpressedRegions;
 import io.compgen.ngsutils.cli.bam.BamExtract;
 import io.compgen.ngsutils.cli.bam.BamFilterCli;
 import io.compgen.ngsutils.cli.bam.BamFlagDuplicates;
+import io.compgen.ngsutils.cli.bam.BamPhase;
 import io.compgen.ngsutils.cli.bam.BamReadGroup;
 import io.compgen.ngsutils.cli.bam.BamRefCount;
 import io.compgen.ngsutils.cli.bam.BamRemoveClipping;
@@ -35,6 +36,7 @@ import io.compgen.ngsutils.cli.bam.BamStats;
 import io.compgen.ngsutils.cli.bam.BamToBed;
 import io.compgen.ngsutils.cli.bam.BamToBedGraph;
 import io.compgen.ngsutils.cli.bam.BamToBedPE;
+import io.compgen.ngsutils.cli.bam.BamToFasta;
 import io.compgen.ngsutils.cli.bam.BamToFastq;
 import io.compgen.ngsutils.cli.bam.BinCount;
 import io.compgen.ngsutils.cli.bam.PileupCli;
@@ -52,6 +54,7 @@ import io.compgen.ngsutils.cli.bed.BedToFasta;
 import io.compgen.ngsutils.cli.fasta.FastaFilter;
 import io.compgen.ngsutils.cli.fasta.FastaGC;
 import io.compgen.ngsutils.cli.fasta.FastaGenerateReads;
+import io.compgen.ngsutils.cli.fasta.FastaGrep;
 import io.compgen.ngsutils.cli.fasta.FastaMask;
 import io.compgen.ngsutils.cli.fasta.FastaNames;
 import io.compgen.ngsutils.cli.fasta.FastaPWM;
@@ -93,6 +96,7 @@ import io.compgen.ngsutils.cli.vcf.VCFStrip;
 import io.compgen.ngsutils.cli.vcf.VCFToBED;
 import io.compgen.ngsutils.cli.vcf.VCFToBEDPE;
 import io.compgen.ngsutils.cli.vcf.VCFToCount;
+import io.compgen.ngsutils.cli.vcf.VCFPeptide;
 import io.compgen.ngsutils.cli.vcf.VCFTsTvRatio;
 import io.compgen.ngsutils.support.DigestCmd;
 import io.compgen.ngsutils.support.stats.FisherCli;
@@ -208,7 +212,11 @@ public class NGSUtils {
 			.addCommand(VCFCheck.class)
 			.addCommand(BamToBedPE.class)
 			.addCommand(BedPEToBed.class)
-			.addCommand(BamClean.class);
+			.addCommand(BamClean.class)
+			.addCommand(VCFPeptide.class)
+			.addCommand(FastaGrep.class)
+			.addCommand(BamToFasta.class)
+			.addCommand(BamPhase.class);
 
         try {
             if (args.length == 0) {
