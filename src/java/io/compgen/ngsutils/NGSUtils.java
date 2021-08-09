@@ -16,6 +16,7 @@ import io.compgen.ngsutils.cli.annotate.RepeatAnnotate;
 import io.compgen.ngsutils.cli.bam.BamBaseCall;
 import io.compgen.ngsutils.cli.bam.BamBest;
 import io.compgen.ngsutils.cli.bam.BamCheck;
+import io.compgen.ngsutils.cli.bam.BamClean;
 import io.compgen.ngsutils.cli.bam.BamConcat;
 import io.compgen.ngsutils.cli.bam.BamCount;
 import io.compgen.ngsutils.cli.bam.BamCoverage;
@@ -33,12 +34,14 @@ import io.compgen.ngsutils.cli.bam.BamSplit;
 import io.compgen.ngsutils.cli.bam.BamStats;
 import io.compgen.ngsutils.cli.bam.BamToBed;
 import io.compgen.ngsutils.cli.bam.BamToBedGraph;
+import io.compgen.ngsutils.cli.bam.BamToBedPE;
 import io.compgen.ngsutils.cli.bam.BamToFastq;
 import io.compgen.ngsutils.cli.bam.BinCount;
 import io.compgen.ngsutils.cli.bam.PileupCli;
 import io.compgen.ngsutils.cli.bed.BedCleanScore;
 import io.compgen.ngsutils.cli.bed.BedCount;
 import io.compgen.ngsutils.cli.bed.BedNearest;
+import io.compgen.ngsutils.cli.bed.BedPEToBed;
 import io.compgen.ngsutils.cli.bed.BedReduce;
 import io.compgen.ngsutils.cli.bed.BedResize;
 import io.compgen.ngsutils.cli.bed.BedStats;
@@ -202,7 +205,10 @@ public class NGSUtils {
     		.addCommand(VCFMerge.class)
     		.addCommand(FastaPWM.class)
 			.addCommand(FastaRandom.class)
-			.addCommand(VCFCheck.class);
+			.addCommand(VCFCheck.class)
+			.addCommand(BamToBedPE.class)
+			.addCommand(BedPEToBed.class)
+			.addCommand(BamClean.class);
 
         try {
             if (args.length == 0) {

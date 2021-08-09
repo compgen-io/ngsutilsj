@@ -76,7 +76,7 @@ public class FastaGenerateReads extends AbstractOutputCommand {
                     buffer = "";
                     pos = 0;
                 }
-                current[0] = line.substring(1).split("\\W",2)[0];
+                current[0] = line.substring(1).split("\\s",2)[0];
             } else {
                 buffer += line;
                 while (buffer.length() > readLength) {

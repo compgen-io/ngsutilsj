@@ -522,4 +522,77 @@ public class ReadUtils {
         
         return read;
     }
+
+	public static SAMRecord findMate(SamReader reader, SAMRecord read) {
+		return findMate(reader, read, 0, 0);
+	}
+	public static SAMRecord findMate(SamReader reader, SAMRecord read, int filterFlags, int requiredFlags) {
+        if (!read.getReadPairedFlag()) {
+            throw new IllegalArgumentException("findMate requires paired end reads!");
+        }
+        SAMRecord mate = null;
+        SAMRecordIterator it = null;
+        
+        if (read.getMateReferenceIndex() == SAMRecord.NO_ALIGNMENT_REFERENCE_INDEX) {
+            it = reader.queryUnmapped();
+        } else {
+            it = reader.query(read.getMateReferenceName(), read.getMateAlignmentStart(), read.getMateAlignmentStart(), false);
+        }
+        
+        while (it.hasNext()) {
+            SAMRecord q = it.next();
+            if (filterFlags > 0) {
+            	if ((q.getFlags() & filterFlags) != 0) {
+            		continue;
+            	}
+            }
+
+            if (requiredFlags > 0) {
+            	if ((q.getFlags() & requiredFlags) != requiredFlags) {
+            		continue;
+            	}
+            }
+            
+            if (q.getReadName().equals(read.getReadName())) {
+            	if (read.getFirstOfPairFlag()) {
+            		if (q.getFirstOfPairFlag()) {
+            			continue; 
+            		}
+            	} else {
+            		if (!q.getFirstOfPairFlag()) {
+            			continue; 
+            		}
+            	}
+            	
+                boolean found = true; 
+            	for (SAMTagAndValue tv: read.getAttributes()) {
+            		// if the read has an IH tag -- require the mate to have the same IH tag
+            		// if you have supplementary mappings, they can have the same location information, 
+            		// so this is the indicator of *which* alignment to use.
+            		if (tv.tag.equals("IH")) {
+            			found = false;
+                    	for (SAMTagAndValue tv2: q.getAttributes()) {
+                    		if (tv2.tag.equals("IH")) {
+                    			if (tv.value.equals(tv2.value)) {
+                    				found = true;
+                    				break;
+                    			}
+                    		}
+                    	}
+                    	if (found) {
+                    		break;
+                    	}
+            		}
+            	}
+            	if (found) {
+            		if (mate != null) {
+                        throw new IllegalArgumentException("findMate found multiple records for read: "+read.getReadName());
+            		}
+            		mate = q;
+            	}
+            }
+		}
+        it.close();
+		return mate;
+	}
 }

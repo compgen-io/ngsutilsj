@@ -11,6 +11,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import htsjdk.samtools.SAMFileHeader;
+import htsjdk.samtools.SAMFileHeader.SortOrder;
 import htsjdk.samtools.SAMFileWriter;
 import htsjdk.samtools.SAMFileWriterFactory;
 import htsjdk.samtools.SAMProgramRecord;
@@ -37,10 +38,17 @@ public class BamClean extends AbstractCommand {
     private String tmpDir = null;
 
     private boolean unmappedMAPQ0 = false;
+    private boolean secondaryUnique = false;
+    private String failedFilename = null;
     
     @UnnamedArg(name = "INFILE OUTFILE")
     public void setFilename(String[] filenames) {
         this.filenames = filenames;
+    }
+
+    @Option(desc = "Remove secondary reads and reset unique tags (fixes NH tag if secondary alignments have been removed, requires name-sorted BAM)", name="fix-secondary")
+    public void setSecondaryUnique(boolean secondaryUnique) {
+        this.secondaryUnique = secondaryUnique;
     }
 
     @Option(desc = "Unmapped reads should have MAPQ=0", name="mapq0")
@@ -52,6 +60,12 @@ public class BamClean extends AbstractCommand {
     public void setTmpDir(String tmpDir) {
         this.tmpDir = tmpDir;
     }
+
+    @Option(desc = "Write failed reads to this file (BAM)", name = "failed", helpValue = "fname")
+    public void setFailedFilename(String failedFilename) {
+        this.failedFilename = failedFilename;
+    }
+
 
 
     @Exec
@@ -77,6 +91,10 @@ public class BamClean extends AbstractCommand {
             name = f.getName();
         }
 
+        if (secondaryUnique && reader.getFileHeader().getSortOrder() != SortOrder.queryname) {
+            throw new CommandArgumentException("In order to fix secondary alignment/unique flags, the BAM file must be name-sorted!");
+        }
+        
         SAMFileWriter writer = null;
 
         SAMFileWriterFactory factory = new SAMFileWriterFactory();
@@ -104,12 +122,24 @@ public class BamClean extends AbstractCommand {
         pgRecords.add(0, pg);
         header.setProgramRecords(pgRecords);
 
+        if (secondaryUnique) {
+        	header.setSortOrder(SortOrder.unsorted); // samtools sort -n uses a different sorting method than HTSJDK, so we need to set this.
+        }
+
         if (outfile != null) {
             writer = factory.makeBAMWriter(header, true, outfile);
         } else {
             writer = factory.makeBAMWriter(header,  true,  outStream);
         }
+ 
         
+        SAMFileWriter failedWriter = null;
+        if (failedFilename != null) {
+        	SAMFileHeader failedHeader = header.clone();
+        	failedHeader.setSortOrder(SortOrder.unsorted);
+            failedWriter = factory.makeBAMWriter(failedHeader, true, new File(failedFilename));
+        }
+
 
         Iterator<SAMRecord> it = ProgressUtils.getIterator(name, reader.iterator(), (channel == null)? null : new FileChannelStats(channel), new ProgressMessage<SAMRecord>() {
             long i = 0;
@@ -121,20 +151,91 @@ public class BamClean extends AbstractCommand {
         long totalCount = 0;
         long alteredCount = 0;
         
+        List<SAMRecord> records = new ArrayList<SAMRecord>();
+        String curName = "";
+        
         while (it.hasNext()) {
             totalCount++;
             SAMRecord read = it.next();
-            if (unmappedMAPQ0 && read.getReadUnmappedFlag()) {
-                if (read.getMappingQuality() != 0) {
-                    read.setMappingQuality(0);
-                    alteredCount++;
+            if (unmappedMAPQ0) {
+            	if (read.getReadUnmappedFlag()) {
+	                if (read.getMappingQuality() != 0) {
+	                    read.setMappingQuality(0);
+	                    alteredCount++;
+	                }
+	                writer.addAlignment(read);
                 }
+            } else if (secondaryUnique){
+            	if (!read.getReadName().equals(curName)) {
+            		alteredCount += writeAndFixSecondary(writer, records);
+            		records.clear();
+            	} 
+            	
+            	if (read.getSupplementaryAlignmentFlag() || read.getReadFailsVendorQualityCheckFlag() || read.getNotPrimaryAlignmentFlag() || read.getDuplicateReadFlag()) {
+            		if (failedWriter != null) {
+            			failedWriter.addAlignment(read);
+            		}
+            	} else {
+            		records.add(read);
+            	}
+            } else {
+                writer.addAlignment(read);
             }
-            writer.addAlignment(read);
         }
+
+        if (secondaryUnique){
+        	alteredCount += writeAndFixSecondary(writer, records);
+        	records.clear();
+    	} 
+
         reader.close();
         writer.close();
         System.err.println("Total reads     : "+totalCount);
         System.err.println("Altered reads: "+alteredCount);
     }
+
+	private int writeAndFixSecondary(SAMFileWriter writer, List<SAMRecord> records) {
+		int altered = 0;
+		if (records == null) {
+			return altered;
+		}
+
+		int NH = 0;
+		
+		for (SAMRecord read: records) {
+			if (read.getFirstOfPairFlag()) {
+				NH++;
+			}
+		}
+
+		int HI = 0;
+		for (SAMRecord read1: records) {
+			if (read1.getFirstOfPairFlag()) {
+				HI++;
+				
+				if (read1.getIntegerAttribute("HI") != HI || read1.getIntegerAttribute("NH") != NH) {
+					altered++;
+				}
+				
+				// reset the NH attribute
+				read1.setAttribute("NH", NH);
+				read1.setAttribute("HI", HI);
+				writer.addAlignment(read1);
+				
+				for (SAMRecord read2:records) {
+					// find the pair to get the HI values correct (there still might be multiple alignments for a given read that aren't secondary)
+					if (read2.getFirstOfPairFlag()) {
+						continue;
+					}
+					if (read1.getMateReferenceIndex() == read2.getReferenceIndex() && read1.getMateAlignmentStart() == read2.getAlignmentStart()) {
+						// found the mate
+						read2.setAttribute("NH", NH);
+						read2.setAttribute("HI", HI);
+						writer.addAlignment(read2);
+					}
+				}
+			}
+		}
+		return altered;
+	}
 }

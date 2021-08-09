@@ -89,7 +89,7 @@ public class FastaGC extends AbstractOutputCommand {
                         tabWrite(tab, ref, currentBinStart, buf);
                     }
                     
-                    ref = line.substring(1).split("\\W",2)[0];
+                    ref = line.substring(1).split("\\s",2)[0];
                     System.err.println(">"+ref);
                     currentBinStart = 0;
                     buf = "";

@@ -29,7 +29,7 @@ public class FastaNames extends AbstractOutputCommand {
         StringLineReader reader = new StringLineReader(filename);
         for (String line: IterUtils.wrap(reader.iterator())) {
             if (line.charAt(0) == '>') {
-                String name = line.substring(1).split("\\W",2)[0];
+                String name = line.substring(1).split("\\s",2)[0];
                 out.write((name+"\n").getBytes());
             }
         }
