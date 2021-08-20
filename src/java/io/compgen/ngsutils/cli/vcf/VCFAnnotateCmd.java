@@ -211,12 +211,14 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
     	String[] spl = vcf.split(":");
     	boolean exact = false;
     	boolean passing = false;
+    	boolean unique = false;
     	if (spl.length == 4) {
             passing = spl[3].contains("@");
             exact = spl[3].contains("!");
+            unique = spl[3].contains("$");
     	}
         try {
-            chain.add(new VCFAnnotation(spl[0], spl[2], spl[1], exact, passing));
+            chain.add(new VCFAnnotation(spl[0], spl[2], spl[1], exact, passing, unique));
         } catch (IOException e) {
             throw new CommandArgumentException("Unable to parse argument for --vcf: "+vcf+"\n"+e.getMessage());
         }
@@ -227,12 +229,14 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
         String[] spl = vcf.split(":");
         boolean exact = false;
         boolean passing = false;
+    	boolean unique = false;
         if (spl.length == 3) {
             passing = spl[2].contains("@");
             exact = spl[2].contains("!");
+            unique = spl[2].contains("$");
         }
         try {
-            chain.add(new VCFAnnotation(spl[0], spl[1], null, exact, passing));
+            chain.add(new VCFAnnotation(spl[0], spl[1], null, exact, passing, unique));
         } catch (IOException e) {
             throw new CommandArgumentException("Unable to parse argument for --vcf-flag: "+vcf+"\n"+e.getMessage());
         }
