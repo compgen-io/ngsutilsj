@@ -251,12 +251,18 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
         }
     }
     
-    @Option(desc="Add flag if an existing INFO value present is in a file", name="in-file", helpValue="FLAGNAME:INFOKEY:FILENAME", allowMultiple=true)
+    @Option(desc="Add flag if an existing INFO value present is in a file (add comma if the field is comma-delimited)", name="in-file", helpValue="FLAGNAME:INFOKEY:FILENAME{:,}", allowMultiple=true)
     public void setInfoInFile(String val) throws CommandArgumentException {
     	String[] spl = val.split(":");
     	if (spl.length == 3) {
     		try {
 				chain.add(new InfoInFile(spl[2], spl[1], spl[0]));
+			} catch (IOException e) {
+	    		throw new CommandArgumentException(e);
+			}
+    	} else if (spl.length == 4 && spl[3].equals(",")) {
+    		try {
+				chain.add(new InfoInFile(spl[2], spl[1], spl[0], ","));
 			} catch (IOException e) {
 	    		throw new CommandArgumentException(e);
 			}
