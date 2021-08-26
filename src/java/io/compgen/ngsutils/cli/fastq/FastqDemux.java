@@ -133,7 +133,7 @@ public class FastqDemux extends AbstractCommand {
                     
                     tmpRgID.add(cols[0]);
                     tmpStr1.add(cols[1]);
-                    if (cols.length > 2) {
+                    if (cols.length > 3) {
                         tmpStr2.add(cols[2]);
                         hasBarcode = true;
                     } else {
