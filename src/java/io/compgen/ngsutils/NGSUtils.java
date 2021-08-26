@@ -245,11 +245,12 @@ public class NGSUtils {
         } catch (UnknownArgumentException e) {
             System.err.println("ERROR: " + e.getMessage());
             System.err.println();
-            System.exit(1);
             try {
                 main.showCommandHelp(e.clazz);
             } catch (MissingCommandException e1) {
             }
+            System.exit(1);
+
         } catch (Exception e) {
             e.printStackTrace();
             System.exit(1);
