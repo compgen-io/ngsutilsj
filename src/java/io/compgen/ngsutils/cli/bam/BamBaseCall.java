@@ -76,6 +76,13 @@ public class BamBaseCall extends AbstractOutputCommand {
         }
     }
 
+    @Option(desc = "No supplementary mappings", name = "no-supplementary")
+    public void seNoSupplmentary(boolean val) {
+        if (val) {
+            filterFlags |= ReadUtils.SUPPLEMENTARY_ALIGNMENT_FLAG;
+        }
+    }
+
     @Option(desc = "No secondary mappings", name = "no-secondary")
     public void setNoSecondary(boolean val) {
         if (val) {

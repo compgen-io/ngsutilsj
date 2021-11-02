@@ -1,5 +1,6 @@
 package io.compgen.ngsutils.vcf;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
@@ -271,6 +272,10 @@ public class VCFRecord {
 		throw new VCFParseException("Unknown parse exception");
 	}
 
+    public String toString() {
+    	return chrom + ":" + pos +":"+ref+">"+altOrig;
+    }
+    
 	public String getChrom() {
 		return chrom;
 	}
@@ -581,5 +586,41 @@ public class VCFRecord {
 
 	    return 0;
 	}
+
+	private void writeToStream(OutputStream os, String s) throws IOException {
+		os.write((s + "\n").getBytes());
+	}
 	
+    public String dump() throws IOException{
+    	ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    	
+    	writeToStream(baos, chrom+":"+pos+" "+ref+">"+StringUtils.join(",", alt));
+    	writeToStream(baos, "ID: " + dbSNPID);
+		String qstr = ""+qual;
+		if (qstr.endsWith(".0")) {
+			qstr = qstr.substring(0,  qstr.length()-2);
+		}
+		writeToStream(baos, "Qual: " + qstr);
+		
+        if (filters != null && filters.size() == 0) {
+        	writeToStream(baos, "Filters: " + MISSING);
+        } else if (!isFiltered()) {
+        	writeToStream(baos, "Filters: " + PASS);
+		} else {
+			writeToStream(baos, "Filters: " + StringUtils.join(";", filters));
+		}
+
+        writeToStream(baos, "INFO: ");
+        for (String k: info.getKeys()) {
+        	writeToStream(baos, "    "+ k + " => " + info.get(k));
+        }
+
+        for (int i=0; i< sampleAttributes.size(); i++) {
+        	writeToStream(baos, "Sample " + i +":");
+	        for (String k: sampleAttributes.get(0).getKeys()) {
+	        	writeToStream(baos, "    "+ k + " => " + sampleAttributes.get(i).get(k));
+	        }
+        }
+        return baos.toString();
+	}
 }

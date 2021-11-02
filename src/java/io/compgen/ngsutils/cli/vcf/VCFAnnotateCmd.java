@@ -11,6 +11,7 @@ import io.compgen.cmdline.annotation.UnnamedArg;
 import io.compgen.cmdline.exceptions.CommandArgumentException;
 import io.compgen.cmdline.impl.AbstractOutputCommand;
 import io.compgen.ngsutils.NGSUtils;
+import io.compgen.ngsutils.support.FileUtils;
 import io.compgen.ngsutils.vcf.VCFHeader;
 import io.compgen.ngsutils.vcf.VCFReader;
 import io.compgen.ngsutils.vcf.VCFRecord;
@@ -125,7 +126,7 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
         String[] spl = bed.split(":");
         if (spl.length == 2) {
             try {
-                chain.add(new BEDAnnotation(spl[0], spl[1], false));
+                chain.add(new BEDAnnotation(spl[0],FileUtils.expandUserPath(spl[1]), false));
             } catch (IOException e) {
                 throw new CommandArgumentException(e);
             }
@@ -153,7 +154,7 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
                 
                 for (String t:spl2) {
                     if (fname == null) {
-                        fname = t;
+                        fname = FileUtils.expandUserPath(t);
                     } else if (t.equals("n")) {
                         isNumber = true;
                     } else if (t.equals("collapse")) {
@@ -196,7 +197,7 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
     	String[] spl = bed.split(":");
     	if (spl.length == 2) {
     		try {
-				chain.add(new BEDAnnotation(spl[0], spl[1], true));
+				chain.add(new BEDAnnotation(spl[0], FileUtils.expandUserPath(spl[1]), true));
 			} catch (IOException e) {
 	    		throw new CommandArgumentException(e);
 			}
@@ -211,12 +212,14 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
     	String[] spl = vcf.split(":");
     	boolean exact = false;
     	boolean passing = false;
+    	boolean unique = false;
     	if (spl.length == 4) {
             passing = spl[3].contains("@");
             exact = spl[3].contains("!");
+            unique = spl[3].contains("$");
     	}
         try {
-            chain.add(new VCFAnnotation(spl[0], spl[2], spl[1], exact, passing));
+            chain.add(new VCFAnnotation(spl[0], FileUtils.expandUserPath(spl[2]), spl[1], exact, passing, unique));
         } catch (IOException e) {
             throw new CommandArgumentException("Unable to parse argument for --vcf: "+vcf+"\n"+e.getMessage());
         }
@@ -227,12 +230,14 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
         String[] spl = vcf.split(":");
         boolean exact = false;
         boolean passing = false;
+    	boolean unique = false;
         if (spl.length == 3) {
             passing = spl[2].contains("@");
             exact = spl[2].contains("!");
+            unique = spl[2].contains("$");
         }
         try {
-            chain.add(new VCFAnnotation(spl[0], spl[1], null, exact, passing));
+            chain.add(new VCFAnnotation(spl[0], FileUtils.expandUserPath(spl[1]), null, exact, passing, unique));
         } catch (IOException e) {
             throw new CommandArgumentException("Unable to parse argument for --vcf-flag: "+vcf+"\n"+e.getMessage());
         }
@@ -247,12 +252,18 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
         }
     }
     
-    @Option(desc="Add flag if an existing INFO value present is in a file", name="in-file", helpValue="FLAGNAME:INFOKEY:FILENAME", allowMultiple=true)
+    @Option(desc="Add flag if an existing INFO value present is in a file (add csv if the field is comma-delimited)", name="in-file", helpValue="FLAGNAME:INFOKEY:FILENAME{:csv}", allowMultiple=true)
     public void setInfoInFile(String val) throws CommandArgumentException {
     	String[] spl = val.split(":");
     	if (spl.length == 3) {
     		try {
-				chain.add(new InfoInFile(spl[2], spl[1], spl[0]));
+				chain.add(new InfoInFile(FileUtils.expandUserPath(spl[2]), spl[1], spl[0]));
+			} catch (IOException e) {
+	    		throw new CommandArgumentException(e);
+			}
+    	} else if (spl.length == 4 && spl[3].equals("csv")) {
+    		try {
+				chain.add(new InfoInFile(FileUtils.expandUserPath(spl[2]), spl[1], spl[0], ","));
 			} catch (IOException e) {
 	    		throw new CommandArgumentException(e);
 			}
@@ -260,6 +271,7 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
     		throw new CommandArgumentException("Unable to parse argument for --in-file: "+val);
     	}
     }
+    
     
 //    @Option(desc="Add peptide annotation for SNVs", name="gtf", helpValue="filename.gtf")
 //    public void setGTFPeptide(String filename) throws CommandArgumentException {
@@ -271,7 +283,7 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
 //    }
 
     
-    @Option(desc="Add peptide annotation", name="gtf", helpValue="filename.gtf")
+    @Option(desc="Add gene annotations (INFO: CG_GENE, CG_GENE_STRAND, CG_GENE_REGION)", name="gtf", helpValue="filename.gtf")
     public void setGTF(String filename) throws CommandArgumentException {
 		try {
 			chain.add(new GTFGene(filename));

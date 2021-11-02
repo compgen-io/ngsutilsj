@@ -71,7 +71,7 @@ public class VCFAttributes {
                     }
     			} else {
     			    try {
-    			        String[] kv = el.split("=");				
+    			        String[] kv = el.split("=", 2);				
                         if (header == null || header.isInfoAllowed(kv[0])) {
                             attrs.put(kv[0], VCFAttributeValue.parse(kv[1]));
                         }

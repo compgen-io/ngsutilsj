@@ -133,7 +133,7 @@ public class FastqDemux extends AbstractCommand {
                     
                     tmpRgID.add(cols[0]);
                     tmpStr1.add(cols[1]);
-                    if (cols.length > 2) {
+                    if (cols.length > 3) {
                         tmpStr2.add(cols[2]);
                         hasBarcode = true;
                     } else {
@@ -155,18 +155,25 @@ public class FastqDemux extends AbstractCommand {
             throw new CommandArgumentException("Missing input filename!");
         }
 
-        if (outputTemplate == null && unmatchedFname == null) {
-            throw new CommandArgumentException("Missing --out filename template or --missing filename (at least one is required)!");
-        }
+//        if (outputTemplate == null && unmatchedFname == null) {
+//            throw new CommandArgumentException("Missing --out filename template or --unmatched filename (at least one is required)!");
+//        }
 
         if (nameSubstr1 == null && nameSubstr2 == null) {
             throw new CommandArgumentException("You must specify at least one value to split reads (--lane, --barcode)!");
         }
 
         if (readGroups == null) {
-            readGroups = new String[nameSubstr1.length];
-            for (int i=0; i<nameSubstr1.length; i++) {
-                readGroups[i] = ""+i;
+        	if (nameSubstr1 != null) {
+	            readGroups = new String[nameSubstr1.length];
+	            for (int i=0; i<nameSubstr1.length; i++) {
+	                readGroups[i] = ""+i;
+	            }
+            } else {
+	            readGroups = new String[nameSubstr2.length];
+	            for (int i=0; i<nameSubstr2.length; i++) {
+	                readGroups[i] = ""+i;
+	            }
             }
         }
         
@@ -178,7 +185,7 @@ public class FastqDemux extends AbstractCommand {
             throw new CommandArgumentException("--barcode and --rg-id must be the same length!");
         }
         
-        if (nameSubstr2 != null && nameSubstr1.length != nameSubstr2.length) {
+        if (nameSubstr1 != null && nameSubstr2 != null && nameSubstr1.length != nameSubstr2.length) {
             throw new CommandArgumentException("--lane and --barcode must be the same length (if set)!");
         }
         
@@ -212,6 +219,15 @@ public class FastqDemux extends AbstractCommand {
                     outs[i] = new FileOutputStream(fname);
                 }
             }
+        } else if (readGroups.length == 1) {
+            outs = new OutputStream[readGroups.length];
+            if (compress) {
+                outs[0] = new GZIPOutputStream(System.out);
+            } else {
+                outs[0] = System.out;
+            }
+        } else {
+            throw new CommandArgumentException("You can only write single barcode/lane combination to stdout.");
         }
 
         OutputStream unmatched = null;

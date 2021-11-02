@@ -18,12 +18,17 @@ public class InfoInFile extends AbstractBasicAnnotator {
 	protected String filename;
 	protected String flagName;
 	protected String tagName;
+	protected String delimiter = null;
 	protected Set<String> set = new HashSet<String>();
 	
 	public InfoInFile(String filename, String tagName, String flagName) throws IOException {
+		this(filename, tagName, flagName, null);
+	}
+	public InfoInFile(String filename, String tagName, String flagName, String delimiter) throws IOException {
 		this.filename = filename;
 		this.flagName = flagName;
 		this.tagName = tagName;
+		this.delimiter = delimiter;
 		BufferedReader reader = new BufferedReader(new FileReader(filename));
 		String line;
 		while ((line = reader.readLine()) != null) {
@@ -54,9 +59,21 @@ public class InfoInFile extends AbstractBasicAnnotator {
 			} catch (VCFAttributeException e) {
 				throw new VCFAnnotatorException(e);
 			}
-			if (!val.equals(VCFAttributeValue.MISSING.toString()) && set.contains(val.trim())) {
-				record.getInfo().putFlag(flagName);
+			
+			if (!val.equals(VCFAttributeValue.MISSING.toString())) {
+				if (delimiter == null) {
+					if (set.contains(val.trim())) {
+						record.getInfo().putFlag(flagName);
+					}
+				} else {
+					for (String spl: val.split(delimiter)) {
+						if (set.contains(spl.trim())) {
+							record.getInfo().putFlag(flagName);
+						}
+					}
+				}
 			}
+			
 		}
 	}
 }
