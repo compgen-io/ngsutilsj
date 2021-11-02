@@ -216,7 +216,7 @@ public class NGSUtils {
 			.addCommand(VCFPeptide.class)
 			.addCommand(FastaGrep.class)
 			.addCommand(BamToFasta.class)
-			.addCommand(BamPhase.class)
+			.addCommand(BamPhase.class);
 
         try {
             if (args.length == 0) {
