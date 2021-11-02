@@ -17,6 +17,7 @@ import io.compgen.common.progress.FileChannelStats;
 import io.compgen.common.progress.ProgressMessage;
 import io.compgen.common.progress.ProgressUtils;
 import io.compgen.ngsutils.NGSUtils;
+import io.compgen.ngsutils.support.FileUtils;
 import io.compgen.ngsutils.tabix.TabixFile;
 import io.compgen.ngsutils.tabix.annotate.TabAnnotator;
 import io.compgen.ngsutils.tabix.annotate.TabixTabAnnotator;
@@ -50,7 +51,7 @@ public class TabAnnotate extends AbstractOutputCommand {
                 
                 for (String t:spl2) {
                     if (fname == null) {
-                        fname = t;
+                        fname = FileUtils.expandUserPath(t);
                     } else {
                         if (t.equals("collapse")) {
                             collapse = true;
@@ -108,11 +109,12 @@ public class TabAnnotate extends AbstractOutputCommand {
         }       
     }
     
-    @Option(desc="Add INFO annotation from a VCF file (CSI indexed, add '@' for only using records passing filters, add alt=col and ref=col to specify an alternative allele column in the input tab-delimited file)", name="vcf", helpValue="NAME:INFONAME:FILENAME{:alt=N,ref=N,@}", allowMultiple=true)
+    @Option(desc="Add INFO annotation from a VCF file (TBI/CSI indexed, add '@' for only using records passing filters, collapse for unique values, alt=col and ref=col to specify an alternative allele column in the input tab-delimited file)", name="vcf", helpValue="NAME:INFONAME:FILENAME{:alt=N,ref=N,@,collapse}", allowMultiple=true)
     public void setVCF(String vcf) throws CommandArgumentException {
         try {
             String[] spl = vcf.split(":");
             boolean passing = false;
+            boolean collapse = false;
             int altCol = -1;
             int refCol = -1;
             if (spl.length == 4) {
@@ -120,6 +122,8 @@ public class TabAnnotate extends AbstractOutputCommand {
                 for (String s: spl2) {
                     if (s.equals("@")) {
                         passing = true;
+                    } else if (s.equals("collapse")) {
+                    	collapse = true;
                     } else if (s.startsWith("alt=")) {
                         altCol = Integer.parseInt(s.substring(4));
                     } else if (s.startsWith("ref=")) {
@@ -127,7 +131,7 @@ public class TabAnnotate extends AbstractOutputCommand {
                     }
                 }
             }
-            chain.add(new TabixVCFAnnotator(spl[0], spl[2], spl[1], passing, refCol, altCol));
+            chain.add(new TabixVCFAnnotator(spl[0], FileUtils.expandUserPath(spl[2]), spl[1], passing, refCol, altCol, collapse));
         } catch (NumberFormatException e) {
             throw new CommandArgumentException("Unable to parse argument for --vcf: "+vcf + " ("+e.getMessage()+")");
         } catch (IOException e) {
