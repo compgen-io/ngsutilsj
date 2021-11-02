@@ -529,6 +529,7 @@ public class ReadUtils {
 	public static SAMRecord findMate(SamReader reader, SAMRecord read) {
 		return findMate(reader, read, 0, 0);
 	}
+    
 	public static SAMRecord findMate(SamReader reader, SAMRecord read, int filterFlags, int requiredFlags) {
         if (!read.getReadPairedFlag()) {
             throw new IllegalArgumentException("findMate requires paired end reads!");
@@ -543,7 +544,6 @@ public class ReadUtils {
         }
         
         while (it.hasNext() && mate == null) {
-
             SAMRecord q = it.next();
             if (filterFlags > 0) {
             	if ((q.getFlags() & filterFlags) != 0) {
@@ -589,6 +589,7 @@ public class ReadUtils {
             		}
             	}
             	if (found) {
+                // this won't happen because we break out of the while loop first
 //            		if (mate != null) {
 //                        throw new IllegalArgumentException("findMate found multiple records for read: "+read.getReadName());
 //            		}
@@ -599,7 +600,8 @@ public class ReadUtils {
         it.close();
 		return mate;
 	}
-
+  
+  // Does a read contain a particular variant?
 	public static boolean containsVariant(SAMRecord read, VCFRecord rec, String allele, IndexedFastaFile fasta) throws IOException {
 		if (!read.getReferenceName().equals(rec.getChrom())) {
 			return false;

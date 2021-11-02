@@ -341,10 +341,24 @@ public class BamExtract extends AbstractOutputCommand {
         	extractReads(region.ref, region.start, region.end);
         } else if (bedFile != null) {
         	Iterator<BedRecord> it = BedReader.readFile(bedFile);
+//        	int lastRecLen = 0;
+        	
         	while (it.hasNext()) {
         		BedRecord rec = it.next();
+//        		for (int i=0; i<lastRecLen;i++) {
+//        			System.err.write('\b');
+//        		}
+//        		for (int i=0; i<lastRecLen;i++) {
+//        			System.err.write(' ');
+//        		}
+//        		for (int i=0; i<lastRecLen;i++) {
+//        			System.err.write('\b');
+//        		}
+//        		System.err.print(rec);
+//        		lastRecLen = rec.toString().length();
             	extractReads(rec.getCoord().ref, rec.getCoord().start, rec.getCoord().end, rec.getCoord().strand);
         	}
+        	System.err.println("Done");
         } else if (vcfFile != null) {
         	VCFReader vcfReader = new VCFReader(vcfFile);
         	Iterator<VCFRecord> it = vcfReader.iterator();
