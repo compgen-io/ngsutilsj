@@ -245,6 +245,14 @@ public class TabAnnotate extends AbstractOutputCommand {
 		        addedHeader = true;
                 System.out.println(tabix.getMeta()+"#ngsutilsj_tab_annotateCommand="+NGSUtils.getArgs());
                 System.out.println(tabix.getMeta()+"#ngsutilsj_tab_annotateVersion="+NGSUtils.getVersion());
+                if (hasHeader) {
+	                System.out.print(line);
+	                for (TabAnnotator ann: chain) {
+	                    System.out.print("\t"+ann.getName());
+	                }
+	                System.out.println();
+	                continue;
+                }
 		    }
 		    
 		    String[] cols = line.split("\t", -1);
