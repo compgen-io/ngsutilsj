@@ -252,7 +252,7 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
         }
     }
     
-    @Option(desc="Add flag if an existing INFO value present is in a file (add csv if the field is comma-delimited)", name="in-file", helpValue="FLAGNAME:INFOKEY:FILENAME{:csv}", allowMultiple=true)
+    @Option(desc="Add flag if an existing INFO value present is in a file (add csv if the INFO field is potentially comma-delimited)", name="in-file", helpValue="FLAGNAME:INFOKEY:FILENAME{:csv}", allowMultiple=true)
     public void setInfoInFile(String val) throws CommandArgumentException {
     	String[] spl = val.split(":");
     	if (spl.length == 3) {
@@ -261,7 +261,7 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
 			} catch (IOException e) {
 	    		throw new CommandArgumentException(e);
 			}
-    	} else if (spl.length == 4 && spl[3].equals("csv")) {
+    	} else if (spl.length == 4 && (spl[3].equals("csv") || spl[3].equals(","))) {
     		try {
 				chain.add(new InfoInFile(FileUtils.expandUserPath(spl[2]), spl[1], spl[0], ","));
 			} catch (IOException e) {
