@@ -252,21 +252,34 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
         }
     }
     
-    @Option(desc="Add flag if an existing INFO value present is in a file (add csv if the INFO field is potentially comma-delimited)", name="in-file", helpValue="FLAGNAME:INFOKEY:FILENAME{:csv}", allowMultiple=true)
+    @Option(desc="Add flag if an existing INFO value present is in a file (add csv if the INFO field is potentially comma-delimited, add tabcol= for a column in the file to add, tab-delimtied, 1-based)", name="in-file", helpValue="FLAGNAME:INFOKEY:FILENAME{:csv:tabcol=n}", allowMultiple=true)
     public void setInfoInFile(String val) throws CommandArgumentException {
     	String[] spl = val.split(":");
-    	if (spl.length == 3) {
-    		try {
-				chain.add(new InfoInFile(FileUtils.expandUserPath(spl[2]), spl[1], spl[0]));
+
+    	if (spl.length >= 3) {
+        	String delimiter = null;
+        	int col = -1;
+        	
+        	String filename = FileUtils.expandUserPath(spl[2]);
+        	String infokey = spl[1];
+        	String flagname = spl[0];
+
+        	for (int i=3; i<spl.length; i++) {
+        		if (spl[i].equals("csv")) {
+        			delimiter = ",";
+        		} else if (spl[i].equals(",")) {
+        			delimiter = ",";
+        		} else if (spl[i].startsWith("tabcol=")) {
+        			col = Integer.parseInt(spl[i].substring(7));
+        		}
+        	}
+        	
+        	try {
+				chain.add(new InfoInFile(filename, infokey, flagname, delimiter, col));
 			} catch (IOException e) {
 	    		throw new CommandArgumentException(e);
 			}
-    	} else if (spl.length == 4 && (spl[3].equals("csv") || spl[3].equals(","))) {
-    		try {
-				chain.add(new InfoInFile(FileUtils.expandUserPath(spl[2]), spl[1], spl[0], ","));
-			} catch (IOException e) {
-	    		throw new CommandArgumentException(e);
-			}
+
     	} else {
     		throw new CommandArgumentException("Unable to parse argument for --in-file: "+val);
     	}
