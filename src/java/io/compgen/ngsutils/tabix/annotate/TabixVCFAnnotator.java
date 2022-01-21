@@ -3,10 +3,10 @@ package io.compgen.ngsutils.tabix.annotate;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.zip.DataFormatException;
 
 import io.compgen.common.IterUtils;
@@ -149,9 +149,20 @@ public class TabixVCFAnnotator implements TabAnnotator {
             
             if (vals.size() > 0) {
             	if (collapse) {
-            		Set<String> uniq = new TreeSet<String>();
-            		uniq.addAll(vals);
-                    return StringUtils.join(",", uniq);
+            		
+            		// convoluted to maintain the same order...
+            		Set<String> uniq = new HashSet<String>();
+            		List<String> ret = new ArrayList<String>();
+            		for (String v: vals) {
+            			if (v != null && !v.equals("")) {
+            				if (!uniq.contains(v) ) {
+            					uniq.add(v);
+            					ret.add(v);
+            				}
+            			}
+            		}
+            		
+                    return StringUtils.join(",", ret);
             	} else {
                     return StringUtils.join(",", vals);
             	}

@@ -3,8 +3,10 @@ package io.compgen.ngsutils.tabix.annotate;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.zip.DataFormatException;
 
 import org.apache.commons.math3.stat.StatUtils;
@@ -148,7 +150,20 @@ public class TabixTabAnnotator implements TabAnnotator {
             return matches.get(0);
         }
         if (collapse) {
-            return StringUtils.join(",", StringUtils.unique(matches));
+    		// convoluted to maintain the same order...
+    		Set<String> uniq = new HashSet<String>();
+    		List<String> ret = new ArrayList<String>();
+    		for (String v: matches) {
+    			if (v != null && !v.equals("")) {
+    				if (!uniq.contains(v) ) {
+    					uniq.add(v);
+    					ret.add(v);
+    				}
+    			}
+    		}
+    		
+        	
+            return StringUtils.join(",", ret);
         }
         if ((mean || median) && matches.size() > 1) {
         	double[] vals = new double[matches.size()];
