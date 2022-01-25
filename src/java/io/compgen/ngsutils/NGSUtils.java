@@ -82,6 +82,7 @@ import io.compgen.ngsutils.cli.gtf.GeneExport;
 import io.compgen.ngsutils.cli.tab.TabAnnotate;
 import io.compgen.ngsutils.cli.tab.TabixCat;
 import io.compgen.ngsutils.cli.tab.TabixQuery;
+import io.compgen.ngsutils.cli.tdf.TabJoin;
 import io.compgen.ngsutils.cli.vcf.VCFAnnotateCmd;
 import io.compgen.ngsutils.cli.vcf.VCFCheck;
 import io.compgen.ngsutils.cli.vcf.VCFChrFix;
@@ -216,7 +217,8 @@ public class NGSUtils {
 			.addCommand(VCFPeptide.class)
 			.addCommand(FastaGrep.class)
 			.addCommand(BamToFasta.class)
-			.addCommand(BamPhase.class);
+			.addCommand(BamPhase.class)
+			.addCommand(TabJoin.class);
 
         try {
             if (args.length == 0) {
