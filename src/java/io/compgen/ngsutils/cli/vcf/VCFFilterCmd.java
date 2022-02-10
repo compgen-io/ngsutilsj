@@ -123,7 +123,7 @@ public class VCFFilterCmd extends AbstractOutputCommand {
     
     @Option(desc="Values for {KEY} is not equal to {VAL} (multiple allowed, String or number)", name="neq", helpValue="KEY:VAL:SAMPLEID:ALLELE", allowMultiple=true)
     public void setNotEQ(String val) throws CommandArgumentException {
-        String[] spl = val.split(":");
+        String[] spl = val.split(":",-1);
         if (spl.length==2) {
             filterChain.add(new NotEquals(spl[0], spl[1], null, null));
         } else if (spl.length==3) {
@@ -137,7 +137,7 @@ public class VCFFilterCmd extends AbstractOutputCommand {
     
     @Option(desc="Values for {KEY} contain {VAL} (multiple allowed, String or number; set SAMPLEID to 'INFO' to filter on an INFO field)", name="contain", helpValue="KEY:VAL:SAMPLEID:ALLELE", allowMultiple=true)
     public void setContains(String val) throws CommandArgumentException {
-        String[] spl = val.split(":");
+        String[] spl = val.split(":",-1);
         if (spl.length==2) {
             filterChain.add(new Contains(spl[0], spl[1], null, null));
         } else if (spl.length==3) {
@@ -151,7 +151,7 @@ public class VCFFilterCmd extends AbstractOutputCommand {
     
     @Option(desc="Values for {KEY} does not contain {VAL} (multiple allowed, String or number; set SAMPLEID to 'INFO' to filter on an INFO field)", name="not-contain", helpValue="KEY:VAL:SAMPLEID:ALLELE", allowMultiple=true)
     public void setNotContain(String val) throws CommandArgumentException {
-        String[] spl = val.split(":");
+        String[] spl = val.split(":",-1);
         if (spl.length==2) {
             filterChain.add(new NotContains(spl[0], spl[1], null, null));
         } else if (spl.length==3) {
@@ -165,7 +165,7 @@ public class VCFFilterCmd extends AbstractOutputCommand {
     
     @Option(desc="Values for {KEY} is equal to {VAL} (multiple allowed, String or number; set SAMPLEID to 'INFO' to filter on an INFO field)", name="eq", helpValue="KEY:VAL:SAMPLEID:ALLELE", allowMultiple=true)
     public void setEQ(String val) throws CommandArgumentException {
-        String[] spl = val.split(":");
+        String[] spl = val.split(":",-1);
         if (spl.length==2) {
             filterChain.add(new Equals(spl[0], spl[1], null, null));
         } else if (spl.length==3) {
@@ -179,7 +179,7 @@ public class VCFFilterCmd extends AbstractOutputCommand {
     
     @Option(desc="Values for {KEY} is less than {VAL} (multiple allowed)", name="lt", helpValue="KEY:VAL:SAMPLEID:ALLELE", allowMultiple=true)
     public void setLT(String val) throws CommandArgumentException {
-    	String[] spl = val.split(":");
+    	String[] spl = val.split(":",-1);
 		try {
 			if (spl.length==2) {
 	        	double thres = Double.parseDouble(spl[1]);
@@ -200,7 +200,7 @@ public class VCFFilterCmd extends AbstractOutputCommand {
     
     @Option(desc="Values for {KEY} is less than or equal to {VAL} (multiple allowed)", name="lte", helpValue="KEY:VAL:SAMPLEID:ALLELE", allowMultiple=true)
     public void setLTE(String val) throws CommandArgumentException {
-    	String[] spl = val.split(":");
+    	String[] spl = val.split(":",-1);
 		try {
 			if (spl.length==2) {
 	        	double thres = Double.parseDouble(spl[1]);
@@ -221,7 +221,7 @@ public class VCFFilterCmd extends AbstractOutputCommand {
     
     @Option(desc="Values for {KEY} is greater than {VAL} (multiple allowed)", name="gt", helpValue="KEY:VAL:SAMPLEID:ALLELE", allowMultiple=true)
     public void setGT(String val) throws CommandArgumentException {
-    	String[] spl = val.split(":");
+    	String[] spl = val.split(":",-1);
 		try {
 			if (spl.length==2) {
 	        	double thres = Double.parseDouble(spl[1]);
@@ -242,7 +242,7 @@ public class VCFFilterCmd extends AbstractOutputCommand {
     
     @Option(desc="Values for {KEY} is greater than or equal {VAL} (multiple allowed)", name="gte", helpValue="KEY:VAL:SAMPLEID:ALLELE", allowMultiple=true)
     public void setGTE(String val) throws CommandArgumentException {
-    	String[] spl = val.split(":");
+    	String[] spl = val.split(":",-1);
 		try {
 			if (spl.length==2) {
 	        	double thres = Double.parseDouble(spl[1]);

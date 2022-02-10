@@ -27,7 +27,7 @@ public class Equals extends VCFAbstractFilter {
 		if (alleleName != null && alleleName.equals("")) {
 			alleleName = null;
 		}
-				
+		
 		this.key = key;
 		this.val = val;
 		this.sampleName = sampleName;
@@ -109,6 +109,9 @@ public class Equals extends VCFAbstractFilter {
 			}
 			
 			if (val == null) {
+				if (this.val == null || this.val.equals("")) {
+					return true;
+				}
                 return false;
             }
 
