@@ -7,6 +7,7 @@ import java.util.Iterator;
 import java.util.zip.DataFormatException;
 
 import io.compgen.common.StringLineReader;
+import io.compgen.ngsutils.annotation.GenomeSpan;
 import io.compgen.ngsutils.support.LogUtils;
 import io.compgen.ngsutils.tabix.BGZFile.BGZBlock;
 
@@ -169,6 +170,11 @@ public class TabixFile {
         return new TabixQueryIterator(ref, start, end, index, bgzf);
 	}
 
+    public Iterator<String> query(GenomeSpan span) throws IOException, DataFormatException {
+    	return query(span.ref, span.start, span.end);
+    }
+
+    
     public Iterator<String> lines() throws IOException {
 		if (closed) {
 			throw new IOException("File closed");
