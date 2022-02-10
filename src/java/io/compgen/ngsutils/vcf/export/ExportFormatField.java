@@ -57,7 +57,7 @@ public class ExportFormatField implements VCFExport {
         if (sample != null) {
             for (String id: ids) {
                 if (newSampleName != null) {
-                    outs.add(newSampleName); 
+                    outs.add(newSampleName.replace("{id}", ""+id)); 
                 } else {
                     outs.add(sample+":"+id); 
                 }
@@ -74,12 +74,14 @@ public class ExportFormatField implements VCFExport {
 
 	@Override
 	public void export(VCFRecord rec, List<String> outs) throws VCFExportException {
-		if (sampleIdx == -1) {
-			for (VCFAttributes attr: rec.getSampleAttributes()) {
-				exportVal(attr, outs);
+		if (rec.getSampleAttributes()!=null) {
+			if (sampleIdx == -1) {
+				for (VCFAttributes attr: rec.getSampleAttributes()) {
+					exportVal(attr, outs);
+				}
+			} else {
+				exportVal(rec.getSampleAttributes().get(sampleIdx), outs);
 			}
-		} else {
-			exportVal(rec.getSampleAttributes().get(sampleIdx), outs);
 		}
 	}
 

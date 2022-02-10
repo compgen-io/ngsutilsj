@@ -98,7 +98,7 @@ public class VCFExportCmd extends AbstractOutputCommand {
         }
     }
     
-    @Option(desc="Export FORMAT field", name="format", helpValue="KEY{:SAMPLE:ALLELE}", allowMultiple=true)
+    @Option(desc="Export FORMAT field (NEWNAME can be used to rewrite the column name, use {id} to include the id name", name="format", helpValue="ID{:SAMPLE:ALLELE:NEWNAME}", allowMultiple=true)
     public void setFormat(String vals) throws CommandArgumentException {
     	for (String val: vals.split(",")) {
 	        boolean ignoreMissing = true;

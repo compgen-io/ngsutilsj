@@ -142,7 +142,10 @@ public class VCFHeader {
 	}
 
 	public List<String> getSamples() {
-	    return ListBuilder.build(samples);
+		if (samples != null) {
+			return ListBuilder.build(samples);
+		}
+		return new ArrayList<String>();
 	}
 	
 	public void addLine(String line) {
