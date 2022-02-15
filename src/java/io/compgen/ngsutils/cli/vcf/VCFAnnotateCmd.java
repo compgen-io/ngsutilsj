@@ -134,6 +134,19 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
             throw new CommandArgumentException("Unable to parse argument for --bed: "+bed);
         }       
     }
+    @Option(desc="Add annotations from a BED4 file (as a format field \"KEY\") (add ',n' to NAME to make value a number)", name="format-bed", helpValue="KEY:ALLELE:FILENAME", allowMultiple=true)
+    public void setFormatBED(String bed) throws CommandArgumentException {
+        String[] spl = bed.split(":");
+        if (spl.length == 3) {
+            try {
+                chain.add(new BEDAnnotation(spl[0],FileUtils.expandUserPath(spl[2]), false, spl[1]));
+            } catch (IOException e) {
+                throw new CommandArgumentException(e);
+            }
+        } else {
+            throw new CommandArgumentException("Unable to parse argument for --bed: "+bed);
+        }       
+    }
     
     @Option(desc="Add annotations from a Tabix file (INFO: If col is left out, this is treaded as a VCF flag; add ',n' for a number; set alt=col# to specify an alternative allele column -- will use exact matching; add ,collapse to collapse unique values to one)", name="tab", helpValue="NAME:FILENAME{,col,n,alt=X,collapse}", allowMultiple=true)
     public void setTabix(String tab) throws CommandArgumentException {
@@ -143,14 +156,18 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
             
             try {
                 String fname = null;
-                int col = -1;
                 
                 String colName = null;
                 String altName = null;
+                String refName = null;
+                
+                int col = -1;
+                int refCol = -1;
+                int altCol = -1;
                 
                 boolean isNumber = false;
-                int altCol = -1;
                 boolean collapse = false;
+                boolean noHeader = false;
                 
                 for (String t:spl2) {
                     if (fname == null) {
@@ -159,11 +176,19 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
                         isNumber = true;
                     } else if (t.equals("collapse")) {
                         collapse = true;
+                    } else if (t.equals("noheader")) {
+                        noHeader = true;
                     } else if (t.startsWith("alt=")) {
                     	try {
                             altCol = Integer.parseInt(t.substring(4))-1;
 	                    } catch (NumberFormatException e) {
-	                    	altName = t;
+	                    	altName = t.substring(4);
+	                    }
+                    } else if (t.startsWith("ref=")) {
+                    	try {
+                            refCol = Integer.parseInt(t.substring(4))-1;
+	                    } catch (NumberFormatException e) {
+	                    	refName = t.substring(4);
 	                    }
                     } else if (col == -1) {
                     	try {
@@ -174,15 +199,55 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
                     }
                 }
 
-                if (colName != null && altName != null) {
-                	chain.add(new TabixAnnotation(spl[0], fname, colName, isNumber, altName, collapse));
-                } else if (colName != null) {
-                	chain.add(new TabixAnnotation(spl[0], fname, colName, isNumber, altCol, collapse));
-                } else if (altName != null) {
-                	chain.add(new TabixAnnotation(spl[0], fname, col, isNumber, altName, collapse));
-                } else {
-                	chain.add(new TabixAnnotation(spl[0], fname, col, isNumber, altCol, collapse));
+                if (refName != null && altName == null) {
+                    throw new CommandArgumentException("If you set ref=, you must also set alt=): "+tab);
                 }
+
+                TabixAnnotation ann = new TabixAnnotation(spl[0], fname);
+                if (colName != null) {
+            		ann.setCol(colName);
+                } else if (col > -1 ) {
+            		ann.setCol(col);
+            	} else {
+                    throw new CommandArgumentException("Missing column number for tab annotation (required for format): "+tab);
+                }
+
+                if (altName != null) {
+                	ann.setAltCol(altName);
+                } else if (altCol > -1) {
+                	ann.setAltCol(altCol);
+                }
+                
+                if (refName != null) {
+                	ann.setRefCol(refName);
+                } else if (refCol > -1) {
+                	ann.setRefCol(refCol);
+                }
+                
+                if (isNumber) {
+                	ann.setNumber();
+                }
+                
+                if (collapse) {
+                	ann.setCollapse();
+                }
+                
+                
+                if (noHeader) {
+                	ann.setNoHeader();
+                }
+                
+                chain.add(ann);
+//                
+//                if (colName != null && altName != null) {
+//                	chain.add(new TabixAnnotation(spl[0], fname, colName, isNumber, altName, collapse));
+//                } else if (colName != null) {
+//                	chain.add(new TabixAnnotation(spl[0], fname, colName, isNumber, altCol, collapse));
+//                } else if (altName != null) {
+//                	chain.add(new TabixAnnotation(spl[0], fname, col, isNumber, altName, collapse));
+//                } else {
+//                	chain.add(new TabixAnnotation(spl[0], fname, col, isNumber, altCol, collapse));
+//                }
                 
             } catch (IOException  e) {
                 throw new CommandArgumentException(e);
@@ -191,6 +256,123 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
             throw new CommandArgumentException("Unable to parse argument for --tab: "+tab);
         }       
     }
+    
+    
+    @Option(desc="Add annotations from a Tabix file (as a format field; add ',n' for a number; set alt=col# to specify an alternative allele column -- will use exact matching; add ,collapse to collapse unique values to one)", name="format-tab", helpValue="NAME:SAMPLE:FILENAME,col{,n,alt=X,collapse,noheader}", allowMultiple=true)
+    public void setFormatTabix(String tab) throws CommandArgumentException {
+        String[] spl = tab.split(":");
+        if (spl.length == 3) {
+            String sampleName = spl[1];
+            String[] spl2 = spl[2].split(",");
+            
+            try {
+                String fname = null;
+                
+                String colName = null;
+                String altName = null;
+                String refName = null;
+                
+                int col = -1;
+                int altCol = -1;
+                int refCol = -1;
+
+                boolean collapse = false;
+                boolean isNumber = false;
+                boolean noHeader = false;
+                
+                for (String t:spl2) {
+                    if (fname == null) {
+                        fname = FileUtils.expandUserPath(t);
+                    } else if (t.equals("n")) {
+                        isNumber = true;
+                    } else if (t.equals("collapse")) {
+                        collapse = true;
+                    } else if (t.equals("noheader")) {
+                    	noHeader = true;
+                    } else if (t.startsWith("alt=")) {
+                    	try {
+                            altCol = Integer.parseInt(t.substring(4))-1;
+	                    } catch (NumberFormatException e) {
+	                    	altName = t.substring(4);
+	                    }
+                    } else if (t.startsWith("ref=")) {
+                    	try {
+                            refCol = Integer.parseInt(t.substring(4))-1;
+	                    } catch (NumberFormatException e) {
+	                    	refName = t.substring(4);
+	                    }
+                    } else if (col == -1) {
+                    	try {
+	                        col = Integer.parseInt(t)-1;
+	                    } catch (NumberFormatException e) {
+	                    	colName = t;
+	                    }
+                    }
+                }
+                if (refName != null && altName == null) {
+                    throw new CommandArgumentException("If you set ref=, you must also set alt=): "+tab);
+                }
+
+                TabixAnnotation ann = new TabixAnnotation(spl[0], fname, sampleName);
+                if (colName != null) {
+            		ann.setCol(colName);
+                } else if (col > -1 ) {
+            		ann.setCol(col);
+            	} else {
+                    throw new CommandArgumentException("Missing column number for tab annotation (required for format): "+tab);
+                }
+
+                if (altName != null) {
+                	ann.setAltCol(altName);
+                } else if (altCol > -1) {
+                	ann.setAltCol(altCol);
+                }
+                
+                if (refName != null) {
+                	ann.setRefCol(refName);
+                } else if (refCol > -1) {
+                	ann.setRefCol(refCol);
+                }
+                
+                if (isNumber) {
+                	ann.setNumber();
+                }
+                
+                if (collapse) {
+                	ann.setCollapse();
+                }
+                
+                
+                if (noHeader) {
+                	ann.setNoHeader();
+                }
+                
+                chain.add(ann);
+                
+//                if (colName != null) {
+//                	if (altName != null) {
+//                		chain.add(new TabixAnnotation(spl[0], fname, colName, isNumber, altName, collapse, sampleName));
+//                	} else {
+//                		chain.add(new TabixAnnotation(spl[0], fname, colName, isNumber, altCol, collapse, sampleName));
+//                	}
+//                } else if (col>=0) {
+//                	if (altName != null) {
+//                		chain.add(new TabixAnnotation(spl[0], fname, col, isNumber, altName, collapse, sampleName));
+//                	} else {
+//                		chain.add(new TabixAnnotation(spl[0], fname, col, isNumber, altCol, collapse, sampleName));
+//                	}
+//                } else {
+//   	             throw new CommandArgumentException("Missing column number for tab annotation (required for format): "+tab);
+//                }
+                
+            } catch (IOException  e) {
+                throw new CommandArgumentException(e);
+            }
+        } else {
+            throw new CommandArgumentException("Unable to parse argument for --tab: "+tab);
+        }       
+    }
+
     
     @Option(desc="Flag variants within a BED3 region (INFO)", name="bed-flag", helpValue="NAME:FILENAME", allowMultiple=true)
     public void setBEDFlag(String bed) throws CommandArgumentException {
