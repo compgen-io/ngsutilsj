@@ -37,9 +37,12 @@ public class BedSpans extends AbstractLineReader<SpanGroup> implements SpanSourc
         }
         
         String line = reader.readLine();
-        String[] cols = line.split("\t");
-        this.numCols = cols.length;
-        
+        if (line == null) {
+        	this.numCols = 0;
+        } else {
+	        String[] cols = line.split("\t");
+	        this.numCols = cols.length;
+        }
         reader.close();
     }
     
