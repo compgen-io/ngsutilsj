@@ -15,17 +15,22 @@ import io.compgen.ngsutils.bed.BedPEReader;
 import io.compgen.ngsutils.bed.BedPERecord;
 import io.compgen.ngsutils.bed.BedRecord;
 
-@Command(name="bedpe-tobed", desc="Convert a BEDPE file to a BED file", category="bed", doc="Note: only non-discordant records can be converted.")
+@Command(name="bedpe-tobed", desc="Convert a BEDPE file to a BED file by combining coordinates (default) or splitting the coordinates", category="bed", doc="Note: only non-discordant records can be combined.")
 public class BedPEToBed extends AbstractOutputCommand {
     
     private String filename = null;
     private int maxDistance = 0;
+    private boolean split = false;
     
+    @Option(desc = "Split records into two BED lines", name="split")
+    public void setSplit(boolean split) {
+    	this.split = split;
+    }
+
     @Option(desc = "Maximum allowed distance between records", name="max", defaultValue="10000")
     public void setMaxDistance(int maxDistance) {
         this.maxDistance = maxDistance;
     }
-
     
     @UnnamedArg(name = "FILE")
     public void setFilename(String filename) {
@@ -39,13 +44,18 @@ public class BedPEToBed extends AbstractOutputCommand {
         	GenomeSpan coord1 = record.getCoord1();
             GenomeSpan coord2 = record.getCoord2();
             
-            if (isDiscordant(coord1, coord2, maxDistance)) {
-            	continue;            	
-            }
-            if (coord1.compareTo(coord2) <  0) { // coord1 is less
-            	new BedRecord(new GenomeSpan(coord1.ref, coord1.start, coord2.end), record.getName(), record.getScoreAsDouble(), record.getExtras()).write(out);
+            if (split) {
+            	new BedRecord(new GenomeSpan(coord1.ref, coord1.start, coord1.end), record.getName(), record.getScoreAsDouble(), record.getExtras()).write(out);
+            	new BedRecord(new GenomeSpan(coord2.ref, coord2.start, coord2.end), record.getName(), record.getScoreAsDouble(), record.getExtras()).write(out);
             } else {
-            	new BedRecord(new GenomeSpan(coord1.ref, coord2.start, coord1.end), record.getName(), record.getScoreAsDouble(), record.getExtras()).write(out);
+	            if (isDiscordant(coord1, coord2, maxDistance)) {
+	            	continue;            	
+	            }
+	            if (coord1.compareTo(coord2) <  0) { // coord1 is less
+	            	new BedRecord(new GenomeSpan(coord1.ref, coord1.start, coord2.end), record.getName(), record.getScoreAsDouble(), record.getExtras()).write(out);
+	            } else {
+	            	new BedRecord(new GenomeSpan(coord1.ref, coord2.start, coord1.end), record.getName(), record.getScoreAsDouble(), record.getExtras()).write(out);
+	            }
             }
         }
     }
