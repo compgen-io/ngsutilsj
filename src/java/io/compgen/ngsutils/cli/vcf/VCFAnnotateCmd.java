@@ -166,6 +166,7 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
                 int altCol = -1;
                 
                 boolean isNumber = false;
+                boolean max = false;
                 boolean collapse = false;
                 boolean noHeader = false;
                 
@@ -174,6 +175,8 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
                         fname = FileUtils.expandUserPath(t);
                     } else if (t.equals("n")) {
                         isNumber = true;
+                    } else if (t.equals("max")) {
+                        max = true;
                     } else if (t.equals("collapse")) {
                         collapse = true;
                     } else if (t.equals("noheader")) {
@@ -203,13 +206,18 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
                     throw new CommandArgumentException("If you set ref=, you must also set alt=): "+tab);
                 }
 
+
+                if (max && collapse) {
+                    throw new CommandArgumentException("max and collapse can't be set at the same time: "+tab);
+                }
+
                 TabixAnnotation ann = new TabixAnnotation(spl[0], fname);
                 if (colName != null) {
             		ann.setCol(colName);
                 } else if (col > -1 ) {
             		ann.setCol(col);
-            	} else {
-                    throw new CommandArgumentException("Missing column number for tab annotation (required for format): "+tab);
+//            	} else {
+//                    throw new CommandArgumentException("Missing column number for tab annotation (required for format): "+tab);
                 }
 
                 if (altName != null) {
@@ -226,6 +234,13 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
                 
                 if (isNumber) {
                 	ann.setNumber();
+                }
+                
+                if (max) {
+                	if (!isNumber) {
+                        throw new CommandArgumentException("max also requires ,n to be set: "+tab);
+                	}
+                	ann.setMax();
                 }
                 
                 if (collapse) {
@@ -276,6 +291,7 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
                 int altCol = -1;
                 int refCol = -1;
 
+                boolean max = false;
                 boolean collapse = false;
                 boolean isNumber = false;
                 boolean noHeader = false;
@@ -285,6 +301,8 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
                         fname = FileUtils.expandUserPath(t);
                     } else if (t.equals("n")) {
                         isNumber = true;
+                    } else if (t.equals("max")) {
+                        max = true;
                     } else if (t.equals("collapse")) {
                         collapse = true;
                     } else if (t.equals("noheader")) {
@@ -312,6 +330,9 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
                 if (refName != null && altName == null) {
                     throw new CommandArgumentException("If you set ref=, you must also set alt=): "+tab);
                 }
+                if (max && collapse) {
+                    throw new CommandArgumentException("max and collapse can't be set at the same time: "+tab);
+                }
 
                 TabixAnnotation ann = new TabixAnnotation(spl[0], fname, sampleName);
                 if (colName != null) {
@@ -337,9 +358,16 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
                 if (isNumber) {
                 	ann.setNumber();
                 }
-                
+
                 if (collapse) {
                 	ann.setCollapse();
+                }
+
+                if (max) {
+                	if (!isNumber) {
+                        throw new CommandArgumentException("max also requires ,n to be set: "+tab);
+                	}
+                	ann.setMax();
                 }
                 
                 

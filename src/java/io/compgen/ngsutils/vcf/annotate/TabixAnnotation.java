@@ -29,6 +29,7 @@ public class TabixAnnotation extends AbstractBasicAnnotator {
     protected int refCol = -1;
 
     protected boolean isNumber;
+    protected boolean max;
     protected boolean collapse;
     protected boolean noHeader;
 
@@ -193,7 +194,23 @@ public class TabixAnnotation extends AbstractBasicAnnotator {
 	                    	try {
 		                        if (collapse) {
 		                        	record.getSampleAttributes().get(sampleNum).put(name, new VCFAttributeValue(StringUtils.join(",", StringUtils.unique(vals))));
-		                            record.getInfo().put(name, new VCFAttributeValue(StringUtils.join(",", StringUtils.unique(vals))));
+		                        } else if (max) {
+		                        	double[] vals_d = new double[vals.size()];
+		                        	for (int i=0; i<vals.size(); i++) {
+		                        		vals_d[i] = Double.parseDouble(vals.get(i));
+		                        	}
+		                        	
+		                        	double maxD = vals_d[0];
+		                        	for (double d: vals_d) {
+		                        		if (d > maxD) {
+		                        			maxD = d;
+		                        		}
+		                        	}
+		                        	String maxS = ""+maxD;
+		                        	if (maxS.endsWith(".0")) {
+		                        		maxS = maxS.substring(0, maxS.length()-2);
+		                        	}
+		                        	record.getSampleAttributes().get(sampleNum).put(name, new VCFAttributeValue(maxS));
 		                        } else {
 		                        	record.getSampleAttributes().get(sampleNum).put(name, new VCFAttributeValue(StringUtils.join(",",vals)));
 		                        }
@@ -204,6 +221,24 @@ public class TabixAnnotation extends AbstractBasicAnnotator {
 	                    	try {
 		                        if (collapse) {
 		                            record.getInfo().put(name, new VCFAttributeValue(StringUtils.join(",", StringUtils.unique(vals))));
+		                        } else if (max) {
+		                        	double[] vals_d = new double[vals.size()];
+		                        	for (int i=0; i<vals.size(); i++) {
+		                        		vals_d[i] = Double.parseDouble(vals.get(i));
+		                        	}
+		                        	
+		                        	double maxD = vals_d[0];
+		                        	for (double d: vals_d) {
+		                        		if (d > maxD) {
+		                        			maxD = d;
+		                        		}
+		                        	}
+		                        	String maxS = ""+maxD;
+		                        	if (maxS.endsWith(".0")) {
+		                        		maxS = maxS.substring(0, maxS.length()-2);
+		                        	}
+
+		                        	record.getInfo().put(name, new VCFAttributeValue(maxS));
 		                        } else {
 		                            record.getInfo().put(name, new VCFAttributeValue(StringUtils.join(",", vals)));
 		                        }
@@ -250,6 +285,10 @@ public class TabixAnnotation extends AbstractBasicAnnotator {
 		this.isNumber = true;
 	}
 
+
+	public void setMax() {
+		this.max = true;
+	}
 
 	public void setCollapse() {
 		this.collapse = true;
