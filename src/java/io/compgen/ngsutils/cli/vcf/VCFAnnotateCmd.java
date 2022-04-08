@@ -148,7 +148,7 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
         }       
     }
     
-    @Option(desc="Add annotations from a Tabix file (INFO: If col is left out, this is treaded as a VCF flag; add ',n' for a number; set alt=col# to specify an alternative allele column -- will use exact matching; add ,collapse to collapse unique values to one)", name="tab", helpValue="NAME:FILENAME{,col,n,alt=X,collapse}", allowMultiple=true)
+    @Option(desc="Add annotations from a Tabix file (INFO: If col is left out, this is treaded as a VCF flag; add ',n' for a number; set alt=col# or ref=col# to specify an alternative/ref allele column -- will use exact matching; add ,collapse to collapse unique values to one; ,max to take a maximum value; ,extend=X to extend the search X bases from the variant)", name="tab", helpValue="NAME:FILENAME{,col,n,alt=X,ref=X,collapse,max,extend=N}", allowMultiple=true)
     public void setTabix(String tab) throws CommandArgumentException {
         String[] spl = tab.split(":");
         if (spl.length == 2) {
@@ -169,6 +169,7 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
                 boolean max = false;
                 boolean collapse = false;
                 boolean noHeader = false;
+                int extend = 0;
                 
                 for (String t:spl2) {
                     if (fname == null) {
@@ -181,6 +182,12 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
                         collapse = true;
                     } else if (t.equals("noheader")) {
                         noHeader = true;
+                    } else if (t.startsWith("extend=")) {
+                    	try {
+                            extend = Integer.parseInt(t.substring(7));
+	                    } catch (NumberFormatException e) {
+	                        throw new CommandArgumentException("Invalid extend value: "+tab);
+	                    }
                     } else if (t.startsWith("alt=")) {
                     	try {
                             altCol = Integer.parseInt(t.substring(4))-1;
@@ -235,6 +242,8 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
                 if (isNumber) {
                 	ann.setNumber();
                 }
+                
+                ann.setExtend(extend);
                 
                 if (max) {
                 	if (!isNumber) {
@@ -295,6 +304,7 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
                 boolean collapse = false;
                 boolean isNumber = false;
                 boolean noHeader = false;
+                int extend = 0;
                 
                 for (String t:spl2) {
                     if (fname == null) {
@@ -307,6 +317,12 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
                         collapse = true;
                     } else if (t.equals("noheader")) {
                     	noHeader = true;
+                    } else if (t.startsWith("extend=")) {
+                    	try {
+                            extend = Integer.parseInt(t.substring(7));
+	                    } catch (NumberFormatException e) {
+	                        throw new CommandArgumentException("Invalid extend value: "+tab);
+	                    }
                     } else if (t.startsWith("alt=")) {
                     	try {
                             altCol = Integer.parseInt(t.substring(4))-1;
@@ -363,6 +379,8 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
                 	ann.setCollapse();
                 }
 
+                ann.setExtend(extend);
+                
                 if (max) {
                 	if (!isNumber) {
                         throw new CommandArgumentException("max also requires ,n to be set: "+tab);

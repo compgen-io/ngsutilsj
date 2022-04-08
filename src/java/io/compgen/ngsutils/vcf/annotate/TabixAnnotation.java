@@ -28,10 +28,11 @@ public class TabixAnnotation extends AbstractBasicAnnotator {
     protected int altCol = -1;
     protected int refCol = -1;
 
-    protected boolean isNumber;
-    protected boolean max;
-    protected boolean collapse;
-    protected boolean noHeader;
+    protected boolean isNumber = false;
+    protected boolean max = false;
+    protected boolean collapse = false;
+    protected boolean noHeader = false;
+    protected int extend = 0;
 
     protected String colDefString;
     
@@ -143,7 +144,7 @@ public class TabixAnnotation extends AbstractBasicAnnotator {
             List<String> vals = new ArrayList<String>();
             boolean found = false;
             
-            for (String line : IterUtils.wrap(tabix.query(chrom, pos - 1, endpos))) {
+            for (String line : IterUtils.wrap(tabix.query(chrom, pos - 1 - extend, endpos + extend))) {
                 String[] spl = line.split("\t");
                 
                 boolean altOk = true;
@@ -292,6 +293,10 @@ public class TabixAnnotation extends AbstractBasicAnnotator {
 
 	public void setCollapse() {
 		this.collapse = true;
+	}
+
+	public void setExtend(int extend) {
+		this.extend = extend;
 	}
 
 
