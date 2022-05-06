@@ -38,7 +38,7 @@ public class InfoInFile extends AbstractBasicAnnotator {
 		this.filename = filename;
 		this.flagName = flagName;
 		this.tagName = tagName;
-		if (delimiter.equals("")) {
+		if (delimiter != null && delimiter.equals("")) {
 			this.delimiter = null;
 		} else {
 			this.delimiter = delimiter;
