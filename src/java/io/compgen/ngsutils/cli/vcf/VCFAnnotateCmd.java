@@ -148,7 +148,7 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
         }       
     }
     
-    @Option(desc="Add annotations from a Tabix file (INFO: If col is left out, this is treaded as a VCF flag; add ',n' for a number; set alt=col# or ref=col# to specify an alternative/ref allele column -- will use exact matching; add ,collapse to collapse unique values to one; ,max to take a maximum value; ,extend=X to extend the search X bases from the variant)", name="tab", helpValue="NAME:FILENAME{,col,n,alt=X,ref=X,collapse,max,extend=N}", allowMultiple=true)
+    @Option(desc="Add annotations from a Tabix file (INFO: If col is left out, this is treaded as a VCF flag; add ',n' for a number; set alt=col# or ref=col# to specify an alternative/ref allele column -- will use exact matching; add ,collapse to collapse unique values to one; add ,first to return only the first value; ,max to take a maximum value; ,extend=X to extend the search X bases from the variant)", name="tab", helpValue="NAME:FILENAME{,col,n,alt=X,ref=X,collapse,first,max,extend=N}", allowMultiple=true)
     public void setTabix(String tab) throws CommandArgumentException {
         String[] spl = tab.split(":");
         if (spl.length == 2) {
@@ -167,6 +167,7 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
                 
                 boolean isNumber = false;
                 boolean max = false;
+                boolean first = false;
                 boolean collapse = false;
                 boolean noHeader = false;
                 int extend = 0;
@@ -180,6 +181,8 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
                         max = true;
                     } else if (t.equals("collapse")) {
                         collapse = true;
+                    } else if (t.equals("first")) {
+                        first = true;
                     } else if (t.equals("noheader")) {
                         noHeader = true;
                     } else if (t.startsWith("extend=")) {
@@ -214,8 +217,20 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
                 }
 
 
-                if (max && collapse) {
-                    throw new CommandArgumentException("max and collapse can't be set at the same time: "+tab);
+                int cnt = 0;
+                if (max) {
+                	cnt ++;
+                }
+                if (first) {
+                	cnt ++;
+                }
+                if (collapse) {
+                	cnt ++;
+                }
+                
+
+                if (cnt>1) {
+                    throw new CommandArgumentException("first, max, and/or collapse can't be set at the same time: "+tab);
                 }
 
                 TabixAnnotation ann = new TabixAnnotation(spl[0], fname);
@@ -252,6 +267,10 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
                 	ann.setMax();
                 }
                 
+                if (first) {
+                	ann.setFirst();
+                }
+                
                 if (collapse) {
                 	ann.setCollapse();
                 }
@@ -282,7 +301,7 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
     }
     
     
-    @Option(desc="Add annotations from a Tabix file (as a format field; add ',n' for a number; set alt=col# to specify an alternative allele column -- will use exact matching; add ,collapse to collapse unique values to one)", name="format-tab", helpValue="NAME:SAMPLE:FILENAME,col{,n,alt=X,collapse,noheader}", allowMultiple=true)
+    @Option(desc="Add annotations from a Tabix file as a FORMAT record (see --tab for options)", name="format-tab", helpValue="NAME:SAMPLE:FILENAME,col{,n,alt=X,collapse,first,max,noheader}", allowMultiple=true)
     public void setFormatTabix(String tab) throws CommandArgumentException {
         String[] spl = tab.split(":");
         if (spl.length == 3) {
@@ -302,6 +321,7 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
 
                 boolean max = false;
                 boolean collapse = false;
+                boolean first = false;
                 boolean isNumber = false;
                 boolean noHeader = false;
                 int extend = 0;
@@ -313,6 +333,8 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
                         isNumber = true;
                     } else if (t.equals("max")) {
                         max = true;
+                    } else if (t.equals("first")) {
+                        first = true;
                     } else if (t.equals("collapse")) {
                         collapse = true;
                     } else if (t.equals("noheader")) {
@@ -346,8 +368,19 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
                 if (refName != null && altName == null) {
                     throw new CommandArgumentException("If you set ref=, you must also set alt=): "+tab);
                 }
-                if (max && collapse) {
-                    throw new CommandArgumentException("max and collapse can't be set at the same time: "+tab);
+                int cnt = 0;
+                if (max) {
+                	cnt ++;
+                }
+                if (first) {
+                	cnt ++;
+                }
+                if (collapse) {
+                	cnt ++;
+                }
+
+                if (cnt>1) {
+                    throw new CommandArgumentException("first, max, and/or collapse can't be set at the same time: "+tab);
                 }
 
                 TabixAnnotation ann = new TabixAnnotation(spl[0], fname, sampleName);
@@ -377,6 +410,9 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
 
                 if (collapse) {
                 	ann.setCollapse();
+                }
+                if (first) {
+                	ann.setFirst();
                 }
 
                 ann.setExtend(extend);

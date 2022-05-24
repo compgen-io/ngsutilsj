@@ -30,6 +30,7 @@ public class TabixAnnotation extends AbstractBasicAnnotator {
 
     protected boolean isNumber = false;
     protected boolean max = false;
+    protected boolean first = false;
     protected boolean collapse = false;
     protected boolean noHeader = false;
     protected int extend = 0;
@@ -195,6 +196,8 @@ public class TabixAnnotation extends AbstractBasicAnnotator {
 	                    	try {
 		                        if (collapse) {
 		                        	record.getSampleAttributes().get(sampleNum).put(name, new VCFAttributeValue(StringUtils.join(",", StringUtils.unique(vals))));
+		                        } else if (first) {
+		                        	record.getSampleAttributes().get(sampleNum).put(name, new VCFAttributeValue(vals.get(0)));
 		                        } else if (max) {
 		                        	double[] vals_d = new double[vals.size()];
 		                        	for (int i=0; i<vals.size(); i++) {
@@ -222,6 +225,8 @@ public class TabixAnnotation extends AbstractBasicAnnotator {
 	                    	try {
 		                        if (collapse) {
 		                            record.getInfo().put(name, new VCFAttributeValue(StringUtils.join(",", StringUtils.unique(vals))));
+		                        } else if (first) {
+		                            record.getInfo().put(name, new VCFAttributeValue(vals.get(0)));
 		                        } else if (max) {
 		                        	double[] vals_d = new double[vals.size()];
 		                        	for (int i=0; i<vals.size(); i++) {
@@ -289,6 +294,10 @@ public class TabixAnnotation extends AbstractBasicAnnotator {
 
 	public void setMax() {
 		this.max = true;
+	}
+
+	public void setFirst() {
+		this.first = true;
 	}
 
 	public void setCollapse() {
