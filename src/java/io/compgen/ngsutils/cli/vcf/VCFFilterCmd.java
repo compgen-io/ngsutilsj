@@ -37,6 +37,8 @@ import io.compgen.ngsutils.vcf.filter.HomozygousFilter;
 import io.compgen.ngsutils.vcf.filter.IndelFilter;
 import io.compgen.ngsutils.vcf.filter.LessThan;
 import io.compgen.ngsutils.vcf.filter.LessThanEqual;
+import io.compgen.ngsutils.vcf.filter.MaxDel;
+import io.compgen.ngsutils.vcf.filter.MaxIns;
 import io.compgen.ngsutils.vcf.filter.NotContains;
 import io.compgen.ngsutils.vcf.filter.NotEquals;
 import io.compgen.ngsutils.vcf.filter.QualityScore;
@@ -70,6 +72,22 @@ public class VCFFilterCmd extends AbstractOutputCommand {
     @Option(desc="Filter SNVs", name="snv")
     public void setSNVs() {
         filterChain.add(new SNVFilter());
+    }
+
+    @Option(desc="Filter insertions longer than {val}", name="max-ins", helpValue="val")
+    public void setMaxIns(int val) throws CommandArgumentException {
+    	if (val < 0) {
+            throw new CommandArgumentException("Max insert value must be positive");
+    	}
+        filterChain.add(new MaxIns(val));
+    }
+
+    @Option(desc="Filter deletions longer than {val}", name="max-del", helpValue="val")
+    public void setMaxDel(int val) throws CommandArgumentException {
+    	if (val < 0) {
+            throw new CommandArgumentException("Max deletion value must be positive");
+    	}
+        filterChain.add(new MaxDel(val));
     }
 
     @Option(desc="Quality score must be above this value", name="qual")

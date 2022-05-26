@@ -2,7 +2,6 @@ package io.compgen.ngsutils.vcf.filter;
 
 import io.compgen.ngsutils.vcf.VCFRecord;
 
-@MathFilter(id="lt", desc="less than")
 public class QualityScore extends VCFAbstractFilter {
 	protected double thres;
 	
