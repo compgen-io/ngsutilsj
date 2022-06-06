@@ -51,6 +51,7 @@ import io.compgen.ngsutils.cli.bed.BedToBed3;
 import io.compgen.ngsutils.cli.bed.BedToBed6;
 import io.compgen.ngsutils.cli.bed.BedToBedGraph;
 import io.compgen.ngsutils.cli.bed.BedToFasta;
+import io.compgen.ngsutils.cli.fasta.FastaBins;
 import io.compgen.ngsutils.cli.fasta.FastaFilter;
 import io.compgen.ngsutils.cli.fasta.FastaGC;
 import io.compgen.ngsutils.cli.fasta.FastaGenerateReads;
@@ -84,6 +85,7 @@ import io.compgen.ngsutils.cli.tab.TabixCat;
 import io.compgen.ngsutils.cli.tab.TabixQuery;
 import io.compgen.ngsutils.cli.tdf.TabJoin;
 import io.compgen.ngsutils.cli.vcf.VCFAnnotateCmd;
+import io.compgen.ngsutils.cli.vcf.VCFBedCount;
 import io.compgen.ngsutils.cli.vcf.VCFCheck;
 import io.compgen.ngsutils.cli.vcf.VCFChrFix;
 import io.compgen.ngsutils.cli.vcf.VCFClearFilter;
@@ -218,7 +220,8 @@ public class NGSUtils {
 			.addCommand(FastaGrep.class)
 			.addCommand(BamToFasta.class)
 			.addCommand(BamPhase.class)
-			.addCommand(TabJoin.class);
+			.addCommand(TabJoin.class)
+			.addCommand(FastaBins.class);
 
         try {
             if (args.length == 0) {
