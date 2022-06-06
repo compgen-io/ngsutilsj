@@ -40,7 +40,7 @@ public class VCFHeader {
     private Set<String> allowedFormatCache = new HashSet<String>();
     private Set<String> blockedFormatCache = new HashSet<String>();
     
-	public VCFHeader(String fileformat, List<String> input, String headerLine, Set<String> removeFilter, Set<String> removeInfo, Set<String> removeFormat, Set<String> removeSample) throws VCFParseException {
+	public VCFHeader(String fileformat, List<String> input, String headerLine, Set<String> removeFilter, Set<String> removeInfo, Set<String> removeFormat, Set<String> removeSample, Set<String> keepFilter, Set<String> keepInfo, Set<String> keepFormat, Set<String> keepSample) throws VCFParseException {
 		if (fileformat == null) {
 			throw new VCFParseException("Missing format in header?");
 		}
@@ -61,6 +61,13 @@ public class VCFHeader {
                     for (String remove: removeInfo) {
                         if (GlobUtils.matches(info.id, remove)) {
                             match = true;
+    	                    if (keepInfo != null) {
+    	                    	for (String keep: keepInfo) {
+    	    	                    if (GlobUtils.matches(info.id, keep)) {
+    	    	                        match = false;
+    	    	                    }    	                    		
+    	                    	}
+    	                    }
                         }
                     }
                 }
@@ -74,6 +81,13 @@ public class VCFHeader {
     	                for (String remove: removeFormat) {
     	                    if (GlobUtils.matches(format.id, remove)) {
     	                        match = true;
+        	                    if (keepFormat != null) {
+        	                    	for (String keep: keepFormat) {
+        	    	                    if (GlobUtils.matches(format.id, keep)) {
+        	    	                        match = false;
+        	    	                    }    	                    		
+        	                    	}
+        	                    }
     	                    }
     	                }
 	                }
@@ -89,6 +103,13 @@ public class VCFHeader {
                     for (String remove: removeFilter) {
                         if (GlobUtils.matches(filter.id, remove)) {
                             match = true;
+    	                    if (keepFilter != null) {
+    	                    	for (String keep: keepFilter) {
+    	    	                    if (GlobUtils.matches(filter.id, keep)) {
+    	    	                        match = false;
+    	    	                    }    	                    		
+    	                    	}
+    	                    }
                         }
                     }
                 }
@@ -103,6 +124,13 @@ public class VCFHeader {
                     for (String remove: removeSample) {
                         if (GlobUtils.matches(vals.get("ID"), remove)) {
                             match = true;
+    	                    if (keepSample != null) {
+    	                    	for (String keep: keepSample) {
+    	    	                    if (GlobUtils.matches(vals.get("ID"), keep)) {
+    	    	                        match = false;
+    	    	                    }    	                    		
+    	                    	}
+    	                    }
                         }
                     }
                 }

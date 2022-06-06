@@ -30,6 +30,10 @@ public class VCFStrip extends AbstractOutputCommand {
     private Set<String> removeInfo = null;
     private Set<String> removeFormat = null;
     private Set<String> removeSample = null;
+    private Set<String> keepFilter = null;
+    private Set<String> keepInfo = null;
+    private Set<String> keepFormat = null;
+    private Set<String> keepSample = null;
   
     @Option(desc="Only output passing variants (warning -- this works on the post-stripped filters)", name="passing")
     public void setOnlyOutputPass(boolean onlyOutputPass) {
@@ -91,6 +95,41 @@ public class VCFStrip extends AbstractOutputCommand {
     public void setStripDBSNP(boolean removeDBSNP) {
         this.removeDBSNP = removeDBSNP;
     }    
+
+    
+    @Option(desc="Keep specific INFO annotations (multiple allowed, wildcard '*' allowed)", name="keep-info")
+    public void setKeepInfo(String keep) {
+        if (keepInfo == null) {
+        	keepInfo = new HashSet<String>();
+        }
+        keepInfo.add(keep);
+    }
+    
+    @Option(desc="Keep specific FORMAT annotations (multiple allowed, wildcard '*' allowed)", name="keep-format")
+    public void setKeepFormat(String keep) {
+        if (keepFormat == null) {
+        	keepFormat = new HashSet<String>();
+        }
+        keepFormat.add(keep);
+    }
+    
+    @Option(desc="Keep specific SAMPLE annotations (multiple allowed, wildcard '*' allowed)", name="keep-sample")
+    public void setKeepSample(String keep) {
+        if (keepSample == null) {
+        	keepSample = new HashSet<String>();
+        }
+        keepSample.add(keep);
+    }
+    
+    @Option(desc="Keep specific FILTER annotations (multiple allowed, wildcard '*' allowed)", name="keep-filter")
+    public void setKeepFilter(String keep) {
+        if (keepFilter == null) {
+        	keepFilter = new HashSet<String>();
+        }
+        keepFilter.add(keep);
+    }
+
+    
     @UnnamedArg(name = "input.vcf", required=true)
     public void setFilename(String filename) throws CommandArgumentException {
     	this.filename = filename;
@@ -122,11 +161,23 @@ public class VCFStrip extends AbstractOutputCommand {
         if (removeInfo != null) {
             reader.addRemoveInfo(removeInfo);
         }
-		
         if (removeSample != null) {
             reader.addRemoveSample(removeSample);
         }
-		
+
+        if (keepFilter != null) {
+            reader.addKeepFilter(keepFilter);
+        }
+        if (keepFormat != null) {
+            reader.addKeepFormat(keepFormat);
+        }
+        if (keepInfo != null) {
+            reader.addKeepInfo(keepInfo);
+        }
+        if (keepSample != null) {
+            reader.addKeepSample(keepSample);
+        }
+
 		VCFHeader header = reader.getHeader();
 		header.addLine("##ngsutilsj_vcf_stripCommand="+NGSUtils.getArgs());
 		if (!header.contains("##ngsutilsj_vcf_stripVersion="+NGSUtils.getVersion())) {
