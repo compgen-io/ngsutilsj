@@ -221,7 +221,8 @@ public class NGSUtils {
 			.addCommand(BamToFasta.class)
 			.addCommand(BamPhase.class)
 			.addCommand(TabJoin.class)
-			.addCommand(FastaBins.class);
+			.addCommand(FastaBins.class)
+			.addCommand(VCFBedCount.class);
 
         try {
             if (args.length == 0) {
