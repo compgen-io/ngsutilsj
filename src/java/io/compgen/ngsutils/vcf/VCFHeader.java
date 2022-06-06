@@ -210,6 +210,11 @@ public class VCFHeader {
 		return false;
 	}
 	
+	/** 
+	 * Returns index of a sample by name
+	 * @param name - name or number (1,2,3) for a sample
+	 * @return 0-based index for a sample in the VCF file.
+	 */
 	public int getSamplePosByName(String name) {
 	    
         // You can ID a sample by index (1, 2, 3)
