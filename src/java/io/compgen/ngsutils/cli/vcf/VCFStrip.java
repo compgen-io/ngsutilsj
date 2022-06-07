@@ -59,7 +59,7 @@ public class VCFStrip extends AbstractOutputCommand {
         setStripSample("*");
     }
     
-    @Option(desc="Remove specific INFO annotations (multiple allowed, wildcard '*' allowed)", name="info")
+    @Option(desc="Remove specific INFO annotations (multiple allowed, wildcard '*' allowed)", name="info", allowMultiple=true)
     public void setStripInfo(String remove) {
         if (removeInfo == null) {
             removeInfo = new HashSet<String>();
@@ -67,7 +67,7 @@ public class VCFStrip extends AbstractOutputCommand {
         removeInfo.add(remove);
     }
     
-    @Option(desc="Remove specific FORMAT annotations (multiple allowed, wildcard '*' allowed)", name="format")
+    @Option(desc="Remove specific FORMAT annotations (multiple allowed, wildcard '*' allowed)", name="format", allowMultiple=true)
     public void setStripFormat(String remove) {
         if (removeFormat == null) {
             removeFormat = new HashSet<String>();
@@ -75,7 +75,7 @@ public class VCFStrip extends AbstractOutputCommand {
         removeFormat.add(remove);
     }
     
-    @Option(desc="Remove specific SAMPLE annotations (multiple allowed, wildcard '*' allowed)", name="sample")
+    @Option(desc="Remove specific SAMPLE annotations (multiple allowed, wildcard '*' allowed)", name="sample", allowMultiple=true)
     public void setStripSample(String remove) {
         if (removeSample == null) {
         	removeSample = new HashSet<String>();
@@ -83,7 +83,7 @@ public class VCFStrip extends AbstractOutputCommand {
         removeSample.add(remove);
     }
     
-    @Option(desc="Remove specific FILTER annotations (multiple allowed, wildcard '*' allowed)", name="filter")
+    @Option(desc="Remove specific FILTER annotations (multiple allowed, wildcard '*' allowed)", name="filter", allowMultiple=true)
     public void setStripFilter(String remove) {
         if (removeFilter == null) {
             removeFilter = new HashSet<String>();
@@ -97,7 +97,7 @@ public class VCFStrip extends AbstractOutputCommand {
     }    
 
     
-    @Option(desc="Keep specific INFO annotations (multiple allowed, wildcard '*' allowed)", name="keep-info")
+    @Option(desc="Keep specific INFO annotations (multiple allowed, wildcard '*' allowed)", name="keep-info", allowMultiple=true)
     public void setKeepInfo(String keep) {
         if (keepInfo == null) {
         	keepInfo = new HashSet<String>();
@@ -105,7 +105,7 @@ public class VCFStrip extends AbstractOutputCommand {
         keepInfo.add(keep);
     }
     
-    @Option(desc="Keep specific FORMAT annotations (multiple allowed, wildcard '*' allowed)", name="keep-format")
+    @Option(desc="Keep specific FORMAT annotations (multiple allowed, wildcard '*' allowed)", name="keep-format", allowMultiple=true)
     public void setKeepFormat(String keep) {
         if (keepFormat == null) {
         	keepFormat = new HashSet<String>();
@@ -113,7 +113,7 @@ public class VCFStrip extends AbstractOutputCommand {
         keepFormat.add(keep);
     }
     
-    @Option(desc="Keep specific SAMPLE annotations (multiple allowed, wildcard '*' allowed)", name="keep-sample")
+    @Option(desc="Keep specific SAMPLE annotations (multiple allowed, wildcard '*' allowed)", name="keep-sample", allowMultiple=true)
     public void setKeepSample(String keep) {
         if (keepSample == null) {
         	keepSample = new HashSet<String>();
@@ -121,7 +121,7 @@ public class VCFStrip extends AbstractOutputCommand {
         keepSample.add(keep);
     }
     
-    @Option(desc="Keep specific FILTER annotations (multiple allowed, wildcard '*' allowed)", name="keep-filter")
+    @Option(desc="Keep specific FILTER annotations (multiple allowed, wildcard '*' allowed)", name="keep-filter", allowMultiple=true)
     public void setKeepFilter(String keep) {
         if (keepFilter == null) {
         	keepFilter = new HashSet<String>();

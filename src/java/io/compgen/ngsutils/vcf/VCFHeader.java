@@ -31,6 +31,9 @@ public class VCFHeader {
     private Set<String> removeFilter = null;
     private Set<String> removeInfo = null;
     private Set<String> removeFormat = null;
+    private Set<String> keepFilter = null;
+    private Set<String> keepInfo = null;
+    private Set<String> keepFormat = null;
 //    private Set<String> removeSample = null;
 
     private Set<String> allowedFilterCache = new HashSet<String>();
@@ -51,6 +54,11 @@ public class VCFHeader {
         this.removeFilter = removeFilter;
         this.removeInfo = removeInfo;
         this.removeFormat = removeFormat;
+        this.keepFilter = keepFilter;
+        
+        this.keepInfo = keepInfo;
+        
+        this.keepFormat = keepFormat;
 //        this.removeSample = removeSample;
 		
 		for (String line: input) {
@@ -156,6 +164,13 @@ public class VCFHeader {
                     for (String remove: removeSample) {
                         if (GlobUtils.matches(spl[i], remove)) {
                             match = true;
+    	                    if (keepSample != null) {
+    	                    	for (String keep: keepSample) {
+    	    	                    if (GlobUtils.matches(spl[i], keep)) {
+    	    	                        match = false;
+    	    	                    }    	                    		
+    	                    	}
+    	                    }
                         }
                     }
                 }
@@ -317,6 +332,14 @@ public class VCFHeader {
         }
         for (String remove: removeFilter) {
             if (GlobUtils.matches(name, remove)) {
+            	if (keepFilter!=null) {
+            		for (String keep: keepFilter) {
+            			if (GlobUtils.matches(name, keep)) {
+            				allowedFilterCache.add(name);
+            		        return true;
+            			}
+            		}
+            	}
                 blockedFilterCache.add(name);
                 return false;
             }
@@ -338,6 +361,14 @@ public class VCFHeader {
         }
         for (String remove: removeInfo) {
             if (GlobUtils.matches(name, remove)) {
+            	if (keepInfo!=null) {
+            		for (String keep: keepInfo) {
+            			if (GlobUtils.matches(name, keep)) {
+            				allowedInfoCache.add(name);
+            		        return true;
+            			}
+            		}
+            	}
                 blockedInfoCache.add(name);
                 return false;
             }
@@ -359,6 +390,14 @@ public class VCFHeader {
         }
         for (String remove: removeFormat) {
             if (GlobUtils.matches(name, remove)) {
+            	if (keepFormat!=null) {
+            		for (String keep: keepFormat) {
+            			if (GlobUtils.matches(name, keep)) {
+            		        allowedFormatCache.add(name);
+            		        return true;
+            			}
+            		}
+            	}
                 blockedFormatCache.add(name);
                 return false;
             }

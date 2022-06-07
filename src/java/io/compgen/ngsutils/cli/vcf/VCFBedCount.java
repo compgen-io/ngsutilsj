@@ -102,7 +102,7 @@ public class VCFBedCount extends AbstractOutputCommand {
 			
 
 			if (altOnly) {
-			    if (!record.getSampleAttributes().get(sampleIdx).contains("GT")) {
+			    if (record.getSampleAttributes() == null || record.getSampleAttributes().get(sampleIdx) == null || !record.getSampleAttributes().get(sampleIdx).contains("GT")) {
 			        throw new CommandArgumentException("Missing GT field");
 			    }
 

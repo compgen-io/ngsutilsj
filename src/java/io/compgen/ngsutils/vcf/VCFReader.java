@@ -235,7 +235,7 @@ public class VCFReader {
             if (this.keepInfo == null) {
                 this.keepInfo = new HashSet<String>();
             }
-            this.removeInfo.addAll(keepInfo);
+            this.keepInfo.addAll(keepInfo);
         } else {
             throw new VCFParseException("You can't remove info after the VCF header has been read.");
         }
@@ -246,7 +246,7 @@ public class VCFReader {
             if (this.keepFormat == null) {
                 this.keepFormat = new HashSet<String>();
             }
-            this.removeFormat.addAll(keepFormat);
+            this.keepFormat.addAll(keepFormat);
         } else {
             throw new VCFParseException("You can't remove formats after the VCF header has been read.");
         }
@@ -257,7 +257,7 @@ public class VCFReader {
             if (this.keepFilter == null) {
                 this.keepFilter = new HashSet<String>();
             }
-            this.removeFilter.addAll(keepFilter);
+            this.keepFilter.addAll(keepFilter);
         } else {
             throw new VCFParseException("You can't remove filters after the VCF header has been read.");
         }
