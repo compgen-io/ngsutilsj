@@ -140,6 +140,9 @@ public class VCFBedCount extends AbstractOutputCommand {
         writer.write_line("## cmd: " + NGSUtils.getArgs());
         writer.write_line("## vcf-input: " + vcfFilename);
         writer.write_line("## bed-input: " + bedFilename);
+        if (tmb > 0) {
+            writer.write_line("## TMB: "+tmb);
+        }
 
 
         writer.write("chrom");
