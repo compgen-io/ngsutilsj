@@ -47,6 +47,8 @@ public class TabAnnotate extends AbstractOutputCommand {
                 boolean first = false;
                 boolean mean = false;
                 boolean median = false;
+                boolean max = false;
+                boolean min = false;
                 boolean count = false;
                 
                 for (String t:spl2) {
@@ -61,6 +63,10 @@ public class TabAnnotate extends AbstractOutputCommand {
                             mean = true;
                         } else if (t.equals("median")) {
                             median = true;
+                        } else if (t.equals("max")) {
+                        	max = true;
+                        } else if (t.equals("min")) {
+                        	min = true;
                         } else if (t.equals("count")) {
                             count = true;
                         } else if (col == -1) {
@@ -94,6 +100,12 @@ public class TabAnnotate extends AbstractOutputCommand {
                 }
                 if (median) {
                 	tta.setMedian();
+                }
+                if (max) {
+                	tta.setMax();
+                }
+                if (min) {
+                	tta.setMin();
                 }
                 if (count) {
                 	tta.setCount();
