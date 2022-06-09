@@ -32,7 +32,7 @@ public class TabAnnotate extends AbstractOutputCommand {
 	
 	List<TabAnnotator> chain = new ArrayList<TabAnnotator>();
     
-    @Option(desc="Add annotations from a Tabix indexed file (If col is left out, this is treaded as a flag)", name="tab", helpValue="NAME:FILENAME{,col,collapse,first}", allowMultiple=true)
+    @Option(desc="Add annotations from a Tabix indexed file (If col is left out, this is treaded as a flag)", name="tab", helpValue="NAME:FILENAME{,col,collapse,first,mean,median,min,max,count}", allowMultiple=true)
     public void setTabix(String tab) throws CommandArgumentException {
         String[] spl = tab.split(":");
         
