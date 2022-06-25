@@ -100,6 +100,7 @@ import io.compgen.ngsutils.cli.vcf.VCFToBED;
 import io.compgen.ngsutils.cli.vcf.VCFToBEDPE;
 import io.compgen.ngsutils.cli.vcf.VCFToCount;
 import io.compgen.ngsutils.cli.vcf.VCFPeptide;
+import io.compgen.ngsutils.cli.vcf.VCFConsensus;
 import io.compgen.ngsutils.cli.vcf.VCFTsTvRatio;
 import io.compgen.ngsutils.support.DigestCmd;
 import io.compgen.ngsutils.support.stats.FisherCli;
@@ -222,7 +223,8 @@ public class NGSUtils {
 			.addCommand(BamPhase.class)
 			.addCommand(TabJoin.class)
 			.addCommand(FastaBins.class)
-			.addCommand(VCFBedCount.class);
+			.addCommand(VCFBedCount.class)
+			.addCommand(VCFConsensus.class);
 
         try {
             if (args.length == 0) {

@@ -10,10 +10,10 @@ import io.compgen.common.StringUtils;
 import io.compgen.ngsutils.support.GlobUtils;
 
 public class VCFAttributes {
-	public Map<String, VCFAttributeValue> attributes = new LinkedHashMap<String, VCFAttributeValue>();
+	private Map<String, VCFAttributeValue> attributes = new LinkedHashMap<String, VCFAttributeValue>();
 	
 	public void put(String key, VCFAttributeValue value) throws VCFAttributeException {
-		if (value.equals(VCFAttributeValue.EMPTY.value) && value != VCFAttributeValue.EMPTY) {
+		if (value == null || (value.equals(VCFAttributeValue.EMPTY.value) && value != VCFAttributeValue.EMPTY)) {
 			throw new VCFAttributeException("You cannot set an empty VCF attribute (INFO/FORMAT) value ("+key+")");
 		}
 		attributes.put(key, value);

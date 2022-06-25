@@ -35,6 +35,23 @@ public class VCFRecord {
     			return NA;
     		}
     	}
+    	
+    	public String toString() {
+    		if (this==FiveToFive) {
+    			return "5to5";
+    		} else if (this==FiveToThree) {
+    			return "5to3";
+    		} else if (this==ThreeToThree) {
+    			return "3to3";
+    		} else if (this==ThreeToFive) {
+    			return "3to5";
+    		} else if (this==NToN) {
+    			return "NToN";
+    		} else if (this==NA) {
+    			return "";
+    		}
+    		return "UNK";
+    	}
 	}
 
     public enum VCFVarType {
@@ -110,6 +127,8 @@ public class VCFRecord {
 	protected VCFAttributes info = null;
 	protected List<VCFAttributes> sampleAttributes = null;
 
+	protected VCFHeader parentHeader = null;
+	
 	public VCFRecord(String chrom, int pos, String ref) {
 		this.chrom = chrom;
 		this.pos = pos;
@@ -117,7 +136,7 @@ public class VCFRecord {
 	}
 	
 	public VCFRecord(String chrom, int pos, String dbSNPID, String ref, List<String> alt, double qual,
-			List<String> filters, VCFAttributes info, List<VCFAttributes> sampleAttributes, String altFull) {
+			List<String> filters, VCFAttributes info, List<VCFAttributes> sampleAttributes, String altFull, VCFHeader header) {
 		this.chrom = chrom;
 		this.pos = pos;
 		this.dbSNPID = dbSNPID;
@@ -128,6 +147,7 @@ public class VCFRecord {
 		this.info = info;
 		this.sampleAttributes = sampleAttributes;
 		this.altOrig = altFull;
+		this.parentHeader = header;
 	}
 
     public void write(OutputStream out) throws IOException{
@@ -221,13 +241,13 @@ public class VCFRecord {
 		if (cols.length > 6) {
 			if (!cols[6].equals(PASS)) {
 			    // if filters is null => PASS
-			    // if filters is not null, but empty => MISSING
+			    // if filters is not null, but empty => MISSING ??
 	
 			    for (String f: cols[6].split(";")) {
+	                if (filters == null) {
+	                    filters = new ArrayList<String>();
+	                }
 					if (!f.equals(MISSING) && (header == null || header.isFilterAllowed(f))) {
-		                if (filters == null) {
-		                    filters = new ArrayList<String>();
-		                }
 					    filters.add(f);
 					}
 				}
@@ -259,7 +279,7 @@ public class VCFRecord {
 					}
 				}
 			}
-			return new VCFRecord(chrom, pos, dbSNPID, ref, alts, qual, filters, info, samples, altOrig);
+			return new VCFRecord(chrom, pos, dbSNPID, ref, alts, qual, filters, info, samples, altOrig, header);
 
 		} catch (VCFParseException | VCFAttributeException e) {
 			if (!VCFCheck.isQuiet()) {
@@ -359,10 +379,25 @@ public class VCFRecord {
 		this.info = info;
 	}
 
+	public VCFHeader getParentHeader() {
+		return parentHeader;
+	}
+	
 	public List<VCFAttributes> getSampleAttributes() {
 		return sampleAttributes;
 	}
 
+	public VCFAttributes getFormatBySample(String sample) throws VCFAttributeException {
+		if (parentHeader == null) {
+			throw new VCFAttributeException("Missing header -- cannot extract sample without the header");
+		}
+		if (sampleAttributes == null) {
+			return null;
+		}
+		
+		return sampleAttributes.get(parentHeader.getSamplePosByName(sample));
+	}
+	
 	public void addSampleAttributes(VCFAttributes attrs) {
 		if (sampleAttributes == null) {
 			sampleAttributes = new ArrayList<VCFAttributes>();
@@ -483,7 +518,7 @@ public class VCFRecord {
             	} else if (alt.startsWith("<DEL")) {
             		altType = VCFVarType.DEL;
         			altConn = VCFSVConnection.ThreeToFive;
-        		} else if (alt.startsWith("<DUP")) {
+        		} else if (alt.startsWith("<DUP")) { // matches DUP and DUP:TANDEM
             		altType = VCFVarType.DUP;
         			altConn = VCFSVConnection.FiveToThree;
         		}
@@ -519,8 +554,13 @@ public class VCFRecord {
         	if (typeKey != null && getInfo().get(typeKey) != null) {
 	            altType = VCFVarType.parse(getInfo().get(typeKey).toString());
 			}
-            if (connKey != null && getInfo().get(connKey) != null) {
+
+        	if (connKey != null && getInfo().get(connKey) != null) {
             	altConn = VCFSVConnection.parse(getInfo().get(connKey).toString());
+			} else if (altType == VCFVarType.INV && altConn == VCFSVConnection.UNK && getInfo().get("CT") != null) {
+				// if we don't explicitly set connKey, and we couldn't figure it out from the alt value,
+				// look for the "CT" INFO field by default. That if that works, try it.
+            	altConn = VCFSVConnection.parse(getInfo().get("CT").toString());
 			}
 
 
