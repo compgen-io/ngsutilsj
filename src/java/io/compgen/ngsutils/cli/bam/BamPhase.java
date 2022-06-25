@@ -406,7 +406,7 @@ public class BamPhase extends AbstractOutputCommand {
     		String alleleB = rec.getAlt().get(0); // default to ref/alt1 if no GT field present (it should be present)
     		
     		if (rec.getSampleAttributes().get(0).contains("GT")) {
-    			String gt = rec.getSampleAttributes().get(0).attributes.get("GT").asString(null);
+    			String gt = rec.getSampleAttributes().get(0).get("GT").asString(null);
     			String[] spl;
     			if (gt.indexOf("/") > -1) {
     				spl = gt.split("/");
