@@ -177,6 +177,7 @@ public class VCFConsensus extends AbstractOutputCommand {
 	private List<String> annotationPrefix = null;
 	
 	private boolean onlyOutputPass = false;
+	private boolean passRescue = false;
 	private boolean writeLinkedEvents = false;
 	private String eventKey = "EVENT";
 
@@ -209,6 +210,11 @@ public class VCFConsensus extends AbstractOutputCommand {
     @Option(desc="Only output passing variants", name="passing")
     public void setOnlyOutputPass(boolean onlyOutputPass) {
         this.onlyOutputPass = onlyOutputPass;
+    }
+    
+    @Option(desc="If a matching SV passes in ANY input, reset the filter to PASS", name="pass-rescue")
+    public void setPassRescue(boolean passRescue) {
+        this.passRescue = passRescue;
     }
     
     @Option(desc="For PRECISE SVs, allow this much buffer (bp) for finding matches (default: 10)", name="precise-buf", defaultValue="10")
@@ -293,9 +299,9 @@ public class VCFConsensus extends AbstractOutputCommand {
 			Iterator<VCFRecord> it = reader.iterator();
 
 			for (VCFRecord rec: IterUtils.wrap(it)) {
-				if (onlyOutputPass && rec.isFiltered()) {
-					continue;
-				}
+//				if (onlyOutputPass && rec.isFiltered()) {
+//					continue;
+//				}
 
 				if (!cache.containsKey(rec.getChrom())) {
 					cache.put(rec.getChrom(), new ArrayList<SVVCFCoord>());
@@ -407,8 +413,38 @@ public class VCFConsensus extends AbstractOutputCommand {
 //					} else {
 //						System.out.println("MATCH\t" + coord.ref1 + ":" + coord.getPos1() + "\t"+coord.ref2 + ":" + coord.getPos2() + "\t" + StringUtils.join(",", coord.matches) + "\t" + coord.type + "\t" + coord.conn + "\t" + coord.isImprecise());
 //					}
-					valid.add(coord);
+
+					// We do the --passing filter here, so that we can match all SVs.
+					// If an SV fails in one VCF, but passes in another, we could potentially rescue it.
 					
+					boolean isPass = true;
+					boolean anyPass = false;
+					for (Pair<String, VCFRecord> pair: coord.records) {
+						if (pair.two.isFiltered()) {
+							isPass = false;
+						} else {
+							anyPass = true;
+						}
+					}
+					
+					if (this.onlyOutputPass && passRescue && anyPass) {
+						// at least one input had this SV group as a PASS, so reset all 
+						isPass = true;
+						for (Pair<String, VCFRecord> pair: coord.records) {
+							if (pair.two.isFiltered()) {
+								pair.two.getInfo().put("ORIG_FILTER",new VCFAttributeValue(StringUtils.join(",",pair.two.getFilters())));
+								pair.two.clearFilters();
+								pair.two.getInfo().putFlag("CG_PASS_RESCUE");
+							}
+						}
+					}
+					
+					if (this.onlyOutputPass && !isPass) {
+						continue;
+					}
+
+					valid.add(coord);
+
 					// also write all events linked to this svvcfcoord
 					if (writeLinkedEvents) {
 						for (Pair<String, VCFRecord> pair: coord.records) {
@@ -419,7 +455,27 @@ public class VCFConsensus extends AbstractOutputCommand {
 			            		if (events.get(vcfPrefix).containsKey(event) && events.get(vcfPrefix).get(event) != null) {
 			            			for (SVVCFCoord coord2: events.get(vcfPrefix).get(event)) {
 //			    						System.out.println("LINKED\t" + coord2.ref1 + ":" + coord2.getPos1() + "\t"+coord2.ref2 + ":" + coord2.getPos2() + "\t" + StringUtils.join(",", coord2.matches) + "\t" + coord2.type + "\t" + coord2.conn + "\t" + coord2.isImprecise());
-		        						valid.add(coord2);
+			    						
+			            				boolean isPass2 = true;
+			            				for (Pair<String, VCFRecord> pair2: coord2.records) {
+			    							if (pair2.two.isFiltered()) {
+			    								if (isPass && passRescue) {
+				    								// at least one input had this SV EVENT as a PASS, so reset all 
+
+			    									pair2.two.getInfo().put("ORIG_FILTER",new VCFAttributeValue(StringUtils.join(",",pair2.two.getFilters())));
+
+			    									pair2.two.clearFilters();
+				    								pair2.two.getInfo().putFlag("CG_EVENT_RESCUE");
+			    								} else {
+			    									isPass2 = false;
+			    								}
+			    							}
+			    						}
+
+			            				if (this.onlyOutputPass && !isPass2) {
+			            					continue;
+			            				}
+		            					valid.add(coord2);
 			            			}
 			            		}
 							}
@@ -567,6 +623,9 @@ public class VCFConsensus extends AbstractOutputCommand {
 		// set IDs
 		List<String> dbIDs = new ArrayList<String>();
 		List<String> filters = new ArrayList<String>();
+		
+		List<String> events = new ArrayList<String>();
+		
 		for (Pair<String, VCFRecord> pair: coord.records) {
 			dbIDs.add(pair.one+"_"+pair.two.getDbSNPID());
 			
@@ -584,9 +643,20 @@ public class VCFConsensus extends AbstractOutputCommand {
 				for (String filter: pair.two.getFilters()) {
 					filters.add(pair.one+"_"+filter);
 				}
+				
+				info.put(pair.one+"_FILTER",new VCFAttributeValue(StringUtils.join(",",pair.two.getFilters())));
+				
 			}
 			for (String infoKey: pair.two.getInfo().getKeys()) {
-				info.put(pair.one+"_"+infoKey, pair.two.getInfo().get(infoKey));
+				if (infoKey.equals("CG_PASS_RESCUE") || infoKey.equals("CG_EVENT_RESCUE")) {
+					// just pass these values along.
+					info.put(infoKey, pair.two.getInfo().get(infoKey));
+				} else if (infoKey.equals("EVENT")) {
+					events.add(pair.two.getInfo().get(infoKey).asString(null));
+					info.put(pair.one+"_"+infoKey, pair.two.getInfo().get(infoKey));
+				} else {
+					info.put(pair.one+"_"+infoKey, pair.two.getInfo().get(infoKey));
+				}
 			}
 			
 			for (String sample: header.getSamples()) {
@@ -595,6 +665,10 @@ public class VCFConsensus extends AbstractOutputCommand {
 					format.get(idx).put(pair.one+"_"+formatKey, pair.two.getFormatBySample(sample).get(formatKey));
 				}
 			}
+		}
+		
+		if (events.size() > 0) {
+			info.put("EVENT", new VCFAttributeValue(StringUtils.join(",", events)));
 		}
 		
 		record.setQual((int)Math.floor(qual));
@@ -625,6 +699,11 @@ public class VCFConsensus extends AbstractOutputCommand {
 		newHeader.addInfo(VCFAnnotationDef.info("PRECISE", "0", "Flag", "SV pos is PRECISE"));
 		newHeader.addInfo(VCFAnnotationDef.info("CT", "1", "String", "SV connection type"));
 
+		newHeader.addInfo(VCFAnnotationDef.info("EVENT", "1", "String", "IDs of event associated to breakend"));
+		newHeader.addInfo(VCFAnnotationDef.info("CG_PASS_RESCUE", "0", "Flag", "SV was filtered by at least one input VCF"));
+		newHeader.addInfo(VCFAnnotationDef.info("CG_EVENT_RESCUE", "0", "Flag", "SV was filtered but is linked to an EVENT with at least one passing member"));
+
+		
 		// Only PASS is strictly defined. all other filter values will be prefixed
 		newHeader.addFilter(VCFFilterDef.build("PASS", "All filters passed"));
 
@@ -637,6 +716,13 @@ public class VCFConsensus extends AbstractOutputCommand {
 			}
 		}		
 
+		// Add VCF_FILTER value
+		for (String vcf: headers.keySet()) {
+			newHeader.addInfo(VCFAnnotationDef.info(vcf+"_FILTER", ".", "String", "Filter values from the "+vcf+" input"));
+			newHeader.addInfo(VCFAnnotationDef.info(vcf+"_ORIG_FILTER", ".", "String", "Original filter values from the "+vcf+" input (before rescue)"));
+		}		
+
+		
 		// rename all FORMAT values
 		for (String vcf: headers.keySet()) {
 			for (String formatName: headers.get(vcf).getFormatIDs()) {
