@@ -26,7 +26,7 @@ import io.compgen.ngsutils.vcf.VCFReader;
 import io.compgen.ngsutils.vcf.VCFRecord;
 
 
-@Command(name="vcf-peptide", desc="For variants, extract new peptides (SNV or indel, in coding regions, does not handle splicing)", category="vcf")
+@Command(name="vcf-peptide", desc="For variants, extract new peptides (SNV or indel, in coding regions, does not handle splicing)", category="vcf", experimental=true)
 public class VCFPeptide extends AbstractOutputCommand {
 	private String fastaFilename = null;
 	private String novelFastaOutname = null;
