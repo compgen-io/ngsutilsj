@@ -552,6 +552,28 @@ public class VCFConsensus extends AbstractOutputCommand {
 		} else if (coord.type == VCFVarType.INS) {
 			alt = "<INS>";
 			info.put("SVTYPE", new VCFAttributeValue("INS"));
+
+			List<Integer> inslen = new ArrayList<Integer>();
+			for (Pair<String, VCFRecord> pair: coord.records) {
+				if (pair.two.getInfo().contains("INSLEN")) {
+					inslen.add(pair.two.getInfo().get("INSLEN").asInt());
+				} else if (pair.two.getInfo().contains("SVLEN")) {
+					inslen.add(pair.two.getInfo().get("SVLEN").asInt());
+				}
+			}
+
+			if (inslen.size()>0) {
+				int val = inslen.get(0);
+				for (int i: inslen) {
+					if (i < val) {
+						val = i;
+					}
+				}
+				
+				info.put("INSLEN", new VCFAttributeValue(""+val));
+			}
+			
+			
 		} else if (coord.type == VCFVarType.BND && 
 				(coord.conn == VCFSVConnection.FiveToFive || 
 				coord.conn == VCFSVConnection.ThreeToFive ||
@@ -698,6 +720,7 @@ public class VCFConsensus extends AbstractOutputCommand {
 		newHeader.addInfo(VCFAnnotationDef.info("CHR2", "1", "String", "Chromosome for the END value for BND SVs"));
 		newHeader.addInfo(VCFAnnotationDef.info("PRECISE", "0", "Flag", "SV pos is PRECISE"));
 		newHeader.addInfo(VCFAnnotationDef.info("CT", "1", "String", "SV connection type"));
+		newHeader.addInfo(VCFAnnotationDef.info("INSLEN", "1", "Integer", "Length of insertion (INS only, min of input estimates)"));
 
 		newHeader.addInfo(VCFAnnotationDef.info("EVENT", "1", "String", "IDs of event associated to breakend"));
 		newHeader.addInfo(VCFAnnotationDef.info("CG_PASS_RESCUE", "0", "Flag", "SV was filtered by at least one input VCF"));
