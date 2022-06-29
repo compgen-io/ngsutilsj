@@ -23,6 +23,7 @@ public class VCFToBEDPE extends AbstractOutputCommand {
 	private String filename = "-";
 	
 	private boolean onlyOutputPass = false;
+	private boolean delOffset = true;
     private String altChrom = null;
     private String altPos = null;
     private String nameKey = null;
@@ -39,6 +40,11 @@ public class VCFToBEDPE extends AbstractOutputCommand {
         this.altPos = key;
     }
 
+    @Option(desc="Don't offset DEL coordinates by 1 (use the VCF pos, not the pos of the deleted bases)", name="no-del-offset")
+    public void setNoDelOffset(boolean noDelOffset) {
+        this.delOffset = !noDelOffset;
+    }
+    
     @Option(desc="Only output passing variants", name="passing")
     public void setOnlyOutputPass(boolean onlyOutputPass) {
         this.onlyOutputPass = onlyOutputPass;
@@ -126,7 +132,7 @@ public class VCFToBEDPE extends AbstractOutputCommand {
             for (VCFAltPos altPos : rec.getAltPos(altChrom, altPos, null, null)) {
 	            writer.write(chrom);
 	            
-	            if (altPos.type == VCFVarType.DEL) {
+	            if (delOffset && altPos.type == VCFVarType.DEL) {
 	            	// deletions are offset by one
 		            writer.write(pos);
 		            writer.write((pos+1));
