@@ -113,8 +113,8 @@ public class BedNearest extends AbstractOutputCommand {
                         bestNames.clear();
                         bestNames.add(best.getName());
                     } else if (dist == bestDist) {
-                    	if (!bestNames.contains(best.getName())) {
-                    		bestNames.add(best.getName());
+                    	if (!bestNames.contains(rec.getName())) {
+                    		bestNames.add(rec.getName());
                     	}
                     }
                     
