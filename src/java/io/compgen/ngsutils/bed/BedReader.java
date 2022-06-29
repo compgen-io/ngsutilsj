@@ -130,6 +130,7 @@ public class BedReader {
                     first = false;
                 }
                 BedRecord cur = next;
+                next = null; // this needed to avoid blank lines at the end returning the last record twice
                 loadNext();
                 return cur;
             }
