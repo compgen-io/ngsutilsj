@@ -150,26 +150,26 @@ public class VCFConsensus extends AbstractOutputCommand {
 			}
 			return false;
 		}
-
-		public int getPos1() {
-			long acc = 0;
-			
-			for (int p: pos1) {
-				acc += p;
-			}
-			
-			return (int) Math.ceil(acc / pos1.size());
-		}
-
-		public int getPos2() {
-			long acc = 0;
-			
-			for (int p: pos2) {
-				acc += p;
-			}
-			
-			return (int) Math.ceil(acc / pos2.size());
-		}
+//
+//		public int getPos1() {
+//			long acc = 0;
+//			
+//			for (int p: pos1) {
+//				acc += p;
+//			}
+//			
+//			return (int) Math.ceil(acc / pos1.size());
+//		}
+//
+//		public int getPos2() {
+//			long acc = 0;
+//			
+//			for (int p: pos2) {
+//				acc += p;
+//			}
+//			
+//			return (int) Math.ceil(acc / pos2.size());
+//		}
 
 	}
 	
@@ -185,7 +185,9 @@ public class VCFConsensus extends AbstractOutputCommand {
 	private int preciseBuffer = 10;
 	private int minMatch = -1;
 
-    
+	// filename/vcfPrefix, map<eventID, sv-matches>
+	private Map<String, Map<String, List<SVVCFCoord>>> events = new HashMap<String, Map<String, List<SVVCFCoord>>>();
+
     @Option(desc="Prefixes to use for overlapping VCF annotations (INFO/FORMAT; CSV or multiple allowed)", name="prefix", allowMultiple=true)
     public void setPrefix(String prefix) {
     	if (this.annotationPrefix == null) {
@@ -262,8 +264,6 @@ public class VCFConsensus extends AbstractOutputCommand {
 		// chrom, list<sv-match>
 		Map<String, List<SVVCFCoord>> cache = new HashMap<String, List<SVVCFCoord>>();
 		
-		// filename/vcfPrefix, map<eventID, sv-matches>
-		Map<String, Map<String, List<SVVCFCoord>>> events = new HashMap<String, Map<String, List<SVVCFCoord>>>();
 		
 		for (int i=0; i< vcfFilenames.length; i++) {
 			String fname = vcfFilenames[i];
@@ -515,7 +515,8 @@ public class VCFConsensus extends AbstractOutputCommand {
 	}
 
 	private VCFRecord mergeVCFRecord(SVVCFCoord coord, VCFHeader header) throws VCFAttributeException {
-		VCFRecord record = new VCFRecord(coord.ref1, coord.getPos1(), coord.records.get(0).two.getRef());
+		// use the first VCF file as the position of record... 
+		VCFRecord record = new VCFRecord(coord.ref1, coord.records.get(0).two.getPos(), coord.records.get(0).two.getRef());
 		VCFAttributes info = new VCFAttributes();
 		List<VCFAttributes> format = new ArrayList<VCFAttributes>();
 		
@@ -523,12 +524,31 @@ public class VCFConsensus extends AbstractOutputCommand {
 			format.add(new VCFAttributes());
 		}
 		
+		boolean eventInversion = coord.isInversion();
+		for (Pair<String, VCFRecord> pair: coord.records) {
+			if (eventInversion) {
+				break;
+			}
+			if (pair.two.getInfo().contains(eventKey) && pair.two.getInfo().get(eventKey) != null) {
+        		String eventName = pair.two.getInfo().get(eventKey).asString(null);
+        		
+        		for (SVVCFCoord c2: events.get(pair.one).get(eventName)) {
+        			if (c2.isInversion()) {
+        				eventInversion = true;
+        				break;
+        			}
+        		}
+			}
+		}
+		
+		
+		
 		double qual = -1;
 		String alt = "";
 		// Alt will be fixed.
-		if (header.getAlts().contains("INV") && coord.isInversion()) { 
+		if (header.getAlts().contains("INV") && eventInversion) { 
 			alt = "<INV>";
-			info.put("END", new VCFAttributeValue(""+coord.getPos2()));
+			info.put("END", new VCFAttributeValue(""+coord.records.get(0).two.getAltPos().get(0).pos));
 			info.put("SVTYPE", new VCFAttributeValue("INV"));
 			info.put("CT", new VCFAttributeValue(coord.conn.toString()));
 		} else 	if (coord.type == VCFVarType.DEL) {
@@ -539,7 +559,7 @@ public class VCFConsensus extends AbstractOutputCommand {
 			} else {
 				alt = "<DEL>";
 			}
-			info.put("END", new VCFAttributeValue(""+coord.getPos2()));
+			info.put("END", new VCFAttributeValue(""+coord.records.get(0).two.getAltPos().get(0).pos));
 			info.put("SVTYPE", new VCFAttributeValue("DEL"));
 		} else if (coord.type == VCFVarType.DUP) {
 			if (header.getAlts().contains("DUP:TANDEM")) {
@@ -547,7 +567,7 @@ public class VCFConsensus extends AbstractOutputCommand {
 			} else {
 				alt = "<DUP>";
 			}
-			info.put("END", new VCFAttributeValue(""+coord.getPos2()));
+			info.put("END", new VCFAttributeValue(""+coord.records.get(0).two.getAltPos().get(0).pos));
 			info.put("SVTYPE", new VCFAttributeValue("DUP"));
 		} else if (coord.type == VCFVarType.INS) {
 			alt = "<INS>";
@@ -583,52 +603,34 @@ public class VCFConsensus extends AbstractOutputCommand {
 			
 			// BND, but of a type we know. If this is an NtoN (INS), NA (SNV), or UNK (INV, but should be pulled from CT), then we can't write it.
 			
-			info.put("END", new VCFAttributeValue(""+coord.getPos2()));
+			info.put("END", new VCFAttributeValue(""+coord.records.get(0).two.getAltPos().get(0).pos));
 			info.put("SVTYPE", new VCFAttributeValue("BND"));
 			info.put("CHR2", new VCFAttributeValue(coord.ref2));
 			info.put("CT", new VCFAttributeValue(coord.conn.toString()));
 
-//        	if (alt.startsWith("[") || alt.startsWith("]") || alt.endsWith("[") || alt.endsWith("]")) {
-//        		//BND
-//        		String sub="";
-//        		if (alt.startsWith("[")) {
-//        			altType = VCFVarType.BND;
-//        			altConn = VCFSVConnection.FiveToFive;
-//        			sub = alt.substring(1,alt.indexOf("[", 2)-1);
-//        		} else if (alt.startsWith("]")) {
-//        			altType = VCFVarType.BND;
-//        			altConn = VCFSVConnection.FiveToThree;
-//        			sub = alt.substring(1,alt.indexOf("]", 2)-1);
-//        		} else if (alt.endsWith("[")) {
-//        			altType = VCFVarType.BND;
-//        			altConn = VCFSVConnection.ThreeToFive;
-//        			sub = alt.substring(alt.indexOf("[")+1,alt.length()-1);
-//        		} else if (alt.endsWith("]")) {
-//        			altType = VCFVarType.BND;
-//        			altConn = VCFSVConnection.ThreeToThree;
-//        			sub = alt.substring(alt.indexOf("]")+1,alt.length()-1);
-//        		}
+//			String altChr = coord.ref2;
+//			int altPos = coord.getPos2();
+//			String refBase = coord.records.get(0).two.getRef();
 //
-//        		String[] spl = sub.split(":");
+//			if (coord.conn == VCFSVConnection.FiveToFive) {
+//				alt =  "[" + altChr + ":" + altPos + "[" + refBase;
+//			} else if (coord.conn == VCFSVConnection.ThreeToFive) {
+//				alt = refBase + "[" + altChr + ":" + altPos + "[";
+//			} else if (coord.conn == VCFSVConnection.ThreeToThree) {
+//				alt = refBase + "]" + altChr + ":" + altPos + "]";
+//			} else if (coord.conn == VCFSVConnection.FiveToThree) {
+//				alt =  "]" + altChr + ":" + altPos + "]" + refBase;
+//			}
 
-			String altChr = coord.ref2;
-			int altPos = coord.getPos2();
-			String refBase = coord.records.get(0).two.getRef();
-
-			if (coord.conn == VCFSVConnection.FiveToFive) {
-				alt =  "[" + altChr + ":" + altPos + "[" + refBase;
-			} else if (coord.conn == VCFSVConnection.ThreeToFive) {
-				alt = refBase + "[" + altChr + ":" + altPos + "[";
-			} else if (coord.conn == VCFSVConnection.ThreeToThree) {
-				alt = refBase + "]" + altChr + ":" + altPos + "]";
-			} else if (coord.conn == VCFSVConnection.FiveToThree) {
-				alt =  "]" + altChr + ":" + altPos + "]" + refBase;
-			}
+			// Don't try to rewrite the BND code (see above), just use the first VCF file's ALT.
+			//coord.records.get(0).two.getAltPos().get(0).pos;
+			alt = coord.records.get(0).two.getAltOrig();
+			//alt = alt + "," + coord.records.get(0).two.getAltOrig();
 			
 		} else {
 			// otherwise, just use the first value.
 			// not an SV (should only be SNV here)
-			alt = coord.alt.alt;
+			alt = coord.records.get(0).two.getAltOrig();
 		}
 		
 		if (info.contains("SVTYPE")) {

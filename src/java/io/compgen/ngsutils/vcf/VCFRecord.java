@@ -91,11 +91,14 @@ public class VCFRecord {
     	public final VCFVarType type;
     	public final VCFSVConnection connType;
     	public final String alt;
+    	public final String extra;
     	
-    	public VCFAltPos(String chrom, int pos, VCFVarType type, VCFSVConnection connType, String alt) {
+    	public VCFAltPos(String chrom, int pos, VCFVarType type, VCFSVConnection connType, String alt, String extra) {
     		this.chrom = chrom;
     		this.pos = pos;
     		this.alt = alt;
+    		this.extra = extra;
+    		
     		if (type != null) {
     			this.type = type;
     		} else {
@@ -469,7 +472,7 @@ public class VCFRecord {
             	altConn = VCFSVConnection.parse(getInfo().get(connKey).toString());
 			}
             
-            ret.add(new VCFAltPos(altChrom, altPos, altType, altConn, this.altOrig));
+            ret.add(new VCFAltPos(altChrom, altPos, altType, altConn, this.altOrig, null));
             return ret;
 		}
 		
@@ -478,6 +481,7 @@ public class VCFRecord {
 			VCFSVConnection altConn = VCFSVConnection.NA;
             String altChrom = this.chrom;
             int altPos = this.pos;
+            String extra = null;
 
         	if (alt.startsWith("[") || alt.startsWith("]") || alt.endsWith("[") || alt.endsWith("]")) {
         		//BND
@@ -485,19 +489,23 @@ public class VCFRecord {
         		if (alt.startsWith("[")) {
         			altType = VCFVarType.BND;
         			altConn = VCFSVConnection.FiveToFive;
-        			sub = alt.substring(1,alt.indexOf("[", 2)-1);
+        			sub = alt.substring(1,alt.indexOf("[", 1));
+        			extra = alt.substring(alt.indexOf("[", 1)+1);
         		} else if (alt.startsWith("]")) {
         			altType = VCFVarType.BND;
         			altConn = VCFSVConnection.FiveToThree;
-        			sub = alt.substring(1,alt.indexOf("]", 2)-1);
+        			sub = alt.substring(1,alt.indexOf("]", 1));
+        			extra = alt.substring(alt.indexOf("]", 1)+1);
         		} else if (alt.endsWith("[")) {
         			altType = VCFVarType.BND;
         			altConn = VCFSVConnection.ThreeToFive;
         			sub = alt.substring(alt.indexOf("[")+1,alt.length()-1);
+        			extra = alt.substring(0, alt.indexOf("[", 1));
         		} else if (alt.endsWith("]")) {
         			altType = VCFVarType.BND;
         			altConn = VCFSVConnection.ThreeToThree;
         			sub = alt.substring(alt.indexOf("]")+1,alt.length()-1);
+        			extra = alt.substring(0, alt.indexOf("]", 1));
         		}
 
         		String[] spl = sub.split(":");
@@ -564,7 +572,7 @@ public class VCFRecord {
 			}
 
 
-            ret.add(new VCFAltPos(altChrom, altPos, altType, altConn, alt));
+            ret.add(new VCFAltPos(altChrom, altPos, altType, altConn, alt, extra));
             
 		}
 		
