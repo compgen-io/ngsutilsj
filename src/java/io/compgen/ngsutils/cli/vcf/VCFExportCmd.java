@@ -2,10 +2,12 @@ package io.compgen.ngsutils.cli.vcf;
 
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import io.compgen.cmdline.annotation.Command;
 import io.compgen.cmdline.annotation.Exec;
@@ -37,6 +39,7 @@ public class VCFExportCmd extends AbstractOutputCommand {
 	Map<String, String> extras = new LinkedHashMap<String,String>();
 	
     private boolean noHeader = false;
+    private boolean uniqueEvent = false;
     private boolean noVCFHeader = false;
     private boolean onlyOutputPass = false;
     private boolean onlySNVs = false;
@@ -56,6 +59,11 @@ public class VCFExportCmd extends AbstractOutputCommand {
     @Option(desc="Only export SNVs", name="only-snvs")
     public void setOnlySNV(boolean onlySNV) {
         this.onlySNVs = onlySNV;
+    }
+
+    @Option(desc="Only export one record for an SV event (requires EVENT INFO, first record written)", name="unique-event")
+    public void setUniqueEvent(boolean uniqueEvent) {
+        this.uniqueEvent = uniqueEvent;
     }
 
     @Option(desc="Only export Indels", name="only-indels")
@@ -195,6 +203,12 @@ public class VCFExportCmd extends AbstractOutputCommand {
         TabWriter writer = new TabWriter();
 
         VCFHeader header = reader.getHeader();
+        if (uniqueEvent) {
+        	if (header.getInfoDef("EVENT") == null) {
+	            throw new CommandArgumentException("--unique-event is only valid for VCFs with EVENT INFO annotations!");
+        	}
+        }
+        
         for (VCFExport export: chain) {
             export.setHeader(header);
             if (missingBlank) {
@@ -229,7 +243,8 @@ public class VCFExportCmd extends AbstractOutputCommand {
         }
 
         Iterator<VCFRecord> it = reader.iterator();
-		
+        Set<String> events = new HashSet<String>();
+
 		for (VCFRecord rec: IterUtils.wrap(it)) {
 			if (onlyOutputPass && rec.isFiltered()) {
 				continue;
@@ -243,6 +258,20 @@ public class VCFExportCmd extends AbstractOutputCommand {
                 continue;          
             }
 
+            if (uniqueEvent) {
+            	if (rec.getInfo().contains("EVENT")) {
+            		String event = rec.getInfo().get("EVENT").asString(null);
+            		if (event != null && !event.equals("")) {
+            			if (events.contains(event)) {
+            				continue;
+            			} else {
+            				events.add(event);
+            			}
+            		}
+            	}
+            }
+
+            
 			List<String> outs = new ArrayList<String>();
 
 	        for (String k: extras.keySet()) {
