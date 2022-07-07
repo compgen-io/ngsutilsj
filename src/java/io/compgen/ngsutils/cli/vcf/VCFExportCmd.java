@@ -1,13 +1,14 @@
 package io.compgen.ngsutils.cli.vcf;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import io.compgen.cmdline.annotation.Command;
 import io.compgen.cmdline.annotation.Exec;
@@ -16,9 +17,12 @@ import io.compgen.cmdline.annotation.UnnamedArg;
 import io.compgen.cmdline.exceptions.CommandArgumentException;
 import io.compgen.cmdline.impl.AbstractOutputCommand;
 import io.compgen.common.IterUtils;
+import io.compgen.common.Pair;
 import io.compgen.common.StringUtils;
 import io.compgen.common.TabWriter;
 import io.compgen.ngsutils.NGSUtils;
+import io.compgen.ngsutils.support.Sorter;
+import io.compgen.ngsutils.vcf.VCFAttributeException;
 import io.compgen.ngsutils.vcf.VCFHeader;
 import io.compgen.ngsutils.vcf.VCFReader;
 import io.compgen.ngsutils.vcf.VCFRecord;
@@ -46,6 +50,11 @@ public class VCFExportCmd extends AbstractOutputCommand {
     private boolean onlyIndel = false;
 	private boolean missingBlank = false;
 	
+	private String[] eventSort = new String[0];
+	private Map<String, Map<Integer, List<String>>> outputBuffer = new HashMap<String, Map<Integer, List<String>>>();
+	private Map<String, List<Pair<VCFRecord, List<String>>>> eventBuffer = new HashMap<String, List<Pair<VCFRecord, List<String>>>>();
+	
+	
     @Option(desc="Only output passing variants", name="passing")
     public void setOnlyOutputPass(boolean onlyOutputPass) {
     	this.onlyOutputPass = onlyOutputPass;
@@ -61,9 +70,15 @@ public class VCFExportCmd extends AbstractOutputCommand {
         this.onlySNVs = onlySNV;
     }
 
-    @Option(desc="Only export one record for an SV event (requires EVENT INFO, first record written)", name="unique-event")
+    @Option(desc="Only export one record for an SV event (requires EVENT INFO)", name="unique-event")
     public void setUniqueEvent(boolean uniqueEvent) {
         this.uniqueEvent = uniqueEvent;
+    }
+
+    @Option(desc="When using event-sort, sort records by these INFO annotations (default: write the first record)", name="unique-event-sort")
+    public void setUniqueEventSort(String eventSort) {
+        this.eventSort = eventSort.split(",");
+        uniqueEvent = true;
     }
 
     @Option(desc="Only export Indels", name="only-indels")
@@ -188,12 +203,11 @@ public class VCFExportCmd extends AbstractOutputCommand {
 
 	@Exec
 	public void exec() throws Exception {
-	       if (onlySNVs && onlyIndel) {
-	            throw new CommandArgumentException("You can't set both --only-snvs and --only-indels at the same time!");
-	        }
-	        
+        if (onlySNVs && onlyIndel) {
+            throw new CommandArgumentException("You can't set both --only-snvs and --only-indels at the same time!");
+        }
 
-		VCFReader reader;
+        VCFReader reader;
 		if (filename.equals("-")) {
 			reader = new VCFReader(System.in);
 		} else {
@@ -243,7 +257,7 @@ public class VCFExportCmd extends AbstractOutputCommand {
         }
 
         Iterator<VCFRecord> it = reader.iterator();
-        Set<String> events = new HashSet<String>();
+//        Set<String> events = new HashSet<String>();
 
 		for (VCFRecord rec: IterUtils.wrap(it)) {
 			if (onlyOutputPass && rec.isFiltered()) {
@@ -258,18 +272,18 @@ public class VCFExportCmd extends AbstractOutputCommand {
                 continue;          
             }
 
-            if (uniqueEvent) {
-            	if (rec.getInfo().contains("EVENT")) {
-            		String event = rec.getInfo().get("EVENT").asString(null);
-            		if (event != null && !event.equals("")) {
-            			if (events.contains(event)) {
-            				continue;
-            			} else {
-            				events.add(event);
-            			}
-            		}
-            	}
-            }
+//            if (uniqueEvent) {
+//            	if (rec.getInfo().contains("EVENT")) {
+//            		String event = rec.getInfo().get("EVENT").asString(null);
+//            		if (event != null && !event.equals("")) {
+//            			if (events.contains(event)) {
+//            				continue;
+//            			} else {
+//            				events.add(event);
+//            			}
+//            		}
+//            	}
+//            }
 
             
 			List<String> outs = new ArrayList<String>();
@@ -286,12 +300,155 @@ public class VCFExportCmd extends AbstractOutputCommand {
 			for (VCFExport export: chain) {
 				export.export(rec, outs);
 			}
-			writer.write(outs);
-			writer.eol();
+
+            if (uniqueEvent) {
+            	if (rec.getInfo().contains("EVENT")) {
+            		String event = rec.getInfo().get("EVENT").asString(null);
+            		if (event != null && !event.equals("")) {
+                    	pushEventRecord(event, rec, outs);
+                    	continue;
+            		}
+            	}
+            }
+        	pushRecord(rec.getChrom(), rec.getPos(), outs);
+
+//			writer.write(outs);
+//			writer.eol();
 		}
 		
+		findBestEvents();
+		writeRecords(writer);
+
 		reader.close();
 		writer.close();
 	}
 
+	private void writeRecords(TabWriter writer) throws IOException {
+		for (String chrom: StringUtils.naturalSort(this.outputBuffer.keySet())) {
+			List<Integer> tmp1 = new ArrayList<Integer>();
+			for (int pos:this.outputBuffer.get(chrom).keySet()) {
+				tmp1.add(pos);
+			}
+			Collections.sort(tmp1);
+			for (int pos: tmp1) {
+				writer.write(this.outputBuffer.get(chrom).get(pos));
+				writer.eol();
+			}
+		}
+	}
+	
+	private void pushRecord(String chrom, int pos, List<String>outs) {
+		if (!this.outputBuffer.containsKey(chrom)) {
+			this.outputBuffer.put(chrom, new HashMap<Integer, List<String>>());
+		}
+		this.outputBuffer.get(chrom).put(pos,  outs);
+	}
+
+	private void pushEventRecord(String event, VCFRecord rec, List<String>outs) {
+		if (!this.eventBuffer.containsKey(event)) {
+			this.eventBuffer.put(event, new ArrayList<Pair<VCFRecord, List<String>>>());
+		}
+		this.eventBuffer.get(event).add(new Pair<VCFRecord, List<String>>(rec, outs));
+	}
+
+	private void findBestEvents() throws VCFAttributeException {
+		
+		String keyType = null;
+		
+		for (String event: this.eventBuffer.keySet()) {
+			if (keyType == null) {
+				keyType = "";
+				VCFHeader header = this.eventBuffer.get(event).get(0).one.getParentHeader();
+				if (this.eventSort != null) {
+					for (String infoKey: this.eventSort) {
+						boolean desc = false;
+						if (infoKey.charAt(0) == '-') {
+							desc = true;
+							infoKey = infoKey.substring(1);
+						} else if (infoKey.startsWith("\\-")) {
+							desc = true;
+							infoKey = infoKey.substring(2);
+						}
+						//Integer", "Float", "Flag", "Character", "String
+						if (!header.getInfoIDs().contains(infoKey)) {
+							throw new VCFAttributeException("Missing INFO: "+infoKey);
+						}
+						String type = header.getInfoDef(infoKey).type;
+						if (type.equals("Integer")) {
+							if (desc) {
+								keyType += "I";
+							} else {
+								keyType += "i";
+							}
+						} else if (type.equals("Float")) {
+							if (desc) {
+								keyType += "F";
+							} else {
+								keyType += "f";
+							}
+						} else {
+							if (desc) {
+								keyType += "S";
+							} else {
+								keyType += "s";
+							}
+						}
+					}
+				}
+			}
+			String[][] tmp = new String[this.eventBuffer.get(event).size()][this.eventSort.length+2];
+			for (int i = 0; i<this.eventBuffer.get(event).size(); i++) {
+				Pair<VCFRecord, List<String>> pair = this.eventBuffer.get(event).get(i);
+				String[] infoVals = extractInfoValues(pair.one, this.eventSort);
+				for (int j=0; j<infoVals.length; j++) {
+					tmp[i][j] = infoVals[j];
+				}
+				tmp[i][infoVals.length] = pair.one.getChrom();
+				tmp[i][infoVals.length+1] = ""+pair.one.getPos();
+			}
+
+//			System.out.println("Before sort " + keyType+"ni");
+//			for (String[] t: tmp) {
+//				System.out.println(StringUtils.join(";", t));
+//			}
+			
+			try {
+				Sorter.sortValues(tmp, keyType+"  "); // the spaces are important
+			} catch (Exception e) {
+				throw new VCFAttributeException(e);
+			}
+
+//			System.out.println("After sort");
+//			for (String[] t: tmp) {
+//				System.out.println(StringUtils.join(";", t));
+//			}
+
+			String bestChr = tmp[0][this.eventSort.length];
+			int bestPos = Integer.parseInt(tmp[0][this.eventSort.length+1]);
+			for (Pair<VCFRecord, List<String>> pair:this.eventBuffer.get(event)) {
+				if (pair.one.getChrom().equals(bestChr) && pair.one.getPos() == bestPos) {
+//					System.out.println("Pushing record: " + bestChr+":"+bestPos+" => "+StringUtils.join(",", pair.two));
+					pushRecord(bestChr, bestPos, pair.two);
+					break;
+				}
+			}
+		}
+	}
+
+	private String[] extractInfoValues(VCFRecord one, String[] keys) throws VCFAttributeException {
+		String[] ret = new String[keys.length];
+		for (int i=0; i< keys.length; i++) {
+//			System.out.println("Looking for: "+keys[i]+ " in " + StringUtils.join(",", one.getInfo().getKeys()));
+			if (one.getInfo().contains(keys[i])) {
+				if (one.getParentHeader().getInfoDef(keys[i]).type.equals("Flag")) {
+					ret[i] = keys[i];
+				} else {
+					ret[i] = one.getInfo().get(keys[i]).asString(null);
+				}
+			} else {
+				ret[i] = "";
+			}
+		}
+		return ret;
+	}
 }

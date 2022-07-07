@@ -512,6 +512,7 @@ public class VCFConsensus extends AbstractOutputCommand {
 				writer.write(rec);
 			}
 		}
+		writer.close();
 	}
 
 	private VCFRecord mergeVCFRecord(SVVCFCoord coord, VCFHeader header) throws VCFAttributeException {
