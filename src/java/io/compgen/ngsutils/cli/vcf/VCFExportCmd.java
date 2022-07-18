@@ -70,7 +70,7 @@ public class VCFExportCmd extends AbstractOutputCommand {
         this.onlySNVs = onlySNV;
     }
 
-    @Option(desc="Only export one record for an SV event (requires EVENT INFO)", name="unique-event")
+    @Option(desc="Only export one record for an SV event (requires EVENT INFO, can require lot of memory!)", name="unique-event")
     public void setUniqueEvent(boolean uniqueEvent) {
         this.uniqueEvent = uniqueEvent;
     }
@@ -309,16 +309,18 @@ public class VCFExportCmd extends AbstractOutputCommand {
                     	continue;
             		}
             	}
+            	pushRecord(rec.getChrom(), rec.getPos(), outs);
+            } else {
+            	writer.write(outs);
+            	writer.eol();
             }
-        	pushRecord(rec.getChrom(), rec.getPos(), outs);
-
-//			writer.write(outs);
-//			writer.eol();
 		}
 		
-		findBestEvents();
-		writeRecords(writer);
-
+        if (uniqueEvent) {
+			findBestEvents();
+			writeRecords(writer);
+        }
+        
 		reader.close();
 		writer.close();
 	}
