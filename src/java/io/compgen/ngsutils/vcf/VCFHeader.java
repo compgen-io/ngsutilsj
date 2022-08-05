@@ -207,6 +207,15 @@ public class VCFHeader {
 		return Collections.unmodifiableList(this.samples);
 	}
 	
+	public void renameSample(String oldname, String newname) throws VCFParseException {
+		int idx = getSamplePosByName(oldname);
+		if (idx > -1) {
+			samples.set(idx, newname);
+		} else {
+			throw new VCFParseException("Couldn't find sample: "+oldname);
+		}
+	}
+	
 	/**
 	 * Line should include the "##" prefix
 	 * @param line

@@ -100,6 +100,7 @@ import io.compgen.ngsutils.cli.vcf.VCFToBED;
 import io.compgen.ngsutils.cli.vcf.VCFToBEDPE;
 import io.compgen.ngsutils.cli.vcf.VCFToCount;
 import io.compgen.ngsutils.cli.vcf.VCFPeptide;
+import io.compgen.ngsutils.cli.vcf.VCFRenameSample;
 import io.compgen.ngsutils.cli.vcf.VCFConsensus;
 import io.compgen.ngsutils.cli.vcf.VCFTsTvRatio;
 import io.compgen.ngsutils.support.DigestCmd;
@@ -224,7 +225,8 @@ public class NGSUtils {
 			.addCommand(TabJoin.class)
 			.addCommand(FastaBins.class)
 			.addCommand(VCFBedCount.class)
-			.addCommand(VCFConsensus.class);
+			.addCommand(VCFConsensus.class)
+			.addCommand(VCFRenameSample.class);
 
         try {
             if (args.length == 0) {
