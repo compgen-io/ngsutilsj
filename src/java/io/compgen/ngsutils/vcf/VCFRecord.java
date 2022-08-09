@@ -99,7 +99,7 @@ public class VCFRecord {
 	
 	protected String chrom;
 	protected int pos; // one-based
-	protected String dbSNPID = "";
+	protected String dbSNPID = null;
 	protected String ref = ""; // reference base
 	protected List<String> alt = null;
 	protected String altOrig = null;
@@ -134,7 +134,7 @@ public class VCFRecord {
 		
 		outcols.add(chrom);
 		outcols.add(""+pos);
-		if (dbSNPID == null) {
+		if (dbSNPID == null || dbSNPID.equals("")) {
             outcols.add(MISSING);
 		} else {
 			outcols.add(dbSNPID);
@@ -166,10 +166,21 @@ public class VCFRecord {
           outcols.add(StringUtils.join(";", filters));
 		}
 		
-	    outcols.add(info.toString());
+        if (info != null) {
+        	outcols.add(info.toString());
+        } else {
+        	outcols.add(MISSING);
+        }
         
 		if (sampleAttributes != null && sampleAttributes.size() > 0) {
 			List<String> keyOrder = sampleAttributes.get(0).getKeys();
+			
+			// GT must always be first, if it is present
+			if (keyOrder.contains("GT") && keyOrder.indexOf("GT") != 0) {
+				keyOrder.remove("GT");
+				keyOrder.add(0, "GT");
+			}
+			
             outcols.add(StringUtils.join(":", keyOrder));
 			
 			for (VCFAttributes attrs: sampleAttributes) {

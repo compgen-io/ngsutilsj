@@ -34,10 +34,8 @@ import io.compgen.ngsutils.pileup.PileupRecord.PileupBaseCallOp;
 import io.compgen.ngsutils.support.SeqUtils;
 
 @Command(name="bam-tofasta", 
-		 desc="For a BAM file, output the basecalls (ACGTN) at each genomic position.", 
-		 category="bam", 
-		 doc=      "This command produces a text file that is significantly easier to parse than a \n"
-		         + "similar pileup file. Base positions are reported as 1-based values."
+		 desc="For a BAM file, output sequence with variants collapsed in FASTA format.", 
+		 category="bam"
 		 )
 
 public class BamToFasta extends AbstractOutputCommand {
@@ -147,7 +145,7 @@ public class BamToFasta extends AbstractOutputCommand {
     	this.minMapQ = minMapQ;
     }
 	
-    @Option(desc="Reference genome FASTA file (required, faidx indexed)", name="ref", helpValue="fname")
+    @Option(desc="Reference genome FASTA file (required, faidx indexed)", name="ref", helpValue="fname", required=true)
     public void setFASTAFilename(String filename) {
         this.fastaFilename = filename;
     }

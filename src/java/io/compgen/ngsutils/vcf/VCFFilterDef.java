@@ -11,6 +11,13 @@ public class VCFFilterDef {
 	final public Map<String, String> extras;
 	final public String origLine;
 	
+	public VCFFilterDef(String id, String description) {
+		this(id, description, null, null);
+	}
+	public VCFFilterDef(String id, String description, Map<String, String> extras) {
+		this(id, description, extras, null);
+	}
+
 	private VCFFilterDef(String id, String description, Map<String, String> extras, String origLine) {
 		this.id = id;
 		this.description = description;

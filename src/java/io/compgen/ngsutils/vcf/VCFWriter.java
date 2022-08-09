@@ -37,4 +37,8 @@ public class VCFWriter {
 		
 		record.write(out);
 	}
+	
+	public VCFHeader getHeader() {
+		return this.header;
+	}
 }

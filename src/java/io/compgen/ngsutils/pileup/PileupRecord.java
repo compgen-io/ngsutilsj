@@ -241,14 +241,18 @@ public class PileupRecord {
 		this.refBase = refBase;
 	}
 
-	public int getSampleCount(int sampleNum) {
-		if (sampleNum < 0 || sampleNum >= records.size()) {
-			return -1;
-		}
-		return records.get(sampleNum).coverage;
+	public int getSampleCount() {
+		return records.size();
+//		if (sampleNum < 0 || sampleNum >= records.size()) {
+//			return -1;
+//		}
+//		return records.get(sampleNum).coverage;
 	}
 
 	public PileupSampleRecord getSampleRecords(int sampleNum) {
+		if (sampleNum < 0 || sampleNum >= records.size()) {
+			throw new java.lang.IndexOutOfBoundsException();
+		}
 	    return records.get(sampleNum);
 	}
 	

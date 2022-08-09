@@ -24,7 +24,20 @@ public class VCFAttributeValue {
 			this.value = value;
 		}
 	}
-	
+
+	public VCFAttributeValue(int value) {
+		this.value = Integer.toString(value);
+	}
+	public VCFAttributeValue(long value) {
+		this.value = Long.toString(value);
+	}
+	public VCFAttributeValue(float value) {
+		this.value = Float.toString(value);
+	}
+	public VCFAttributeValue(double value) {
+		this.value = Double.toString(value);
+	}
+
 	public String toString() {
 		return value;
 	}

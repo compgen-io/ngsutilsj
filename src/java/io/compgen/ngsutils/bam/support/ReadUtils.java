@@ -535,15 +535,22 @@ public class ReadUtils {
         }
         SAMRecord mate = null;
         SAMRecordIterator it = null;
-        
+
+//        System.err.print("Finding mate: "+read.getReadName()+" ");
+//        long start = System.currentTimeMillis();
+
         if (read.getMateReferenceIndex() == SAMRecord.NO_ALIGNMENT_REFERENCE_INDEX) {
             it = reader.queryUnmapped();
+//            System.err.print("unmapped");
         } else {
             it = reader.query(read.getMateReferenceName(), read.getMateAlignmentStart(), read.getMateAlignmentStart(), false);
+//            System.err.print(read.getMateReferenceName()+":"+read.getMateAlignmentStart());
         }
         
+        
+//        int i=0;
         while (it.hasNext() && mate == null) {
-
+//        	i++;
             SAMRecord q = it.next();
             if (filterFlags > 0) {
             	if ((q.getFlags() & filterFlags) != 0) {
@@ -597,6 +604,23 @@ public class ReadUtils {
             }
 		}
         it.close();
+        
+//        long duration_sec = (System.currentTimeMillis() - start) / 1000;
+//        System.err.print(" " + duration_sec + " ");
+//        // hours = 1000*60*60
+//        long hours = duration_sec / (60*60);
+//        duration_sec = duration_sec - (hours * 60 * 60);
+//        
+//        long min = duration_sec / 60;
+//        duration_sec = duration_sec - (min * 60);
+//
+//
+//        if (mate != null) {	
+//        	System.err.println(" Found!   ("+hours+":"+min+":"+duration_sec+"), "+i+"X");
+//        } else {
+//        	System.err.println(" Missing! ("+hours+":"+min+":"+duration_sec+"), "+i+"X");
+//        }
+        
 		return mate;
 	}
 
@@ -727,6 +751,8 @@ public class ReadUtils {
 			} else if (e.getOperator() == CigarOperator.S) {
 				// soft clip -- skip these bases in read
 				readpos += e.getLength();
+			} else if (e.getOperator() == CigarOperator.H) {
+				// hard clip -- ignore
 			} else {
 				throw new IOException("Unsupported CIGAR element: " + e.getOperator()+ " / "+ read.getCigarString());
 			}

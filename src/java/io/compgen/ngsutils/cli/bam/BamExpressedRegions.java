@@ -113,7 +113,7 @@ public class BamExpressedRegions extends AbstractOutputCommand {
                 progress += 100000;
             }
             
-            if (record.getSampleCount(0) < minDepth) {
+            if (record.getSampleRecords(0).coverage < minDepth) {
                 continue;
             }
 
@@ -124,11 +124,11 @@ public class BamExpressedRegions extends AbstractOutputCommand {
                 }
 
                 curStart = record.pos;
-                peak = record.getSampleCount(0);
+                peak = record.getSampleRecords(0).coverage;
             }
 
-            if (record.getSampleCount(0) > peak) {
-                peak = record.getSampleCount(0);
+            if (record.getSampleRecords(0).coverage > peak) {
+                peak = record.getSampleRecords(0).coverage;
             }
             
             curEnd = record.pos;

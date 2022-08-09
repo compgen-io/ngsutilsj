@@ -7,6 +7,9 @@ public class VCFContigDef {
 	final public long length;
 	final public String origLine;
 	
+	public VCFContigDef(String id, long length) {
+		this(id, length, null);
+	}
 	private VCFContigDef(String id, long length, String origLine) {
 		this.id = id;
 		this.length = length;

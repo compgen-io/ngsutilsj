@@ -39,6 +39,10 @@ public class VCFHeader {
     private Set<String> blockedInfoCache = new HashSet<String>();
     private Set<String> allowedFormatCache = new HashSet<String>();
     private Set<String> blockedFormatCache = new HashSet<String>();
+
+    public VCFHeader() {
+    	this.fileformat = "##fileformat=VCFv4.2"; // default format version 
+    }
     
 	public VCFHeader(String fileformat, List<String> input, String headerLine, Set<String> removeFilter, Set<String> removeInfo, Set<String> removeFormat, Set<String> removeSample) throws VCFParseException {
 		if (fileformat == null) {
@@ -144,6 +148,20 @@ public class VCFHeader {
 	public List<String> getSamples() {
 	    return ListBuilder.build(samples);
 	}
+
+	public void addSample(String sample) {
+		if (samples == null) {
+			samples = new String[] {sample};
+		} else {
+			String[] tmp = new String[samples.length + 1];
+			for (int i=0; i< samples.length; i++) {
+				tmp[i] = samples[i];
+			}
+			tmp[samples.length] = sample;
+			samples = tmp;
+		}
+	}
+
 	
 	public void addLine(String line) {
 		this.lines.add(line);

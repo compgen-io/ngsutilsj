@@ -6,10 +6,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import io.compgen.ngsutils.bam.Strand;
+
 public class BaseTally {
     public class BaseCount implements Comparable<BaseCount> {
         private String base;
-        private int count=0;
+        private int plusCount = 0;
+        private int minusCount = 0;
+        private int noneCount = 0;
         
         private BaseCount(String base) {
             this.base = base;
@@ -17,11 +21,22 @@ public class BaseTally {
         
         @Override
         public int compareTo(BaseCount o) {
-            return Integer.compare(count, o.count);
+            return Integer.compare(plusCount+minusCount+noneCount, o.plusCount + o.minusCount + o.noneCount);
         }
         
-        private void incr() {
-            count++;
+        private void incr(Strand strand) {
+        	switch(strand) {
+        	case PLUS:
+        		plusCount++;
+        		break;
+        	case MINUS:
+        		minusCount++;
+        		break;
+        	default:
+        		noneCount++;
+        		break;
+        		
+        	}
         }
         
         public String getBase() {
@@ -29,7 +44,15 @@ public class BaseTally {
         }
         
         public int getCount() {
-            return count;
+            return plusCount+minusCount+noneCount;
+        }
+        public int getStrandCount(Strand strand) {
+            if (strand == Strand.PLUS) {
+            	return plusCount;
+            } else if (strand == Strand.MINUS) {
+            	return minusCount;
+            }
+            return noneCount;
         }
     }
     
@@ -40,12 +63,23 @@ public class BaseTally {
             tallies.put(base, new BaseCount(base));
         }
     }
-    
+
     public void incr(String base) {
     	if (!tallies.containsKey(base)) {
             tallies.put(base, new BaseCount(base));
     	}
-        tallies.get(base).incr();
+		tallies.get(base).incr(Strand.NONE);
+    }
+    
+    public void incrStrand(String base, boolean isPlusStrand) {
+    	if (!tallies.containsKey(base)) {
+            tallies.put(base, new BaseCount(base));
+    	}
+    	if (isPlusStrand) {
+    		tallies.get(base).incr(Strand.PLUS);
+    	} else {
+    		tallies.get(base).incr(Strand.MINUS);
+    	}
     }
     
     public List<BaseCount> getSorted() {
@@ -60,6 +94,10 @@ public class BaseTally {
 
     public int getCount(String base) {
         return tallies.get(base).getCount();        
+    }
+
+    public int getStrandCount(String base, Strand strand) {
+        return tallies.get(base).getStrandCount(strand);        
     }
 
     

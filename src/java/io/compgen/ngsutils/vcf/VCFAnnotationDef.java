@@ -95,6 +95,73 @@ public class VCFAnnotationDef {
 		return s+">";
 	}
 
+	public static VCFAnnotationDef newIntegerN(boolean isInfo, String id, String description, int num) {
+		try {
+			return new VCFAnnotationDef(isInfo, id, ""+num, "Integer", description, null, null, null, null);
+		} catch (VCFParseException e) {
+		}
+		return null;
+	}
+
+	public static VCFAnnotationDef newIntegerR(boolean isInfo, String id, String description) {
+		try {
+			return new VCFAnnotationDef(isInfo, id, "R", "Integer", description, null, null, null, null);
+		} catch (VCFParseException e) {
+		}
+		return null;
+	}
+	public static VCFAnnotationDef newIntegerA(boolean isInfo, String id, String description) {
+		try {
+			return new VCFAnnotationDef(isInfo, id, "A", "Integer", description, null, null, null, null);
+		} catch (VCFParseException e) {
+		}
+		return null;
+	}
+	public static VCFAnnotationDef newFloatA(boolean isInfo, String id, String description) {
+		try {
+			return new VCFAnnotationDef(isInfo, id, "A", "Float", description, null, null, null, null);
+		} catch (VCFParseException e) {
+		}
+		return null;
+	}
+	public static VCFAnnotationDef newFloatR(boolean isInfo, String id, String description) {
+		try {
+			return new VCFAnnotationDef(isInfo, id, "R", "Float", description, null, null, null, null);
+		} catch (VCFParseException e) {
+		}
+		return null;
+	}
+	public static VCFAnnotationDef newFloatN(boolean isInfo, String id, String description, int num) {
+		try {
+			return new VCFAnnotationDef(isInfo, id, ""+num, "Float", description, null, null, null, null);
+		} catch (VCFParseException e) {
+		}
+		return null;
+	}
+	public static VCFAnnotationDef newFloatWild(boolean isInfo, String id, String description, int num) {
+		try {
+			return new VCFAnnotationDef(isInfo, id, ".", "Float", description, null, null, null, null);
+		} catch (VCFParseException e) {
+		}
+		return null;
+	}
+	public static VCFAnnotationDef newIntegerWild(boolean isInfo, String id, String description) {
+		try {
+			return new VCFAnnotationDef(isInfo, id, ".", "Integer", description, null, null, null, null);
+		} catch (VCFParseException e) {
+		}
+		return null;
+	}
+
+	public static VCFAnnotationDef newStringN(boolean isInfo, String id, String description, int num) {
+		try {
+			return new VCFAnnotationDef(isInfo, id, ""+num, "String", description, null, null, null, null);
+		} catch (VCFParseException e) {
+		}
+		return null;
+	}
+
+	
 	public static VCFAnnotationDef parseString(String line) throws VCFParseException {
 		try {
 			boolean isInfo = false;

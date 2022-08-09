@@ -168,7 +168,7 @@ public class BamToBedGraph extends AbstractOutputCommand {
                 lastPos = -1;
             }            
             
-            int count = record.getSampleCount(0);
+            int count = record.getSampleRecords(0).coverage;
             if (curCount != count || record.pos != lastPos + 1) {
                 if (curCount > 0) {
                     writeLine(writer, lastChrom, curStart, lastPos+1, curCount);
