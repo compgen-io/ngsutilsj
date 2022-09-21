@@ -201,7 +201,7 @@ public class FastaTri extends AbstractOutputCommand {
         
         for (String tri: validTri) {
             long count = tally.getCount(tri) + tally.getCount(SeqUtils.revcomp(tri));
-            System.out.println(tri+"\t"+count);
+            out.write((tri+"\t"+count+"\n").getBytes());
         }
     }
 }
