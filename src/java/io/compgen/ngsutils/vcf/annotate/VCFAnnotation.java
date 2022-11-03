@@ -108,7 +108,7 @@ public class VCFAnnotation extends AbstractBasicAnnotator {
         int pos;
         try {
             chrom = getChrom(record);
-            pos = getPos(record);
+            pos = record.getPos(); // don't adjust the position based on deletions -- for a VCF:VCF comparison, the pos/ref/alt should match exactly.
         } catch (VCFAnnotatorMissingAltException e) {
             return;
         }
@@ -148,14 +148,16 @@ public class VCFAnnotation extends AbstractBasicAnnotator {
 				boolean match = !exactMatch;
 				
 				if (exactMatch) {
-				    if (bgzfRec.getAlt()!=null) {
-    					for (String a1: bgzfRec.getAlt()) {
-    						for (String a2: record.getAlt()) {
-    							if (a1.equals(a2)) { 
-    								match = true;
-    							}
-    						}
-    					}
+				    if (bgzfRec.getRef()!=null && bgzfRec.getRef().equals(record.getRef())) {
+					    if (bgzfRec.getAlt()!=null) {
+	    					for (String a1: bgzfRec.getAlt()) {
+	    						for (String a2: record.getAlt()) {
+	    							if (a1.equals(a2)) { 
+	    								match = true;
+	    							}
+	    						}
+	    					}
+					    }
 				    }
 				}
 				
