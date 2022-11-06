@@ -11,7 +11,8 @@ import io.compgen.ngsutils.bed.BedRecord;
 public class BedRegionCounter {
     protected final BedAnnotationSource bed;
     protected long total = 0;
-    protected long ontarget = 0;
+    protected long onTarget = 0;
+    protected long onTargetBases = 0;
     protected long size = 0;
     
     public BedRegionCounter(String filename) throws NumberFormatException, IOException {
@@ -31,7 +32,8 @@ public class BedRegionCounter {
         for (GenomeSpan reg: GenomeSpan.getReadAlignmentRegions(read, orient)) {
             List<BedRecord> foo = bed.findAnnotation(reg);
             if (foo != null && foo.size() > 0) {
-                ontarget++;
+            	onTarget++;
+            	onTargetBases += read.getReadLength();
                 return;
             }
         }
@@ -42,7 +44,11 @@ public class BedRegionCounter {
     }
 
     public long getOnTarget() {
-        return ontarget;
+        return onTarget;
+    }
+
+    public long getOnTargetBases() {
+        return onTargetBases;
     }
 
     public long getBedSize() {
