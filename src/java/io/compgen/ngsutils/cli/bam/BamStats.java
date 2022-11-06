@@ -370,7 +370,9 @@ public class BamStats extends AbstractOutputCommand {
         println("Uniquely-mapped-reads:\t" + (mapped - multiple));
         if (bedCounter!=null) {
             println("On-target-reads:\t" + (bedCounter.getOnTarget()));
+            println("On-target-bases:\t" + (bedCounter.getOnTargetBases()));
             println("On-target-pct:\t" + String.format("%.2f%%", (100.0*bedCounter.getOnTarget()) / bedCounter.getTotalCount()));
+            println("On-target-depth:\t" + String.format("%.2f", ((double)bedCounter.getOnTargetBases()) / bedCounter.getTotalCount()) + "X");
         } 
         println("Total-bases:\t" + totalBases);
         if (bedCounter!=null) {

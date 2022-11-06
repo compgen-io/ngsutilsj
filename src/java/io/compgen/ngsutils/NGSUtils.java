@@ -41,6 +41,7 @@ import io.compgen.ngsutils.cli.bam.BamToFastq;
 import io.compgen.ngsutils.cli.bam.BinCount;
 import io.compgen.ngsutils.cli.bam.PileupCli;
 import io.compgen.ngsutils.cli.bed.BedCleanScore;
+import io.compgen.ngsutils.cli.bed.BedCombine;
 import io.compgen.ngsutils.cli.bed.BedCount;
 import io.compgen.ngsutils.cli.bed.BedNearest;
 import io.compgen.ngsutils.cli.bed.BedPEToBed;
@@ -218,6 +219,7 @@ public class NGSUtils {
 			.addCommand(BamToBedPE.class)
 			.addCommand(BedPEToBed.class)
 			.addCommand(BamClean.class)
+			.addCommand(BedCombine.class)
 			.addCommand(VCFPeptide.class)
 			.addCommand(FastaGrep.class)
 			.addCommand(BamToFasta.class)
@@ -227,6 +229,7 @@ public class NGSUtils {
 			.addCommand(VCFBedCount.class)
 			.addCommand(VCFConsensus.class)
 			.addCommand(VCFRenameSample.class);
+
 
         try {
             if (args.length == 0) {
