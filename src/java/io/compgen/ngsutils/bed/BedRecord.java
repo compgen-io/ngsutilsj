@@ -20,6 +20,10 @@ public class BedRecord implements Annotation, Comparable<BedRecord> {
         this(coord, null, 0, null);
     }
     
+    public BedRecord(GenomeSpan coord, String name) {
+        this(coord, name, 0, null);
+    }
+
     public BedRecord(GenomeSpan coord, String name, double score) {
         this(coord, name, score, null);
     }
@@ -104,6 +108,14 @@ public class BedRecord implements Annotation, Comparable<BedRecord> {
     public int compareTo(BedRecord o) {
         return coord.compareTo(o.coord);
     }
+
+	public BedRecord clone(String newName) {
+		return new BedRecord(this.coord, newName, this.score, this.extras);
+	}
+
+	public BedRecord clone(GenomeSpan newcoord) {
+		return new BedRecord(newcoord, this.name, this.score, this.extras);
+	}
 
 }
 
