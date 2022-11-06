@@ -1,6 +1,8 @@
 package io.compgen.ngsutils.cli.vcf;
 
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Set;
 
 import io.compgen.cmdline.annotation.Command;
 import io.compgen.cmdline.annotation.Exec;
@@ -23,6 +25,8 @@ public class VCFToBEDPE extends AbstractOutputCommand {
 	private String filename = "-";
 	
 	private boolean onlyOutputPass = false;
+	private boolean delOffset = true;
+	private boolean uniqueEvent = false;
     private String altChrom = null;
     private String altPos = null;
     private String nameKey = null;
@@ -39,6 +43,16 @@ public class VCFToBEDPE extends AbstractOutputCommand {
         this.altPos = key;
     }
 
+    @Option(desc="Don't offset DEL coordinates by 1 (use the VCF pos, not the pos of the deleted bases)", name="no-del-offset")
+    public void setNoDelOffset(boolean noDelOffset) {
+        this.delOffset = !noDelOffset;
+    }
+    
+    @Option(desc="Only export one set of coordinates per event (for SVs with multiple records, eg INV; requires EVENT INFO field)", name="unique-event")
+    public void setUniqueEvent(boolean uniqueEvent) {
+        this.uniqueEvent = uniqueEvent;
+    }
+    
     @Option(desc="Only output passing variants", name="passing")
     public void setOnlyOutputPass(boolean onlyOutputPass) {
         this.onlyOutputPass = onlyOutputPass;
@@ -67,7 +81,12 @@ public class VCFToBEDPE extends AbstractOutputCommand {
 		} else {
 			reader = new VCFReader(filename);
 		}
-		
+        if (uniqueEvent) {
+        	if (reader.getHeader().getInfoDef("EVENT") == null) {
+	            throw new CommandArgumentException("--unique-event is only valid for VCFs with EVENT INFO annotations!");
+        	}
+        }
+
          
 		Iterator<VCFRecord> it = reader.iterator();
 		
@@ -115,18 +134,33 @@ public class VCFToBEDPE extends AbstractOutputCommand {
         
         writer.eol();
         
+        Set<String> events = new HashSet<String>();
+        
 		for (VCFRecord rec: IterUtils.wrap(it)) {
 			if (onlyOutputPass && rec.isFiltered()) {
 				continue;
 			}
 
+            if (uniqueEvent) {
+            	if (rec.getInfo().contains("EVENT")) {
+            		String event = rec.getInfo().get("EVENT").asString(null);
+            		if (event != null && !event.equals("")) {
+            			if (events.contains(event)) {
+            				continue;
+            			} else {
+            				events.add(event);
+            			}
+            		}
+            	}
+            }
+            
             String chrom = rec.getChrom();
             int pos = rec.getPos();
 
             for (VCFAltPos altPos : rec.getAltPos(altChrom, altPos, null, null)) {
 	            writer.write(chrom);
 	            
-	            if (altPos.type == VCFVarType.DEL) {
+	            if (delOffset && altPos.type == VCFVarType.DEL) {
 	            	// deletions are offset by one
 		            writer.write(pos);
 		            writer.write((pos+1));

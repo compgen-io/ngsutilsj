@@ -25,8 +25,15 @@ public class BEDAnnotation extends AbstractBasicAnnotator {
 	final protected BedAnnotationSource bed;
     final protected boolean flag;
     final protected boolean isNumber;
+    final protected String sampleName;
+    
+    protected int sampleNum = -1;
+
+    public BEDAnnotation(String name, String filename, boolean flag) throws IOException {
+		this(name, filename, flag, null);
+	}
 	
-	public BEDAnnotation(String name, String filename, boolean flag) throws IOException {
+	public BEDAnnotation(String name, String filename, boolean flag, String sampleName) throws IOException {
 	    if (name.endsWith(",n")) {
             this.isNumber = true;
 	        this.name = name.substring(0, name.length()-2);
@@ -36,6 +43,7 @@ public class BEDAnnotation extends AbstractBasicAnnotator {
 	    }
 		this.filename = filename;
 		this.flag = flag;
+		this.sampleName = sampleName;
 		this.bed = getBEDSource(filename);
 	}
 
@@ -51,6 +59,19 @@ public class BEDAnnotation extends AbstractBasicAnnotator {
 		try {
 			if (flag) {
 				header.addInfo(VCFAnnotationDef.info(name, "0", "Flag", "Present in BED file: "+ name, filename, null, null, null));
+			} else if (sampleName!=null) {
+			    if (isNumber) {
+                    header.addInfo(VCFAnnotationDef.format(name, "1", "Float", "BED file annotation: "+ name, filename, null, null, null));
+                } else {
+                    header.addInfo(VCFAnnotationDef.format(name, "1", "String", "BED file annotation: "+ name, filename, null, null, null));
+                }
+			    
+			    sampleNum = header.getSamplePosByName(sampleName);
+			    if (sampleNum < 0) {
+					throw new VCFAnnotatorException("Missing sample: "+sampleName);
+
+			    }
+			    
 			} else {
 			    if (isNumber) {
                     header.addInfo(VCFAnnotationDef.info(name, "1", "Float", "BED file annotation: "+ name, filename, null, null, null));
@@ -87,10 +108,19 @@ public class BEDAnnotation extends AbstractBasicAnnotator {
 				// don't add an empty annotation
 //				record.getInfo().put(name, VCFAttributeValue.MISSING);
 //			} else {
-				try {
-					record.getInfo().put(name, new VCFAttributeValue(StringUtils.join(",", bedNames)));
-				} catch (VCFAttributeException e) {
-					throw new VCFAnnotatorException(e);
+
+				if (sampleName != null) {
+					try {
+						record.getSampleAttributes().get(sampleNum).put(name, new VCFAttributeValue(StringUtils.join(",", bedNames)));
+					} catch (VCFAttributeException e) {
+						throw new VCFAnnotatorException(e);
+					}
+				} else {
+					try {
+						record.getInfo().put(name, new VCFAttributeValue(StringUtils.join(",", bedNames)));
+					} catch (VCFAttributeException e) {
+						throw new VCFAnnotatorException(e);
+					}
 				}
 			}
 		}

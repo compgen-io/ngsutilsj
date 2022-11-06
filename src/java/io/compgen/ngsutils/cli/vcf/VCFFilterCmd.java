@@ -37,6 +37,8 @@ import io.compgen.ngsutils.vcf.filter.HomozygousFilter;
 import io.compgen.ngsutils.vcf.filter.IndelFilter;
 import io.compgen.ngsutils.vcf.filter.LessThan;
 import io.compgen.ngsutils.vcf.filter.LessThanEqual;
+import io.compgen.ngsutils.vcf.filter.MaxDel;
+import io.compgen.ngsutils.vcf.filter.MaxIns;
 import io.compgen.ngsutils.vcf.filter.NotContains;
 import io.compgen.ngsutils.vcf.filter.NotEquals;
 import io.compgen.ngsutils.vcf.filter.QualityScore;
@@ -70,6 +72,22 @@ public class VCFFilterCmd extends AbstractOutputCommand {
     @Option(desc="Filter SNVs", name="snv")
     public void setSNVs() {
         filterChain.add(new SNVFilter());
+    }
+
+    @Option(desc="Filter insertions longer than {val}", name="max-ins", helpValue="val")
+    public void setMaxIns(int val) throws CommandArgumentException {
+    	if (val < 0) {
+            throw new CommandArgumentException("Max insert value must be positive");
+    	}
+        filterChain.add(new MaxIns(val));
+    }
+
+    @Option(desc="Filter deletions longer than {val}", name="max-del", helpValue="val")
+    public void setMaxDel(int val) throws CommandArgumentException {
+    	if (val < 0) {
+            throw new CommandArgumentException("Max deletion value must be positive");
+    	}
+        filterChain.add(new MaxDel(val));
     }
 
     @Option(desc="Quality score must be above this value", name="qual")
@@ -123,7 +141,7 @@ public class VCFFilterCmd extends AbstractOutputCommand {
     
     @Option(desc="Values for {KEY} is not equal to {VAL} (multiple allowed, String or number)", name="neq", helpValue="KEY:VAL:SAMPLEID:ALLELE", allowMultiple=true)
     public void setNotEQ(String val) throws CommandArgumentException {
-        String[] spl = val.split(":");
+        String[] spl = val.split(":",-1);
         if (spl.length==2) {
             filterChain.add(new NotEquals(spl[0], spl[1], null, null));
         } else if (spl.length==3) {
@@ -137,7 +155,7 @@ public class VCFFilterCmd extends AbstractOutputCommand {
     
     @Option(desc="Values for {KEY} contain {VAL} (multiple allowed, String or number; set SAMPLEID to 'INFO' to filter on an INFO field)", name="contain", helpValue="KEY:VAL:SAMPLEID:ALLELE", allowMultiple=true)
     public void setContains(String val) throws CommandArgumentException {
-        String[] spl = val.split(":");
+        String[] spl = val.split(":",-1);
         if (spl.length==2) {
             filterChain.add(new Contains(spl[0], spl[1], null, null));
         } else if (spl.length==3) {
@@ -151,7 +169,7 @@ public class VCFFilterCmd extends AbstractOutputCommand {
     
     @Option(desc="Values for {KEY} does not contain {VAL} (multiple allowed, String or number; set SAMPLEID to 'INFO' to filter on an INFO field)", name="not-contain", helpValue="KEY:VAL:SAMPLEID:ALLELE", allowMultiple=true)
     public void setNotContain(String val) throws CommandArgumentException {
-        String[] spl = val.split(":");
+        String[] spl = val.split(":",-1);
         if (spl.length==2) {
             filterChain.add(new NotContains(spl[0], spl[1], null, null));
         } else if (spl.length==3) {
@@ -165,7 +183,7 @@ public class VCFFilterCmd extends AbstractOutputCommand {
     
     @Option(desc="Values for {KEY} is equal to {VAL} (multiple allowed, String or number; set SAMPLEID to 'INFO' to filter on an INFO field)", name="eq", helpValue="KEY:VAL:SAMPLEID:ALLELE", allowMultiple=true)
     public void setEQ(String val) throws CommandArgumentException {
-        String[] spl = val.split(":");
+        String[] spl = val.split(":",-1);
         if (spl.length==2) {
             filterChain.add(new Equals(spl[0], spl[1], null, null));
         } else if (spl.length==3) {
@@ -179,7 +197,7 @@ public class VCFFilterCmd extends AbstractOutputCommand {
     
     @Option(desc="Values for {KEY} is less than {VAL} (multiple allowed)", name="lt", helpValue="KEY:VAL:SAMPLEID:ALLELE", allowMultiple=true)
     public void setLT(String val) throws CommandArgumentException {
-    	String[] spl = val.split(":");
+    	String[] spl = val.split(":",-1);
 		try {
 			if (spl.length==2) {
 	        	double thres = Double.parseDouble(spl[1]);
@@ -200,7 +218,7 @@ public class VCFFilterCmd extends AbstractOutputCommand {
     
     @Option(desc="Values for {KEY} is less than or equal to {VAL} (multiple allowed)", name="lte", helpValue="KEY:VAL:SAMPLEID:ALLELE", allowMultiple=true)
     public void setLTE(String val) throws CommandArgumentException {
-    	String[] spl = val.split(":");
+    	String[] spl = val.split(":",-1);
 		try {
 			if (spl.length==2) {
 	        	double thres = Double.parseDouble(spl[1]);
@@ -221,7 +239,7 @@ public class VCFFilterCmd extends AbstractOutputCommand {
     
     @Option(desc="Values for {KEY} is greater than {VAL} (multiple allowed)", name="gt", helpValue="KEY:VAL:SAMPLEID:ALLELE", allowMultiple=true)
     public void setGT(String val) throws CommandArgumentException {
-    	String[] spl = val.split(":");
+    	String[] spl = val.split(":",-1);
 		try {
 			if (spl.length==2) {
 	        	double thres = Double.parseDouble(spl[1]);
@@ -242,7 +260,7 @@ public class VCFFilterCmd extends AbstractOutputCommand {
     
     @Option(desc="Values for {KEY} is greater than or equal {VAL} (multiple allowed)", name="gte", helpValue="KEY:VAL:SAMPLEID:ALLELE", allowMultiple=true)
     public void setGTE(String val) throws CommandArgumentException {
-    	String[] spl = val.split(":");
+    	String[] spl = val.split(":",-1);
 		try {
 			if (spl.length==2) {
 	        	double thres = Double.parseDouble(spl[1]);

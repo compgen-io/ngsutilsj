@@ -4,6 +4,9 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.security.DigestOutputStream;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -21,6 +24,7 @@ import io.compgen.ngsutils.fastq.Fastq;
 import io.compgen.ngsutils.fastq.FastqRead;
 import io.compgen.ngsutils.fastq.FastqReader;
 import io.compgen.ngsutils.fastq.filter.FilteringException;
+import io.compgen.ngsutils.support.DigestCmd;
 
 @Command(name = "fastq-demux", desc = "Splits a FASTQ file based on lane/barcode values", category="fastq")
 public class FastqDemux extends AbstractCommand {
@@ -33,6 +37,8 @@ public class FastqDemux extends AbstractCommand {
     
     private int mismatches = 0;
     
+    private boolean calcMD5 = false;
+    private boolean calcSHA1 = false;
     private boolean force = false;
     private boolean compress = false;
     
@@ -86,6 +92,15 @@ public class FastqDemux extends AbstractCommand {
         this.outputTemplate = outputTemplate;
     }
 
+    @Option(desc="Calculate MD5 (will be written to {output}.md5)", name="md5")
+    public void setCalcMD5(boolean calcMD5) {
+        this.calcMD5 = calcMD5;
+    }
+    @Option(desc="Calculate SHA1 (will be written to {output}.sha1)", name="sha1")
+    public void setCalcSHA1(boolean calcSHA1) {
+        this.calcSHA1 = calcSHA1;
+    }
+    
     @Option(desc="Compress output files (gzip)", charName="z", name="gzip")
     public void setCompress(boolean compress) {
         this.compress = compress;
@@ -107,7 +122,7 @@ public class FastqDemux extends AbstractCommand {
     }
     
     @Exec
-    public void exec() throws IOException, CommandArgumentException, FilteringException {
+    public void exec() throws IOException, CommandArgumentException, FilteringException, NoSuchAlgorithmException {
         if (configFile != null) {
             if (nameSubstr1 != null || nameSubstr2 != null || readGroups != null) {
                 throw new CommandArgumentException("--rg-id, --lane, and --barcode values obtained from config file: " + configFile);
@@ -133,7 +148,7 @@ public class FastqDemux extends AbstractCommand {
                     
                     tmpRgID.add(cols[0]);
                     tmpStr1.add(cols[1]);
-                    if (cols.length > 2) {
+                    if (cols.length > 3) {
                         tmpStr2.add(cols[2]);
                         hasBarcode = true;
                     } else {
@@ -155,18 +170,25 @@ public class FastqDemux extends AbstractCommand {
             throw new CommandArgumentException("Missing input filename!");
         }
 
-        if (outputTemplate == null && unmatchedFname == null) {
-            throw new CommandArgumentException("Missing --out filename template or --missing filename (at least one is required)!");
-        }
+//        if (outputTemplate == null && unmatchedFname == null) {
+//            throw new CommandArgumentException("Missing --out filename template or --unmatched filename (at least one is required)!");
+//        }
 
         if (nameSubstr1 == null && nameSubstr2 == null) {
             throw new CommandArgumentException("You must specify at least one value to split reads (--lane, --barcode)!");
         }
 
         if (readGroups == null) {
-            readGroups = new String[nameSubstr1.length];
-            for (int i=0; i<nameSubstr1.length; i++) {
-                readGroups[i] = ""+i;
+        	if (nameSubstr1 != null) {
+	            readGroups = new String[nameSubstr1.length];
+	            for (int i=0; i<nameSubstr1.length; i++) {
+	                readGroups[i] = ""+i;
+	            }
+            } else {
+	            readGroups = new String[nameSubstr2.length];
+	            for (int i=0; i<nameSubstr2.length; i++) {
+	                readGroups[i] = ""+i;
+	            }
             }
         }
         
@@ -178,7 +200,7 @@ public class FastqDemux extends AbstractCommand {
             throw new CommandArgumentException("--barcode and --rg-id must be the same length!");
         }
         
-        if (nameSubstr2 != null && nameSubstr1.length != nameSubstr2.length) {
+        if (nameSubstr1 != null && nameSubstr2 != null && nameSubstr1.length != nameSubstr2.length) {
             throw new CommandArgumentException("--lane and --barcode must be the same length (if set)!");
         }
         
@@ -200,9 +222,18 @@ public class FastqDemux extends AbstractCommand {
         long unmatchedCount = 0;
         
         OutputStream[] outs = null;
+
+        MessageDigest[] md5 = null;
+        MessageDigest[] sha1 = null;
         
         if (outputTemplate != null) {
             outs = new OutputStream[readGroups.length];
+            if (calcMD5) {
+            	md5 = new MessageDigest[readGroups.length];
+            }
+            if (calcSHA1) {
+            	sha1 = new MessageDigest[readGroups.length];
+            }
         
             for (int i=0; i<readGroups.length; i++) {
                 String fname = outputTemplate.replace("%RGID", readGroups[i]);
@@ -211,7 +242,28 @@ public class FastqDemux extends AbstractCommand {
                 } else {
                     outs[i] = new FileOutputStream(fname);
                 }
+                // these can cascade, so we can calc both at the same time
+                if (calcMD5) {
+                	md5[i] = MessageDigest.getInstance("MD5");
+                	outs[i] = new DigestOutputStream(outs[i], md5[i]);
+                }
+                if (calcSHA1) {
+                	sha1[i] = MessageDigest.getInstance("SHA1");
+                	outs[i] = new DigestOutputStream(outs[i], sha1[i]);
+                }
             }
+        } else if (readGroups.length == 1) {
+            if (calcMD5 || calcSHA1) {
+                throw new CommandArgumentException("You can't calculate MD5/SHA1 when writing to stdout.");
+            }
+            outs = new OutputStream[readGroups.length];
+            if (compress) {
+                outs[0] = new GZIPOutputStream(System.out);
+            } else {
+                outs[0] = System.out;
+            }
+        } else {
+            throw new CommandArgumentException("You can only write single barcode/lane combination to stdout.");
         }
 
         OutputStream unmatched = null;
@@ -288,6 +340,24 @@ public class FastqDemux extends AbstractCommand {
                 }
             }
         }
+        
+        if (calcMD5 || calcSHA1) {
+	        if (outputTemplate != null) {
+	            for (int i=0; i<readGroups.length; i++) {
+	                String fname = outputTemplate.replace("%RGID", readGroups[i]);
+	                
+	                if (calcMD5) {
+	                	// write the filename as if it were in the same dir
+	                	DigestCmd.writeDigest(md5[i].digest(), new File(fname).getName(), fname+".md5");
+	                }
+	                if (calcSHA1) {
+	                	// write the filename as if it were in the same dir
+	                	DigestCmd.writeDigest(sha1[i].digest(), new File(fname).getName(), fname+".sha1");
+	                }
+	            }
+	        }
+        }
+
         
         for (int i=0; i<readGroups.length; i++) {
             System.err.println("Group " + readGroups[i] + ": "+counts[i]+" reads");

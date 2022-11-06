@@ -123,9 +123,9 @@ public class VCFStats extends AbstractOutputCommand {
 				if (onlyPassing) {
 					continue;
 				}
+			} else {
+				passing++;
 			}
-
-			passing++;
 			
 			if (rec.getAlt() == null) {
 				refonly++;
@@ -168,13 +168,13 @@ public class VCFStats extends AbstractOutputCommand {
 		System.out.println("Filtered variants:\t" + filtered);
 		System.out.println("Passing variants:\t" + passing);
 		System.out.println();
-		System.out.println("SNV:\t" + (passing - indel - refonly));
+		System.out.println("SNV:\t" + (count - indel - refonly));
 		System.out.println("Indels:\t" + indel);
 		System.out.println("Reference-only:\t" + refonly);
 		System.out.println();
 		System.out.println("Transitions:\t" + tsCount);
 		System.out.println("Transversions:\t" + tvCount);
-		System.out.println("Ts/Tv ratio:\t" + ((double) tsCount / tvCount));
+		System.out.println("Ts/Tv ratio:\t" + (tvCount>0 ? (double) tsCount / tvCount: ""));
 		System.out.println();
 
 		if (showFullFilters) {

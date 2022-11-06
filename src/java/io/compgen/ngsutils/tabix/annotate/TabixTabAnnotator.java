@@ -3,8 +3,10 @@ package io.compgen.ngsutils.tabix.annotate;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.zip.DataFormatException;
 
 import org.apache.commons.math3.stat.StatUtils;
@@ -24,6 +26,8 @@ public class TabixTabAnnotator implements TabAnnotator {
     private boolean first;
     private boolean mean;
     private boolean median;
+    private boolean max;
+    private boolean min;
     private boolean count;
     
     public TabixTabAnnotator(String name, String fname, int col) throws IOException {
@@ -61,6 +65,8 @@ public class TabixTabAnnotator implements TabAnnotator {
     	this.first = false;
     	this.mean = false;
     	this.median = false;
+    	this.min = false;
+    	this.max = false;
     	this.count = false;
     }
     
@@ -71,6 +77,8 @@ public class TabixTabAnnotator implements TabAnnotator {
     	this.mean = false;
     	this.median = false;
     	this.count = false;
+    	this.min = false;
+    	this.max = false;
     }
     public void setFirst() {
     	this.first = true;
@@ -79,6 +87,8 @@ public class TabixTabAnnotator implements TabAnnotator {
     	this.mean = false;
     	this.median = false;
     	this.count = false;
+    	this.min = false;
+    	this.max = false;
     }
     public void setMean() {
     	this.mean = true;
@@ -87,6 +97,8 @@ public class TabixTabAnnotator implements TabAnnotator {
     	this.collapse = false;
     	this.median = false;
     	this.count = false;
+    	this.min = false;
+    	this.max = false;
     }
     public void setMedian() {
     	this.median = true;
@@ -95,6 +107,8 @@ public class TabixTabAnnotator implements TabAnnotator {
     	this.collapse = false;
     	this.mean = false;
     	this.count = false;
+    	this.min = false;
+    	this.max = false;
     }
     public void setCount() {
     	this.count = true;
@@ -103,6 +117,30 @@ public class TabixTabAnnotator implements TabAnnotator {
     	this.collapse = false;
     	this.mean = false;
     	this.median = false;
+    	this.min = false;
+    	this.max = false;
+    }
+    
+    public void setMax() {
+    	this.max = true;
+
+    	this.count = false;
+    	this.first = false;
+    	this.collapse = false;
+    	this.mean = false;
+    	this.median = false;
+    	this.min = false;
+    }
+    
+    public void setMin() {
+    	this.min = true;
+
+    	this.count = false;
+    	this.first = false;
+    	this.collapse = false;
+    	this.mean = false;
+    	this.median = false;
+    	this.max = false;
     }
     
     @Override
@@ -115,6 +153,12 @@ public class TabixTabAnnotator implements TabAnnotator {
     	}
     	if (count) {
     		return name+"_count";
+    	}
+    	if (max) {
+    		return name+"_max";
+    	}
+    	if (min) {
+    		return name+"_min";
     	}
         return name;
     }
@@ -148,9 +192,22 @@ public class TabixTabAnnotator implements TabAnnotator {
             return matches.get(0);
         }
         if (collapse) {
-            return StringUtils.join(",", StringUtils.unique(matches));
+    		// convoluted to maintain the same order...
+    		Set<String> uniq = new HashSet<String>();
+    		List<String> ret = new ArrayList<String>();
+    		for (String v: matches) {
+    			if (v != null && !v.equals("")) {
+    				if (!uniq.contains(v) ) {
+    					uniq.add(v);
+    					ret.add(v);
+    				}
+    			}
+    		}
+    		
+        	
+            return StringUtils.join(",", ret);
         }
-        if ((mean || median) && matches.size() > 1) {
+        if ((mean || median || max || min) && matches.size() > 1) {
         	double[] vals = new double[matches.size()];
         	for (int i=0; i<vals.length; i++) {
         		vals[i] = Double.parseDouble(matches.get(i));
@@ -158,6 +215,12 @@ public class TabixTabAnnotator implements TabAnnotator {
         	
         	if (mean) {
         		return ""+StatUtils.mean(vals);
+        	}
+        	if (max) {
+        		return ""+StatUtils.max(vals);
+        	}
+        	if (min) {
+        		return ""+StatUtils.min(vals);
         	}
         	if (median) {
         		Median med = new Median();

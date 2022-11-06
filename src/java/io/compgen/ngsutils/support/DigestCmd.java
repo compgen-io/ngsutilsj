@@ -3,6 +3,7 @@ package io.compgen.ngsutils.support;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.security.MessageDigest;
@@ -128,14 +129,17 @@ public class DigestCmd extends AbstractCommand {
         out.flush();
         out.close();
         
-        byte[] digest = md.digest();
+        writeDigest(md.digest(), this.outputFilename, this.digestFilename);
         
+    }
+
+    public static void writeDigest(byte[] digest, String inputFilename, String digestFilename) throws IOException {
         String myHash = Hex.toHexString(digest).toLowerCase();
         
-        OutputStream digestOS = new FileOutputStream(this.digestFilename);
+        OutputStream digestOS = new FileOutputStream(digestFilename);
         
-        if (this.outputFilename != null) {
-            myHash += "  " + this.outputFilename;
+        if (inputFilename != null) {
+            myHash += "  " + inputFilename;
         }
         
         myHash += "\n";
@@ -143,10 +147,7 @@ public class DigestCmd extends AbstractCommand {
         digestOS.write(myHash.getBytes());
         digestOS.flush();
         digestOS.close();
-        
-        
-        
-        
+    	
     }
-
+    
 }

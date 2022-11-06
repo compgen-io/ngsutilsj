@@ -76,12 +76,20 @@ public class GenomeSpan implements Comparable<GenomeSpan> {
     }
     
     public static GenomeSpan parse(String str, Strand strand, boolean zero) {
-        if (str.indexOf(':') <= 0) {
+    	// allow for an escaped colon in the chrom name (custom FASTA files)
+        int colonPos = str.indexOf(':');
+        while (colonPos > 1 && str.charAt(colonPos-1) == '\\') {
+        	str = str.substring(0, colonPos-1) + str.substring(colonPos);
+        	colonPos = str.indexOf(':', colonPos); // we shrunk the str, so we don't need to add one here.
+        }
+
+        if (colonPos <= 0) {
             return new GenomeSpan(str, -1, -1);
         }
 
-        String ref = str.substring(0,str.indexOf(':'));
-        String startend = str.substring(str.indexOf(':')+1);
+        
+        String ref = str.substring(0,colonPos);
+        String startend = str.substring(colonPos+1);
 
         if (startend.indexOf('-') == 0) {
             return null;

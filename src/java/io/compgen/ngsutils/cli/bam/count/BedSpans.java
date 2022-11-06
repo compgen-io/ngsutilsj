@@ -13,10 +13,16 @@ import io.compgen.ngsutils.bam.Strand;
 
 public class BedSpans extends AbstractLineReader<SpanGroup> implements SpanSource {
     private int numCols;
+    private int extend;
     
     public BedSpans(String filename) throws IOException {
+        this(filename, 0);
+    }
+    public BedSpans(String filename, int extend) throws IOException {
         super(filename);
 
+        this.extend = extend;
+        
         FileInputStream peek = new FileInputStream(filename);
         byte[] magic = new byte[2];
         peek.read(magic);
@@ -31,9 +37,12 @@ public class BedSpans extends AbstractLineReader<SpanGroup> implements SpanSourc
         }
         
         String line = reader.readLine();
-        String[] cols = line.split("\t");
-        this.numCols = cols.length;
-        
+        if (line == null) {
+        	this.numCols = 0;
+        } else {
+	        String[] cols = line.split("\t");
+	        this.numCols = cols.length;
+        }
         reader.close();
     }
     
@@ -69,10 +78,20 @@ public class BedSpans extends AbstractLineReader<SpanGroup> implements SpanSourc
             return null;
         }
         
+        int start = Integer.parseInt(cols[1]);
+        int end = Integer.parseInt(cols[2]);
+        
+        start = start - extend;
+        end = end + extend;
+        
+        if (start < 0) {
+        	start = 0;
+        }
+        
         if (cols.length > 5) {
-            span = new SpanGroup(cols[0], Strand.parse(cols[5]), cols, Integer.parseInt(cols[1]), Integer.parseInt(cols[2]));
+            span = new SpanGroup(cols[0], Strand.parse(cols[5]), cols, start, end);
         } else {
-            span = new SpanGroup(cols[0], Strand.NONE, cols, Integer.parseInt(cols[1]), Integer.parseInt(cols[2]));
+            span = new SpanGroup(cols[0], Strand.NONE, cols, start, end);
         }
         return span;
     }

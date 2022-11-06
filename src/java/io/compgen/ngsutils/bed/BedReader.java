@@ -39,14 +39,30 @@ public class BedReader {
     }
     public static Iterator<BedRecord> readInputStream(final InputStream rawInput, final boolean ignoreStrand) throws IOException {
         PeekableInputStream peek = new PeekableInputStream(rawInput);
-        byte[] magic = peek.peek(2);
+
         final InputStream is;
-        if (Arrays.equals(magic, new byte[] {0x1f, (byte) 0x8B})) { // need to cast 0x8b because it is a neg. num in 2-complement
-            is = new GzipCompressorInputStream(peek, true);
-        } else {
-            is = peek;
-        }
-        
+        try {
+        	byte[] magic = peek.peek(2);
+	        if (Arrays.equals(magic, new byte[] {0x1f, (byte) 0x8B})) { // need to cast 0x8b because it is a neg. num in 2-complement
+	            is = new GzipCompressorInputStream(peek, true);
+	        } else {
+	            is = peek;
+	        }
+        }  catch (Exception e) {
+        	// empty input file
+            return new Iterator<BedRecord> () {
+
+				@Override
+				public boolean hasNext() {
+					return false;
+				}
+
+				@Override
+				public BedRecord next() {
+					return null;
+				}};
+        }        
+
         return new Iterator<BedRecord>() {
             BedRecord next = null;
             boolean first = true;
@@ -130,6 +146,7 @@ public class BedReader {
                     first = false;
                 }
                 BedRecord cur = next;
+                next = null; // this needed to avoid blank lines at the end returning the last record twice
                 loadNext();
                 return cur;
             }

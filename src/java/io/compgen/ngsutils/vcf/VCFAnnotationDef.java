@@ -171,4 +171,8 @@ public class VCFAnnotationDef {
 		}
 		return true;
 	}
+
+	public VCFAnnotationDef copy(String newId) throws VCFParseException {
+		return new VCFAnnotationDef(isInfo, newId, number, type, description, source, version, extras, null);
+	}
 }

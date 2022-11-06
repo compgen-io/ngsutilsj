@@ -1,5 +1,6 @@
 package io.compgen.ngsutils.vcf;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
@@ -33,6 +34,23 @@ public class VCFRecord {
     		} else {
     			return NA;
     		}
+    	}
+    	
+    	public String toString() {
+    		if (this==FiveToFive) {
+    			return "5to5";
+    		} else if (this==FiveToThree) {
+    			return "5to3";
+    		} else if (this==ThreeToThree) {
+    			return "3to3";
+    		} else if (this==ThreeToFive) {
+    			return "3to5";
+    		} else if (this==NToN) {
+    			return "NToN";
+    		} else if (this==NA) {
+    			return "";
+    		}
+    		return "UNK";
     	}
 	}
 
@@ -73,11 +91,14 @@ public class VCFRecord {
     	public final VCFVarType type;
     	public final VCFSVConnection connType;
     	public final String alt;
+    	public final String extra;
     	
-    	public VCFAltPos(String chrom, int pos, VCFVarType type, VCFSVConnection connType, String alt) {
+    	public VCFAltPos(String chrom, int pos, VCFVarType type, VCFSVConnection connType, String alt, String extra) {
     		this.chrom = chrom;
     		this.pos = pos;
     		this.alt = alt;
+    		this.extra = extra;
+    		
     		if (type != null) {
     			this.type = type;
     		} else {
@@ -109,6 +130,8 @@ public class VCFRecord {
 	protected VCFAttributes info = null;
 	protected List<VCFAttributes> sampleAttributes = null;
 
+	protected VCFHeader parentHeader = null;
+	
 	public VCFRecord(String chrom, int pos, String ref) {
 		this.chrom = chrom;
 		this.pos = pos;
@@ -116,7 +139,7 @@ public class VCFRecord {
 	}
 	
 	public VCFRecord(String chrom, int pos, String dbSNPID, String ref, List<String> alt, double qual,
-			List<String> filters, VCFAttributes info, List<VCFAttributes> sampleAttributes, String altFull) {
+			List<String> filters, VCFAttributes info, List<VCFAttributes> sampleAttributes, String altFull, VCFHeader header) {
 		this.chrom = chrom;
 		this.pos = pos;
 		this.dbSNPID = dbSNPID;
@@ -127,6 +150,7 @@ public class VCFRecord {
 		this.info = info;
 		this.sampleAttributes = sampleAttributes;
 		this.altOrig = altFull;
+		this.parentHeader = header;
 	}
 
     public void write(OutputStream out) throws IOException{
@@ -220,13 +244,13 @@ public class VCFRecord {
 		if (cols.length > 6) {
 			if (!cols[6].equals(PASS)) {
 			    // if filters is null => PASS
-			    // if filters is not null, but empty => MISSING
+			    // if filters is not null, but empty => MISSING ??
 	
 			    for (String f: cols[6].split(";")) {
+	                if (filters == null) {
+	                    filters = new ArrayList<String>();
+	                }
 					if (!f.equals(MISSING) && (header == null || header.isFilterAllowed(f))) {
-		                if (filters == null) {
-		                    filters = new ArrayList<String>();
-		                }
 					    filters.add(f);
 					}
 				}
@@ -258,7 +282,7 @@ public class VCFRecord {
 					}
 				}
 			}
-			return new VCFRecord(chrom, pos, dbSNPID, ref, alts, qual, filters, info, samples, altOrig);
+			return new VCFRecord(chrom, pos, dbSNPID, ref, alts, qual, filters, info, samples, altOrig, header);
 
 		} catch (VCFParseException | VCFAttributeException e) {
 			if (!VCFCheck.isQuiet()) {
@@ -271,6 +295,10 @@ public class VCFRecord {
 		throw new VCFParseException("Unknown parse exception");
 	}
 
+    public String toString() {
+    	return chrom + ":" + pos +":"+ref+">"+altOrig;
+    }
+    
 	public String getChrom() {
 		return chrom;
 	}
@@ -354,10 +382,25 @@ public class VCFRecord {
 		this.info = info;
 	}
 
+	public VCFHeader getParentHeader() {
+		return parentHeader;
+	}
+	
 	public List<VCFAttributes> getSampleAttributes() {
 		return sampleAttributes;
 	}
 
+	public VCFAttributes getFormatBySample(String sample) throws VCFAttributeException {
+		if (parentHeader == null) {
+			throw new VCFAttributeException("Missing header -- cannot extract sample without the header");
+		}
+		if (sampleAttributes == null) {
+			return null;
+		}
+		
+		return sampleAttributes.get(parentHeader.getSamplePosByName(sample));
+	}
+	
 	public void addSampleAttributes(VCFAttributes attrs) {
 		if (sampleAttributes == null) {
 			sampleAttributes = new ArrayList<VCFAttributes>();
@@ -429,7 +472,7 @@ public class VCFRecord {
             	altConn = VCFSVConnection.parse(getInfo().get(connKey).toString());
 			}
             
-            ret.add(new VCFAltPos(altChrom, altPos, altType, altConn, this.altOrig));
+            ret.add(new VCFAltPos(altChrom, altPos, altType, altConn, this.altOrig, null));
             return ret;
 		}
 		
@@ -438,6 +481,7 @@ public class VCFRecord {
 			VCFSVConnection altConn = VCFSVConnection.NA;
             String altChrom = this.chrom;
             int altPos = this.pos;
+            String extra = null;
 
         	if (alt.startsWith("[") || alt.startsWith("]") || alt.endsWith("[") || alt.endsWith("]")) {
         		//BND
@@ -445,19 +489,23 @@ public class VCFRecord {
         		if (alt.startsWith("[")) {
         			altType = VCFVarType.BND;
         			altConn = VCFSVConnection.FiveToFive;
-        			sub = alt.substring(1,alt.indexOf("[", 2)-1);
+        			sub = alt.substring(1,alt.indexOf("[", 1));
+        			extra = alt.substring(alt.indexOf("[", 1)+1);
         		} else if (alt.startsWith("]")) {
         			altType = VCFVarType.BND;
         			altConn = VCFSVConnection.FiveToThree;
-        			sub = alt.substring(1,alt.indexOf("]", 2)-1);
+        			sub = alt.substring(1,alt.indexOf("]", 1));
+        			extra = alt.substring(alt.indexOf("]", 1)+1);
         		} else if (alt.endsWith("[")) {
         			altType = VCFVarType.BND;
         			altConn = VCFSVConnection.ThreeToFive;
         			sub = alt.substring(alt.indexOf("[")+1,alt.length()-1);
+        			extra = alt.substring(0, alt.indexOf("[", 1));
         		} else if (alt.endsWith("]")) {
         			altType = VCFVarType.BND;
         			altConn = VCFSVConnection.ThreeToThree;
         			sub = alt.substring(alt.indexOf("]")+1,alt.length()-1);
+        			extra = alt.substring(0, alt.indexOf("]", 1));
         		}
 
         		String[] spl = sub.split(":");
@@ -478,7 +526,7 @@ public class VCFRecord {
             	} else if (alt.startsWith("<DEL")) {
             		altType = VCFVarType.DEL;
         			altConn = VCFSVConnection.ThreeToFive;
-        		} else if (alt.startsWith("<DUP")) {
+        		} else if (alt.startsWith("<DUP")) { // matches DUP and DUP:TANDEM
             		altType = VCFVarType.DUP;
         			altConn = VCFSVConnection.FiveToThree;
         		}
@@ -514,12 +562,17 @@ public class VCFRecord {
         	if (typeKey != null && getInfo().get(typeKey) != null) {
 	            altType = VCFVarType.parse(getInfo().get(typeKey).toString());
 			}
-            if (connKey != null && getInfo().get(connKey) != null) {
+
+        	if (connKey != null && getInfo().get(connKey) != null) {
             	altConn = VCFSVConnection.parse(getInfo().get(connKey).toString());
+			} else if (altType == VCFVarType.INV && altConn == VCFSVConnection.UNK && getInfo().get("CT") != null) {
+				// if we don't explicitly set connKey, and we couldn't figure it out from the alt value,
+				// look for the "CT" INFO field by default. That if that works, try it.
+            	altConn = VCFSVConnection.parse(getInfo().get("CT").toString());
 			}
 
 
-            ret.add(new VCFAltPos(altChrom, altPos, altType, altConn, alt));
+            ret.add(new VCFAltPos(altChrom, altPos, altType, altConn, alt, extra));
             
 		}
 		
@@ -581,5 +634,41 @@ public class VCFRecord {
 
 	    return 0;
 	}
+
+	private void writeToStream(OutputStream os, String s) throws IOException {
+		os.write((s + "\n").getBytes());
+	}
 	
+    public String dump() throws IOException{
+    	ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    	
+    	writeToStream(baos, chrom+":"+pos+" "+ref+">"+StringUtils.join(",", alt));
+    	writeToStream(baos, "ID: " + dbSNPID);
+		String qstr = ""+qual;
+		if (qstr.endsWith(".0")) {
+			qstr = qstr.substring(0,  qstr.length()-2);
+		}
+		writeToStream(baos, "Qual: " + qstr);
+		
+        if (filters != null && filters.size() == 0) {
+        	writeToStream(baos, "Filters: " + MISSING);
+        } else if (!isFiltered()) {
+        	writeToStream(baos, "Filters: " + PASS);
+		} else {
+			writeToStream(baos, "Filters: " + StringUtils.join(";", filters));
+		}
+
+        writeToStream(baos, "INFO: ");
+        for (String k: info.getKeys()) {
+        	writeToStream(baos, "    "+ k + " => " + info.get(k));
+        }
+
+        for (int i=0; i< sampleAttributes.size(); i++) {
+        	writeToStream(baos, "Sample " + i +":");
+	        for (String k: sampleAttributes.get(0).getKeys()) {
+	        	writeToStream(baos, "    "+ k + " => " + sampleAttributes.get(i).get(k));
+	        }
+        }
+        return baos.toString();
+	}
 }

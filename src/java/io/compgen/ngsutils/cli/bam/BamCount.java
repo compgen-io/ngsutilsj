@@ -42,6 +42,8 @@ public class BamCount extends AbstractOutputCommand {
     private String gtfFilename=null;
     private int binSize = 0;
     
+    private int bedExtend = 0;
+    
     private boolean contained = false;
     private boolean lenient = false;
     private boolean silent = false;
@@ -95,6 +97,15 @@ public class BamCount extends AbstractOutputCommand {
     public void setBedFile(String bedFilename) {
         this.bedFilename = bedFilename;
     }
+    
+    @Option(desc="Extend BED regions by this many bases (news start/end not shown in output)", name="bed-extend", defaultValue="0")
+    public void setBedExtend(int bedExtend) throws CommandArgumentException {
+        if (bedExtend < 0) {
+        	throw new CommandArgumentException("--bed-extend must be positive!");
+        }
+        this.bedExtend = bedExtend;
+    }
+
 
     @Option(desc="Use lenient validation strategy", name="lenient")
     public void setLenient(boolean lenient) {
@@ -211,7 +222,10 @@ public class BamCount extends AbstractOutputCommand {
             name = "bins - "+ binSize;
         } else if (bedFilename != null) {
             writer.write_line("## source: bed " + bedFilename);
-            spanSource = new BedSpans(bedFilename);
+            if (bedExtend > 0) {
+            	writer.write_line("## bed-extend: " + bedExtend);
+            }
+            spanSource = new BedSpans(bedFilename, bedExtend);
             name = bedFilename;
         } else if (gtfFilename != null) {
             writer.write_line("## source: gtf " + gtfFilename);

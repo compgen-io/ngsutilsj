@@ -23,82 +23,37 @@ public class TabixAnnotation extends AbstractBasicAnnotator {
     final protected String name;
     final protected String filename;
     final protected TabixFile tabix;
-    final protected int colNum;
-    final protected int altColNum;
-    final protected boolean isNumber;
-    final protected boolean collapse;
-
-    final protected String colDefString;
     
-    public TabixAnnotation(String name, String filename, int colNum, boolean isNumber, int altColNum, boolean collapse)
-            throws IOException {
-        this.name = name;
-        this.filename = filename;
-        this.colNum = colNum;
-        this.isNumber = isNumber;
-        this.altColNum = altColNum;
-        this.tabix = getTabixFile(filename);
-        this.collapse = collapse;
-        this.colDefString = null;
+    protected int col = -1;
+    protected int altCol = -1;
+    protected int refCol = -1;
+
+    protected boolean isNumber = false;
+    protected boolean max = false;
+    protected boolean first = false;
+    protected boolean collapse = false;
+    protected boolean noHeader = false;
+    protected int extend = 0;
+
+    protected String colDefString;
+    
+    final protected String sampleName;
+    protected int sampleNum = -1;
+
+    
+	// INFO annotation
+    public TabixAnnotation(String name, String filename) throws IOException {
+    	this(name, filename, null);
     }
-
-    public TabixAnnotation(String name, String filename, String colName, boolean isNumber, String altColName, boolean collapse)
-            throws IOException {
-        this.name = name;
-        this.filename = filename;
-        this.isNumber = isNumber;
+ 
+	// FORMAT annotation (or ctor)
+    public TabixAnnotation(String name, String filename, String sampleName) throws IOException {
+	    this.name = name;
+	    this.filename = filename;
+	    this.sampleName = sampleName;
         this.tabix = getTabixFile(filename);
-        this.collapse = collapse;
-        
-
-        int altColNum = this.tabix.findColumnByName(altColName);
-        if (altColNum == -1) {
-        	throw new IOException("Unknown column name: "+ altColName);
-        }
-        this.altColNum = altColNum;
-
-        int colNum = this.tabix.findColumnByName(colName);
-        if (colNum == -1) {
-        	throw new IOException("Unknown column name: "+ colName);
-        }
-        this.colNum = colNum;
-        this.colDefString = colName;
     }
-
-    public TabixAnnotation(String name, String filename, String colName, boolean isNumber, int altColNum, boolean collapse)
-            throws IOException {
-        this.name = name;
-        this.filename = filename;
-        this.isNumber = isNumber;
-        this.altColNum = altColNum;
-        this.tabix = getTabixFile(filename);
-        this.collapse = collapse;
-        
-        int colNum = this.tabix.findColumnByName(colName);
-        if (colNum == -1) {
-        	throw new IOException("Unknown column name: "+ colName);
-        }
-        
-        this.colNum = colNum;
-        this.colDefString = colName;
-    }
-
-    public TabixAnnotation(String name, String filename, int colNum, boolean isNumber, String altColName, boolean collapse)
-            throws IOException {
-        this.name = name;
-        this.filename = filename;
-        this.isNumber = isNumber;
-        this.tabix = getTabixFile(filename);
-        this.collapse = collapse;
-        this.colNum = colNum;
-        int altColNum = this.tabix.findColumnByName(altColName);
-        if (altColNum == -1) {
-        	throw new IOException("Unknown column name: "+ altColName);
-        }
-        this.altColNum = altColNum;
-        this.colDefString = null;
-    }
-
+ 
 
     private static TabixFile getTabixFile(String filename) throws IOException {
         if (!cache.containsKey(filename)) {
@@ -109,29 +64,41 @@ public class TabixAnnotation extends AbstractBasicAnnotator {
 
     @Override
     public void setHeaderInner(VCFHeader header) throws VCFAnnotatorException {
+    	if (sampleName != null) {
+		    sampleNum = header.getSamplePosByName(sampleName);
+		    if (sampleNum < 0) {
+				throw new VCFAnnotatorException("Missing sample: "+sampleName);
+		    }
+    	}
+    	
+    	if (noHeader) {
+    		return;
+    	}
         try {
-            if (colNum == -1) {
+            if (col == -1) {
                 header.addInfo(VCFAnnotationDef.info(name, "0", "Flag", "Present in Tabix file",
                         filename, null, null, null));
             } else {
-            	if (this.colDefString != null) {
-                // use 1-based indexing here...
-	                if (isNumber) {
-	                    header.addInfo(VCFAnnotationDef.info(name, ".", "Float",
-	                            "Column " + VCFHeader.quoteString(colDefString) + " from file", filename, null, null, null));
-	                } else {
-	                    header.addInfo(VCFAnnotationDef.info(name, ".", "String",
-	                            "Column " + VCFHeader.quoteString(colDefString) + " from file", filename, null, null, null));
-	                }
-            	} else {
-	                if (isNumber) {
-	                    header.addInfo(VCFAnnotationDef.info(name, ".", "Float",
-	                            "Column " + (colNum+1) + " from file", filename, null, null, null));
-	                } else {
-	                    header.addInfo(VCFAnnotationDef.info(name, ".", "String",
-	                            "Column " + (colNum+1) + " from file", filename, null, null, null));
-	                }
+            	String type = "String";
+            	String desc;
+            	
+            	if (isNumber) {
+            		type = "Float";
             	}
+            	
+            	if (this.colDefString != null) {
+            		desc = "Column " + VCFHeader.quoteString(colDefString) + " from file";
+            	} else {
+            		desc = "Column " + (col+1) + " from file";
+            	}
+
+            	if (sampleName != null) {
+            		// FORMAT
+            		header.addFormat(VCFAnnotationDef.format(name,  ".", type, desc, filename, null, null, null));
+            	} else {
+            		header.addInfo(VCFAnnotationDef.info(name,  ".", type, desc, filename, null, null, null));
+            	}
+
             }
         } catch (VCFParseException e) {
             throw new VCFAnnotatorException(e);
@@ -154,8 +121,15 @@ public class TabixAnnotation extends AbstractBasicAnnotator {
         int endpos;
         try {
             chrom = getChrom(record);
-            pos = getPos(record);
-            endpos = getEndPos(record);
+            if (refCol>-1) {
+            	// we are matching against a ref/alt column, so don't adjust the positions. This input should be equivalent to a VCF comparison.
+            	pos = record.getPos();
+            	endpos = record.getPos();
+            	
+            } else {
+	            pos = getPos(record);
+	            endpos = getEndPos(record);
+            }
         } catch (VCFAnnotatorMissingAltException e) {
             return;
         }
@@ -170,67 +144,114 @@ public class TabixAnnotation extends AbstractBasicAnnotator {
 //
             List<String> vals = new ArrayList<String>();
             boolean found = false;
-
-            if (altColNum > -1) {
-                // need to verify the alt column.
-            	
-                for (String line : IterUtils.wrap(tabix.query(chrom, pos - 1, endpos))) {
+            
+            for (String line : IterUtils.wrap(tabix.query(chrom, pos - 1 - extend, endpos + extend))) {
+                String[] spl = line.split("\t");
+                
+                boolean altOk = true;
+                if (altCol > -1) {
+                	altOk = false;
                     for (String alt: record.getAlt()) {
-                        String[] spl = line.split("\t");
-                        if (alt.equals(spl[altColNum])) {
-                            found = true;
-                            if (colNum > -1) {
-                                // annotate based on a column value
-                                if (spl.length <= colNum) {
-                                    throw new VCFAnnotatorException("Missing column for line: " + line);
-                                }
-                                // TODO: HERE
-                                if (!spl[colNum].equals("")) {
-                                	vals.add(spl[colNum]);
-                                }
-                            }
+                        if (alt.equals(spl[altCol])) {
+                        	altOk = true;
                         }
                     }
                 }
-            } else {
-                // just look for a BED region that spans this VCF position
-                found = false;
-                for (String line : IterUtils.wrap(tabix.query(chrom, pos - 1, endpos))) {
-                    found = true;
-                    if (colNum > -1) { 
-                        // annotate based on a column value
-                        String[] spl = line.split("\t");
+                if (!altOk) {
+                	continue;
+                }
 
-                        if (spl.length <= colNum) {
-                            throw new VCFAnnotatorException("Missing column for line: " + line);
+                boolean refOk = true;
+                if (refCol > -1) {
+                	refOk = false;
+                    if (record.getRef().equals(spl[refCol])) {
+                    	refOk = true;
+                    }
+                }
+                if (!refOk) {
+                	continue;
+                }
+
+                found = true;
+                if (col > -1) {
+                    // annotate based on a column value
+                    if (spl.length>col) {
+                        if (!spl[col].equals("")) {
+                        	vals.add(spl[col]);
                         }
-                        // TODO: HERE
-                        if (!spl[colNum].equals("")) {
-                            vals.add(spl[colNum]);
-                        }
+                    } else {
+                    	// do nothing for blanks...
+                        //throw new VCFAnnotatorException("Missing column for line: " + line);
                     }
                 }
             }
-
+            
             if (found) {
-                if (colNum == -1) {
+                if (col == -1) {
                     // this is just a flag
                     record.getInfo().putFlag(name);
                 } else {
                     if (vals.size() > 0) {
-                    	// don't add empty annotations
-//                        record.getInfo().put(name, VCFAttributeValue.MISSING);
-//                    } else {
-                        // TODO: replace empty strings for missing?
-                    	try {
-	                        if (collapse) {
-	                            record.getInfo().put(name, new VCFAttributeValue(StringUtils.join(",", StringUtils.unique(vals))));
-	                        } else {
-	                            record.getInfo().put(name, new VCFAttributeValue(StringUtils.join(",", vals)));
-	                        }
-	            		} catch (VCFAttributeException e) {
-	            			throw new VCFAnnotatorException(e);
-	            		}
+        				if (sampleName != null) {
+	                    	try {
+		                        if (collapse) {
+		                        	record.getSampleAttributes().get(sampleNum).put(name, new VCFAttributeValue(StringUtils.join(",", StringUtils.unique(vals))));
+		                        } else if (first) {
+		                        	record.getSampleAttributes().get(sampleNum).put(name, new VCFAttributeValue(vals.get(0)));
+		                        } else if (max) {
+		                        	double[] vals_d = new double[vals.size()];
+		                        	for (int i=0; i<vals.size(); i++) {
+		                        		vals_d[i] = Double.parseDouble(vals.get(i));
+		                        	}
+		                        	
+		                        	double maxD = vals_d[0];
+		                        	for (double d: vals_d) {
+		                        		if (d > maxD) {
+		                        			maxD = d;
+		                        		}
+		                        	}
+		                        	String maxS = ""+maxD;
+		                        	if (maxS.endsWith(".0")) {
+		                        		maxS = maxS.substring(0, maxS.length()-2);
+		                        	}
+		                        	record.getSampleAttributes().get(sampleNum).put(name, new VCFAttributeValue(maxS));
+		                        } else {
+		                        	record.getSampleAttributes().get(sampleNum).put(name, new VCFAttributeValue(StringUtils.join(",",vals)));
+		                        }
+		            		} catch (VCFAttributeException e) {
+		            			throw new VCFAnnotatorException(e);
+		            		}
+                    	} else {
+	                    	try {
+		                        if (collapse) {
+		                            record.getInfo().put(name, new VCFAttributeValue(StringUtils.join(",", StringUtils.unique(vals))));
+		                        } else if (first) {
+		                            record.getInfo().put(name, new VCFAttributeValue(vals.get(0)));
+		                        } else if (max) {
+		                        	double[] vals_d = new double[vals.size()];
+		                        	for (int i=0; i<vals.size(); i++) {
+		                        		vals_d[i] = Double.parseDouble(vals.get(i));
+		                        	}
+		                        	
+		                        	double maxD = vals_d[0];
+		                        	for (double d: vals_d) {
+		                        		if (d > maxD) {
+		                        			maxD = d;
+		                        		}
+		                        	}
+		                        	String maxS = ""+maxD;
+		                        	if (maxS.endsWith(".0")) {
+		                        		maxS = maxS.substring(0, maxS.length()-2);
+		                        	}
+
+		                        	record.getInfo().put(name, new VCFAttributeValue(maxS));
+		                        } else {
+		                            record.getInfo().put(name, new VCFAttributeValue(StringUtils.join(",", vals)));
+		                        }
+		            		} catch (VCFAttributeException e) {
+		            			throw new VCFAnnotatorException(e);
+		            		}
+                    	}
                     }
                 }
             }
@@ -238,4 +259,62 @@ public class TabixAnnotation extends AbstractBasicAnnotator {
             throw new VCFAnnotatorException(e);
         }
     }
+
+
+	public void setCol(int colNum) {
+		this.col = colNum;
+	}
+
+	public void setCol(String colName) throws IOException {
+		this.col = tabix.findColumnByName(colName);
+		this.colDefString = colName;
+	}
+
+
+	public void setAltCol(int altCol) {
+		this.altCol = altCol;
+	}
+	public void setAltCol(String altCol) throws IOException {
+		this.altCol = tabix.findColumnByName(altCol);
+	}
+
+
+	public void setRefCol(int refCol) {
+		this.refCol = refCol;
+	}
+	public void setRefCol(String refCol) throws IOException {
+		this.refCol = tabix.findColumnByName(refCol);
+	}
+
+
+	public void setNumber() {
+		this.isNumber = true;
+	}
+
+
+	public void setMax() {
+		this.max = true;
+	}
+
+	public void setFirst() {
+		this.first = true;
+	}
+
+	public void setCollapse() {
+		this.collapse = true;
+	}
+
+	public void setExtend(int extend) {
+		this.extend = extend;
+	}
+
+
+	public void setNoHeader() {
+		this.noHeader = true;
+	}
+
+
+	public void setColDefString(String colDefString) {
+		this.colDefString = colDefString;
+	}
 }

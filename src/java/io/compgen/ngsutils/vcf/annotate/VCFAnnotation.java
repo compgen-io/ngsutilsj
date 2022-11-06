@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.zip.DataFormatException;
 
 import io.compgen.common.IterUtils;
@@ -26,8 +28,9 @@ public class VCFAnnotation extends AbstractBasicAnnotator {
 	final protected String infoVal;
     final protected boolean exactMatch;
     final protected boolean passingOnly;
+    final protected boolean uniqueMatch;
 	
-	public VCFAnnotation(String name, String filename, String infoVal, boolean exact, boolean passing) throws IOException {
+	public VCFAnnotation(String name, String filename, String infoVal, boolean exact, boolean passing, boolean unique) throws IOException {
 		this.name = name;
 		this.filename = filename;
 		this.infoVal = infoVal;
@@ -38,11 +41,12 @@ public class VCFAnnotation extends AbstractBasicAnnotator {
 		}
 		
 		this.passingOnly = passing;
+		this.uniqueMatch = unique;
 		this.vcfTabix = getTabixFile(filename);
 	}	
 
 	public VCFAnnotation(String name, String filename, String infoVal) throws IOException {
-		this(name, filename, infoVal, false, false);
+		this(name, filename, infoVal, false, false, false);
 	}
 	
 	private static TabixFile getTabixFile(String filename) throws IOException {
@@ -60,13 +64,24 @@ public class VCFAnnotation extends AbstractBasicAnnotator {
 		    }
 		    
 		    String extra = "";
-		    if (passingOnly && exactMatch) {
-                extra = " (passing, exact match)";
-            } else if (passingOnly) {
-                extra = " (passing)";
-            } else if (exactMatch) {
-                extra = " (exact match)";
+            if (passingOnly) {
+                extra = "passing";
+            }
+            if (exactMatch) {
+            	if (!extra.equals("")) {
+            		extra += ",";
+            	}
+                extra += "exact";
 		    }
+            if (uniqueMatch) {
+            	if (!extra.equals("")) {
+            		extra += ",";
+            	}
+                extra += "unique";
+		    }
+        	if (!extra.equals("")) {
+        		extra = " (" + extra+")";
+        	}
 		    
 			if (infoVal == null) {
 		        header.addInfo(VCFAnnotationDef.info(name, "0", "Flag", "Present in VCF file"+extra, filename, null, null, null));
@@ -93,7 +108,7 @@ public class VCFAnnotation extends AbstractBasicAnnotator {
         int pos;
         try {
             chrom = getChrom(record);
-            pos = getPos(record);
+            pos = record.getPos(); // don't adjust the position based on deletions -- for a VCF:VCF comparison, the pos/ref/alt should match exactly.
         } catch (VCFAnnotatorMissingAltException e) {
             return;
         }
@@ -133,14 +148,16 @@ public class VCFAnnotation extends AbstractBasicAnnotator {
 				boolean match = !exactMatch;
 				
 				if (exactMatch) {
-				    if (bgzfRec.getAlt()!=null) {
-    					for (String a1: bgzfRec.getAlt()) {
-    						for (String a2: record.getAlt()) {
-    							if (a1.equals(a2)) { 
-    								match = true;
-    							}
-    						}
-    					}
+				    if (bgzfRec.getRef()!=null && bgzfRec.getRef().equals(record.getRef())) {
+					    if (bgzfRec.getAlt()!=null) {
+	    					for (String a1: bgzfRec.getAlt()) {
+	    						for (String a2: record.getAlt()) {
+	    							if (a1.equals(a2)) { 
+	    								match = true;
+	    							}
+	    						}
+	    					}
+					    }
 				    }
 				}
 				
@@ -154,6 +171,8 @@ public class VCFAnnotation extends AbstractBasicAnnotator {
                         record.getInfo().put(name, VCFAttributeValue.EMPTY);
                         // flags return right away
                         return;
+				    } else if (infoVal.equals("@ID")) { // just add a flag
+				    	vals.add(bgzfRec.getDbSNPID());
 					} else {
 	                   if (bgzfRec.getInfo().get(infoVal)!=null) {
 	                       String val = bgzfRec.getInfo().get(infoVal).asString(null);
@@ -170,7 +189,13 @@ public class VCFAnnotation extends AbstractBasicAnnotator {
             }
 			// it's possible for there to be multiple lines for a position, so we need to loop them all
 			if (vals.size() > 0) {
-				record.getInfo().put(name, new VCFAttributeValue(StringUtils.join(",", vals)));
+				if (uniqueMatch) {
+					Set<String> tmp = new TreeSet<String>();
+					tmp.addAll(vals);
+					record.getInfo().put(name, new VCFAttributeValue(StringUtils.join(",", tmp)));
+				} else {
+					record.getInfo().put(name, new VCFAttributeValue(StringUtils.join(",", vals)));
+				}
 			}
 		} catch (VCFAttributeException | VCFParseException | IOException | DataFormatException e) {
 			throw new VCFAnnotatorException(e);

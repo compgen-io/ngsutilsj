@@ -3,6 +3,7 @@ package io.compgen.ngsutils.vcf;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -11,7 +12,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import io.compgen.common.ListBuilder;
 import io.compgen.common.StringUtils;
 import io.compgen.ngsutils.support.GlobUtils;
 
@@ -23,14 +23,18 @@ public class VCFHeader {
 	protected List<String> lines = new ArrayList<String>();
 
 	protected Map<String, VCFContigDef> contigDefs = new LinkedHashMap<String, VCFContigDef>();
+	protected Map<String, VCFAltDef> altDefs = new LinkedHashMap<String, VCFAltDef>();
 	
 	protected String headerLine;
 	
-	protected String[] samples = null;
+	protected List<String> samples = new ArrayList<String>();
 	
     private Set<String> removeFilter = null;
     private Set<String> removeInfo = null;
     private Set<String> removeFormat = null;
+    private Set<String> keepFilter = null;
+    private Set<String> keepInfo = null;
+    private Set<String> keepFormat = null;
 //    private Set<String> removeSample = null;
 
     private Set<String> allowedFilterCache = new HashSet<String>();
@@ -40,7 +44,17 @@ public class VCFHeader {
     private Set<String> allowedFormatCache = new HashSet<String>();
     private Set<String> blockedFormatCache = new HashSet<String>();
     
-	public VCFHeader(String fileformat, List<String> input, String headerLine, Set<String> removeFilter, Set<String> removeInfo, Set<String> removeFormat, Set<String> removeSample) throws VCFParseException {
+	public VCFHeader() {
+		this("fileformat=VCFv4.2");
+		// nothing set...
+	}
+	public VCFHeader(String fileformat) {
+		this.fileformat = fileformat;
+		// nothing set...
+	}
+
+    
+	public VCFHeader(String fileformat, List<String> input, String headerLine, Set<String> removeFilter, Set<String> removeInfo, Set<String> removeFormat, Set<String> removeSample, Set<String> keepFilter, Set<String> keepInfo, Set<String> keepFormat, Set<String> keepSample) throws VCFParseException {
 		if (fileformat == null) {
 			throw new VCFParseException("Missing format in header?");
 		}
@@ -51,6 +65,11 @@ public class VCFHeader {
         this.removeFilter = removeFilter;
         this.removeInfo = removeInfo;
         this.removeFormat = removeFormat;
+        this.keepFilter = keepFilter;
+        
+        this.keepInfo = keepInfo;
+        
+        this.keepFormat = keepFormat;
 //        this.removeSample = removeSample;
 		
 		for (String line: input) {
@@ -61,6 +80,13 @@ public class VCFHeader {
                     for (String remove: removeInfo) {
                         if (GlobUtils.matches(info.id, remove)) {
                             match = true;
+    	                    if (keepInfo != null) {
+    	                    	for (String keep: keepInfo) {
+    	    	                    if (GlobUtils.matches(info.id, keep)) {
+    	    	                        match = false;
+    	    	                    }    	                    		
+    	                    	}
+    	                    }
                         }
                     }
                 }
@@ -74,6 +100,13 @@ public class VCFHeader {
     	                for (String remove: removeFormat) {
     	                    if (GlobUtils.matches(format.id, remove)) {
     	                        match = true;
+        	                    if (keepFormat != null) {
+        	                    	for (String keep: keepFormat) {
+        	    	                    if (GlobUtils.matches(format.id, keep)) {
+        	    	                        match = false;
+        	    	                    }    	                    		
+        	                    	}
+        	                    }
     	                    }
     	                }
 	                }
@@ -89,6 +122,13 @@ public class VCFHeader {
                     for (String remove: removeFilter) {
                         if (GlobUtils.matches(filter.id, remove)) {
                             match = true;
+    	                    if (keepFilter != null) {
+    	                    	for (String keep: keepFilter) {
+    	    	                    if (GlobUtils.matches(filter.id, keep)) {
+    	    	                        match = false;
+    	    	                    }    	                    		
+    	                    	}
+    	                    }
                         }
                     }
                 }
@@ -103,6 +143,13 @@ public class VCFHeader {
                     for (String remove: removeSample) {
                         if (GlobUtils.matches(vals.get("ID"), remove)) {
                             match = true;
+    	                    if (keepSample != null) {
+    	                    	for (String keep: keepSample) {
+    	    	                    if (GlobUtils.matches(vals.get("ID"), keep)) {
+    	    	                        match = false;
+    	    	                    }    	                    		
+    	                    	}
+    	                    }
                         }
                     }
                 }
@@ -112,6 +159,9 @@ public class VCFHeader {
             } else if (line.startsWith("##contig=")) {
                 VCFContigDef contig = VCFContigDef.parse(line);
                 addContig(contig);
+            } else if (line.startsWith("##ALT=")) {
+                VCFAltDef contig = VCFAltDef.parse(line);
+                addAlt(contig);
 			} else {
 				lines.add(line);
 			}
@@ -121,30 +171,55 @@ public class VCFHeader {
 		
 		if (spl.length > 9) {
 			
-			List<String> sampleList = new ArrayList<String>();
+//			List<String> sampleList = new ArrayList<String>();
 			for (int i=9; i< spl.length; i++) {
                 boolean match = false;
                 if (removeSample != null) {
                     for (String remove: removeSample) {
                         if (GlobUtils.matches(spl[i], remove)) {
                             match = true;
+    	                    if (keepSample != null) {
+    	                    	for (String keep: keepSample) {
+    	    	                    if (GlobUtils.matches(spl[i], keep)) {
+    	    	                        match = false;
+    	    	                    }    	                    		
+    	                    	}
+    	                    }
                         }
                     }
                 }
                 if (!match) {
-                	sampleList.add(spl[i]);
+                	addSample(spl[i]);
+//                	sampleList.add(spl[i]);
 //    				samples[i-9]=spl[i];
                 }
 			}
 			
-			samples = sampleList.toArray(new String[] {});
+//			samples = sampleList.toArray(new String[] {});
 		}
 	}
 
-	public List<String> getSamples() {
-	    return ListBuilder.build(samples);
+	public void addSample(String sample) {
+		this.samples.add(sample);
 	}
 	
+	public List<String> getSamples() {
+		return Collections.unmodifiableList(this.samples);
+	}
+	
+	public void renameSample(String oldname, String newname) throws VCFParseException {
+		int idx = getSamplePosByName(oldname);
+		if (idx > -1) {
+			samples.set(idx, newname);
+		} else {
+			throw new VCFParseException("Couldn't find sample: "+oldname);
+		}
+	}
+	
+	/**
+	 * Line should include the "##" prefix
+	 * @param line
+	 */
 	public void addLine(String line) {
 		this.lines.add(line);
 	}
@@ -159,6 +234,9 @@ public class VCFHeader {
 				fileformat = "#" + fileformat; 
 			}
 			StringUtils.writeOutputStream(out, fileformat + "\n");
+		    Calendar now = Calendar.getInstance();
+		    now.get(Calendar.YEAR);
+			StringUtils.writeOutputStream(out, "##fileDate="+now.get(Calendar.YEAR)+String.format("%02d", now.get(Calendar.MONTH)+1)+String.format("%02d", now.get(Calendar.DATE))+"\n");
 		}
 		List<String> outlines = new ArrayList<String>();;
 		
@@ -172,6 +250,9 @@ public class VCFHeader {
             outlines.add(def.toString());
         }
         for (VCFContigDef def: contigDefs.values()) {
+            outlines.add(def.toString());
+        }
+        for (VCFAltDef def: altDefs.values()) {
             outlines.add(def.toString());
         }
         outlines.addAll(lines);
@@ -207,6 +288,11 @@ public class VCFHeader {
 		return false;
 	}
 	
+	/** 
+	 * Returns index of a sample by name
+	 * @param name - name or number (1,2,3) for a sample
+	 * @return 0-based index for a sample in the VCF file.
+	 */
 	public int getSamplePosByName(String name) {
 	    
         // You can ID a sample by index (1, 2, 3)
@@ -220,8 +306,8 @@ public class VCFHeader {
 	    
         // OR by name NORMAL, TUMOR, etc...
 	    
-		for (int i=0; i<samples.length; i++) {
-			if (samples[i].equals(name)) {
+		for (int i=0; i<samples.size(); i++) {
+			if (samples.get(i).equals(name)) {
 				return i;
 			}
 		}
@@ -246,6 +332,15 @@ public class VCFHeader {
         contigDefs.remove(id);
     }
     
+    public void addAlt(VCFAltDef def) {
+        altDefs.put(def.id, def);
+    }
+    
+    public void removeAlt(String id) {
+    	altDefs.remove(id);
+    }
+    
+
 	public VCFAnnotationDef getFormatDef(String id) {
 		return formatDefs.get(id);
 	}
@@ -281,6 +376,14 @@ public class VCFHeader {
         }
         for (String remove: removeFilter) {
             if (GlobUtils.matches(name, remove)) {
+            	if (keepFilter!=null) {
+            		for (String keep: keepFilter) {
+            			if (GlobUtils.matches(name, keep)) {
+            				allowedFilterCache.add(name);
+            		        return true;
+            			}
+            		}
+            	}
                 blockedFilterCache.add(name);
                 return false;
             }
@@ -302,6 +405,14 @@ public class VCFHeader {
         }
         for (String remove: removeInfo) {
             if (GlobUtils.matches(name, remove)) {
+            	if (keepInfo!=null) {
+            		for (String keep: keepInfo) {
+            			if (GlobUtils.matches(name, keep)) {
+            				allowedInfoCache.add(name);
+            		        return true;
+            			}
+            		}
+            	}
                 blockedInfoCache.add(name);
                 return false;
             }
@@ -323,6 +434,14 @@ public class VCFHeader {
         }
         for (String remove: removeFormat) {
             if (GlobUtils.matches(name, remove)) {
+            	if (keepFormat!=null) {
+            		for (String keep: keepFormat) {
+            			if (GlobUtils.matches(name, keep)) {
+            		        allowedFormatCache.add(name);
+            		        return true;
+            			}
+            		}
+            	}
                 blockedFormatCache.add(name);
                 return false;
             }
@@ -330,6 +449,14 @@ public class VCFHeader {
 
         allowedFormatCache.add(name);
         return true;
+    }
+    
+    public Set<String> getAlts() {
+        return Collections.unmodifiableSet(altDefs.keySet());
+    }
+    
+    public VCFAltDef getAlt(String id) {
+        return altDefs.get(id);
     }
     
     public Set<String> getContigNames() {

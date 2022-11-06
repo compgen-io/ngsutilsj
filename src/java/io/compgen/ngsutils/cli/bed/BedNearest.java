@@ -77,6 +77,7 @@ public class BedNearest extends AbstractOutputCommand {
             
             GenomeSpan queryCoord = new GenomeSpan(coord.ref, coord.start - extend, coord.end + extend, coord.strand);
             BedRecord  best = null;
+            List<String> bestNames = new ArrayList<String>();
             int bestDist = 0;
             
             for (BedRecord rec: ann.findAnnotation(queryCoord)) {
@@ -109,6 +110,12 @@ public class BedNearest extends AbstractOutputCommand {
                     if (best == null || dist < bestDist) {
                         bestDist = dist;
                         best = rec;
+                        bestNames.clear();
+                        bestNames.add(best.getName());
+                    } else if (dist == bestDist) {
+                    	if (!bestNames.contains(rec.getName())) {
+                    		bestNames.add(rec.getName());
+                    	}
                     }
                     
                 } catch (BadReferenceException e) {
@@ -123,7 +130,7 @@ public class BedNearest extends AbstractOutputCommand {
             cols.add(""+record.getScore());
             cols.add(record.getCoord().strand.toString());
             if (best != null) {
-                cols.add(best.getName());
+                cols.add(StringUtils.join(",", bestNames));
                 if (best.getCoord().strand == Strand.PLUS || best.getCoord().strand == Strand.NONE) {
                     try {
                         cols.add(""+best.getCoord().distanceTo(coord));

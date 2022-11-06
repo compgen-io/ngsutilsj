@@ -42,6 +42,9 @@ public class BaseTally {
     }
     
     public void incr(String base) {
+    	if (!tallies.containsKey(base)) {
+            tallies.put(base, new BaseCount(base));
+    	}
         tallies.get(base).incr();
     }
     

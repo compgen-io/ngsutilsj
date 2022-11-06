@@ -25,6 +25,7 @@ import io.compgen.ngsutils.cli.bam.BamExpressedRegions;
 import io.compgen.ngsutils.cli.bam.BamExtract;
 import io.compgen.ngsutils.cli.bam.BamFilterCli;
 import io.compgen.ngsutils.cli.bam.BamFlagDuplicates;
+import io.compgen.ngsutils.cli.bam.BamPhase;
 import io.compgen.ngsutils.cli.bam.BamReadGroup;
 import io.compgen.ngsutils.cli.bam.BamRefCount;
 import io.compgen.ngsutils.cli.bam.BamRemoveClipping;
@@ -35,6 +36,7 @@ import io.compgen.ngsutils.cli.bam.BamStats;
 import io.compgen.ngsutils.cli.bam.BamToBed;
 import io.compgen.ngsutils.cli.bam.BamToBedGraph;
 import io.compgen.ngsutils.cli.bam.BamToBedPE;
+import io.compgen.ngsutils.cli.bam.BamToFasta;
 import io.compgen.ngsutils.cli.bam.BamToFastq;
 import io.compgen.ngsutils.cli.bam.BinCount;
 import io.compgen.ngsutils.cli.bam.PileupCli;
@@ -50,9 +52,11 @@ import io.compgen.ngsutils.cli.bed.BedToBed3;
 import io.compgen.ngsutils.cli.bed.BedToBed6;
 import io.compgen.ngsutils.cli.bed.BedToBedGraph;
 import io.compgen.ngsutils.cli.bed.BedToFasta;
+import io.compgen.ngsutils.cli.fasta.FastaBins;
 import io.compgen.ngsutils.cli.fasta.FastaFilter;
 import io.compgen.ngsutils.cli.fasta.FastaGC;
 import io.compgen.ngsutils.cli.fasta.FastaGenerateReads;
+import io.compgen.ngsutils.cli.fasta.FastaGrep;
 import io.compgen.ngsutils.cli.fasta.FastaMask;
 import io.compgen.ngsutils.cli.fasta.FastaNames;
 import io.compgen.ngsutils.cli.fasta.FastaPWM;
@@ -80,7 +84,9 @@ import io.compgen.ngsutils.cli.gtf.GeneExport;
 import io.compgen.ngsutils.cli.tab.TabAnnotate;
 import io.compgen.ngsutils.cli.tab.TabixCat;
 import io.compgen.ngsutils.cli.tab.TabixQuery;
+import io.compgen.ngsutils.cli.tdf.TabJoin;
 import io.compgen.ngsutils.cli.vcf.VCFAnnotateCmd;
+import io.compgen.ngsutils.cli.vcf.VCFBedCount;
 import io.compgen.ngsutils.cli.vcf.VCFCheck;
 import io.compgen.ngsutils.cli.vcf.VCFChrFix;
 import io.compgen.ngsutils.cli.vcf.VCFClearFilter;
@@ -94,6 +100,9 @@ import io.compgen.ngsutils.cli.vcf.VCFStrip;
 import io.compgen.ngsutils.cli.vcf.VCFToBED;
 import io.compgen.ngsutils.cli.vcf.VCFToBEDPE;
 import io.compgen.ngsutils.cli.vcf.VCFToCount;
+import io.compgen.ngsutils.cli.vcf.VCFPeptide;
+import io.compgen.ngsutils.cli.vcf.VCFRenameSample;
+import io.compgen.ngsutils.cli.vcf.VCFConsensus;
 import io.compgen.ngsutils.cli.vcf.VCFTsTvRatio;
 import io.compgen.ngsutils.support.DigestCmd;
 import io.compgen.ngsutils.support.stats.FisherCli;
@@ -210,7 +219,17 @@ public class NGSUtils {
 			.addCommand(BamToBedPE.class)
 			.addCommand(BedPEToBed.class)
 			.addCommand(BamClean.class)
-			.addCommand(BedCombine.class);
+			.addCommand(BedCombine.class)
+			.addCommand(VCFPeptide.class)
+			.addCommand(FastaGrep.class)
+			.addCommand(BamToFasta.class)
+			.addCommand(BamPhase.class)
+			.addCommand(TabJoin.class)
+			.addCommand(FastaBins.class)
+			.addCommand(VCFBedCount.class)
+			.addCommand(VCFConsensus.class)
+			.addCommand(VCFRenameSample.class);
+
 
         try {
             if (args.length == 0) {
@@ -239,11 +258,12 @@ public class NGSUtils {
         } catch (UnknownArgumentException e) {
             System.err.println("ERROR: " + e.getMessage());
             System.err.println();
-            System.exit(1);
             try {
                 main.showCommandHelp(e.clazz);
             } catch (MissingCommandException e1) {
             }
+            System.exit(1);
+
         } catch (Exception e) {
             e.printStackTrace();
             System.exit(1);

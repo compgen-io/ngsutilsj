@@ -29,6 +29,10 @@ public class VCFReader {
     protected Set<String> removeFormat = null;
     protected Set<String> removeInfo = null;
     protected Set<String> removeSample = null;
+    protected Set<String> keepFilter = null;
+    protected Set<String> keepFormat = null;
+    protected Set<String> keepInfo = null;
+    protected Set<String> keepSample = null;
     
 	public VCFReader(String filename) throws IOException, VCFParseException {
         if (filename.equals("-")) {
@@ -105,7 +109,7 @@ public class VCFReader {
 			}
 		}
 		
-		header = new VCFHeader(fileformat, lines, headerLine, removeFilter, removeInfo, removeFormat, removeSample);
+		header = new VCFHeader(fileformat, lines, headerLine, removeFilter, removeInfo, removeFormat, removeSample, keepFilter, keepInfo, keepFormat, keepSample);
 	}
 
 	public VCFHeader getHeader() throws IOException, VCFParseException {
@@ -222,6 +226,50 @@ public class VCFReader {
                 this.removeSample = new HashSet<String>();
             }
             this.removeSample.addAll(removeSample);
+        } else {
+            throw new VCFParseException("You can't remove samples after the VCF header has been read.");
+        }
+	}
+    public void addKeepInfo(Set<String> keepInfo) throws VCFParseException {
+        if (header == null) {
+            if (this.keepInfo == null) {
+                this.keepInfo = new HashSet<String>();
+            }
+            this.keepInfo.addAll(keepInfo);
+        } else {
+            throw new VCFParseException("You can't remove info after the VCF header has been read.");
+        }
+    }
+
+    public void addKeepFormat(Set<String> keepFormat) throws VCFParseException {
+        if (header == null) {
+            if (this.keepFormat == null) {
+                this.keepFormat = new HashSet<String>();
+            }
+            this.keepFormat.addAll(keepFormat);
+        } else {
+            throw new VCFParseException("You can't remove formats after the VCF header has been read.");
+        }
+    }
+
+    public void addKeepFilter(Set<String> keepFilter) throws VCFParseException {
+        if (header == null) {
+            if (this.keepFilter == null) {
+                this.keepFilter = new HashSet<String>();
+            }
+            this.keepFilter.addAll(keepFilter);
+        } else {
+            throw new VCFParseException("You can't remove filters after the VCF header has been read.");
+        }
+    }
+
+
+	public void addKeepSample(Set<String> keepSample) throws VCFParseException {
+        if (header == null) {
+            if (this.keepSample == null) {
+                this.keepSample = new HashSet<String>();
+            }
+            this.keepSample.addAll(keepSample);
         } else {
             throw new VCFParseException("You can't remove samples after the VCF header has been read.");
         }

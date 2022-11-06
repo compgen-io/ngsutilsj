@@ -11,6 +11,7 @@ import io.compgen.cmdline.annotation.UnnamedArg;
 import io.compgen.cmdline.exceptions.CommandArgumentException;
 import io.compgen.cmdline.impl.AbstractOutputCommand;
 import io.compgen.ngsutils.NGSUtils;
+import io.compgen.ngsutils.support.FileUtils;
 import io.compgen.ngsutils.vcf.VCFHeader;
 import io.compgen.ngsutils.vcf.VCFReader;
 import io.compgen.ngsutils.vcf.VCFRecord;
@@ -125,7 +126,20 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
         String[] spl = bed.split(":");
         if (spl.length == 2) {
             try {
-                chain.add(new BEDAnnotation(spl[0], spl[1], false));
+                chain.add(new BEDAnnotation(spl[0],FileUtils.expandUserPath(spl[1]), false));
+            } catch (IOException e) {
+                throw new CommandArgumentException(e);
+            }
+        } else {
+            throw new CommandArgumentException("Unable to parse argument for --bed: "+bed);
+        }       
+    }
+    @Option(desc="Add annotations from a BED4 file (as a format field \"KEY\") (add ',n' to NAME to make value a number)", name="format-bed", helpValue="KEY:ALLELE:FILENAME", allowMultiple=true)
+    public void setFormatBED(String bed) throws CommandArgumentException {
+        String[] spl = bed.split(":");
+        if (spl.length == 3) {
+            try {
+                chain.add(new BEDAnnotation(spl[0],FileUtils.expandUserPath(spl[2]), false, spl[1]));
             } catch (IOException e) {
                 throw new CommandArgumentException(e);
             }
@@ -134,7 +148,7 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
         }       
     }
     
-    @Option(desc="Add annotations from a Tabix file (INFO: If col is left out, this is treaded as a VCF flag; add ',n' for a number; set alt=col# to specify an alternative allele column -- will use exact matching; add ,collapse to collapse unique values to one)", name="tab", helpValue="NAME:FILENAME{,col,n,alt=X,collapse}", allowMultiple=true)
+    @Option(desc="Add annotations from a Tabix file (INFO: If col is left out, this is treaded as a VCF flag; add ',n' for a number; set alt=col# or ref=col# to specify an alternative/ref allele column -- will use exact matching; add ,collapse to collapse unique values to one; add ,first to return only the first value; ,max to take a maximum value; ,extend=X to extend the search X bases from the variant)", name="tab", helpValue="NAME:FILENAME{,col,n,alt=X,ref=X,collapse,first,max,extend=N}", allowMultiple=true)
     public void setTabix(String tab) throws CommandArgumentException {
         String[] spl = tab.split(":");
         if (spl.length == 2) {
@@ -142,27 +156,52 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
             
             try {
                 String fname = null;
-                int col = -1;
                 
                 String colName = null;
                 String altName = null;
+                String refName = null;
+                
+                int col = -1;
+                int refCol = -1;
+                int altCol = -1;
                 
                 boolean isNumber = false;
-                int altCol = -1;
+                boolean max = false;
+                boolean first = false;
                 boolean collapse = false;
+                boolean noHeader = false;
+                int extend = 0;
                 
                 for (String t:spl2) {
                     if (fname == null) {
-                        fname = t;
+                        fname = FileUtils.expandUserPath(t);
                     } else if (t.equals("n")) {
                         isNumber = true;
+                    } else if (t.equals("max")) {
+                        max = true;
                     } else if (t.equals("collapse")) {
                         collapse = true;
+                    } else if (t.equals("first")) {
+                        first = true;
+                    } else if (t.equals("noheader")) {
+                        noHeader = true;
+                    } else if (t.startsWith("extend=")) {
+                    	try {
+                            extend = Integer.parseInt(t.substring(7));
+	                    } catch (NumberFormatException e) {
+	                        throw new CommandArgumentException("Invalid extend value: "+tab);
+	                    }
                     } else if (t.startsWith("alt=")) {
                     	try {
                             altCol = Integer.parseInt(t.substring(4))-1;
 	                    } catch (NumberFormatException e) {
-	                    	altName = t;
+	                    	altName = t.substring(4);
+	                    }
+                    } else if (t.startsWith("ref=")) {
+                    	try {
+                            refCol = Integer.parseInt(t.substring(4))-1;
+	                    } catch (NumberFormatException e) {
+	                    	refName = t.substring(4);
 	                    }
                     } else if (col == -1) {
                     	try {
@@ -173,15 +212,85 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
                     }
                 }
 
-                if (colName != null && altName != null) {
-                	chain.add(new TabixAnnotation(spl[0], fname, colName, isNumber, altName, collapse));
-                } else if (colName != null) {
-                	chain.add(new TabixAnnotation(spl[0], fname, colName, isNumber, altCol, collapse));
-                } else if (altName != null) {
-                	chain.add(new TabixAnnotation(spl[0], fname, col, isNumber, altName, collapse));
-                } else {
-                	chain.add(new TabixAnnotation(spl[0], fname, col, isNumber, altCol, collapse));
+                if (refName != null && altName == null) {
+                    throw new CommandArgumentException("If you set ref=, you must also set alt=): "+tab);
                 }
+
+
+                int cnt = 0;
+                if (max) {
+                	cnt ++;
+                }
+                if (first) {
+                	cnt ++;
+                }
+                if (collapse) {
+                	cnt ++;
+                }
+                
+
+                if (cnt>1) {
+                    throw new CommandArgumentException("first, max, and/or collapse can't be set at the same time: "+tab);
+                }
+
+                TabixAnnotation ann = new TabixAnnotation(spl[0], fname);
+                if (colName != null) {
+            		ann.setCol(colName);
+                } else if (col > -1 ) {
+            		ann.setCol(col);
+//            	} else {
+//                    throw new CommandArgumentException("Missing column number for tab annotation (required for format): "+tab);
+                }
+
+                if (altName != null) {
+                	ann.setAltCol(altName);
+                } else if (altCol > -1) {
+                	ann.setAltCol(altCol);
+                }
+                
+                if (refName != null) {
+                	ann.setRefCol(refName);
+                } else if (refCol > -1) {
+                	ann.setRefCol(refCol);
+                }
+                
+                if (isNumber) {
+                	ann.setNumber();
+                }
+                
+                ann.setExtend(extend);
+                
+                if (max) {
+                	if (!isNumber) {
+                        throw new CommandArgumentException("max also requires ,n to be set: "+tab);
+                	}
+                	ann.setMax();
+                }
+                
+                if (first) {
+                	ann.setFirst();
+                }
+                
+                if (collapse) {
+                	ann.setCollapse();
+                }
+                
+                
+                if (noHeader) {
+                	ann.setNoHeader();
+                }
+                
+                chain.add(ann);
+//                
+//                if (colName != null && altName != null) {
+//                	chain.add(new TabixAnnotation(spl[0], fname, colName, isNumber, altName, collapse));
+//                } else if (colName != null) {
+//                	chain.add(new TabixAnnotation(spl[0], fname, colName, isNumber, altCol, collapse));
+//                } else if (altName != null) {
+//                	chain.add(new TabixAnnotation(spl[0], fname, col, isNumber, altName, collapse));
+//                } else {
+//                	chain.add(new TabixAnnotation(spl[0], fname, col, isNumber, altCol, collapse));
+//                }
                 
             } catch (IOException  e) {
                 throw new CommandArgumentException(e);
@@ -191,12 +300,168 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
         }       
     }
     
+    
+    @Option(desc="Add annotations from a Tabix file as a FORMAT record (see --tab for options)", name="format-tab", helpValue="NAME:SAMPLE:FILENAME,col{,n,alt=X,collapse,first,max,noheader}", allowMultiple=true)
+    public void setFormatTabix(String tab) throws CommandArgumentException {
+        String[] spl = tab.split(":");
+        if (spl.length == 3) {
+            String sampleName = spl[1];
+            String[] spl2 = spl[2].split(",");
+            
+            try {
+                String fname = null;
+                
+                String colName = null;
+                String altName = null;
+                String refName = null;
+                
+                int col = -1;
+                int altCol = -1;
+                int refCol = -1;
+
+                boolean max = false;
+                boolean collapse = false;
+                boolean first = false;
+                boolean isNumber = false;
+                boolean noHeader = false;
+                int extend = 0;
+                
+                for (String t:spl2) {
+                    if (fname == null) {
+                        fname = FileUtils.expandUserPath(t);
+                    } else if (t.equals("n")) {
+                        isNumber = true;
+                    } else if (t.equals("max")) {
+                        max = true;
+                    } else if (t.equals("first")) {
+                        first = true;
+                    } else if (t.equals("collapse")) {
+                        collapse = true;
+                    } else if (t.equals("noheader")) {
+                    	noHeader = true;
+                    } else if (t.startsWith("extend=")) {
+                    	try {
+                            extend = Integer.parseInt(t.substring(7));
+	                    } catch (NumberFormatException e) {
+	                        throw new CommandArgumentException("Invalid extend value: "+tab);
+	                    }
+                    } else if (t.startsWith("alt=")) {
+                    	try {
+                            altCol = Integer.parseInt(t.substring(4))-1;
+	                    } catch (NumberFormatException e) {
+	                    	altName = t.substring(4);
+	                    }
+                    } else if (t.startsWith("ref=")) {
+                    	try {
+                            refCol = Integer.parseInt(t.substring(4))-1;
+	                    } catch (NumberFormatException e) {
+	                    	refName = t.substring(4);
+	                    }
+                    } else if (col == -1) {
+                    	try {
+	                        col = Integer.parseInt(t)-1;
+	                    } catch (NumberFormatException e) {
+	                    	colName = t;
+	                    }
+                    }
+                }
+                if (refName != null && altName == null) {
+                    throw new CommandArgumentException("If you set ref=, you must also set alt=): "+tab);
+                }
+                int cnt = 0;
+                if (max) {
+                	cnt ++;
+                }
+                if (first) {
+                	cnt ++;
+                }
+                if (collapse) {
+                	cnt ++;
+                }
+
+                if (cnt>1) {
+                    throw new CommandArgumentException("first, max, and/or collapse can't be set at the same time: "+tab);
+                }
+
+                TabixAnnotation ann = new TabixAnnotation(spl[0], fname, sampleName);
+                if (colName != null) {
+            		ann.setCol(colName);
+                } else if (col > -1 ) {
+            		ann.setCol(col);
+            	} else {
+                    throw new CommandArgumentException("Missing column number for tab annotation (required for format): "+tab);
+                }
+
+                if (altName != null) {
+                	ann.setAltCol(altName);
+                } else if (altCol > -1) {
+                	ann.setAltCol(altCol);
+                }
+                
+                if (refName != null) {
+                	ann.setRefCol(refName);
+                } else if (refCol > -1) {
+                	ann.setRefCol(refCol);
+                }
+                
+                if (isNumber) {
+                	ann.setNumber();
+                }
+
+                if (collapse) {
+                	ann.setCollapse();
+                }
+                if (first) {
+                	ann.setFirst();
+                }
+
+                ann.setExtend(extend);
+                
+                if (max) {
+                	if (!isNumber) {
+                        throw new CommandArgumentException("max also requires ,n to be set: "+tab);
+                	}
+                	ann.setMax();
+                }
+                
+                
+                if (noHeader) {
+                	ann.setNoHeader();
+                }
+                
+                chain.add(ann);
+                
+//                if (colName != null) {
+//                	if (altName != null) {
+//                		chain.add(new TabixAnnotation(spl[0], fname, colName, isNumber, altName, collapse, sampleName));
+//                	} else {
+//                		chain.add(new TabixAnnotation(spl[0], fname, colName, isNumber, altCol, collapse, sampleName));
+//                	}
+//                } else if (col>=0) {
+//                	if (altName != null) {
+//                		chain.add(new TabixAnnotation(spl[0], fname, col, isNumber, altName, collapse, sampleName));
+//                	} else {
+//                		chain.add(new TabixAnnotation(spl[0], fname, col, isNumber, altCol, collapse, sampleName));
+//                	}
+//                } else {
+//   	             throw new CommandArgumentException("Missing column number for tab annotation (required for format): "+tab);
+//                }
+                
+            } catch (IOException  e) {
+                throw new CommandArgumentException(e);
+            }
+        } else {
+            throw new CommandArgumentException("Unable to parse argument for --tab: "+tab);
+        }       
+    }
+
+    
     @Option(desc="Flag variants within a BED3 region (INFO)", name="bed-flag", helpValue="NAME:FILENAME", allowMultiple=true)
     public void setBEDFlag(String bed) throws CommandArgumentException {
     	String[] spl = bed.split(":");
     	if (spl.length == 2) {
     		try {
-				chain.add(new BEDAnnotation(spl[0], spl[1], true));
+				chain.add(new BEDAnnotation(spl[0], FileUtils.expandUserPath(spl[1]), true));
 			} catch (IOException e) {
 	    		throw new CommandArgumentException(e);
 			}
@@ -211,12 +476,14 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
     	String[] spl = vcf.split(":");
     	boolean exact = false;
     	boolean passing = false;
+    	boolean unique = false;
     	if (spl.length == 4) {
             passing = spl[3].contains("@");
             exact = spl[3].contains("!");
+            unique = spl[3].contains("$");
     	}
         try {
-            chain.add(new VCFAnnotation(spl[0], spl[2], spl[1], exact, passing));
+            chain.add(new VCFAnnotation(spl[0], FileUtils.expandUserPath(spl[2]), spl[1], exact, passing, unique));
         } catch (IOException e) {
             throw new CommandArgumentException("Unable to parse argument for --vcf: "+vcf+"\n"+e.getMessage());
         }
@@ -227,12 +494,14 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
         String[] spl = vcf.split(":");
         boolean exact = false;
         boolean passing = false;
+    	boolean unique = false;
         if (spl.length == 3) {
             passing = spl[2].contains("@");
             exact = spl[2].contains("!");
+            unique = spl[2].contains("$");
         }
         try {
-            chain.add(new VCFAnnotation(spl[0], spl[1], null, exact, passing));
+            chain.add(new VCFAnnotation(spl[0], FileUtils.expandUserPath(spl[1]), null, exact, passing, unique));
         } catch (IOException e) {
             throw new CommandArgumentException("Unable to parse argument for --vcf-flag: "+vcf+"\n"+e.getMessage());
         }
@@ -247,19 +516,39 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
         }
     }
     
-    @Option(desc="Add flag if an existing INFO value present is in a file", name="in-file", helpValue="FLAGNAME:INFOKEY:FILENAME", allowMultiple=true)
+    @Option(desc="Add flag if an existing INFO value present is in a file (add csv if the INFO field is potentially comma-delimited, add tabcol= for a column in the file to add, tab-delimtied, 1-based)", name="in-file", helpValue="FLAGNAME:INFOKEY:FILENAME{:csv:tabcol=n}", allowMultiple=true)
     public void setInfoInFile(String val) throws CommandArgumentException {
     	String[] spl = val.split(":");
-    	if (spl.length == 3) {
-    		try {
-				chain.add(new InfoInFile(spl[2], spl[1], spl[0]));
+
+    	if (spl.length >= 3) {
+        	String delimiter = null;
+        	int col = -1;
+        	
+        	String filename = FileUtils.expandUserPath(spl[2]);
+        	String infokey = spl[1];
+        	String flagname = spl[0];
+
+        	for (int i=3; i<spl.length; i++) {
+        		if (spl[i].equals("csv")) {
+        			delimiter = ",";
+        		} else if (spl[i].equals(",")) {
+        			delimiter = ",";
+        		} else if (spl[i].startsWith("tabcol=")) {
+        			col = Integer.parseInt(spl[i].substring(7));
+        		}
+        	}
+        	
+        	try {
+				chain.add(new InfoInFile(filename, infokey, flagname, delimiter, col));
 			} catch (IOException e) {
 	    		throw new CommandArgumentException(e);
 			}
+
     	} else {
     		throw new CommandArgumentException("Unable to parse argument for --in-file: "+val);
     	}
     }
+    
     
 //    @Option(desc="Add peptide annotation for SNVs", name="gtf", helpValue="filename.gtf")
 //    public void setGTFPeptide(String filename) throws CommandArgumentException {
@@ -271,7 +560,7 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
 //    }
 
     
-    @Option(desc="Add peptide annotation", name="gtf", helpValue="filename.gtf")
+    @Option(desc="Add gene annotations (INFO: CG_GENE, CG_GENE_STRAND, CG_GENE_REGION)", name="gtf", helpValue="filename.gtf")
     public void setGTF(String filename) throws CommandArgumentException {
 		try {
 			chain.add(new GTFGene(filename));
