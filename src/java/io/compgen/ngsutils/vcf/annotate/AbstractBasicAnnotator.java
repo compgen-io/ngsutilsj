@@ -74,18 +74,12 @@ public abstract class AbstractBasicAnnotator implements VCFAnnotator {
 
     protected int getPos(VCFRecord rec) throws VCFAnnotatorMissingAltException {
         if (altPos == null) {
-    		return rec.getPos();
-    		//
-    		// If we adjust for deletions, we end up missing other annotations that are also anchored
-    		// Best to leave the start pos the same and let the end position extend out past the del.
-    		//
-    		
-//        	if (rec.getRef().length()==1) {
-//        		return rec.getPos();
-//        	} else {
-//        		// this is a deletion, so the variant is actually the next base
-//        		return rec.getPos()+1; 
-//        	}
+        	if (rec.getRef().length()==1) {
+        		return rec.getPos();
+        	} else {
+        		// this is a deletion, so the variant is actually the next base
+        		return rec.getPos()+1; 
+        	}
         }
         
         VCFAttributeValue pos = rec.getInfo().get(altPos);
