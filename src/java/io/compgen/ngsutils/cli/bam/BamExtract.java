@@ -46,6 +46,8 @@ public class BamExtract extends AbstractOutputCommand {
     private String outBamFname = null;
     private String tmpDir = null;
 
+    private boolean samOutput = false;
+
     private String vcfFile = null;
     private String bedFile = null;
     private GenomeSpan region = null;
@@ -105,6 +107,11 @@ public class BamExtract extends AbstractOutputCommand {
     @Option(desc="Extract reads using these VCF coordinates", name="vcf")
     public void setVCF(String vcfFile) {
         this.vcfFile = vcfFile;
+    }
+
+    @Option(desc="Write output in SAM format", name="sam")
+    public void setSamOutput(boolean val) {
+        this.samOutput = val;
     }
 
     @Option(desc="Only export variants that pass VCF filters", name="vcf-passing")
@@ -330,9 +337,17 @@ public class BamExtract extends AbstractOutputCommand {
         header.setSortOrder(SortOrder.unsorted);
 
         if (outfile != null) {
-            writer = factory.makeBAMWriter(header, true, outfile);
+            if (samOutput) {
+                writer = factory.makeSAMWriter(header, true, outfile);
+            } else {
+                writer = factory.makeBAMWriter(header, true, outfile);
+            }
         } else {
-            writer = factory.makeBAMWriter(header, true, outStream);
+            if (samOutput) {
+                writer = factory.makeSAMWriter(header, true, outStream);
+            } else {
+                writer = factory.makeBAMWriter(header, true, outStream);
+            }
         }
         
 
