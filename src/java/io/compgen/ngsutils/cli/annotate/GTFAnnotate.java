@@ -25,6 +25,7 @@ public class GTFAnnotate extends AbstractOutputCommand {
 
     private String filename = null;
     private String gtfFilename = null;
+    private List<String> requiredTags = null;
 
     private int refCol = -1;
     private int startCol = -1;
@@ -47,6 +48,16 @@ public class GTFAnnotate extends AbstractOutputCommand {
     public void setFilename(String filename) {
         this.filename = filename;
     }
+    @Option(desc="List of required tag annotations (comma-separated list)", name="tag", allowMultiple=true)
+    public void setRequiredTags(String requiredTags) {
+    	if (this.requiredTags == null) {
+    		this.requiredTags = new ArrayList<String>();
+    	}
+    	for (String s:requiredTags.split(",")) {
+    		this.requiredTags.add(s);
+    	}
+    }
+
 
     @Option(desc = "Annotate a novel junction that is spanned by a gene (requires --col-strand)", name = "within-gene")
     public void setWithinGene(boolean junctionWithinGene) {
@@ -211,7 +222,7 @@ public class GTFAnnotate extends AbstractOutputCommand {
             System.err.print("Reading GTF annotation file: " + gtfFilename);
         }
 
-        GTFAnnotationSource ann = new GTFAnnotationSource(gtfFilename);
+        GTFAnnotationSource ann = new GTFAnnotationSource(gtfFilename, requiredTags);
         if (verbose) {
             System.err.println(" [done]");
         }

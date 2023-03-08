@@ -42,6 +42,9 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
 	private String altPos = null;
 	private String endPos = null;
 	
+	private GTFGene gtfGene = null;
+	private List<String> requiredGTFTags = null;
+	
 	List<VCFAnnotator> chain = new ArrayList<VCFAnnotator>();
 	
     @Option(desc="Only output passing variants", name="passing")
@@ -558,12 +561,22 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
 //			throw new CommandArgumentException(e);
 //		}    	
 //    }
+    @Option(desc="List of required tag annotations for GTF file (comma-separated list)", name="gtf-tag", allowMultiple=true)
+    public void setRequiredTags(String requiredTags) {
+    	if (this.requiredGTFTags == null) {
+    		this.requiredGTFTags = new ArrayList<String>();
+    	}
+    	for (String s:requiredTags.split(",")) {
+    		this.requiredGTFTags.add(s);
+    	}
+    }
 
     
     @Option(desc="Add gene annotations (INFO: CG_GENE, CG_GENE_STRAND, CG_GENE_REGION)", name="gtf", helpValue="filename.gtf")
     public void setGTF(String filename) throws CommandArgumentException {
 		try {
-			chain.add(new GTFGene(filename));
+			this.gtfGene = new GTFGene(filename);
+			chain.add(this.gtfGene);
 		} catch (IOException e) {
 			throw new CommandArgumentException(e);
 		}    	
@@ -594,6 +607,10 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
 			reader = new VCFReader(System.in);
 		} else {
 			reader = new VCFReader(filename);
+		}
+		
+		if (gtfGene != null && requiredGTFTags!=null) {
+			gtfGene.addRequiredTags(requiredGTFTags);
 		}
 		
 		NullAnnotator nullAnn = new NullAnnotator(reader, onlyPassing, true);

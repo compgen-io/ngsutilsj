@@ -2,6 +2,7 @@ package io.compgen.ngsutils.cli.bam.count;
 
 import java.io.IOException;
 import java.util.Iterator;
+import java.util.List;
 
 import io.compgen.common.IterUtils.MapFunc;
 import io.compgen.common.StringUtils;
@@ -17,11 +18,11 @@ public class GTFSpans  implements SpanSource {
     private long pos = 0;
     private long size = 0;
     
-    public GTFSpans(String filename) throws IOException {
+    public GTFSpans(String filename, List<String> tags) throws IOException {
         if (TTY.isattyStdErr()) {
             System.err.print("Loading GTF annotation: "+filename+"... ");
         }
-        gtf = new GTFAnnotationSource(filename);
+        gtf = new GTFAnnotationSource(filename, tags);
         if (TTY.isattyStdErr()) {
             System.err.println("done");
         }

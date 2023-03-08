@@ -16,7 +16,7 @@ public class SeqUtils {
     	};
     	
     	public String toAA(String codon) {
-    		return codonToAA.get(codon);
+    		return codonToAA.get(codon.toUpperCase());
     	}
 
     	public static CodonTable buildCodonTable(String inp) {
@@ -31,7 +31,7 @@ public class SeqUtils {
     			// only the first two columns matter:
     			// CODON AA
     			String[] spl = line.split(" ");
-    			codonToAA.put(spl[0],spl[1]);
+    			codonToAA.put(spl[0].toUpperCase(),spl[1]);
     		}
     		
     		return new CodonTable(codonToAA);
@@ -47,11 +47,11 @@ public class SeqUtils {
     			+ "TGC C Cys\n"
     			+ "TTA L Leu\n"
     			+ "TCA S Ser\n"
-    			+ "TAA X Ter\n"
-    			+ "TGA X Ter\n"
+    			+ "TAA * Ter\n"
+    			+ "TGA * Ter\n"
     			+ "TTG L Leu\n"
     			+ "TCG S Ser\n"
-    			+ "TAG X Ter\n"
+    			+ "TAG * Ter\n"
     			+ "TGG W Trp\n"
     			+ "CTT L Leu\n"
     			+ "CCT P Pro\n"
@@ -116,7 +116,7 @@ public class SeqUtils {
     			+ "TGA W Trp\n"
     			+ "TTG L Leu\n"
     			+ "TCG S Ser\n"
-    			+ "TAG X Ter\n"
+    			+ "TAG * Ter\n"
     			+ "TGG W Trp\n"
     			+ "CTT L Leu\n"
     			+ "CCT P Pro\n"
@@ -145,11 +145,11 @@ public class SeqUtils {
     			+ "ATA M Met\n"
     			+ "ACA T Thr\n"
     			+ "AAA K Lys\n"
-    			+ "AGA X Ter\n"
+    			+ "AGA * Ter\n"
     			+ "ATG M Met\n"
     			+ "ACG T Thr\n"
     			+ "AAG K Lys\n"
-    			+ "AGG X Ter\n"
+    			+ "AGG * Ter\n"
     			+ "GTT V Val\n"
     			+ "GCT A Ala\n"
     			+ "GAT D Asp\n"
@@ -425,27 +425,37 @@ public class SeqUtils {
     	return s;
     }
 
-    public static String translate(String seq) {
-    	return translate(seq, SeqUtils.CodonTable.DEFAULT);
+    public static String translate(String seq, boolean keepCase) {
+    	return translate(seq, SeqUtils.CodonTable.DEFAULT, keepCase);
     }
     /**
      * Translate a cDNA sequence to a peptide. Translation will stop at the first stop codon (which will not be included in the result)
      * 
      * @param seq cDNA sequence -- needs to be in codon triplets
      * @param table Codon Table (default uses Vertebrate)
+     * @param keepCase if the input codon is lowercase, output a lower case amino acid
      * @return amino acid sequence
      */
-    public static String translate(String seq, CodonTable table) {
+    public static String translate(String seq, CodonTable table, boolean keepCase) {
     	String peptide = "";
     	for (int i=0; i+2 < seq.length(); i+=3) {
-    		String aa = table.toAA(seq.substring(i, i+3));
+    		String codon = seq.substring(i, i+3);
+    		String aa = table.toAA(codon);
     		if (aa == null) {
     			break;
     		} 
 
-    		peptide += aa;
+    		if (keepCase) {
+    			if (Character.isLowerCase(codon.charAt(0)) || Character.isLowerCase(codon.charAt(1)) || Character.isLowerCase(codon.charAt(2))) {
+    				peptide += aa.toLowerCase();
+    			} else {
+        			peptide += aa;
+    			}
+    		} else {
+    			peptide += aa;
+    		}
 
-			if (aa.equals("X")) {
+			if (aa.equals("*")) {
 				break;
 			}
 

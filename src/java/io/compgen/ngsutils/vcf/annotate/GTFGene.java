@@ -17,14 +17,23 @@ import io.compgen.ngsutils.vcf.VCFRecord;
 
 public class GTFGene extends AbstractBasicAnnotator {
 	final protected String filename;
-	final protected GTFAnnotationSource gtf;
+	protected GTFAnnotationSource gtf;
+	protected List<String> requiredTags = null;
 	
 	public GTFGene(String filename) throws IOException {
 		this.filename = filename;
-		this.gtf = new GTFAnnotationSource(filename);
 	}
 	
+	public void addRequiredTags(List<String> tags) {
+		if (requiredTags == null) {
+			requiredTags = new ArrayList<String>();
+		}
+		for (String t : tags) {
+			requiredTags.add(t);
+		}
+	}
 
+	
 	@Override
 	public void setHeaderInner(VCFHeader header) throws VCFAnnotatorException {
 		try {
@@ -59,6 +68,13 @@ public class GTFGene extends AbstractBasicAnnotator {
 
 	@Override
 	public void annotate(VCFRecord record) throws VCFAnnotatorException {
+		if (this.gtf == null) {
+			try {
+				this.gtf = new GTFAnnotationSource(filename, requiredTags);
+			} catch (NumberFormatException | IOException e) {
+				throw new VCFAnnotatorException(e);
+			}
+		}
         GenomeSpan pos;
         try {
             pos = new GenomeSpan(getChrom(record), getPos(record));

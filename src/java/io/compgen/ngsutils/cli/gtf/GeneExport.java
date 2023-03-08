@@ -3,7 +3,9 @@ package io.compgen.ngsutils.cli.gtf;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import io.compgen.cmdline.annotation.Command;
@@ -28,6 +30,7 @@ public class GeneExport extends AbstractOutputCommand {
     private String filename=null;
     private String includeList = null;
     
+    private List<String> requiredTags = null;
     private boolean exportGenomicSize = false;
     private boolean exportTranscriptSize = false;
     private boolean exportMaxIntron = false;
@@ -39,6 +42,17 @@ public class GeneExport extends AbstractOutputCommand {
     public void setFilename(String filename) {
         this.filename = filename;
     }
+
+    @Option(desc="List of required tag annotations (comma-separated list)", name="tag", allowMultiple=true)
+    public void setRequiredTags(String requiredTags) {
+    	if (this.requiredTags == null) {
+    		this.requiredTags = new ArrayList<String>();
+    	}
+    	for (String s:requiredTags.split(",")) {
+    		this.requiredTags.add(s);
+    	}
+    }
+
 
     @Option(desc="List of gene names to include", name="include")
     public void setIncludeList(String includeList) {
@@ -129,7 +143,7 @@ public class GeneExport extends AbstractOutputCommand {
             System.err.print("Reading GTF annotation file: "+filename);
         }
 
-        AnnotationSource<GTFGene> ann = new GTFAnnotationSource(filename);
+        AnnotationSource<GTFGene> ann = new GTFAnnotationSource(filename, requiredTags);
 
         if (verbose) {
             System.err.println(" [done]");
