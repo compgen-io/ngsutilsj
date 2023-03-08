@@ -34,6 +34,7 @@ import io.compgen.ngsutils.bam.Strand;
 @Command(name="gtf-export", desc="Export gene annotations from a GTF file as BED regions", category="gtf")
 public class GTFExport extends AbstractOutputCommand {
     private String filename=null;
+    private List<String> requiredTags = null;
     private String includeList = null;
     private String excludeList = null;
     
@@ -64,6 +65,16 @@ public class GTFExport extends AbstractOutputCommand {
     @Option(desc="List of gene names to exclude (filename or comma-separated list)", name="exclude")
     public void setExcludeList(String excludeList) {
         this.excludeList = excludeList;
+    }
+
+    @Option(desc="List of required tag annotations (comma-separated list)", name="tag", allowMultiple=true)
+    public void setRequiredTags(String requiredTags) {
+    	if (this.requiredTags == null) {
+    		this.requiredTags = new ArrayList<String>();
+    	}
+    	for (String s:requiredTags.split(",")) {
+    		this.requiredTags.add(s);
+    	}
     }
 
     @Option(desc="List of gene names to include (filename or comma-separated list)", name="include")
@@ -122,7 +133,7 @@ public class GTFExport extends AbstractOutputCommand {
         exportTSS = val;
     }
 
-    @Option(desc="Export translational stop site", name="tlss")
+    @Option(desc="Export translational stop site/stop codon", name="tlss")
     public void setTLSS(boolean val) {
         exportTLSS = val;
     }
@@ -260,14 +271,12 @@ public class GTFExport extends AbstractOutputCommand {
                 System.err.println(" [done]");
             }
         }
-
-        
         
         if (verbose) {
             System.err.print("Reading GTF annotation file: "+filename);
         }
 
-        AnnotationSource<GTFGene> ann = new GTFAnnotationSource(filename);
+        AnnotationSource<GTFGene> ann = new GTFAnnotationSource(filename, requiredTags);
         
         if (verbose) {
             System.err.println(" [done]");
@@ -436,7 +445,7 @@ public class GTFExport extends AbstractOutputCommand {
 //                            if (useGeneId) {
 //                                writer.write(gene.getGeneId()+"-"+txpt.getTranscriptId());
 //                            } else {
-                                writer.write(gene.getGeneName());
+                            writer.write(gene.getGeneName()+"/"+txpt.getTranscriptId());
 //                            }
                             writer.write(0);
                             writer.write(gene.getStrand().toString());
@@ -490,57 +499,31 @@ public class GTFExport extends AbstractOutputCommand {
             }
 
             if (exportTLSS) {
-                List<Integer> stops = new ArrayList<Integer>();
+            	// translational stop site => stop codon
+                Set<Pair<Integer, Integer>> stops = new HashSet<Pair<Integer, Integer>>();
                 for (GTFTranscript txpt: gene.getTranscripts(codingOnly, nonCodingOnly)) {
-                    if (!txpt.hasCDS() || gene.getStrand() == Strand.NONE) {
+                    if (!txpt.hasCDS() || gene.getStrand() == Strand.NONE || txpt.getStopCodonStart() == 1) {
                         continue;
                     }
 
-                    if (gene.getStrand().equals(Strand.PLUS) && txpt.getStopCodon() >= txpt.getEnd()) {
-                        // require some amount of UTR... (likely an odd transcript)
-                        continue;
-                    } else if (gene.getStrand().equals(Strand.MINUS) && txpt.getStopCodon() <= txpt.getStart()) {
-                        // require some amount of UTR... (likely an odd transcript)
-                        continue;
-                    }
+                    Pair<Integer, Integer> stop = new Pair<Integer, Integer>(txpt.getStopCodonStart(), txpt.getStopCodonEnd());
                     
-                    // getStopCodon already does the plus/minus switch
-                    if (stops.contains(txpt.getStopCodon())) {
-                        continue;
-                    }
-                    stops.add(txpt.getStopCodon());
+                    stops.add(stop);
                     if (!combine) {
                         writer.write(gene.getRef());
-                        writer.write(txpt.getStopCodon());
-                        writer.write(txpt.getStopCodon()+3);
-                        writer.write(gene.getGeneName());
+                        writer.write(stop.one);
+                        writer.write(stop.two);
+                        writer.write(gene.getGeneName()+"/"+txpt.getTranscriptId());
                         writer.write(0);
                         writer.write(gene.getStrand().toString());
                         writer.eol();
                     }
                 }
                 if (combine) {
-                    int val = -1;
-                    if (gene.getStrand() == Strand.PLUS) {
-                        val = stops.get(0);
-                        for (Integer i: stops) {
-                            if (i > val) {
-                                val = i;
-                            }
-                        }
-                    } else if (gene.getStrand() == Strand.MINUS) {
-                        val = stops.get(0);
-                        for (Integer i: stops) {
-                            if (i < val) {
-                                val = i;
-                            }
-                        }
-                    }
-                    
-                    if (val > -1) {
+                	for (Pair<Integer, Integer> stop: stops) {
                         writer.write(gene.getRef());
-                        writer.write(val);
-                        writer.write(val+3);
+                        writer.write(stop.one);
+                        writer.write(stop.two);
                         writer.write(gene.getGeneName());
                         writer.write(0);
                         writer.write(gene.getStrand().toString());
@@ -556,20 +539,24 @@ public class GTFExport extends AbstractOutputCommand {
                         continue;
                     }
 
-                    if (gene.getStrand().equals(Strand.PLUS) && txpt.getStopCodon() >= txpt.getEnd()) {
+                    if (gene.getStrand().equals(Strand.PLUS) && txpt.getStopCodonEnd() >= txpt.getEnd()) {
+                        // 3' UTR is from end of the stop codon to the end of the transcript
                         // require some amount of UTR... (likely an odd transcript)
+                    	// if the stop codon is at or after (?) the end of the transcript, there is no 3' UTR
                         continue;
-                    } else if (gene.getStrand().equals(Strand.MINUS) && txpt.getStopCodon() <= txpt.getStart()) {
+                    } else if (gene.getStrand().equals(Strand.MINUS) && txpt.getStopCodonStart() <= txpt.getStart()) {
+                        // 3' UTR is from the start of the transcript to the start of the stop codon
                         // require some amount of UTR... (likely an odd transcript)
+                    	// if the stop codon is at or before (?) the start of the transcript, there is no 3' UTR
                         continue;
                     }
                     
                     Pair<Integer, Integer> utr = null;
                     
                     if (gene.getStrand().equals(Strand.PLUS)) {
-                        utr = new Pair<Integer, Integer>(txpt.getCdsEnd(), txpt.getEnd());
+                        utr = new Pair<Integer, Integer>(txpt.getStopCodonEnd(), txpt.getEnd());
                     } else if (gene.getStrand().equals(Strand.MINUS)) {
-                        utr = new Pair<Integer, Integer>(txpt.getStart(), txpt.getCdsStart());
+                        utr = new Pair<Integer, Integer>(txpt.getStart(), txpt.getStopCodonStart());
                     } else {
                         // should never happen
                         continue;
@@ -621,21 +608,24 @@ public class GTFExport extends AbstractOutputCommand {
                     if (!txpt.hasCDS() || gene.getStrand() == Strand.NONE) {
                         continue;
                     }
-
-                    if (gene.getStrand().equals(Strand.PLUS) && txpt.getStopCodon() >= txpt.getEnd()) {
+                    if (gene.getStrand().equals(Strand.PLUS) && txpt.getStartCodonStart() <= txpt.getStart()) {
+                        // 5' UTR is from start of transcript to the start codon
                         // require some amount of UTR... (likely an odd transcript)
+                    	// if the start codon is at or before (?) the start of the transcript, there is no 5' UTR
                         continue;
-                    } else if (gene.getStrand().equals(Strand.MINUS) && txpt.getStopCodon() <= txpt.getStart()) {
+                    } else if (gene.getStrand().equals(Strand.MINUS) && txpt.getStartCodonEnd() >= txpt.getEnd()) {
+                        // 5' UTR is from the end of the start codon to the end of the transcript
                         // require some amount of UTR... (likely an odd transcript)
+                    	// if the start codon is at or after (?) the end of the transcript, there is no 5' UTR
                         continue;
                     }
                     
                     Pair<Integer, Integer> utr = null;
                     
                     if (gene.getStrand().equals(Strand.MINUS)) {
-                        utr = new Pair<Integer, Integer>(txpt.getCdsEnd(), txpt.getEnd());
+                        utr = new Pair<Integer, Integer>(txpt.getStartCodonEnd(), txpt.getEnd());
                     } else if (gene.getStrand().equals(Strand.PLUS)) {
-                        utr = new Pair<Integer, Integer>(txpt.getStart(), txpt.getCdsStart());
+                        utr = new Pair<Integer, Integer>(txpt.getStart(), txpt.getStartCodonStart());
                     } else {
                         // should never happen
                         continue;
@@ -651,7 +641,7 @@ public class GTFExport extends AbstractOutputCommand {
                         writer.write(gene.getRef());
                         writer.write(utr.one);
                         writer.write(utr.two);
-                        writer.write(gene.getGeneName());
+                        writer.write(gene.getGeneName()+"/"+txpt.getTranscriptId());
                         writer.write(0);
                         writer.write(gene.getStrand().toString());
                         writer.eol();
@@ -890,9 +880,9 @@ public class GTFExport extends AbstractOutputCommand {
                             }
 
                             for (int pos=exon.getStart(); pos<exon.getEnd(); pos++ ) {
-                                if (pos == txpt.getStartCodon()) {
+                                if (pos == txpt.getStartCodonStart()) {
                                     orf = 1;
-                                } else if (pos == txpt.getStopCodon()) {
+                                } else if (pos == txpt.getStopCodonStart()) {
                                     orf = 0;
                                 } else if (orf > 0) {
                                     orf = orf << 1;
@@ -919,9 +909,9 @@ public class GTFExport extends AbstractOutputCommand {
                             }
 
                             for (int pos=exon.getStart(); pos<exon.getEnd(); pos++ ) {
-                                if (pos == txpt.getStopCodon()+3) {
+                                if (pos == txpt.getCdsStart()) {
                                     orf = 4;
-                                } else if (pos == txpt.getStartCodon()) {
+                                } else if (pos == txpt.getStartCodonEnd()) {
                                     orf = 0;
                                 } else if (orf > 0) {
                                     orf = orf >> 1;

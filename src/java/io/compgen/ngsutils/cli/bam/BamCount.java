@@ -19,6 +19,7 @@ import io.compgen.cmdline.annotation.UnnamedArg;
 import io.compgen.cmdline.exceptions.CommandArgumentException;
 import io.compgen.cmdline.impl.AbstractOutputCommand;
 import io.compgen.common.IterUtils;
+import io.compgen.common.StringUtils;
 import io.compgen.common.TabWriter;
 import io.compgen.common.progress.IncrementingStats;
 import io.compgen.common.progress.ProgressUtils;
@@ -58,6 +59,8 @@ public class BamCount extends AbstractOutputCommand {
     private int filterFlags = 0;
     private int requiredFlags = 0;
     
+    private List<String> requiredTags = null;
+    
     private Orientation orient = Orientation.UNSTRANDED;
 
     @Option(desc = "Only keep properly paired reads", name = "proper-pairs")
@@ -67,6 +70,17 @@ public class BamCount extends AbstractOutputCommand {
             filterFlags |= ReadUtils.MATE_UNMAPPED_FLAG;
         }
     }
+    
+    @Option(desc="List of required GTF tag annotations (comma-separated list)", name="gtf-tag", allowMultiple=true)
+    public void setRequiredTags(String requiredTags) {
+    	if (this.requiredTags == null) {
+    		this.requiredTags = new ArrayList<String>();
+    	}
+    	for (String s:requiredTags.split(",")) {
+    		this.requiredTags.add(s);
+    	}
+    }
+
 
     @Option(desc = "Filtering flags", name = "filter-flags", defaultValue = "3844")
     public void setFilterFlags(int flag) {
@@ -213,6 +227,10 @@ public class BamCount extends AbstractOutputCommand {
             writer.write_line("## counts: starting positions only ");
         }
 
+        if (requiredTags != null) {
+            writer.write_line("## gtf-tags: " + StringUtils.join(",", requiredTags));
+        }
+
         SamReader reader = readerFactory.open(new File(samFilename));
         String name;
         SpanSource spanSource = null;
@@ -229,7 +247,7 @@ public class BamCount extends AbstractOutputCommand {
             name = bedFilename;
         } else if (gtfFilename != null) {
             writer.write_line("## source: gtf " + gtfFilename);
-            spanSource = new GTFSpans(gtfFilename);
+            spanSource = new GTFSpans(gtfFilename, requiredTags);
             name = gtfFilename;
         } else {
             reader.close();

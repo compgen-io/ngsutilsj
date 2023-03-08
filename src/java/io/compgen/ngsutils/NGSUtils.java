@@ -80,6 +80,7 @@ import io.compgen.ngsutils.cli.fastq.FastqStats;
 import io.compgen.ngsutils.cli.fastq.FastqToBam;
 import io.compgen.ngsutils.cli.fastq.FastqToFasta;
 import io.compgen.ngsutils.cli.gtf.GTFExport;
+import io.compgen.ngsutils.cli.gtf.GTFToFASTA;
 import io.compgen.ngsutils.cli.gtf.GeneExport;
 import io.compgen.ngsutils.cli.tab.TabAnnotate;
 import io.compgen.ngsutils.cli.tab.TabixCat;
@@ -91,6 +92,7 @@ import io.compgen.ngsutils.cli.vcf.VCFCheck;
 import io.compgen.ngsutils.cli.vcf.VCFChrFix;
 import io.compgen.ngsutils.cli.vcf.VCFClearFilter;
 import io.compgen.ngsutils.cli.vcf.VCFCount;
+import io.compgen.ngsutils.cli.vcf.VCFEffect;
 import io.compgen.ngsutils.cli.vcf.VCFExportCmd;
 import io.compgen.ngsutils.cli.vcf.VCFFilterCmd;
 import io.compgen.ngsutils.cli.vcf.VCFMerge;
@@ -228,7 +230,9 @@ public class NGSUtils {
 			.addCommand(FastaBins.class)
 			.addCommand(VCFBedCount.class)
 			.addCommand(VCFConsensus.class)
-			.addCommand(VCFRenameSample.class);
+			.addCommand(VCFRenameSample.class)
+			.addCommand(GTFToFASTA.class)
+			.addCommand(VCFEffect.class);
 
 
         try {

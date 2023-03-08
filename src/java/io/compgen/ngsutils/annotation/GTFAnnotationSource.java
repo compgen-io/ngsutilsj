@@ -4,8 +4,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.TreeMap;
@@ -19,6 +21,8 @@ import io.compgen.common.StringUtils;
 import io.compgen.ngsutils.annotation.GTFAnnotationSource.GTFGene;
 import io.compgen.ngsutils.bam.Orientation;
 import io.compgen.ngsutils.bam.Strand;
+import io.compgen.ngsutils.fasta.FastaReader;
+import io.compgen.ngsutils.support.SeqUtils;
 
 /**
  * Class to extract gene annotations stored in a GTF file.
@@ -80,6 +84,19 @@ public class GTFAnnotationSource extends AbstractAnnotationSource<GTFGene> {
             
             return 0;
         }
+
+        /** 
+         * Returns the sequence for this exon
+         * 
+         * This doesn't switch strands!!! It always returns the PLUS strand sequence
+         * 
+         * @param fasta - Reference genome FASTA file
+         * @return
+         * @throws IOException
+         */
+		public String getSequence(FastaReader fasta) throws IOException {
+			return fasta.fetchSequence(parent.getParent().getRef(), start, end);
+		}
     }
 
     public class GTFTranscript {
@@ -93,8 +110,19 @@ public class GTFAnnotationSource extends AbstractAnnotationSource<GTFGene> {
         private int cdsStart = -1;
         private int cdsEnd = -1;
 
+        
+        // start/stop codons can span multiple exons, so they need to be treated as potentially discontinuous...
+        private int startCodonStart = -1;
+        private int startCodonEnd = -1;
+        
+        private int stopCodonStart = -1;
+        private int stopCodonEnd = -1;
+        
         List<GTFExon> exons = new ArrayList<GTFExon>();
         List<GTFExon> cds = new ArrayList<GTFExon>();
+        List<GTFExon> startCodons = new ArrayList<GTFExon>();
+        List<GTFExon> stopCodons = new ArrayList<GTFExon>();
+
 
         public GTFTranscript(GTFGene parent, String transcriptId) {
             this.parent = parent;
@@ -126,6 +154,7 @@ public class GTFAnnotationSource extends AbstractAnnotationSource<GTFGene> {
         }
 
         public int getCdsEnd() {
+        	// note, this is the last base before the stop codon
             return cdsEnd;
         }
 
@@ -159,31 +188,88 @@ public class GTFAnnotationSource extends AbstractAnnotationSource<GTFGene> {
             Collections.sort(cds);
         }
 
-        public int getStartCodon() {
-            if (parent.getStrand().equals(Strand.PLUS)) {
-                if (cdsStart > 0) {
-                    return cdsStart;
-                }
-            } else {
-                if (cdsEnd > 0) {
-                    return cdsEnd - 3;
-                }
+        public void addStopCodon(int start, int end, String[] attributes) {
+            if (stopCodonStart == -1 || stopCodonStart > start) {
+            	stopCodonStart = start;
             }
-            return -1;
+            if (stopCodonEnd == -1 || stopCodonEnd < end) {
+            	stopCodonEnd = end;
+            }
+            stopCodons.add(new GTFExon(this, start, end, attributes));
+            Collections.sort(stopCodons);
         }
 
-        public int getStopCodon() {
-            if (parent.getStrand().equals(Strand.PLUS)) {
-                if (cdsEnd > 0) {
-                    return cdsEnd;
-                }
-            } else {
-                if (cdsStart > 0) {
-                    return cdsStart - 3;
-                }
+        public void addStartCodon(int start, int end, String[] attributes) {
+            if (startCodonStart == -1 || startCodonStart > start) {
+            	startCodonStart = start;
             }
-            return -1;
+            if (startCodonEnd == -1 || startCodonEnd < end) {
+            	startCodonEnd = end;
+            }
+            startCodons.add(new GTFExon(this, start, end, attributes));
+            Collections.sort(startCodons);
         }
+
+        public int getStartCodonStart() {
+        	return startCodonStart;
+        }
+        public int getStartCodonEnd() {
+        	return startCodonEnd;
+        }
+
+        public int getStopCodonStart() {
+        	return stopCodonStart;
+        }
+        public int getStopCodonEnd() {
+        	return stopCodonEnd;
+        }
+
+        public List<GTFExon> getStartCodons() {
+        	return startCodons;
+        }
+        
+        public List<GTFExon> getStopCodons() {
+        	return stopCodons;
+        }
+
+		public String getSequence(FastaReader fasta) throws IOException {
+			String ret = "";
+			for (GTFExon exon: exons) {
+				String seq = exon.getSequence(fasta);
+				ret += seq;
+			}
+			
+			if (parent.getStrand() == Strand.MINUS) {
+				return SeqUtils.revcomp(ret);
+			}
+			return ret;
+		}
+        
+//        public int getStartCodon() {
+//            if (parent.getStrand().equals(Strand.PLUS)) {
+//                if (cdsStart > 0) {
+//                    return cdsStart;
+//                }
+//            } else {
+//                if (cdsEnd > 0) {
+//                    return cdsEnd - 3;
+//                }
+//            }
+//            return -1;
+//        }
+//
+//        public int getStopCodon() {
+//            if (parent.getStrand().equals(Strand.PLUS)) {
+//                if (cdsEnd > 0) {
+//                    return cdsEnd;
+//                }
+//            } else {
+//                if (cdsStart > 0) {
+//                    return cdsStart - 3;
+//                }
+//            }
+//            return -1;
+//        }
 
     }
 
@@ -273,6 +359,20 @@ public class GTFAnnotationSource extends AbstractAnnotationSource<GTFGene> {
             transcripts.get(transcriptId).addCDS(start, end, attributes);
         }
 
+        public void addStopCodon(String transcriptId, int start, int end, String[] attributes) {
+            if (!transcripts.containsKey(transcriptId)) {
+                transcripts.put(transcriptId, new GTFTranscript(this, transcriptId));
+            }
+            transcripts.get(transcriptId).addStopCodon(start, end, attributes);
+        }
+
+        public void addStartCodon(String transcriptId, int start, int end, String[] attributes) {
+            if (!transcripts.containsKey(transcriptId)) {
+                transcripts.put(transcriptId, new GTFTranscript(this, transcriptId));
+            }
+            transcripts.get(transcriptId).addStartCodon(start, end, attributes);
+        }
+
         public List<GTFTranscript> getTranscripts(boolean codingOnly, boolean nonCodingOnly) {
             if (!codingOnly && !nonCodingOnly) {
                 return new ArrayList<GTFTranscript>(transcripts.values());
@@ -348,7 +448,7 @@ public class GTFAnnotationSource extends AbstractAnnotationSource<GTFGene> {
     final private boolean hasBioType;
     final private boolean hasStatus;
 
-    public GTFAnnotationSource(String filename) throws NumberFormatException, IOException {
+    public GTFAnnotationSource(String filename, List<String> requiredTags) throws NumberFormatException, IOException {
         final Map<String, GTFGene> cache = new HashMap<String, GTFGene>();
         
         boolean hasBioType = false;
@@ -391,6 +491,7 @@ public class GTFAnnotationSource extends AbstractAnnotationSource<GTFGene> {
 
             final String[] attrs = StringUtils.quotedSplit(cols[8], ';');
             List<String> exonAttributes = new ArrayList<String>();
+            Set<String> exonTags = new HashSet<String>();
             
             for (final String attr : attrs) {
                 if (StringUtils.strip(attr).length() > 0) {
@@ -419,10 +520,28 @@ public class GTFAnnotationSource extends AbstractAnnotationSource<GTFGene> {
                     default:
                         exonAttributes.add(k);
                         exonAttributes.add(v);
+                        
+                        if (k.equals("tag")) {
+                        	exonTags.add(v);
+                        }
                     }
                 }
             }
 
+            if (requiredTags != null) {
+            	boolean fail = false;
+	            for (String tag: requiredTags) {
+	            	if (!exonTags.contains(tag)) {
+	            		fail = true;
+	            		break;
+	            	}
+	            }
+	            if (fail) {
+	            	// skip this entry
+	            	continue;
+	            }
+            }
+            
             if (hasBioType == false && bioType!=null && !bioType.equals("")) {
                 hasBioType = true;
             }
@@ -448,7 +567,15 @@ public class GTFAnnotationSource extends AbstractAnnotationSource<GTFGene> {
             case "CDS":
                 gene.addCDS(transcriptId, start, end, exonAttributes.toArray(new String[exonAttributes.size()]));
                 break;
-            }
+                
+            case "stop_codon":
+                gene.addStopCodon(transcriptId, start, end, exonAttributes.toArray(new String[exonAttributes.size()]));
+                break;
+
+            case "start_codon":
+	            gene.addStartCodon(transcriptId, start, end, exonAttributes.toArray(new String[exonAttributes.size()]));
+	            break;
+	        }
         }
 
         for (final String geneId : cache.keySet()) {

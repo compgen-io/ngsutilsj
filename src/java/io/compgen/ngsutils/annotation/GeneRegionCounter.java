@@ -13,7 +13,7 @@ public class GeneRegionCounter {
     
     public GeneRegionCounter(String filename) throws NumberFormatException, IOException {
         System.err.print("Loading GTF annotation: "+filename+"...");
-        gtf = new GTFAnnotationSource(filename);
+        gtf = new GTFAnnotationSource(filename, null);
         System.err.println(" done");
         for (GenicRegion region: GenicRegion.values()) {
             regionCounts.put(region, 0L);
