@@ -258,6 +258,12 @@ public class CodingSequence {
 		if (end > peptide.length()) {
 			end = peptide.length();
 		}
+		if (start > peptide.length() || start > end) {
+			return null;
+		}
+
+//		System.err.println("peptide.getAA ("+aaPos+","+endPos+","+flanking+") => (" + start+","+end+") "+peptide);
+		
 		String ret = peptide.substring(start, end);
 //		if (ret.endsWith("*")) {
 //			ret = ret.substring(0, ret.length()-1);

@@ -107,7 +107,12 @@ public class VCFAttributeValue {
 					int i = Integer.parseInt(alleleName);
 					return spl[i];
 				} catch (NumberFormatException e) {
-					throw new VCFAttributeException("Unable to find allele: "+alleleName);
+					double d = asDouble(alleleName);
+					if (d == Double.NaN) {
+						throw new VCFAttributeException("Unable to find allele: "+alleleName);
+					} else {
+						return ""+d;
+					}
 				}
 			}
 		}
