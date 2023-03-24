@@ -133,6 +133,7 @@ public class GTFToFASTA extends AbstractOutputCommand {
             
             if (verbose) {
                 System.err.println(" [done]");
+                System.err.println(" Genes: " + StringUtils.join(",", includeListSet));
             }
         }
 
@@ -191,5 +192,6 @@ public class GTFToFASTA extends AbstractOutputCommand {
 				}
 			}
 		}
+		writer.close();
     }
 }
