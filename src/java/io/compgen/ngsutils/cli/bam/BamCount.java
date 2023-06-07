@@ -33,6 +33,7 @@ import io.compgen.ngsutils.cli.bam.count.BinSpans;
 import io.compgen.ngsutils.cli.bam.count.GTFSpans;
 import io.compgen.ngsutils.cli.bam.count.SpanGroup;
 import io.compgen.ngsutils.cli.bam.count.SpanSource;
+import io.compgen.ngsutils.cli.bam.count.TabixSpans;
 
 @Command(name="bam-count", desc="Counts the number of reads for genes (GTF), within a BED region, or by bins (--gtf, --bed, or --bins required)", category="bam")
 public class BamCount extends AbstractOutputCommand {
@@ -40,9 +41,10 @@ public class BamCount extends AbstractOutputCommand {
     private String samFilename=null;
 
     private String bedFilename=null;
+    private String tabixFilename=null;
     private String gtfFilename=null;
+
     private int binSize = 0;
-    
     private int bedExtend = 0;
     
     private boolean contained = false;
@@ -105,6 +107,11 @@ public class BamCount extends AbstractOutputCommand {
     @Option(desc="Count reads for genes (GTF model)", name="gtf", helpValue="fname")
     public void setGTFFile(String gtfFilename) {
         this.gtfFilename = gtfFilename;
+    }
+
+    @Option(desc="Count reads within Tabix-indexed defined regions", name="tabix", helpValue="fname")
+    public void setTabixFile(String fname) {
+        this.tabixFilename = fname;
     }
 
     @Option(desc="Count reads within BED regions", name="bed", helpValue="fname")
@@ -195,8 +202,11 @@ public class BamCount extends AbstractOutputCommand {
         if (gtfFilename != null) {
             sources++;
         }
+        if (tabixFilename != null) {
+            sources++;
+        }
         if (sources != 1) {
-            throw new CommandArgumentException("You must specify one of --bins, --bed, --vcf or --gtf!");
+            throw new CommandArgumentException("You must specify one of --bins, --bed, --tabix, --vcf or --gtf!");
         }
         
         SamReaderFactory readerFactory = SamReaderFactory.makeDefault();
@@ -245,6 +255,10 @@ public class BamCount extends AbstractOutputCommand {
             }
             spanSource = new BedSpans(bedFilename, bedExtend);
             name = bedFilename;
+        } else if (tabixFilename != null) {
+            writer.write_line("## source: tabix " + tabixFilename);
+            spanSource = new TabixSpans(tabixFilename);
+            name = tabixFilename;
         } else if (gtfFilename != null) {
             writer.write_line("## source: gtf " + gtfFilename);
             spanSource = new GTFSpans(gtfFilename, requiredTags);

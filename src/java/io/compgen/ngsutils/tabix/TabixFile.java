@@ -45,11 +45,7 @@ public class TabixFile {
 	    this.closed = true;
 	}
 
-	
-	public int findColumnByName(String name) throws IOException {
-		if (index == null) {
-			throw new IOException("Missing TBI or CSI index file! (Index needed for name-based column access)");
-		}
+	protected void populateHeaders() throws IOException {
 		if (headerNames == null) {
 			StringLineReader reader = new StringLineReader(new BGZInputStream(this.filename));
 			Iterator<String> it = reader.iterator();
@@ -68,7 +64,12 @@ public class TabixFile {
 
 			headerNames = line.split("\t");
 			reader.close();
-			
+		}
+	}
+	
+	public int findColumnByName(String name) throws IOException {
+		if (headerNames == null) {
+			populateHeaders();
 		}
 		
 		for (int i=0; i<headerNames.length; i++) {
@@ -259,6 +260,12 @@ public class TabixFile {
         };
     }
     
+    public String[] getHeaderNames() throws IOException {
+		if (headerNames == null) {
+			populateHeaders();
+		}
+    	return this.headerNames;
+    }
     
     public char getMeta() {
         return index.getMeta();
