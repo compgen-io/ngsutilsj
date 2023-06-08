@@ -19,6 +19,18 @@ public class FastaGenerateReads extends AbstractOutputCommand {
     private int windowStep = 1;
     private int maxWildcard = 0;
     private char qualScore = 30+33;
+    private boolean exportFA = false;
+    private boolean exportFQ = false; 
+
+    @Option(name="fastq", desc="Export FASTQ")
+    public void setFASTQ(boolean val) {
+        this.exportFQ = val;
+    }
+
+    @Option(name="fasta", desc="Export FASTA")
+    public void setFASTA(boolean val) {
+        this.exportFA = val;
+    }
 
     @Option(name="read-length", charName="l", desc="Read length", defaultValue="100")
     public void setReadLength(int readLength) {
@@ -49,6 +61,9 @@ public class FastaGenerateReads extends AbstractOutputCommand {
     public void exec() throws IOException, CommandArgumentException {
         if (filename == null) {
             throw new CommandArgumentException("Missing/invalid arguments!");
+        }
+        if (!exportFA  && ! exportFQ) {
+            throw new CommandArgumentException("You must specify --fastq or --fasta outputs!");
         }
         
         if (windowStep > readLength) {
@@ -97,9 +112,14 @@ public class FastaGenerateReads extends AbstractOutputCommand {
                     }
                     
                     if (count <= maxWildcard) {
-                        out.write(("@"+current[0]+":"+pos+"-"+(pos+readLength)+"\n").getBytes());
-                        out.write(read.getBytes());
-                        out.write(("\n+\n"+qual+"\n").getBytes());
+                        if (exportFQ) {
+	                        out.write(("@"+current[0]+":"+pos+"-"+(pos+readLength)+"\n").getBytes());
+	                        out.write(read.getBytes());
+	                        out.write(("\n+\n"+qual+"\n").getBytes());
+                        } else if (exportFA) {
+	                        out.write((">"+current[0]+":"+pos+"-"+(pos+readLength)+"\n").getBytes());
+	                        out.write((read+"\n").getBytes());
+                        }
                     }
 
                     buffer = buffer.substring(windowStep);
