@@ -3,7 +3,6 @@ package io.compgen.ngsutils.cli.bam.count;
 import java.io.IOException;
 import java.util.Iterator;
 
-import io.compgen.common.StringUtils;
 import io.compgen.ngsutils.bam.Strand;
 import io.compgen.ngsutils.tabix.TabixFile;
 
