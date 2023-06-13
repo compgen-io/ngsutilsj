@@ -426,15 +426,9 @@ public class SeqUtils {
     }
 
     public static String translate(String seq, boolean keepCase) {
-    	return translate(seq, SeqUtils.CodonTable.DEFAULT, keepCase, true);
+    	return translate(seq, SeqUtils.CodonTable.DEFAULT, keepCase);
     }
 
-    public static String translate(String seq, boolean keepCase, boolean forceFirstMet) {
-    	return translate(seq, SeqUtils.CodonTable.DEFAULT, keepCase,forceFirstMet);
-    }
-    public static String translate(String seq, CodonTable table, boolean keepCase) {
-    	return translate(seq, table, keepCase, true);
-    }
     /**
      * Translate a cDNA sequence to a peptide. Translation will stop at the first stop codon (which will not be included in the result)
      * 
@@ -444,7 +438,7 @@ public class SeqUtils {
      * @param forceFirstMet The firsrt AA should always be a methionine, regardless of if the start codon is ATG
      * @return amino acid sequence
      */
-    public static String translate(String seq, CodonTable table, boolean keepCase, boolean forceFirstMet) {
+    public static String translate(String seq, CodonTable table, boolean keepCase) {
     	String peptide = "";
     	for (int i=0; i+2 < seq.length(); i+=3) {
     		String codon = seq.substring(i, i+3);
@@ -453,10 +447,11 @@ public class SeqUtils {
     			break;
     		} 
 
-    		if (peptide.length() == 0 && !codon.toUpperCase().equals("ATG") && forceFirstMet) {
-    			// non-ATG starts still end up with a first AA as methionine.
-    			aa = "M";
-    		}
+// This just caused issues when done at this level -- only do this conversion when you know you are working with full length protein sequences    		
+//    		if (peptide.length() == 0 && !codon.toUpperCase().equals("ATG") && forceFirstMet) {
+//    			// non-ATG starts still end up with a first AA as methionine.
+//    			aa = "M";
+//    		}
     		
     		if (keepCase) {
     			if (Character.isLowerCase(codon.charAt(0)) || Character.isLowerCase(codon.charAt(1)) || Character.isLowerCase(codon.charAt(2))) {

@@ -231,8 +231,9 @@ public class CodingSequence {
 	public String getAA() {
 		return getAA(SeqUtils.CodonTable.DEFAULT);
 	}
+
 	public String getAA(CodonTable table) {
-		String ret = SeqUtils.translate(getCDS(), table, true);
+		String ret = SeqUtils.translate(getCDS(), table, true); //
 //		if (ret.endsWith("*")) {
 //			ret = ret.substring(0, ret.length()-1);
 //		}
@@ -304,7 +305,7 @@ public class CodingSequence {
 	 * @return
 	 */
 	public CodingVariant addVariant(String chrom, int pos, String ref, String alt) {
-//		System.out.println(this.parent.getTranscriptId() + " / Adding variant: "+ref+">"+alt);
+//		System.err.println(this.parent.getTranscriptId() + " / Adding variant: "+ref+">"+alt);
 		CodingSequence newcds = clone();
 
 		int varStart = pos - 1;
@@ -331,7 +332,7 @@ public class CodingSequence {
 		for (int i=0; i<parent.exons.size(); i++) {
 			GTFExon exon = parent.exons.get(i);
 
-//			System.out.println(exon.getStart() + " / " + exon.getEnd());
+//			System.err.println(exon.getStart() + " / " + exon.getEnd());
 			if (lastExon == null) {
 				if (varStart < exon.getStart() && varEnd > exon.getStart()) {
 					// we are spanning the 5' end here
@@ -425,12 +426,12 @@ public class CodingSequence {
 			}
 		}
 
-//		System.out.println("Original AA: " + this.getAA());
+//		System.err.println("Original AA: " + this.getAA());
 		CodingSequence newSeq = new CodingSequence(this.parent);
 		for (CodingBase b: newBases) {
 			newSeq.addBase(b);
 		}
-//		System.out.println("New      AA: " + newSeq.getAA());
+//		System.err.println("New      AA: " + newSeq.getAA());
 		
 		String consequence="";
 		String cdsVariant = "";
@@ -469,7 +470,7 @@ public class CodingSequence {
 				consequence = "5_prime_UTR_variant";
 			}
 		} else if (alt.length() < ref.length()) {
-//			System.out.println("Deletion");
+//			System.err.println("Deletion");
 				// deletion
 
 				if (parent.getParent().getStrand() == Strand.PLUS) {
@@ -535,7 +536,7 @@ public class CodingSequence {
 //				System.out.println("del: start:"+startAA+startPos+", end:"+endAA+endPos + " other: "+aaPos+"-"+aaEndPos);
 				
 		} else if (alt.length() > ref.length()) {
-//			System.out.println("Insertion");
+//			System.err.println("Insertion");
 			// inserts
 
 			if (parent.getParent().getStrand() == Strand.PLUS) {
@@ -597,7 +598,7 @@ public class CodingSequence {
 //			System.out.println("ins: start:"+startAA+startPos+", end:"+endAA+endPos + " other: "+aaPos+"-"+aaEndPos);
 
 		} else {
-//			System.out.println("SNV");
+//			System.err.println("SNV");
 			// missense
 			String refCodon = "";
 			String altCodon = "";
@@ -624,9 +625,9 @@ public class CodingSequence {
 			
 			String refAA = SeqUtils.translate(refCodon, false);
 			String altAA = SeqUtils.translate(altCodon, true);
-//			
-//			System.out.println("refCodon   : " + refCodon + " => " + refAA);
-//			System.out.println("altCodon   : " + altCodon + " => " + altAA);
+			
+//			System.err.println("refCodon   : " + refCodon + " => " + refAA);
+//			System.err.println("altCodon   : " + altCodon + " => " + altAA);
 
 			cdsVariant = "c."+cdsPos+ref+">"+alt;
 
@@ -649,10 +650,9 @@ public class CodingSequence {
 			consequence = "start_lost";
 		}
 		
-//		System.out.println("Consequence: " + consequence);
-//		System.out.println("cdsVariant : " + cdsVariant);
-//		System.out.println("aaVariant  : " + aaVariant);
-//
+//		System.err.println("Consequence: " + consequence);
+//		System.err.println("cdsVariant : " + cdsVariant);
+//		System.err.println("aaVariant  : " + aaVariant);
 		
 		newcds.bases = newBases;
 		

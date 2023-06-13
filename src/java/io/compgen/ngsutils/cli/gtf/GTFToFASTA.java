@@ -184,7 +184,14 @@ public class GTFToFASTA extends AbstractOutputCommand {
 				writer.write_line(">" + ann.getValue().getGeneName()+"|"+ann.getValue().getGeneId()+"|"+txpt.getTranscriptId()+ " " + ann.getValue().getRef()+":"+txpt.getStart()+"-"+txpt.getEnd());
 				CodingSequence cds = CodingSequence.buildFromTranscript(txpt, fasta);
 				if (protein) {
-					writer.write_line(cds.getAA());
+					String aa = cds.getAA();
+					// If the full length protein doesn't start with a methionine, force it to start with an M.
+					// See: https://en.wikipedia.org/wiki/Start_codon
+					
+					if (!aa.startsWith("M") || !aa.startsWith("m")) {
+						aa = "M" + aa.substring(1);
+					}
+					writer.write_line(aa);
 				} else if (full) {
 					writer.write_line(txpt.getSequence(fasta));
 				} else {

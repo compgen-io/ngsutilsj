@@ -175,7 +175,13 @@ public class VCFPeptide extends AbstractOutputCommand {
 					System.err.println(gene.getGeneName() + " / Variant: "+chrom + ":" + rec.getPos() + " "+rec.getRef()+">"+alt);
 
 					for (GTFTranscript txpt: gene.getTranscripts(true, false)) { // only look for coding transcripts
-						PeptideRecord peptide = writePeptide(chrom, rec.getPos(), rec.getRef(), alt, txpt, fasta, rec);
+						if (verbose) {
+							System.err.println("  [txpt] " + txpt.getTranscriptId());
+						}
+						PeptideRecord peptide = writePeptide(chrom, rec.getPos(), rec.getRef(), alt, txpt, fasta, rec, verbose);
+						if (verbose) {
+							System.err.println("  [peptide] " + peptide);
+						}
 						
 						if (peptide != null) {
 							if (!writtenPeptides.contains(peptide.peptide)) {
@@ -222,7 +228,7 @@ public class VCFPeptide extends AbstractOutputCommand {
 		}
 	}
 	
-	private PeptideRecord writePeptide(String chrom, int pos, String ref, String alt, GTFTranscript txpt, FastaReader fasta, VCFRecord vcfRecord) throws IOException, VCFAttributeException {
+	private PeptideRecord writePeptide(String chrom, int pos, String ref, String alt, GTFTranscript txpt, FastaReader fasta, VCFRecord vcfRecord, boolean verbose) throws IOException, VCFAttributeException {
 		CodingSequence cds = CodingSequence.buildFromTranscript(txpt, fasta);
 		CodingVariant var = cds.addVariant(chrom, pos, ref, alt);
 
@@ -239,7 +245,13 @@ public class VCFPeptide extends AbstractOutputCommand {
 			
 			String refheader = chrom+":"+start+"-"+end+"||" + txpt.getParent().getGeneName() + 
 				    "|"+txpt.getTranscriptId()+"|"+proteinId + "|||reference_sequence";
-					
+
+			if (verbose) {
+				System.err.println("  [protein] " + proteinId );
+				System.err.println("  [protein] " + header);
+			}
+
+			
 
 			if (this.infoValues != null) {
 				for (String key: this.infoValues) {

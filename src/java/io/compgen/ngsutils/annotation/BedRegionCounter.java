@@ -1,7 +1,7 @@
 package io.compgen.ngsutils.annotation;
 
-import java.util.List;
 import java.io.IOException;
+import java.util.List;
 
 import htsjdk.samtools.SAMRecord;
 import io.compgen.common.IterUtils;

@@ -20,6 +20,7 @@ import io.compgen.ngsutils.fastq.filter.ExcludeListFilter;
 import io.compgen.ngsutils.fastq.filter.FastqFilter;
 import io.compgen.ngsutils.fastq.filter.FilteringException;
 import io.compgen.ngsutils.fastq.filter.FlankingWildcardFilter;
+import io.compgen.ngsutils.fastq.filter.IncludeListFilter;
 import io.compgen.ngsutils.fastq.filter.NameSubstring;
 import io.compgen.ngsutils.fastq.filter.PairedFilter;
 import io.compgen.ngsutils.fastq.filter.PrefixQualFilter;
@@ -28,7 +29,6 @@ import io.compgen.ngsutils.fastq.filter.SeqTrimFilter;
 import io.compgen.ngsutils.fastq.filter.SizeFilter;
 import io.compgen.ngsutils.fastq.filter.SuffixQualFilter;
 import io.compgen.ngsutils.fastq.filter.SuffixTrimFilter;
-import io.compgen.ngsutils.fastq.filter.IncludeListFilter;
 import io.compgen.ngsutils.fastq.filter.WildcardFilter;
 
 @Command(name = "fastq-filter", desc = "Filters reads from a FASTQ file.", category="fastq")
