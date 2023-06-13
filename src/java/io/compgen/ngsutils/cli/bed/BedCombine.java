@@ -150,7 +150,8 @@ public class BedCombine extends AbstractOutputCommand {
         	List<List<BedRecord>> curRecords = records.get(curRef);
         	while (true) {
 	         	int firstIdx = -1;
-	        	int secondIdx = -1;
+	        	@SuppressWarnings("unused")
+				int secondIdx = -1;
 	        	BedRecord first = null;
 	        	BedRecord second = null;
 	        	
