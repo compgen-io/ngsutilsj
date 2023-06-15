@@ -4,10 +4,14 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.text.DecimalFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import org.apache.commons.math3.util.CombinatoricsUtils;
 import org.junit.Test;
+
+import io.compgen.common.Pair;
 
 public class StatisiticsTest {
 
@@ -117,6 +121,50 @@ public class StatisiticsTest {
     public void testPropTestPval() {
         assertEquals("0.3072681", new DecimalFormat("0.0000000").format(StatUtils.calcProportionalPvalue(5, 11, 16, 15)));
         assertEquals("0.8706", new DecimalFormat("0.0000").format(StatUtils.calcProportionalPvalue(5, 10, 20, 30)));
+    }
+    
+    @Test
+    public void testMeanMedianSpan() {
+    	List<Pair<Double, Integer>> l1 = new ArrayList<Pair<Double, Integer>>();
+    	l1.add(new Pair<Double, Integer>(2.0,2));
+    	l1.add(new Pair<Double, Integer>(1.0,3));
+    	l1.add(new Pair<Double, Integer>(3.0,5));
+
+    	List<Pair<Double, Integer>> l2 = new ArrayList<Pair<Double, Integer>>();
+    	l2.add(new Pair<Double, Integer>(2.0,2));
+    	l2.add(new Pair<Double, Integer>(1.0,3));
+    	l2.add(new Pair<Double, Integer>(3.0,4));
+
+    	int[] size = new int[] {2,3,5};
+    	double[] dvals = new double[] {2.0, 1.0, 3.0};
+    
+    	
+//    	System.out.println(StringUtils.join(",", l1));
+//    	System.out.println("Mean: " + StatUtils.meanSpan(l1));
+//    	System.out.println("Median: " + StatUtils.medianSpan(l1));
+
+        assertEquals(2.2, StatUtils.meanSpan(l1), 0.000001);
+        assertEquals(2.5, StatUtils.medianSpan(l1), 0.000001);
+
+//    	System.out.println("======");
+//    	
+//    	System.out.println(StringUtils.join(",", l2));
+//    	System.out.println("Mean: " + StatUtils.meanSpan(l2));
+//    	System.out.println("Median: " + StatUtils.medianSpan(l2));
+//
+        assertEquals(19.0/9, StatUtils.meanSpan(l2), 0.000001);
+        assertEquals(2.0, StatUtils.medianSpan(l2), 0.000001);
+
+//        System.out.println("======");
+//
+//    	System.out.println("size: " + StringUtils.join(",", size));
+//    	System.out.println("dval: " + StringUtils.join(",", dvals));
+//    	System.out.println("Mean: " + StatUtils.meanSpan(dvals, size));
+//    	System.out.println("Median: " + StatUtils.medianSpan(dvals, size));
+
+        assertEquals(2.2, StatUtils.meanSpan(dvals, size), 0.000001);
+        assertEquals(2.5, StatUtils.medianSpan(dvals, size), 0.000001);
+
     }
 
 }

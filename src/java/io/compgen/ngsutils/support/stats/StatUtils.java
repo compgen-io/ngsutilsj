@@ -5,11 +5,13 @@ import static org.apache.commons.math3.util.CombinatoricsUtils.factorialDouble;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import org.apache.commons.math3.distribution.ChiSquaredDistribution;
 
 import io.compgen.common.ComparablePair;
+import io.compgen.common.Pair;
 
 public class StatUtils {
     
@@ -456,6 +458,142 @@ public class StatUtils {
         
         return pvalue;
     }
+    
+    
+    /**
+     * Give a list of Double/Integer pairs, treat the double as a value and the integer as the
+     * number of times the double is present in a list.
+     * 
+     * Example:
+     *     The mean of: [(3,2), (1,2), (4,1)] should be ((3 * 2) + (1*2) + (4*1)) / 5
+     * 
+     * @param vals
+     * @return
+     */
+    public static double meanSpan(List<Pair<Double, Integer>> vals) {
+    	double acc = 0.0;
+    	int count = 0;
+    	
+    	for (Pair<Double, Integer> val: vals) {
+    		acc += (val.one * val.two);
+    		count += val.two;
+    	}
+    	return acc / count;
+    }
+
+    public static double meanSpan(double[] dvals, int[] sizes) {
+    	if (dvals.length != sizes.length) {
+    		throw new RuntimeException("Mismatched vals/sizes!");
+    	}
+
+    	double acc = 0.0;
+    	int count = 0;
+    	
+    	for (int i=0; i< dvals.length; i++) {
+    		acc += (dvals[i] * sizes[i]);
+    		count += sizes[i];
+    	}
+    	return acc / count;
+    }
+
+    /**
+     * Return the median value for a value/size pair
+     * 
+     * Note: we call this from the double[], int[] version as well so we can do a paired sort on the
+     * tuple.
+     * 
+     * @param vals
+     * @return
+     */
+    public static double medianSpan(List<Pair<Double, Integer>> spanVals) {
+    	if (spanVals == null || spanVals.size() == 0) {
+    		return Double.NaN;
+    	}
+
+    	// Make a copy of the list... we need to sort it and don't want to alter the incoming list.
+    	List<Pair<Double, Integer>> vals = new ArrayList<Pair<Double, Integer>>(spanVals.size());
+    	for (Pair<Double, Integer> tup : spanVals) {
+    		vals.add(tup);
+    	}
+    	
+    	vals.sort(new Comparator<Pair<Double, Integer>>() {
+			@Override
+			public int compare(Pair<Double, Integer> o1, Pair<Double, Integer> o2) {
+				return Double.compare(o1.one,  o2.one);
+			}});
+    	
+    	int total = 0;
+    	for (Pair<Double, Integer> tup : vals) {
+    		total += tup.two;
+    	}
+    	
+    	if (total % 2 == 0) {
+        	int mid1 = total / 2;
+        	int mid2 = (total / 2) + 1;
+        	
+    		int cur = 0;
+    		double val1 = Double.NaN;
+    		boolean found = false;
+    		
+        	for (Pair<Double, Integer> tup : vals) {        		
+        		cur += tup.two;
+        		if (!found && cur >= mid1) {
+        			found = true;
+        			val1 = tup.one;
+        		}
+        		if (cur >= mid2) {
+        			return (val1 + tup.one) / 2;
+        		}
+        	}
+    	} else {
+        	int mid = (total / 2) + 1;        	
+    		int cur = 0;
+    		
+        	for (Pair<Double, Integer> tup : vals) {        		
+        		cur += tup.two;
+        		if (cur >= mid) {
+        			return tup.one;
+        		}
+        	}
+    	}
+    	return Double.NaN;    	
+    }
+
+    public static double medianSpan(double[] dvals, int[] sizes) {
+    	if (dvals.length != sizes.length) {
+    		throw new RuntimeException("Mismatched vals/sizes!");
+    	}
+    	
+    	List<Pair<Double, Integer>> vals = new ArrayList<Pair<Double, Integer>>(dvals.length);
+    	for (int i=0; i<dvals.length; i++) {
+    		vals.add(new Pair<Double, Integer>(dvals[i], sizes[i]));
+    	}
+    	
+    	return medianSpan(vals);
+
+    }
+
+    
+	public static double max(double[] dvals) {
+		double thres = dvals[0];
+		for (int i=1; i<dvals.length; i++) {
+			if (dvals[i] > thres) {
+				thres = dvals[i];
+			}
+		}
+		return thres;
+	}
+
+	public static double min(double[] dvals) {
+		double thres = dvals[0];
+		for (int i=1; i<dvals.length; i++) {
+			if (dvals[i] < thres) {
+				thres = dvals[i];
+			}
+		}
+		return thres;
+	}
+    
     
 //    public static class Trendline {
 //        public final double slope;

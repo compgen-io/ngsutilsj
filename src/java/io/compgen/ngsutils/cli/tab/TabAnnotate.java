@@ -19,6 +19,7 @@ import io.compgen.common.progress.ProgressUtils;
 import io.compgen.ngsutils.NGSUtils;
 import io.compgen.ngsutils.support.FileUtils;
 import io.compgen.ngsutils.tabix.TabixFile;
+import io.compgen.ngsutils.tabix.annotate.BedGraphTabAnnotator;
 import io.compgen.ngsutils.tabix.annotate.TabAnnotator;
 import io.compgen.ngsutils.tabix.annotate.TabixTabAnnotator;
 import io.compgen.ngsutils.tabix.annotate.TabixVCFAnnotator;
@@ -120,6 +121,68 @@ public class TabAnnotate extends AbstractOutputCommand {
             throw new CommandArgumentException("Unable to parse argument for --tab: "+tab);
         }       
     }
+    
+    @Option(desc="Add annotations from a Tabix indexed BedGraph file (reports all values by default)", name="bg", helpValue="NAME:FILENAME{,mean,median,min,max}", allowMultiple=true)
+    public void setBedgraph(String bg) throws CommandArgumentException {
+        String[] spl = bg.split(":");
+        
+        if (spl.length == 2 || spl.length == 3) {
+            String[] spl2 = spl[1].split(",");
+            
+            try {
+                String fname = null;
+                boolean mean = false;
+                boolean median = false;
+                boolean max = false;
+                boolean min = false;
+                boolean all = false;
+                
+                for (String t:spl2) {
+                    if (fname == null) {
+                        fname = FileUtils.expandUserPath(t);
+                    } else {
+                        if (t.equals("median")) {
+                            median = true;
+                        } else if (t.equals("max")) {
+                        	max = true;
+                        } else if (t.equals("min")) {
+                        	min = true;
+                        } else if (t.equals("mean")) {
+                        	mean = true;
+                        } else if (t.equals("all")) {
+                        	all = true;
+                        }
+                    }
+                }
+                
+                BedGraphTabAnnotator tta = new BedGraphTabAnnotator(spl[0], fname);
+
+                if (mean) {
+                	tta.setMean();
+                }
+                if (median) {
+                	tta.setMedian();
+                }
+                if (max) {
+                	tta.setMax();
+                }
+                if (min) {
+                	tta.setMin();
+                }
+                if (all) {
+                	tta.setAll();
+                }
+                
+                chain.add(tta);
+                
+            } catch (IOException  e) {
+                throw new CommandArgumentException(e);
+            }
+        } else {
+            throw new CommandArgumentException("Unable to parse argument for --bg: "+bg);
+        }       
+    }
+
     
     @Option(desc="Add INFO annotation from a VCF file (TBI/CSI indexed, add '@' for only using records passing filters, collapse for unique values, alt=col and ref=col to specify an alternative allele column in the input tab-delimited file)", name="vcf", helpValue="NAME:INFONAME:FILENAME{:alt=N,ref=N,@,collapse}", allowMultiple=true)
     public void setVCF(String vcf) throws CommandArgumentException {
