@@ -71,7 +71,7 @@ public class FastqRemix extends AbstractOutputCommand {
 	   }
    }
    
-   @Option(desc="Total number of reads to include in the output (int)", name="total")
+   @Option(desc="Total number of reads to include in the output (int)", name="total", required=true)
    public void setTotalReads(int totalReads) {
        this.totalReads = totalReads;
    }
@@ -95,6 +95,9 @@ public class FastqRemix extends AbstractOutputCommand {
 				throw new CommandArgumentException("Missing file: " + filenames.get(i));
 			}
 		}
+        if (totalReads < 1) {
+            throw new CommandArgumentException("You must set the --total number of reads.");
+        }
 
         if (ratios == null) {
      	   	this.ratios = new ArrayList<Double>();
