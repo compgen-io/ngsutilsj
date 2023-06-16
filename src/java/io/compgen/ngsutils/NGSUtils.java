@@ -10,7 +10,6 @@ import io.compgen.cmdline.exceptions.MissingCommandException;
 import io.compgen.cmdline.exceptions.UnknownArgumentException;
 import io.compgen.common.StringUtils;
 import io.compgen.common.progress.SocketProgress;
-import io.compgen.common.updates.UpdateCheck;
 import io.compgen.ngsutils.cli.annotate.GTFAnnotate;
 import io.compgen.ngsutils.cli.annotate.RepeatAnnotate;
 import io.compgen.ngsutils.cli.bam.BamBaseCall;
@@ -73,6 +72,7 @@ import io.compgen.ngsutils.cli.fastq.FastqDemux;
 import io.compgen.ngsutils.cli.fastq.FastqFilterCli;
 import io.compgen.ngsutils.cli.fastq.FastqMerge;
 import io.compgen.ngsutils.cli.fastq.FastqOverlap;
+import io.compgen.ngsutils.cli.fastq.FastqRemix;
 import io.compgen.ngsutils.cli.fastq.FastqSeparate;
 import io.compgen.ngsutils.cli.fastq.FastqSort;
 import io.compgen.ngsutils.cli.fastq.FastqSplit;
@@ -232,31 +232,32 @@ public class NGSUtils {
 			.addCommand(VCFConsensus.class)
 			.addCommand(VCFRenameSample.class)
 			.addCommand(GTFToFASTA.class)
-			.addCommand(VCFEffect.class);
+			.addCommand(VCFEffect.class)
+			.addCommand(FastqRemix.class);
 
 
         try {
             if (args.length == 0) {
                 main.showCommands();
             } else {
-                if (!getBuild().equals("dev")) {
-                    UpdateCheck uc = new UpdateCheck("http://updates.compgen.io/versions.txt", "NGSUTILSJ_NO_UPDATECHECK", "io.compgen.ngsutilsj.no_upatecheck");
-                    uc.setValue("cmd", args[0]);
-                    uc.setValue("os", System.getProperty("os.name"));
-                    uc.setValue("arch", System.getProperty("os.arch"));
-                    uc.setValue("java_version", System.getProperty("java.version"));
-                    uc.setValue("java_vendor", System.getProperty("java.vendor"));
-                    
-                    if (!uc.isCurrentVersion("ngsutilsj", getBuild(), getVersionCode())) {
-                        String desc = uc.getCurrentVersionDescription("ngsutilsj", getBuild());
-                        if (desc == null || desc.equals("")) {
-                            System.err.println("Updated version of ngsutilsj is available: "+uc.getCurrentVersion("ngsutilsj", getBuild()));
-                        } else {
-                            System.err.println("Updated version of ngsutilsj is available: "+uc.getCurrentVersion("ngsutilsj", getBuild()) + " ("+ desc + ")");
-                        }
-                    }
-                }
-
+//                if (!getBuild().equals("dev")) {
+//                    UpdateCheck uc = new UpdateCheck("http://updates.compgen.io/versions.txt", "NGSUTILSJ_NO_UPDATECHECK", "io.compgen.ngsutilsj.no_upatecheck");
+//                    uc.setValue("cmd", args[0]);
+//                    uc.setValue("os", System.getProperty("os.name"));
+//                    uc.setValue("arch", System.getProperty("os.arch"));
+//                    uc.setValue("java_version", System.getProperty("java.version"));
+//                    uc.setValue("java_vendor", System.getProperty("java.vendor"));
+//                    
+//                    if (!uc.isCurrentVersion("ngsutilsj", getBuild(), getVersionCode())) {
+//                        String desc = uc.getCurrentVersionDescription("ngsutilsj", getBuild());
+//                        if (desc == null || desc.equals("")) {
+//                            System.err.println("Updated version of ngsutilsj is available: "+uc.getCurrentVersion("ngsutilsj", getBuild()));
+//                        } else {
+//                            System.err.println("Updated version of ngsutilsj is available: "+uc.getCurrentVersion("ngsutilsj", getBuild()) + " ("+ desc + ")");
+//                        }
+//                    }
+//                }
+//
                 main.findAndRun(args);
             }
         } catch (UnknownArgumentException e) {
