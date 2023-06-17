@@ -118,7 +118,7 @@ public class BamToBedPE extends AbstractOutputCommand {
         long i = 0;
         while (it.hasNext()) {
             SAMRecord read = it.next();
-            if (read.getReadUnmappedFlag()) {
+            if (read.getReadUnmappedFlag() || read.getMateUnmappedFlag()) {
                 continue;
             }
             
