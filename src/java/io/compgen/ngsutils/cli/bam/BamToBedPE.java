@@ -104,8 +104,8 @@ public class BamToBedPE extends AbstractOutputCommand {
 
         
         TabWriter writer = new TabWriter(out);
-        writer.write_line("## program: " + NGSUtils.getVersion());
-        writer.write_line("## cmd: " + NGSUtils.getArgs());
+//        writer.write_line("## program: " + NGSUtils.getVersion());
+//        writer.write_line("## cmd: " + NGSUtils.getArgs());
 
 
         Iterator<SAMRecord> it = ProgressUtils.getIterator(name, reader.iterator(), (channel == null)? null : new FileChannelStats(channel), new ProgressMessage<SAMRecord>() {
