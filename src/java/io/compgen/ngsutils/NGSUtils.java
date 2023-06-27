@@ -46,6 +46,7 @@ import io.compgen.ngsutils.cli.bed.BedNearest;
 import io.compgen.ngsutils.cli.bed.BedPEToBed;
 import io.compgen.ngsutils.cli.bed.BedReduce;
 import io.compgen.ngsutils.cli.bed.BedResize;
+import io.compgen.ngsutils.cli.bed.BedSort;
 import io.compgen.ngsutils.cli.bed.BedStats;
 import io.compgen.ngsutils.cli.bed.BedToBed3;
 import io.compgen.ngsutils.cli.bed.BedToBed6;
@@ -233,7 +234,8 @@ public class NGSUtils {
 			.addCommand(VCFRenameSample.class)
 			.addCommand(GTFToFASTA.class)
 			.addCommand(VCFEffect.class)
-			.addCommand(FastqRemix.class);
+			.addCommand(FastqRemix.class)
+			.addCommand(BedSort.class);
 
 
         try {
