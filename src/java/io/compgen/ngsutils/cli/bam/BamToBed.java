@@ -25,7 +25,6 @@ import io.compgen.common.TabWriter;
 import io.compgen.common.progress.FileChannelStats;
 import io.compgen.common.progress.ProgressMessage;
 import io.compgen.common.progress.ProgressUtils;
-import io.compgen.ngsutils.NGSUtils;
 import io.compgen.ngsutils.support.CloseableFinalizer;
 
 @Command(name="bam-tobed", desc="Writes read positions to a BED6 file", category="bam", experimental=true, 
