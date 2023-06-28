@@ -37,12 +37,18 @@ public class BamToBed extends AbstractOutputCommand {
     private boolean lenient = false;
     private boolean silent = false;
     private boolean second = false;
+    private boolean pairMapped = false;
 
     private String includeList = null;
 
     @UnnamedArg(name = "FILE")
     public void setFilename(String filename) {
         this.filename = filename;
+    }
+
+    @Option(desc = "Only write reads with a mapped pair", name="pair-mapped")
+    public void setPairMapped(boolean pairMapped) {
+        this.pairMapped = pairMapped;
     }
 
     @Option(desc = "Output second read (R2, default is to only output R1 if paired)", name="second-read")
@@ -130,6 +136,10 @@ public class BamToBed extends AbstractOutputCommand {
             	if (!second && !read.getFirstOfPairFlag()) {
                     continue;
             	}
+            	
+            	if (pairMapped && read.getMateUnmappedFlag()) {
+            		continue;
+            	}
             }
             
             if (includeReadNames != null && !includeReadNames.contains(read.getReadName())) {
@@ -148,6 +158,6 @@ public class BamToBed extends AbstractOutputCommand {
         }
         writer.close();
         reader.close();
-        System.err.println("Successfully read: "+i+" records.");
+        System.err.println("Successfully wrote: "+i+" records.");
     }
 }
