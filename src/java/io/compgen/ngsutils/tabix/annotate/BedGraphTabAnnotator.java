@@ -2,7 +2,6 @@ package io.compgen.ngsutils.tabix.annotate;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -107,6 +106,8 @@ public class BedGraphTabAnnotator implements TabAnnotator {
     @Override
     public String getValue(String ref, int start, int end, String[] qCols) throws IOException {
         List<String> matches = new ArrayList<String>();
+        
+        // Stored as value-length pairs
         List<Pair<Double, Integer>> vals = new ArrayList<Pair<Double, Integer>>();
         try{
             for (String s: IterUtils.wrap(tabix.query(ref, start, end))) {
@@ -133,57 +134,38 @@ public class BedGraphTabAnnotator implements TabAnnotator {
             throw new IOException(e);
         }
         
-        if (all) {
-    		// convoluted to maintain the same order...
-    		Set<String> uniq = new HashSet<String>();
-    		List<String> ret = new ArrayList<String>();
-    		for (String v: matches) {
-    			if (v != null && !v.equals("")) {
-    				if (!uniq.contains(v) ) {
-    					uniq.add(v);
-    					ret.add(v);
-    				}
-    			}
-    		}
-    		
-        	
-            return StringUtils.join(",", ret);
-        } else if ((max || min) && matches.size() > 1) {
-        	double[] dvals = new double[vals.size()];
-        	
-        	for (int i=0; i<vals.size(); i++) {
-        		dvals[i] = vals.get(i).one;
-        	}
-        	if (max) {
-        		return ""+StatUtils.max(dvals);
-        	} 
-        	if (min) {
-        		return ""+StatUtils.min(dvals);
-        	} 
-    	} else if (mean && matches.size() > 0) {
-    		return ""+StatUtils.meanSpan(vals);
-    	} else if (median && matches.size() > 0) {
-    		return ""+StatUtils.medianSpan(vals);
-    	}
-
-    	
-    	if ((mean || median || max || min) && matches.size() > 1) {
-
-        	// Sort by value
-        	vals.sort(new Comparator<Pair<Double, Integer>>() {
-				@Override
-				public int compare(Pair<Double, Integer> o1, Pair<Double, Integer> o2) {
-					return Double.compare(o1.one,  o2.two);
-				}});
-        	
-        	double[] dvals = new double[vals.size()];
-        	int[] sizes = new int[vals.size()];
-        	
-        	for (int i=0; i<vals.size(); i++) {
-        		dvals[i] = vals.get(i).one;
-        		sizes[i] = vals.get(i).two;
-        	}
-        	
+        if (matches.size() > 1) {
+	        if (all) {
+	    		// convoluted to maintain the same order...
+	    		Set<String> uniq = new HashSet<String>();
+	    		List<String> ret = new ArrayList<String>();
+	    		for (String v: matches) {
+	    			if (v != null && !v.equals("")) {
+	    				if (!uniq.contains(v) ) {
+	    					uniq.add(v);
+	    					ret.add(v);
+	    				}
+	    			}
+	    		}
+	        	
+	            return StringUtils.join(",", ret);
+	        } else if (max || min) {
+	        	double[] dvals = new double[vals.size()];
+	        	
+	        	for (int i=0; i<vals.size(); i++) {
+	        		dvals[i] = vals.get(i).one;
+	        	}
+	        	if (max) {
+	        		return ""+StatUtils.max(dvals);
+	        	} 
+	        	if (min) {
+	        		return ""+StatUtils.min(dvals);
+	        	} 
+	    	} else if (mean) {
+	    		return ""+StatUtils.meanSpan(vals);
+	    	} else if (median) {
+	    		return ""+StatUtils.medianSpan(vals);
+	    	}
         }
         
         return StringUtils.join(",", matches);

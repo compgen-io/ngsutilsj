@@ -513,9 +513,35 @@ public class StatUtils {
     	// Make a copy of the list... we need to sort it and don't want to alter the incoming list.
     	List<Pair<Double, Integer>> vals = new ArrayList<Pair<Double, Integer>>(spanVals.size());
     	for (Pair<Double, Integer> tup : spanVals) {
-    		vals.add(tup);
+    		vals.add(new Pair<Double, Integer>(tup.one, tup.two));
+    	}
+    	return medianSpanInplace(vals);
+    }
+    
+
+    public static double medianSpan(double[] dvals, int[] sizes) {
+    	if (dvals.length != sizes.length) {
+    		throw new RuntimeException("Mismatched vals/sizes!");
     	}
     	
+    	List<Pair<Double, Integer>> vals = new ArrayList<Pair<Double, Integer>>(dvals.length);
+    	for (int i=0; i<dvals.length; i++) {
+    		vals.add(new Pair<Double, Integer>(dvals[i], sizes[i]));
+    	}
+    	
+    	return medianSpanInplace(vals);
+
+    }
+
+    /**
+     * This method will calculate the median using the argument list in-place (so use it after
+     * creating a copy in a public method)
+     * 
+     * @param vals
+     * @return
+     */
+    private static double medianSpanInplace(List<Pair<Double, Integer>> vals) {
+
     	vals.sort(new Comparator<Pair<Double, Integer>>() {
 			@Override
 			public int compare(Pair<Double, Integer> o1, Pair<Double, Integer> o2) {
@@ -558,21 +584,6 @@ public class StatUtils {
     	}
     	return Double.NaN;    	
     }
-
-    public static double medianSpan(double[] dvals, int[] sizes) {
-    	if (dvals.length != sizes.length) {
-    		throw new RuntimeException("Mismatched vals/sizes!");
-    	}
-    	
-    	List<Pair<Double, Integer>> vals = new ArrayList<Pair<Double, Integer>>(dvals.length);
-    	for (int i=0; i<dvals.length; i++) {
-    		vals.add(new Pair<Double, Integer>(dvals[i], sizes[i]));
-    	}
-    	
-    	return medianSpan(vals);
-
-    }
-
     
 	public static double max(double[] dvals) {
 		double thres = dvals[0];
