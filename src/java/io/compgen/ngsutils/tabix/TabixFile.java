@@ -46,6 +46,9 @@ public class TabixFile {
 	}
 
 	protected void populateHeaders() throws IOException {
+		// column names are assumed to be the last skipped line
+		// it can still be commented, but should be the last skipped line.
+		
 		if (headerNames == null) {
 			StringLineReader reader = new StringLineReader(new BGZInputStream(this.filename));
 			Iterator<String> it = reader.iterator();
