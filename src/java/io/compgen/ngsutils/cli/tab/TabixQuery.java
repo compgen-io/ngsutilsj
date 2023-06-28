@@ -1,5 +1,8 @@
 package io.compgen.ngsutils.cli.tab;
 
+import java.io.IOException;
+import java.util.Arrays;
+
 import io.compgen.cmdline.annotation.Command;
 import io.compgen.cmdline.annotation.Exec;
 import io.compgen.cmdline.annotation.Option;
@@ -19,10 +22,22 @@ public class TabixQuery extends AbstractOutputCommand {
     private String[] alleles = null;
     private int altCol = -1;
     private String bedFilename = null;
+    private String[] columns = null;
+
 
     @Option(name = "bed", desc = "Extract regions from this BED file")
     public void setBED(String bedFilename) throws CommandArgumentException {
         this.bedFilename = bedFilename;
+    }
+
+    @Option(name = "col", desc = "Extract a specific column", allowMultiple=true)
+    public void setColumn(String colname) throws CommandArgumentException {
+    	if (columns == null) {
+    		columns = new String[] { colname };
+    	} else {
+    		columns = Arrays.copyOf(columns, columns.length + 1);
+    		columns[columns.length-1] = colname;
+    	}
     }
 
     @Option(name = "altcol", defaultValue = "-1", desc = "Alternate allele column (for matching a specific allele)")
@@ -50,10 +65,8 @@ public class TabixQuery extends AbstractOutputCommand {
 
     @Exec
     public void exec() throws Exception {
-
     	if (span == null && bedFilename == null) {
-            throw new CommandArgumentException( "You must include either a region of interest or specify --bed");
-    		
+            throw new CommandArgumentException( "You must include either a region of interest or specify --bed");    		
     	}
     	
         if (altCol == -1 && alleles !=null ) {
@@ -62,6 +75,22 @@ public class TabixQuery extends AbstractOutputCommand {
         }
 
         final TabixFile tabix = new TabixFile(filename);
+        if (verbose) {
+        	tabix.dumpIndex();
+        }
+
+        if (columns != null) {
+        	if (tabix.getColBegin() == tabix.getColEnd()) {
+        		System.out.print("seq\tpos");
+        	} else {
+        		System.out.print("seq\tstart\tend");
+        	}
+        	
+        	for (String col:columns) {
+        		System.out.print("\t" + col);
+        	}
+        	System.out.println("");
+        }
         
 
         if (span != null) {
@@ -71,11 +100,11 @@ public class TabixQuery extends AbstractOutputCommand {
 	                    for (final String alt : alleles) {
 	                        final String[] spl = line.split("\t");
 	                        if (alt.equals(spl[altCol])) {
-	                            System.out.println(line);
+	                        	writeValue(tabix, line);
 	                        }
 	                    }
 	                } else {
-	                    System.out.println(line);
+	                	writeValue(tabix, line);
 	                }
 	            }
 	        }
@@ -87,11 +116,11 @@ public class TabixQuery extends AbstractOutputCommand {
     	                    for (final String alt : alleles) {
     	                        final String[] spl = line.split("\t");
     	                        if (alt.equals(spl[altCol])) {
-    	                            System.out.println(line);
+    	                        	writeValue(tabix, line);
     	                        }
     	                    }
     	                } else {
-    	                    System.out.println(line);
+    	                	writeValue(tabix, line);
     	                }
     	            }
     	        }
@@ -101,4 +130,27 @@ public class TabixQuery extends AbstractOutputCommand {
         tabix.close();
     }
 
+    private void writeValue(TabixFile tabix, String line) throws IOException {
+    	if (columns == null) {
+    		System.out.println(line);
+    	} else {
+    		String[] vals = line.split("\\t");
+        	if (tabix.getColBegin() == tabix.getColEnd()) {
+        		System.out.print(vals[tabix.getColSeq()-1]);
+        		System.out.print("\t");
+        		System.out.print(vals[tabix.getColBegin()-1]);
+        	} else {
+        		System.out.print(vals[tabix.getColSeq()-1]);
+        		System.out.print("\t");
+        		System.out.print(vals[tabix.getColBegin()-1]);
+        		System.out.print("\t");
+        		System.out.print(vals[tabix.getColEnd()-1]);
+        	}
+        	for (String col:columns) {
+        		System.out.print("\t" + vals[tabix.findColumnByName(col)]);
+        	}
+    		System.out.println();
+    	}
+    }
+    
 }
