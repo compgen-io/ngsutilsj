@@ -12,11 +12,13 @@ import io.compgen.common.IterUtils;
 import io.compgen.common.StringLineReader;
 import io.compgen.common.TabWriter;
 import io.compgen.ngsutils.fasta.FastaReader;
+import io.compgen.ngsutils.tabix.TabixFile;
 
 @Command(name="fasta-gc", desc="Determine the GC% for a given region or bins (DNA)", category="fasta")
 public class FastaGC extends AbstractOutputCommand {
     private String filename = null;
     private String bedFilename = null;
+    private String tabixFilename = null;
     private int binSize = -1;
     
     @Option(desc="Bin size", name="bins")
@@ -29,6 +31,11 @@ public class FastaGC extends AbstractOutputCommand {
         this.bedFilename = bedFilename;
     }    
     
+    @Option(desc="Tabix file containing regions to count", name="tabix")
+    public void setTabixFile(String tabixFilename) {
+        this.tabixFilename = tabixFilename;
+    }    
+    
     @UnnamedArg(name = "FILE")
     public void setFilename(String filename) throws CommandArgumentException {
         this.filename = filename;
@@ -39,10 +46,19 @@ public class FastaGC extends AbstractOutputCommand {
         if (filename == null) {
             throw new CommandArgumentException("Missing/invalid arguments!");
         }
-        if (binSize == -1 && bedFilename == null) {
-            throw new CommandArgumentException("Missing/invalid arguments! You must specify either --bed or --bins!");
+
+        if (binSize == -1 && bedFilename == null && tabixFilename == null) {
+            throw new CommandArgumentException("Missing/invalid arguments! You must specify either --bed, --tabix, or --bins!");
         }
 
+        TabixFile tabix = null;
+        if (tabixFilename != null) {
+        	tabix = new TabixFile(tabixFilename);
+        	if (tabix.getColBegin() == tabix.getColEnd()) {
+                throw new CommandArgumentException("Tabix file must have both start and end columns, not just a single position.");
+        	}
+        }
+        
         FastaReader fasta = FastaReader.open(filename);
         TabWriter tab = new TabWriter(out);
         tab.write("chrom");
@@ -51,14 +67,26 @@ public class FastaGC extends AbstractOutputCommand {
         tab.write("gc_fraction");
         tab.eol();
 
-        if (binSize == -1) {
-            StringLineReader bedReader = new StringLineReader(bedFilename);
-            for (String line: IterUtils.wrap(bedReader.iterator())) {
-                if (line.trim().length()>0){
+        if (tabix != null) {
+        	int lineno = 0;
+            for (String line: IterUtils.wrap(tabix.lines())) {
+            	if (lineno < tabix.getSkipLines()) {
+            		lineno++;
+            		continue;
+            	}
+            	if (line.length()>0 && line.charAt(0) == tabix.getMeta()) {
+            		continue;
+            	}
+
+            	if (line.trim().length()>0){
                     String[] spl = line.split("\t");
-                    String ref = spl[0];
-                    int start = Integer.parseInt(spl[1]);
-                    int end = Integer.parseInt(spl[2]);
+                    String ref = spl[tabix.getColSeq()-1];
+                    int start = Integer.parseInt(spl[tabix.getColBegin()-1]);
+                    int end = Integer.parseInt(spl[tabix.getColEnd()-1]);
+                    
+                    if (verbose) {
+                    	System.err.println(">"+ref+":"+start+"-"+end);
+                    }
                     
                     String seq = fasta.fetchSequence(ref, start, end);
                     tab.write(ref);
@@ -73,9 +101,35 @@ public class FastaGC extends AbstractOutputCommand {
                     tab.eol();
                 }
             }
-            
-            bedReader.close();
+            tabix.close();
+        } else if (binSize == -1) {
+                StringLineReader bedReader = new StringLineReader(bedFilename);
+                for (String line: IterUtils.wrap(bedReader.iterator())) {
+                    if (line.trim().length()>0){
+                        String[] spl = line.split("\t");
+                        String ref = spl[0];
+                        int start = Integer.parseInt(spl[1]);
+                        int end = Integer.parseInt(spl[2]);
 
+                        if (verbose) {
+                        	System.err.println(">"+ref+":"+start+"-"+end);
+                        }
+                        
+                        String seq = fasta.fetchSequence(ref, start, end);
+                        tab.write(ref);
+                        tab.write(start);
+                        tab.write(end);
+                        double d = calcGC(seq);
+                        if (d > -1) {
+                            tab.write(d);
+                        } else {
+                            tab.write("");
+                        }
+                        tab.eol();
+                    }
+                }
+                
+                bedReader.close();
         } else {
             
             StringLineReader reader = new StringLineReader(filename);
