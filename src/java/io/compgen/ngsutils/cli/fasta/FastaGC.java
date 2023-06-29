@@ -78,28 +78,30 @@ public class FastaGC extends AbstractOutputCommand {
             		continue;
             	}
 
-            	if (line.trim().length()>0){
-                    String[] spl = line.split("\t");
-                    String ref = spl[tabix.getColSeq()-1];
-                    int start = Integer.parseInt(spl[tabix.getColBegin()-1]);
-                    int end = Integer.parseInt(spl[tabix.getColEnd()-1]);
-                    
-                    if (verbose) {
-                    	System.err.println(">"+ref+":"+start+"-"+end);
-                    }
-                    
-                    String seq = fasta.fetchSequence(ref, start, end);
-                    tab.write(ref);
-                    tab.write(start);
-                    tab.write(end);
-                    double d = calcGC(seq);
-                    if (d > -1) {
-                        tab.write(d);
-                    } else {
-                        tab.write("");
-                    }
-                    tab.eol();
+            	if (line.trim().length()==0){
+            		continue;
+            	}
+
+            	String[] spl = line.split("\t");
+                String ref = spl[tabix.getColSeq()-1];
+                int start = Integer.parseInt(spl[tabix.getColBegin()-1]);
+                int end = Integer.parseInt(spl[tabix.getColEnd()-1]);
+                
+                if (verbose) {
+                	System.err.println(">"+ref+":"+start+"-"+end);
                 }
+                
+                String seq = fasta.fetchSequence(ref, start, end);
+                tab.write(ref);
+                tab.write(start);
+                tab.write(end);
+                double d = calcGC(seq);
+                if (d > -1) {
+                    tab.write(d);
+                } else {
+                    tab.write("");
+                }
+                tab.eol();
             }
             tabix.close();
         } else if (binSize == -1) {
