@@ -3,6 +3,7 @@ package io.compgen.ngsutils.cli.fasta;
 import java.io.BufferedOutputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -22,11 +23,10 @@ public class FastaSplit extends AbstractCommand {
     private String template = "";
     private Set<String> valid = null;
 
-    @Option(desc="Output template (new files will be named: template${name}.fa)", name="template", defaultValue="")
+    @Option(desc="Output template (new files will be named: template${name}.fa, set to - for stdout)", name="template")
     public void setTemplate(String template) {
         this.template = template;
     }    
-
 
     @UnnamedArg(name = "FILE [seq1 seq2...]")
     public void setFilename(String[] filename) throws CommandArgumentException {
@@ -46,18 +46,24 @@ public class FastaSplit extends AbstractCommand {
         }
         
         StringLineReader reader = new StringLineReader(filename);
-        BufferedOutputStream bos = null;
+        OutputStream bos = null;
         
         for (String line: IterUtils.wrap(reader.iterator())) {
             if (line.charAt(0) == '>') {
                 String name = line.substring(1).split("\\s",2)[0];
                 
                 if (bos != null) {
-                    bos.close();
+            		if (bos != System.out) {
+            			bos.close();
+            		}
                 }
                 
                 if (valid == null || valid.contains(name)) {
-	                bos = new BufferedOutputStream(new FileOutputStream(template+name+".fa"));
+                	if (template.equals("-")) {
+                		bos = System.out;
+                	} else {
+                		bos = new BufferedOutputStream(new FileOutputStream(template+name+".fa"));
+                	}
 	                System.err.println(name);
                 } else {
                 	bos = null;
@@ -68,9 +74,14 @@ public class FastaSplit extends AbstractCommand {
             	bos.write((line+"\n").getBytes());
             }
         }
+        
         reader.close();
+
         if (bos != null) {
-            bos.close();
+        	bos.flush();
+    		if (bos != System.out) {
+    			bos.close();
+    		}
         }
     }
 }
