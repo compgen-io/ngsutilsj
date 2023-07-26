@@ -12,6 +12,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import htsjdk.samtools.SAMFileHeader;
+import htsjdk.samtools.SAMFileHeader.GroupOrder;
 import htsjdk.samtools.SAMFileHeader.SortOrder;
 import htsjdk.samtools.SAMFileWriter;
 import htsjdk.samtools.SAMFileWriterFactory;
@@ -133,6 +134,7 @@ public class BamBest extends AbstractCommand {
     private boolean silent = false;
     private boolean allowOrphans = false;
     private boolean unsorted = false;
+    private boolean clearGroup = false;
     private boolean noTies = false;
 
     @UnnamedArg(name = "input1 input2 {...} -- output1 {output2 ...}")
@@ -205,6 +207,11 @@ public class BamBest extends AbstractCommand {
     @Option(desc = "Force output to be flagged as unsorted", name="unsorted")
     public void setUnsorted(boolean unsorted) {
         this.unsorted = unsorted;
+    }
+
+    @Option(desc = "Clear the group order flag", name="clear-group")
+    public void setClearGroup(boolean clearGroup) {
+        this.clearGroup = clearGroup;
     }
 
     @Option(desc = "Use lenient validation strategy", name="lenient")
@@ -311,6 +318,10 @@ public class BamBest extends AbstractCommand {
             SAMFileHeader header = readers[i].getFileHeader().clone();
             if (unsorted) {
                 header.setSortOrder(SortOrder.unsorted);
+                header.setGroupOrder(GroupOrder.none);
+            }
+            if (clearGroup) {
+            	header.setGroupOrder(GroupOrder.none);
             }
             SAMProgramRecord pg = BamHeaderUtils.buildSAMProgramRecord("bam-best", header);
             List<SAMProgramRecord> pgRecords = new ArrayList<SAMProgramRecord>(header.getProgramRecords());
