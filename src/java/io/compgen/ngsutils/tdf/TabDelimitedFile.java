@@ -62,16 +62,19 @@ public class TabDelimitedFile {
 	
 	@SuppressWarnings("resource")
 	public Pair<InputStream, FileChannel> openFile() throws IOException {
-        FileInputStream fis = new FileInputStream(this.filename);
-        byte[] magic = new byte[2];
-        fis.read(magic);
-        fis.close();
-
-        FileInputStream fis2 = new FileInputStream(this.filename);
-        if (Arrays.equals(magic, new byte[] {0x1f, (byte) 0x8B})) {  /// need to cast 0x8b because it is a neg. num in 2-complement
-        	return new Pair<InputStream, FileChannel>(new GzipCompressorInputStream(fis2, true), fis2.getChannel());
-        }
-    	return new Pair<InputStream, FileChannel>(fis2, fis2.getChannel());
+		if (!this.filename.equals("-")) {
+	        FileInputStream fis = new FileInputStream(this.filename);
+	        byte[] magic = new byte[2];
+	        fis.read(magic);
+	        fis.close();
+	
+	        FileInputStream fis2 = new FileInputStream(this.filename);
+	        if (Arrays.equals(magic, new byte[] {0x1f, (byte) 0x8B})) {  /// need to cast 0x8b because it is a neg. num in 2-complement
+	        	return new Pair<InputStream, FileChannel>(new GzipCompressorInputStream(fis2, true), fis2.getChannel());
+	        }
+	    	return new Pair<InputStream, FileChannel>(fis2, fis2.getChannel());
+		}
+    	return new Pair<InputStream, FileChannel>(System.in, null);
 	}
 	
 	/**
