@@ -550,6 +550,7 @@ public class VCFConsensus extends AbstractOutputCommand {
 		if (header.getAlts().contains("INV") && eventInversion) { 
 			alt = "<INV>";
 			info.put("END", new VCFAttributeValue(""+coord.records.get(0).two.getAltPos().get(0).pos));
+			info.put("CHR2", new VCFAttributeValue(coord.ref2));
 			info.put("SVTYPE", new VCFAttributeValue("INV"));
 			info.put("CT", new VCFAttributeValue(coord.conn.toString()));
 		} else 	if (coord.type == VCFVarType.DEL) {
@@ -561,6 +562,7 @@ public class VCFConsensus extends AbstractOutputCommand {
 				alt = "<DEL>";
 			}
 			info.put("END", new VCFAttributeValue(""+coord.records.get(0).two.getAltPos().get(0).pos));
+			info.put("CHR2", new VCFAttributeValue(coord.ref2));
 			info.put("SVTYPE", new VCFAttributeValue("DEL"));
 		} else if (coord.type == VCFVarType.DUP) {
 			if (header.getAlts().contains("DUP:TANDEM")) {
@@ -569,6 +571,7 @@ public class VCFConsensus extends AbstractOutputCommand {
 				alt = "<DUP>";
 			}
 			info.put("END", new VCFAttributeValue(""+coord.records.get(0).two.getAltPos().get(0).pos));
+			info.put("CHR2", new VCFAttributeValue(coord.ref2));
 			info.put("SVTYPE", new VCFAttributeValue("DUP"));
 		} else if (coord.type == VCFVarType.INS) {
 			alt = "<INS>";
