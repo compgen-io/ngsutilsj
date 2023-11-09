@@ -96,6 +96,8 @@ public class BamFilterCli extends AbstractCommand {
     private int filterFlags = 0;
     private int requiredFlags = 0;
 
+    private boolean writeUnsorted = false;
+    
     private Orientation orient = Orientation.UNSTRANDED;
 
     @UnnamedArg(name = "INFILE OUTFILE")
@@ -111,6 +113,12 @@ public class BamFilterCli extends AbstractCommand {
     public void setTmpDir(String tmpDir) {
         this.tmpDir = tmpDir;
     }
+
+    @Option(desc = "Set the output BAM file to be unsorted", name = "write-unsorted")
+    public void setWriteUnsorted(boolean val) {
+    	writeUnsorted = val;
+    }
+
 
     @Option(desc = "Force sanity checking of read pairing (simple - same chromosome, reversed orientation)", name = "sane-pairs")
     public void setPairRef(boolean val) {
@@ -425,6 +433,10 @@ public class BamFilterCli extends AbstractCommand {
         pgRecords.add(0, pg);
         header.setProgramRecords(pgRecords);
 
+        if (writeUnsorted) {
+        	header.setSortOrder(SortOrder.unsorted);
+        }
+        
         SAMFileWriter out;
         if (outfile != null) {
             out = factory.makeBAMWriter(header, true, outfile);

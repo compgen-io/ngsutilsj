@@ -39,6 +39,7 @@ public class BamClean extends AbstractCommand {
 
     private boolean unmappedMAPQ0 = false;
     private boolean secondaryUnique = false;
+    private boolean sortingReset = false;
     private String failedFilename = null;
     
     @UnnamedArg(name = "INFILE OUTFILE")
@@ -65,6 +66,12 @@ public class BamClean extends AbstractCommand {
     public void setFailedFilename(String failedFilename) {
         this.failedFilename = failedFilename;
     }
+
+    @Option(desc = "Remove the sort-order flag from a BAM file (sets the sort order to 'unsorted')", name="reset-sorting")
+    public void setSortingReset(boolean sortingReset) {
+        this.sortingReset = sortingReset;
+    }
+
 
 
 
@@ -117,6 +124,11 @@ public class BamClean extends AbstractCommand {
         }
 
         SAMFileHeader header = reader.getFileHeader().clone();
+        
+        if (sortingReset) {
+        	header.setSortOrder(SortOrder.unsorted);
+        }
+        
         SAMProgramRecord pg = BamHeaderUtils.buildSAMProgramRecord("bam-clean", header);
         List<SAMProgramRecord> pgRecords = new ArrayList<SAMProgramRecord>(header.getProgramRecords());
         pgRecords.add(0, pg);

@@ -30,6 +30,7 @@ import io.compgen.ngsutils.cli.bam.BamRefCount;
 import io.compgen.ngsutils.cli.bam.BamRemoveClipping;
 import io.compgen.ngsutils.cli.bam.BamSampleReads;
 import io.compgen.ngsutils.cli.bam.BamSoftClip;
+import io.compgen.ngsutils.cli.bam.BamSort;
 import io.compgen.ngsutils.cli.bam.BamSplit;
 import io.compgen.ngsutils.cli.bam.BamStats;
 import io.compgen.ngsutils.cli.bam.BamToBed;
@@ -237,7 +238,8 @@ public class NGSUtils {
 			.addCommand(VCFEffect.class)
 			.addCommand(FastqRemix.class)
 			.addCommand(BedSort.class)
-			.addCommand(BedToBedPE.class);
+			.addCommand(BedToBedPE.class)
+			.addCommand(BamSort.class);
 
 
         try {
