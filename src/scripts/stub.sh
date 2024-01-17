@@ -40,6 +40,9 @@ if [ $FOUNDGC -eq 0 ]; then
     JAVA_OPTS="${JAVA_OPTS} -XX:ParallelGCThreads=2"
 fi
 
+if [ "$TMPDIR" != "" ]; then
+    JAVA_OPTS="${JAVA_OPTS} -Djava.io.tmpdir=${TMPDIR}"
+fi
 
 JAVABIN=`which java`
 if [ "${JAVA_HOME}" != "" ]; then
