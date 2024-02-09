@@ -9,6 +9,7 @@ import java.util.Comparator;
 import java.util.List;
 
 import org.apache.commons.math3.distribution.ChiSquaredDistribution;
+import org.apache.commons.math3.distribution.PoissonDistribution;
 
 import io.compgen.common.ComparablePair;
 import io.compgen.common.Pair;
@@ -48,24 +49,24 @@ public class StatUtils {
         return (AB * CD * AC * BD) / (Afact * Bfact * Cfact * Dfact * Nfact);
     }
     
-//    public static double poissonMean(int lambda, int n, float mu) {
-//        return ppois(n, (int) Math.floor(lambda*mu));
-//    }
+    public static double poissonMean(int lambda, int n, float mu) {
+        return ppois(n, (int) Math.floor(lambda*mu));
+    }
 
-//    public static double dpois(int x, int lambda) {
-//        return new PoissonDistribution(lambda).probability(x);
-//        //return (Math.pow(lambda, x) / CombinatoricsUtils.factorialDouble(x)) * Math.exp(-1*lambda); 
-//    }
+    public static double dpois(int x, int lambda) {
+        return new PoissonDistribution(lambda).probability(x);
+        //return (Math.pow(lambda, x) / CombinatoricsUtils.factorialDouble(x)) * Math.exp(-1*lambda); 
+    }
 
-//    public static double ppois(int x, int lambda) {
-//        return new PoissonDistribution(lambda).cumulativeProbability(x);
-////        double acc = 0.0;
-////        for (int i=0; i<=x; i++) {
-////            acc += (Math.pow(lambda, i) / CombinatoricsUtils.factorialDouble(i)); 
-////        }
-////        return acc * Math.exp(-lambda);
-//    }
-//
+    public static double ppois(int x, int lambda) {
+        return new PoissonDistribution(lambda).cumulativeProbability(x);
+//        double acc = 0.0;
+//        for (int i=0; i<=x; i++) {
+//            acc += (Math.pow(lambda, i) / CombinatoricsUtils.factorialDouble(i)); 
+//        }
+//        return acc * Math.exp(-lambda);
+    }
+
     /* Use CombinatoricsUtils.factorial instead
     private static Map<Integer, Long> factorialMemoize = new HashMap<Integer, Long> ();
     public static long factorial(int n) {

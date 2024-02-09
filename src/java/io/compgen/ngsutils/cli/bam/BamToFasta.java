@@ -311,13 +311,13 @@ public class BamToFasta extends AbstractOutputCommand {
         		BaseTally bt = new BaseTally(); 
         		for (PileupBaseCall call: record.getSampleRecords(0).calls) {
         			if (call.op == PileupBaseCallOp.Match) {
-        				bt.incr(call.call);
+        				bt.incr(call.call, call.plusStrand);
         			} else if (call.op == PileupBaseCallOp.Ins) {
-        				bt.incr("+"+call.call);
+        				bt.incr("+"+call.call, call.plusStrand);
         			} else if (call.op == PileupBaseCallOp.Del) {
-        				bt.incr("-"+call.call);
+        				bt.incr("-"+call.call, call.plusStrand);
         			} else if (call.op == PileupBaseCallOp.Gap) {
-        				bt.incr("."); // IUPAC for a gap. 
+        				bt.incr(".", call.plusStrand); // IUPAC for a gap. 
         			} // these are the only options...
         		}
         		

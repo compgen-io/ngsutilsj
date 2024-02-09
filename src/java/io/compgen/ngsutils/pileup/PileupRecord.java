@@ -241,11 +241,15 @@ public class PileupRecord {
 		this.refBase = refBase;
 	}
 
-	public int getSampleCount(int sampleNum) {
+	public int getSampleDepth(int sampleNum) {
 		if (sampleNum < 0 || sampleNum >= records.size()) {
 			return -1;
 		}
 		return records.get(sampleNum).coverage;
+	}
+
+	public int getNumSamples() {
+		return records.size();
 	}
 
 	public PileupSampleRecord getSampleRecords(int sampleNum) {

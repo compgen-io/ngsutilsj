@@ -434,14 +434,14 @@ public class BamBaseCall extends AbstractOutputCommand {
         for (PileupBaseCall call: record.getSampleRecords(0).calls) {
             if (call.op == PileupRecord.PileupBaseCallOp.Match) {
                 if (bt.contains(call.call)) {
-                    bt.incr(call.call);
+                    bt.incr(call.call, call.plusStrand);
                 } else {
                     n++;
                 }
             } else if (call.op == PileupRecord.PileupBaseCallOp.Ins){
-                bt.incr("Ins");
+                bt.incr("Ins", call.plusStrand);
             } else if (call.op == PileupRecord.PileupBaseCallOp.Del){
-                bt.incr("Del");
+                bt.incr("Del", call.plusStrand);
             }
 
             if (call.plusStrand) {
