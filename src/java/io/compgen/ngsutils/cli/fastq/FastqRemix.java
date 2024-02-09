@@ -194,84 +194,86 @@ public class FastqRemix extends AbstractOutputCommand {
 		//
 
 		for (int i=0; i<filenames.size(); i++) {
-			System.err.println("Shuffling reads...");
-			// find all reads we will be keeping. First, build an array of the index of all reads (1..file_read_count)
-            int[] idx = new int[fileReadCount[i]];
-            for (int j=0; j<fileReadCount[i]; j++) {
-            	idx[j] = j;
-            }
-
-//            System.err.println("Read idx: " + StringUtils.join(", ", idx));
-            
-            // Shuffle array
-            for (int j=idx.length; j>1; j--) {
-            	int swapIdx = random.nextInt(j);
-            	int tmp = idx[j-1];
-            	idx[j-1] = idx[swapIdx];
-            	idx[swapIdx] = tmp;
-            }
-
-//            System.err.println("Shuffled: " + StringUtils.join(", ", idx));
-
-            // Take the first ${targetReadCount[i]} reads and sort that subset
-            int[] valid = new int[targetReadCount[i]];
-            for (int j=0; j<targetReadCount[i]; j++) {
-            	valid[j] = idx[j];
-            }
-
-//            System.err.println("Valid   : " + StringUtils.join(", ", valid));
-
-            
-            Arrays.sort(valid);
-//            System.err.println("Sorted  : " + StringUtils.join(", ", valid));
-			System.err.println("Writing reads...");
-
-            int validIdx = 0;
-
-            int written = 0;
-            
-            // Now we can iterate over the file again, and if the read number (pos/index) matches a valid index, write the read to stdout.
-    		FileInputStream fis1 = new FileInputStream(filenames.get(i));
-    		FileChannel channel1 = fis1.getChannel();
-			FastqReader reader = Fastq.open(fis1, null, channel1, filenames.get(i));
-			
-			String lastRead = null;
-			int curReadNum = 0;
-			boolean currentValid = false;
-			
-			// This is a multi-step process to support interleaved FASTQ files
-			// 
-			// First, if the read's name doesn't match the prior name, we increment the read number (and reset the valid flag)
-						
-	        for (FastqRead read: reader) {
-				if (lastRead != null && !lastRead.equals(read.getName())) {
-					curReadNum++;
+			System.err.println("Shuffling reads... ("+targetReadCount[i]+"/"+fileReadCount[i]+")");
+			if (targetReadCount[i] > 0) {
+				// find all reads we will be keeping. First, build an array of the index of all reads (1..file_read_count)
+	            int[] idx = new int[fileReadCount[i]];
+	            for (int j=0; j<fileReadCount[i]; j++) {
+	            	idx[j] = j;
+	            }
+	
+	//            System.err.println("Read idx: " + StringUtils.join(", ", idx));
+	            
+	            // Shuffle array
+	            for (int j=idx.length; j>1; j--) {
+	            	int swapIdx = random.nextInt(j);
+	            	int tmp = idx[j-1];
+	            	idx[j-1] = idx[swapIdx];
+	            	idx[swapIdx] = tmp;
+	            }
+	
+	//            System.err.println("Shuffled: " + StringUtils.join(", ", idx));
+	
+	            // Take the first ${targetReadCount[i]} reads and sort that subset
+	            int[] valid = new int[targetReadCount[i]];
+	            for (int j=0; j<targetReadCount[i]; j++) {
+	            	valid[j] = idx[j];
+	            }
+	
+	//            System.err.println("Valid   : " + StringUtils.join(", ", valid));
+	
+	            
+	            Arrays.sort(valid);
+	//            System.err.println("Sorted  : " + StringUtils.join(", ", valid));
+				System.err.println("Writing reads...");
+	
+	            int validIdx = 0;
+	
+	            int written = 0;
+	            
+	            // Now we can iterate over the file again, and if the read number (pos/index) matches a valid index, write the read to stdout.
+	    		FileInputStream fis1 = new FileInputStream(filenames.get(i));
+	    		FileChannel channel1 = fis1.getChannel();
+				FastqReader reader = Fastq.open(fis1, null, channel1, filenames.get(i));
+				
+				String lastRead = null;
+				int curReadNum = 0;
+				boolean currentValid = false;
+				
+				// This is a multi-step process to support interleaved FASTQ files
+				// 
+				// First, if the read's name doesn't match the prior name, we increment the read number (and reset the valid flag)
+							
+		        for (FastqRead read: reader) {
+					if (lastRead != null && !lastRead.equals(read.getName())) {
+						curReadNum++;
+						if (currentValid) {
+							validIdx++;
+						}
+						currentValid = false;
+						if (validIdx >= valid.length) {
+							break;
+						}
+					}
+	
+					if (curReadNum == valid[validIdx]) {
+						currentValid = true;
+					}
+	
 					if (currentValid) {
-						validIdx++;
+						if (lastRead == null || !lastRead.equals(read.getName())) {
+							written++;
+						}
+						read.write(out);
 					}
-					currentValid = false;
-					if (validIdx >= valid.length) {
-						break;
-					}
+	
+					lastRead = read.getName();
 				}
+		        
+				reader.close();            
 
-				if (curReadNum == valid[validIdx]) {
-					currentValid = true;
-				}
-
-				if (currentValid) {
-					if (lastRead == null || !lastRead.equals(read.getName())) {
-						written++;
-					}
-					read.write(out);
-				}
-
-				lastRead = read.getName();
+				System.err.println("Reads written: " + written);
 			}
-	        System.err.println("Reads written: " + written);
-			reader.close();            
 		}
-
 	}
-
 }

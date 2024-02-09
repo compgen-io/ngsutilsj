@@ -182,7 +182,7 @@ public class BamCoverage extends AbstractOutputCommand {
             allOut.close();
         }
         out.write(("Min\t"+tally.getMin()+"\n").getBytes());
-        for (double pct: new double[]{0.05, 0.25, 0.5, 0.75, 0.95}) {
+        for (double pct: new double[]{0.01, 0.05, 0.25, 0.5, 0.75, 0.95, 0.99}) {
             out.write((pct+"\t" + tally.getQuantile(pct)+"\n").getBytes());
         }
         out.write(("Max\t"+tally.getMax()+"\n").getBytes());
