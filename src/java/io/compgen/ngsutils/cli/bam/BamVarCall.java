@@ -96,7 +96,7 @@ public class BamVarCall extends AbstractOutputCommand {
         }
     }
 
-    @Option(desc = "Only keep mapped reads (both reads if paired)", name = "mapped")
+    @Option(desc = "Only keep reads where pairs are both mapped", name = "mapped")
     public void setMapped(boolean val) {
         if (val) {
             filterFlags |= ReadUtils.READ_UNMAPPED_FLAG | ReadUtils.MATE_UNMAPPED_FLAG;
@@ -131,12 +131,12 @@ public class BamVarCall extends AbstractOutputCommand {
         }
     }
 
-    @Option(desc = "Filtering flags", name = "filter-flags", defaultValue = "0")
+    @Option(desc = "Filtering flags (mpileup)", name = "filter-flags", defaultValue = "0")
     public void setFilterFlags(int flag) {
         filterFlags |= flag;
     }
 
-    @Option(desc = "Required flags", name = "required-flags", defaultValue = "0")
+    @Option(desc = "Required flags (mpileup)", name = "required-flags", defaultValue = "0")
     public void setRequiredFlags(int flag) {
         requiredFlags |= flag;
     }   
@@ -156,7 +156,7 @@ public class BamVarCall extends AbstractOutputCommand {
        this.maxNormalAF = maxNormalAF;
    }
    
-   @Option(desc="Minimum number of non-reference (alt) calls (set to > 0 to export only alt bases)", name="min-alt")
+   @Option(desc="Minimum number of alt/variant calls", name="min-alt")
    public void setMinAlt(int minAlt) {
        this.minAlt = minAlt;
    }
@@ -345,26 +345,30 @@ public class BamVarCall extends AbstractOutputCommand {
         }
         
         if (pileup.getFileCount() > 1) {
-        	writer.write_line("##FILTER=<ID=low_pred_call,Description=\"Tumor/Normal variant p-value too low (" + this.minPvalue+")\">");
+        	writer.write_line("##FILTER=<ID=low_pred_call_tumor,Description=\"Tumor/Normal variant p-value too low (" + this.minPvalue+")\">");
+        	writer.write_line("##FILTER=<ID=pred_call_in_normal,Description=\"Variant predicted germline\">");
 
 	        writer.write_line("##FILTER=<ID=min_normal_depth,Description=\"Depth in normal too low (" + this.minNormalDepth+")\">");
 	        writer.write_line("##FILTER=<ID=max_normal_abs_count,Description=\"Alt read count in normal too high (" + this.maxNormalAlt+")\">");
 	        writer.write_line("##FILTER=<ID=max_normal_af,Description=\"Allele-frequency in normal too high (" + this.maxNormalAF+")\">");
         } else {
             if (tumorOnly) {
-            	writer.write_line("##FILTER=<ID=low_pred_call,Description=\"Tumor-only variant p-value too low (" + this.minPvalue+")\">");
+            	writer.write_line("##FILTER=<ID=low_pred_call_tumor_only,Description=\"Tumor-only variant p-value too low (" + this.minPvalue+")\">");
             } else {
-            	writer.write_line("##FILTER=<ID=low_pred_call,Description=\"Diploid variant p-value too low (" + this.minPvalue+")\">");
+            	writer.write_line("##FILTER=<ID=low_pred_call_germline,Description=\"Germline variant p-value too low (" + this.minPvalue+")\">");
             }
         }
 
-        writer.write_line("##FORMAT=<ID=AD,Number=R,Type=Integer,Description=\"Allelic depths for the ref and alt alleles in the order listed\">");
+        writer.write_line("##FORMAT=<ID=AD,Number=R,Type=Integer,Description=\"Allelic depths for the ref and alt alleles (in same order)\">");
         writer.write_line("##FORMAT=<ID=AF,Number=A,Type=Float,Description=\"Allele fraction of alt alleles\">");
-		writer.write_line("##FORMAT=<ID=DP,Number=1,Type=Integer,Description=\"Approximate read depth\">");
+		writer.write_line("##FORMAT=<ID=DP,Number=1,Type=Integer,Description=\"Approximate read depth in sample\">");
 		writer.write_line("##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">");
 		writer.write_line("##FORMAT=<ID=SAC,Number=.,Type=Integer,Description=\"Number of reads on the forward and reverse strand supporting each allele (including reference)\">");        
         
         
+		writer.write_line("##INFO=<ID=DP,Number=1,Type=Integer,Description=\"Total depth across all samples\">");
+		writer.write_line("##INFO=<ID=AD,Number=R,Type=Integer,Description=\"Allelic depths for the ref and alt alleles (in same order)\">");
+		
         if (pileup.getFileCount() > 1) {
         	writer.write_line("##SAMPLE=<ID=TUMOR,File="+new File(bam1Filename).getAbsolutePath()+">");
         	writer.write_line("##SAMPLE=<ID=NORMAL,File="+new File(bam2Filename).getAbsolutePath()+">");
@@ -405,15 +409,15 @@ public class BamVarCall extends AbstractOutputCommand {
     }
 
     private void writePileupRecords(CloseableIterator<PileupRecord> it,  TabWriter writer) throws IOException {
-        int counter = 0;
-
+    	int counter = 0;
         for (PileupRecord record: IterUtils.wrap(it)) {
+//        	System.out.println(record.getSampleRecords(0).calls+" :: " +record.originalLine);
             if (record.getSampleRecords(0).calls!=null && record.getSampleRecords(0).calls.size() > 0) {
                 writeVCFRecord(record, writer);
             }
 
             counter++;
-            if (verbose && counter >= 100000) {
+            if (verbose && counter >= 1_000_000) {
                 System.err.println(record.ref+":"+record.pos);
                 counter = 0;
             }
@@ -421,6 +425,11 @@ public class BamVarCall extends AbstractOutputCommand {
     }
 
     private void writeVCFRecord(PileupRecord record, TabWriter writer) throws IOException {
+    	
+    	if (record.refBase.equals("N")) {
+    		// don't export anything when the reference base is 'N'.
+    		return;
+    	}
     	
     	// calculate VCF filters, info, fields
     	
@@ -430,13 +439,15 @@ public class BamVarCall extends AbstractOutputCommand {
     	int totalDepth = 0;
     	int firstDepth = 0;
     	int altCount = 0;
+    	int refCount = 0;
     	int indelCount = 0;
         
     	List<BaseCount> sorted = bt.getSorted();
     	Collections.reverse(sorted); // we want descending order here.
     	
     	String maxRef = record.refBase;
-    	
+    	refCount = bt.getCount(record.refBase);
+
         for (BaseCount bc: sorted) {
         	if (!bc.getBase().equals(record.refBase)) {
         		if (bc.getCount()>0) {
@@ -469,6 +480,7 @@ public class BamVarCall extends AbstractOutputCommand {
     	BaseTally bt2 = null;    	
     	int secondDepth = 0;
     	int secondAltCount = 0;
+    	int secondRefCount = 0;
 
         if (record.getNumSamples() > 1 && record.getSampleRecords(1).calls != null && record.getSampleRecords(1).calls.size()>0) {
         	bt2 = BaseTally.parsePileupRecord(record.getSampleRecords(1).calls);
@@ -480,12 +492,46 @@ public class BamVarCall extends AbstractOutputCommand {
         	totalDepth += bt2.getCount(record.refBase);
         	secondDepth += bt2.getCount(record.refBase);
         	secondAltCount = bt2.getCount(alts.get(0));
+        	secondRefCount = bt2.getCount(record.refBase);
         }
         
-        List<String> acVals = new ArrayList<String>();
+        
+        
+        // If tumor/normal
+        // 		process the normal FIRST to find potential germline variants (het)
+        // 		Subtract those from the alts list. And perform variant calling on the rest.
+        //
+        //	    You're looking for if a variant is real (and not in normal)
+        //
+        //
+        // If tumor/only, you're looking for if the variant is likely real
+        //
+        // For germline, you're looking for if a variant is real and at least het.
+        //
+        
+
+        
+        
+        List<String> adVals = new ArrayList<String>();
+        adVals.add(""+(refCount+secondRefCount));
         for (String alt: alts) {
-        	acVals.add(""+altCounts.get(alt));
+        	adVals.add(""+altCounts.get(alt));
         }
+        
+        String GT1 = "./."; // tumor GT
+        String GT2 = "./."; // normal GT
+        
+        
+        double refPval = 1.0;
+        double var1Pval = 1.0;
+        double var2Pval = 1.0;
+
+        double normalRefPval = 1.0;
+        double normalVar1Pval = 1.0;
+        double normalVar2Pval = 1.0;
+
+        
+        
         
         // calculate filters based on the FIRST alt allele only
         
@@ -519,10 +565,57 @@ public class BamVarCall extends AbstractOutputCommand {
         	}
         }
         
+        
+    	// tumor GT/filter
+    	if (var1Pval < this.minPvalue && var2Pval < this.minPvalue) {
+    		if (record.getNumSamples() > 1) {
+    			filters.add("low_pred_call_tumor");
+    		} else if (tumorOnly) {
+    			filters.add("low_pred_call_tumoronly");
+    		} else {    			
+    			filters.add("low_pred_call_germline");
+    		}
+    		GT1 = "0/0";
+    		GT2 = "0/0";
+    	} else {
+    		if (refPval > var1Pval && refPval > var2Pval) {
+    			if (var1Pval > var2Pval && var1Pval > this.minPvalue) {
+    				GT1="0/1";
+    			} else if (var2Pval > var1Pval && var2Pval > this.minPvalue) {
+    				GT1="0/2";
+    			} else {
+    				GT1="0/0";
+    			}
+    		} else if (var1Pval > var2Pval && var1Pval > refPval) {
+    			if (refPval > var2Pval && refPval > this.minPvalue) {
+    				GT1="1/0";
+    			} else if (var2Pval > refPval && var2Pval > this.minPvalue) {
+    				GT1="1/2";
+    			} else {
+    				GT1="1/1";
+    			}
+    		} else if (var2Pval > var1Pval && var2Pval > refPval) {
+    			if (refPval > var1Pval && refPval > this.minPvalue) {
+    				GT1="2/0";
+    			} else if (var1Pval > refPval && var1Pval > this.minPvalue) {
+    				GT1="2/1";
+    			} else {
+    				GT1="2/2";
+    			}
+    		}         		
+        }
+        if (record.getNumSamples() > 1) {	
+        	// set GT2 / in_normal filter
+
+        }
+
+
+        
 
         if (passingOnly && filters.size() > 0) {
         	return;
         }
+        
         
         
         writer.write(record.ref); // chrom
@@ -572,18 +665,12 @@ public class BamVarCall extends AbstractOutputCommand {
         }
         
         // only write a simple INFO field
-        writer.write("DP="+totalDepth+";AC="+StringUtils.join(",", acVals)); // info -- could omit with '.'
+        writer.write("DP="+totalDepth+";AD="+StringUtils.join(",", adVals)); // info -- could omit with '.'
 
-//        ##FORMAT=<ID=AD,Number=R,Type=Integer,Description="Allelic depths for the ref and alt alleles in the order listed">
-//        ##FORMAT=<ID=AF,Number=A,Type=Float,Description="Allele fraction of the event in the tumor">
-//        ##FORMAT=<ID=DP,Number=1,Type=Integer,Description="Approximate read depth">
-//        ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
-//        ##FORMAT=<ID=SAC,Number=.,Type=Integer,Description="Number of reads on the forward and reverse strand supporting each allele (including reference)">        
-
-        writer.write("DP:AD:AF:SAC");
+        writer.write("GT:DP:AD:AF:SAC");
 
         List<String> recOuts = new ArrayList<String>();
-
+        recOuts.add(GT1);
         recOuts.add(""+bt.calcDepth());
         recOuts.add(StringUtils.join(",", bt.calcAltDepth(record.refBase, alts)));
         recOuts.add(StringUtils.join(",", bt.calcAltFreq(alts)));
@@ -594,7 +681,8 @@ public class BamVarCall extends AbstractOutputCommand {
         if (record.getNumSamples()>1) {
 	        if (bt2 != null && bt2.calcDepth() > 0) {
 	            List<String> recOuts2 = new ArrayList<String>();
-	        
+	            
+	            recOuts.add(GT2);
 	            recOuts2.add(""+bt2.calcDepth());        
 	            recOuts2.add(StringUtils.join(",", bt2.calcAltDepth(record.refBase, alts)));
 	            recOuts2.add(StringUtils.join(",", bt2.calcAltFreq(alts)));
@@ -602,7 +690,7 @@ public class BamVarCall extends AbstractOutputCommand {
 	            
 	            writer.write(StringUtils.join(":", recOuts2));
 	        } else {
-	        	writer.write(".:.:.:.");
+	        	writer.write(".:.:.:.:.");
 	        }
         }
 

@@ -58,6 +58,14 @@ public class BaseTally {
         }
     }
     
+    public String toString() {
+    	String ret = "[";
+    	for (String k: tallies.keySet()) {
+    		ret += k +":"+tallies.get(k).getCount()+", ";
+    	}
+    	return ret+"]";
+    }
+    
     public void incr(String base, boolean plusStrand) {
     	if (!tallies.containsKey(base)) {
             tallies.put(base, new BaseCount(base));
@@ -122,7 +130,7 @@ public class BaseTally {
 
 	public static BaseTally parsePileupRecord(List<PileupBaseCall> calls) {
 
-        BaseTally bt = new BaseTally();
+        BaseTally bt = new BaseTally("A", "C", "G", "T");
         
         for (PileupBaseCall call: calls) {
             if (call.op == PileupRecord.PileupBaseCallOp.Match) {

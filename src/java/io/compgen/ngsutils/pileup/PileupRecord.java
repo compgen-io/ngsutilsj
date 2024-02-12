@@ -119,6 +119,7 @@ public class PileupRecord {
 	public final String ref;
 	public final int pos;
 	public final String refBase;
+	public final String originalLine;
 	
 	private List<PileupSampleRecord> records = new ArrayList<PileupSampleRecord>();
 	
@@ -154,7 +155,7 @@ public class PileupRecord {
 		int pos = Integer.parseInt(cols[1]) - 1; // we store this as a 0-based value... Pileup uses 1-based
 		String refBase = cols[2].toUpperCase();
 		
-		PileupRecord record = new PileupRecord(ref, pos, refBase);
+		PileupRecord record = new PileupRecord(ref, pos, refBase, line);
 		
 		for (int i=3; i<cols.length; i+=offset) {
 			int coverage = Integer.parseInt(cols[i]);
@@ -235,10 +236,11 @@ public class PileupRecord {
 		this.records.add(new PileupSampleRecord(coverage, calls));		
 	}
 
-	public PileupRecord(String ref, int pos, String refBase) {
+	public PileupRecord(String ref, int pos, String refBase, String line) {
 		this.ref = ref;
 		this.pos = pos;
 		this.refBase = refBase;
+		this.originalLine = line;
 	}
 
 	public int getSampleDepth(int sampleNum) {
