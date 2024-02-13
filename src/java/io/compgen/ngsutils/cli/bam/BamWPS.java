@@ -28,6 +28,7 @@ import io.compgen.common.TabWriter;
 import io.compgen.common.progress.FileChannelStats;
 import io.compgen.common.progress.ProgressMessage;
 import io.compgen.common.progress.ProgressUtils;
+import io.compgen.ngsutils.NGSUtils;
 import io.compgen.ngsutils.support.CloseableFinalizer;
 
 @Command(name="bam-wps", desc="For each location in the genome, calculate a window positioning score (WPS)", category="bam", experimental=true, 
@@ -82,6 +83,8 @@ public class BamWPS extends AbstractOutputCommand {
     private boolean lenient = false;
     private boolean silent = false;
     
+    private boolean bedGraph = false;
+
     private boolean paired = false;
     private boolean overlap = false;
     private boolean noDiscord = false;
@@ -103,6 +106,11 @@ public class BamWPS extends AbstractOutputCommand {
     public void setWindow(int window) {
         this.window = window;
     }
+
+    @Option(desc="Output in BedGraph format", name="bg")
+    public void setBedGraph(boolean val) {
+        this.bedGraph = val;
+    }    
 
     @Option(desc="Only count properly paired reads", name="paired")
     public void setPaired(boolean val) {
@@ -176,17 +184,14 @@ public class BamWPS extends AbstractOutputCommand {
 
         
         TabWriter writer = new TabWriter(out);
-//        writer.write_line("## program: " + NGSUtils.getVersion());
-//        writer.write_line("## cmd: " + NGSUtils.getArgs());
-//        writer.write("chrom");
-//        writer.write("pos");
-////        writer.write("start");
-////        writer.write("end");
-//        writer.write("spanning");
-//        writer.write("one_side");
-//        writer.write("wps");
-//    	writer.eol();
-
+        if (!bedGraph) {
+	        writer.write_line("## program: " + NGSUtils.getVersion());
+	        writer.write_line("## cmd: " + NGSUtils.getArgs());
+	        writer.write("chrom");
+	        writer.write("pos");
+	        writer.write("wps");
+	    	writer.eol();
+        }
     
     	String curChrom = null;    	
     	PairSpan nextRead = null;
@@ -294,39 +299,41 @@ public class BamWPS extends AbstractOutputCommand {
 		        	}
 		        	
 		        	
-		        	if (accSpan + accOneEnd > 0) {
-		        		int wps = accSpan-accOneEnd;
-
-		        		if (wps != lastWPS || lastChrom == null || !lastChrom.equals(curChrom)) {
+	        		int wps = accSpan-accOneEnd;
+	        		
+		        	if (bedGraph) {
+			        	if (accSpan + accOneEnd > 0) {
+			        		if (wps != lastWPS || lastChrom == null || !lastChrom.equals(curChrom)) {
+			        			if (lastChrom != null) {
+				        			writer.write(lastChrom);
+				        			writer.write(lastStart);
+				        			writer.write(lastEnd+1);
+				        			writer.write(lastWPS);
+						        	writer.eol();
+			        			}
+			        			lastChrom = curChrom;
+			        			lastStart = curPos;
+			        			lastEnd = curPos;
+			        			lastWPS = wps;
+			        		} else {
+			        			lastEnd = curPos;
+			        		}
+			        	} else {
 		        			if (lastChrom != null) {
 			        			writer.write(lastChrom);
 			        			writer.write(lastStart);
 			        			writer.write(lastEnd+1);
 			        			writer.write(lastWPS);
 					        	writer.eol();
+					        	lastChrom = null;
 		        			}
-		        			lastChrom = curChrom;
-		        			lastStart = curPos;
-		        			lastEnd = curPos;
-		        			lastWPS = wps;
-		        		} else {
-		        			lastEnd = curPos;
-		        		}
-//		        		
-//			        	writer.write(curChrom);
-//			        	writer.write(curPos); // output 0-based coordinates
-//			        	writer.write(wps);
-//			        	writer.write();
-//			        	writer.eol();
+			        	}
 		        	} else {
-	        			if (lastChrom != null) {
-		        			writer.write(lastChrom);
-		        			writer.write(lastStart);
-		        			writer.write(lastEnd+1);
-		        			writer.write(lastWPS);
-				        	writer.eol();
-				        	lastChrom = null;
-	        			}
+			        	writer.write(curChrom);
+			        	writer.write(curPos+1); // output 1-based coordinates
+			        	writer.write(wps);
+			        	writer.write();
+			        	writer.eol();
 		        	}
 		
 		        	windowBuffer = nextBuf;
@@ -338,7 +345,7 @@ public class BamWPS extends AbstractOutputCommand {
 //		} catch (InterruptedException e) {
 //		}
     
-		if (lastChrom != null) {
+		if (bedGraph && lastChrom != null) {
 			writer.write(lastChrom);
 			writer.write(lastStart);
 			writer.write(lastEnd+1);
