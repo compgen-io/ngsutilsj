@@ -24,7 +24,7 @@ import io.compgen.ngsutils.pileup.BAMPileup;
 import io.compgen.ngsutils.pileup.PileupRecord;
 
 @Command(name="bam-tobedgraph", 
-		 desc="Calculate coverave for an aligned BAM file in BedGraph format.", 
+		 desc="Calculate coverage for an aligned BAM file in BedGraph format.", 
 		 category="bam"
 		 )
 
