@@ -49,16 +49,27 @@ public class StatUtils {
         return (AB * CD * AC * BD) / (Afact * Bfact * Cfact * Dfact * Nfact);
     }
     
-    public static double poissonMean(int lambda, int n, float mu) {
+	public static double phred(double val) {
+		if (val <= 0.0) {
+			return 255.0;
+		} else if (val >= 1.0) {
+			return 0.0;
+		} else {
+			return -10 * Math.log10(val);
+		}
+	}
+
+    
+    public static double poissonMean(double lambda, int n, float mu) {
         return ppois(n, (int) Math.floor(lambda*mu));
     }
 
-    public static double dpois(int x, int lambda) {
+    public static double dpois(int x, double lambda) {
         return new PoissonDistribution(lambda).probability(x);
         //return (Math.pow(lambda, x) / CombinatoricsUtils.factorialDouble(x)) * Math.exp(-1*lambda); 
     }
 
-    public static double ppois(int x, int lambda) {
+    public static double ppois(int x, double lambda) {
         return new PoissonDistribution(lambda).cumulativeProbability(x);
 //        double acc = 0.0;
 //        for (int i=0; i<=x; i++) {
