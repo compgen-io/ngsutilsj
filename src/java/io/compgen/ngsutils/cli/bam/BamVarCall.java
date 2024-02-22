@@ -32,6 +32,7 @@ import io.compgen.ngsutils.bam.support.BaseTally.BaseCount;
 import io.compgen.ngsutils.bam.support.ReadUtils;
 import io.compgen.ngsutils.pileup.BAMPileup;
 import io.compgen.ngsutils.pileup.PileupRecord;
+import io.compgen.ngsutils.support.stats.StatUtils;
 
 @Command(name="bam-varcall", 
 		 desc="For  a BAM file, call variants from a reference genome (germline, tumor-only, or tumor/normal).\n"
@@ -65,10 +66,12 @@ public class BamVarCall extends AbstractOutputCommand {
     private int clusterDist = -1;
     
     private double minAF = 0.0;
-    private double minPvalue = 0.05;
+//    private double minPvalue = 0.01;
+    private double errorRate = 0.02;
     private double maxNormalAF = 1.0;
     
     private boolean passingOnly = false;
+    private boolean noFilters = false;
     private boolean tumorOnly = false;
     
     private int maxDepth = -1;
@@ -87,6 +90,11 @@ public class BamVarCall extends AbstractOutputCommand {
     @Option(desc = "Only output variants that pass filters", name = "passing")
     public void setPassingOnly(boolean val) {
     	this.passingOnly = val;
+    }
+
+    @Option(desc = "Do not include filters in the VCF output", name = "no-filters")
+    public void setNoFilters(boolean val) {
+    	this.noFilters = val;
     }
 
     @Option(desc = "Only keep properly paired reads", name = "proper-pairs")
@@ -141,9 +149,13 @@ public class BamVarCall extends AbstractOutputCommand {
         requiredFlags |= flag;
     }   
     
-    @Option(desc="Minimum p-value for variant call prediction", name="min-pval", defaultValue="0.05")
-    public void setMinPvalue(double pval) {
-        this.minPvalue = pval;
+//    @Option(desc="Minimum p-value for genotype prediction", name="min-pval", defaultValue="0.01")
+//    public void setMinPvalue(double pval) {
+//        this.minPvalue = pval;
+//    }
+    @Option(desc="Assumed error rate of sequencing (how many errors are expected)", name="error-rate", defaultValue="0.02")
+    public void setErrorRate(double errorRate) {
+        this.errorRate = errorRate;
     }
     
    @Option(desc="Minimum allele-frequency to report", name="min-af")
@@ -339,23 +351,24 @@ public class BamVarCall extends AbstractOutputCommand {
         writer.write_line("##FILTER=<ID=min_af,Description=\"Allele-frequency too low (" + this.minAF+")\">");
 
         writer.write_line("##FILTER=<ID=multi_indel,Description=\"Multiple indels reported at position\">");
+        writer.write_line("##FILTER=<ID=multi_alleles,Description=\"More than 3 alleles reported at position\">");
 
         if (this.clusterDist > 0) {
             writer.write_line("##FILTER=<ID=cluster_var,Description=\"Variants are clustered (w/in " + this.clusterDist+"bp)\">");
         }
         
         if (pileup.getFileCount() > 1) {
-        	writer.write_line("##FILTER=<ID=low_pred_call_tumor,Description=\"Tumor/Normal variant p-value too low (" + this.minPvalue+")\">");
-        	writer.write_line("##FILTER=<ID=pred_call_in_normal,Description=\"Variant predicted germline\">");
+        	writer.write_line("##FILTER=<ID=low_pred_call_tumor,Description=\"Tumor/Normal variant prediction not above background\">");
+//        	writer.write_line("##FILTER=<ID=pred_call_in_normal,Description=\"Variant predicted found in germline\">");
 
 	        writer.write_line("##FILTER=<ID=min_normal_depth,Description=\"Depth in normal too low (" + this.minNormalDepth+")\">");
 	        writer.write_line("##FILTER=<ID=max_normal_abs_count,Description=\"Alt read count in normal too high (" + this.maxNormalAlt+")\">");
 	        writer.write_line("##FILTER=<ID=max_normal_af,Description=\"Allele-frequency in normal too high (" + this.maxNormalAF+")\">");
         } else {
             if (tumorOnly) {
-            	writer.write_line("##FILTER=<ID=low_pred_call_tumor_only,Description=\"Tumor-only variant p-value too low (" + this.minPvalue+")\">");
+            	writer.write_line("##FILTER=<ID=low_pred_call_tumor,Description=\"Tumor-only variant prediction not above background\">");
             } else {
-            	writer.write_line("##FILTER=<ID=low_pred_call_germline,Description=\"Germline variant p-value too low (" + this.minPvalue+")\">");
+            	writer.write_line("##FILTER=<ID=low_pred_call_germline,Description=\"Germline variant prediction not above background\">");
             }
         }
 
@@ -430,10 +443,52 @@ public class BamVarCall extends AbstractOutputCommand {
     		// don't export anything when the reference base is 'N'.
     		return;
     	}
-    	
+
+    	BaseTally bt = BaseTally.parsePileupRecord(record.getSampleRecords(0).calls);    	
+    	BaseTally bt2 = null;    	
+
+    	List<String> normCalls = null;
+
+        if (record.getNumSamples() > 1 && record.getSampleRecords(1).calls != null && record.getSampleRecords(1).calls.size()>0) {
+        	// this is a tumor/normal call, so we need to find the potential normal variants
+        	// first. We will then subtract these from the tumor alt calls. 
+        	
+        	bt2 = BaseTally.parsePileupRecord(record.getSampleRecords(1).calls);
+        	List<BaseCount> sorted = bt2.getSorted();
+        	Collections.reverse(sorted); // we want descending order here.
+
+        	int total = 0;
+            for (BaseCount bc: sorted) {
+            	total += bc.getCount();
+            }
+            
+            for (BaseCount bc: sorted) {
+        		if (bc.getCount()>0) {
+        			double hom = StatUtils.calcPvalueHomozygous(bc.getCount(), total, this.errorRate);
+        			double het = StatUtils.calcPvalueHeterozygous(bc.getCount(), total);
+        			double bg = StatUtils.calcPvalueBackground(bc.getCount(), total, this.errorRate);
+        			
+        			if (hom > het && hom > bg) {
+        				// homozygous call
+        				if (normCalls == null) {
+        					normCalls = new ArrayList<String>();
+        					normCalls.add(bc.getBase());
+        				}
+        			} else if (het > hom && het > bg) {
+        				// heterozygous call
+        				if (normCalls == null) {
+        					normCalls = new ArrayList<String>();
+        				}
+    					normCalls.add(bc.getBase());        				
+        			} else {
+        				// background... no op
+        			}        			
+        		}
+            }        	
+        }
+
     	// calculate VCF filters, info, fields
     	
-    	BaseTally bt = BaseTally.parsePileupRecord(record.getSampleRecords(0).calls);    	
     	List<String> alts = new ArrayList<String>();
     	Map<String, Integer> altCounts = new HashMap<String, Integer>();
     	int totalDepth = 0;
@@ -451,9 +506,16 @@ public class BamVarCall extends AbstractOutputCommand {
         for (BaseCount bc: sorted) {
         	if (!bc.getBase().equals(record.refBase)) {
         		if (bc.getCount()>0) {
+        			if (normCalls != null && normCalls.contains(bc.getBase())) {
+        				// if we have normal calls (we are in a tumor-normal workflow)
+        				// and this base is in the normal GT, then skip.
+        				continue;
+        			}
+        			
         			if (alts.size() == 0) {
         				altCount = bc.getCount(); 
         			}
+        			
         			alts.add(bc.getBase());
         			altCounts.put(bc.getBase(), bc.getCount());
         			if (bc.getBase().startsWith("-")) {
@@ -477,13 +539,15 @@ public class BamVarCall extends AbstractOutputCommand {
         	return;
         }        
 
-    	BaseTally bt2 = null;    	
+//    	BaseTally bt2 = null;    	
     	int secondDepth = 0;
     	int secondAltCount = 0;
     	int secondRefCount = 0;
 
         if (record.getNumSamples() > 1 && record.getSampleRecords(1).calls != null && record.getSampleRecords(1).calls.size()>0) {
+        	// tumor-normal calling
         	bt2 = BaseTally.parsePileupRecord(record.getSampleRecords(1).calls);
+        	// we will only look for alt calls present in the test sample (so, not already seen in normal as hom/het)
         	for (String alt : alts) {
         		altCounts.put(alt, altCounts.get(alt) + bt2.getCount(alt));
             	totalDepth += bt2.getCount(alt);
@@ -496,10 +560,17 @@ public class BamVarCall extends AbstractOutputCommand {
         }
         
         
+        List<String> adInfoVals = new ArrayList<String>();
+        adInfoVals.add(""+(refCount+secondRefCount));
+        for (String alt: alts) {
+        	adInfoVals.add(""+altCounts.get(alt));
+        }
         
+
         // If tumor/normal
         // 		process the normal FIRST to find potential germline variants (het)
         // 		Subtract those from the alts list. And perform variant calling on the rest.
+        //      (this is done above)
         //
         //	    You're looking for if a variant is real (and not in normal)
         //
@@ -509,33 +580,118 @@ public class BamVarCall extends AbstractOutputCommand {
         // For germline, you're looking for if a variant is real and at least het.
         //
         
-
-        
-        
-        List<String> adVals = new ArrayList<String>();
-        adVals.add(""+(refCount+secondRefCount));
-        for (String alt: alts) {
-        	adVals.add(""+altCounts.get(alt));
-        }
-        
         String GT1 = "./."; // tumor GT
         String GT2 = "./."; // normal GT
-        
-        
-        double refPval = 1.0;
-        double var1Pval = 1.0;
-        double var2Pval = 1.0;
+        List<String> filters = new ArrayList<String>();
 
-        double normalRefPval = 1.0;
-        double normalVar1Pval = 1.0;
-        double normalVar2Pval = 1.0;
 
-        
-        
+        if (this.tumorOnly || record.getNumSamples() > 1) {
+        	// somatic calling
+        	List<String> gtAcc = new ArrayList<String>();
+        	boolean isGood = false;
+        	
+//        	String s = "";
+        	
+            for (int i=0; i<alts.size(); i++) {
+            	String alt = alts.get(i);
+            	int count = altCounts.get(alt);
+            	
+//            	s += count+",";
+            	
+            	double bg = StatUtils.calcPvalueBackground(count, firstDepth, this.errorRate);
+            	double present = StatUtils.calcPvaluePresent(count, firstDepth);
+            	
+            	if (present > bg) {
+            		// we want values that are larger than error
+            		gtAcc.add(""+(i+1));
+            		isGood = true;
+            	}
+            }
+            
+            if (gtAcc.size() == 0) {
+            	GT1 = "0/0";
+            } else if (gtAcc.size() == 1) {
+            	GT1 = "0/"+gtAcc.get(0);
+            } else if (gtAcc.size() == 2) {
+            	GT1 = StringUtils.join("/", gtAcc);
+            } // else keep it ./.
+            
+
+        	// tumor GT/filter
+    		if (!isGood) {
+    			filters.add("low_pred_call_tumor");
+//    			System.out.println("Ref: " + refCount+", alts: "+ s);
+//                for (int i=0; i<alts.size(); i++) {
+//                	String alt = alts.get(i);
+//                	int count = altCounts.get(alt);
+//                	
+//                	s += count+",";
+//                	
+//                	double bg = StatUtils.calcPvalueBackground(count, firstDepth, this.errorRate);
+//                	double present = StatUtils.calcPvaluePresent(count, firstDepth);
+//                	
+//        			System.out.println("    " + alt + " (" + count + "/" + firstDepth+") bg: "+bg+", present:"+present);
+//
+//                }
+            }
+            
+        } else {
+        	// germline calls
+        	
+        	List<String> gtAcc = new ArrayList<String>();
+        	boolean isGood = false;
+        	
+            for (int i=0; i<alts.size(); i++) {
+            	String alt = alts.get(i);
+            	int count = altCounts.get(alt);
+            	
+    			double hom = StatUtils.calcPvalueHomozygous(count, firstDepth, this.errorRate);
+    			double het = StatUtils.calcPvalueHeterozygous(count, firstDepth);
+    			double bg = StatUtils.calcPvalueBackground(count, firstDepth, this.errorRate);
+    			
+    			if (hom > het && hom > bg) {
+    				// homozygous call
+            		GT1 = "" + (i+1) + "/" + (i+1);
+            		isGood = true;
+            		break;
+    			} else if (het > hom && het > bg) {
+    				// heterozygous call
+            		gtAcc.add(""+(i+1));
+            		isGood = true;
+    			} else {
+    				// background... no op
+    			}
+            }
+            
+            if (GT1.equals("./.")) {
+	            if (gtAcc.size() == 0) {
+	            	GT1 = "0/0";
+	            } else if (gtAcc.size() == 1) {
+	            	GT1 = "0/"+gtAcc.get(0);
+	            } else if (gtAcc.size() == 2) {
+	            	GT1 = StringUtils.join("/", gtAcc);
+	            } // else keep it ./.
+            }
+    		if (!isGood) {
+    			filters.add("low_pred_call_germline");
+    		}
+        }
+
+      
         
         // calculate filters based on the FIRST alt allele only
         
-        List<String> filters = new ArrayList<String>();
+        int[] depths = bt.calcAltDepth(record.refBase, alts);
+        int presentVals = 0;
+        for (int i=0; i<depths.length; i++) {
+        	if (depths[i] > 0) {
+        		presentVals += 1;
+        	}
+        }
+        
+        if (presentVals > 3) {
+        	filters.add("multi_alleles");
+        }
         
         if (indelCount > 1) {
         	filters.add("multi_indel");
@@ -549,7 +705,7 @@ public class BamVarCall extends AbstractOutputCommand {
         	filters.add("min_abs_count");
         }
         
-        if ((altCount / firstDepth) < this.minAF) {
+        if (((double)altCount / firstDepth) < this.minAF) {
         	filters.add("min_af");
         }
         
@@ -560,56 +716,11 @@ public class BamVarCall extends AbstractOutputCommand {
         	if (this.maxNormalAlt > -1 && secondAltCount > this.maxNormalAlt) {
             	filters.add("max_normal_abs_count");
         	}
-        	if (secondDepth > 0 && (secondAltCount / secondDepth) > this.maxNormalAF) {
+        	if (secondDepth > 0 && ((double)secondAltCount / secondDepth) > this.maxNormalAF) {
             	filters.add("max_normal_af");
         	}
         }
         
-        
-    	// tumor GT/filter
-    	if (var1Pval < this.minPvalue && var2Pval < this.minPvalue) {
-    		if (record.getNumSamples() > 1) {
-    			filters.add("low_pred_call_tumor");
-    		} else if (tumorOnly) {
-    			filters.add("low_pred_call_tumoronly");
-    		} else {    			
-    			filters.add("low_pred_call_germline");
-    		}
-    		GT1 = "0/0";
-    		GT2 = "0/0";
-    	} else {
-    		if (refPval > var1Pval && refPval > var2Pval) {
-    			if (var1Pval > var2Pval && var1Pval > this.minPvalue) {
-    				GT1="0/1";
-    			} else if (var2Pval > var1Pval && var2Pval > this.minPvalue) {
-    				GT1="0/2";
-    			} else {
-    				GT1="0/0";
-    			}
-    		} else if (var1Pval > var2Pval && var1Pval > refPval) {
-    			if (refPval > var2Pval && refPval > this.minPvalue) {
-    				GT1="1/0";
-    			} else if (var2Pval > refPval && var2Pval > this.minPvalue) {
-    				GT1="1/2";
-    			} else {
-    				GT1="1/1";
-    			}
-    		} else if (var2Pval > var1Pval && var2Pval > refPval) {
-    			if (refPval > var1Pval && refPval > this.minPvalue) {
-    				GT1="2/0";
-    			} else if (var1Pval > refPval && var1Pval > this.minPvalue) {
-    				GT1="2/1";
-    			} else {
-    				GT1="2/2";
-    			}
-    		}         		
-        }
-        if (record.getNumSamples() > 1) {	
-        	// set GT2 / in_normal filter
-
-        }
-
-
         
 
         if (passingOnly && filters.size() > 0) {
@@ -658,14 +769,14 @@ public class BamVarCall extends AbstractOutputCommand {
         
         writer.write("."); // score
         
-        if (filters.size() == 0) {
+        if (noFilters || filters.size() == 0) {
         	writer.write("PASS"); // filter
         } else {
         	writer.write(StringUtils.join(",", filters));
         }
         
         // only write a simple INFO field
-        writer.write("DP="+totalDepth+";AD="+StringUtils.join(",", adVals)); // info -- could omit with '.'
+        writer.write("DP="+totalDepth+";AD="+StringUtils.join(",", adInfoVals)); // info -- could omit with '.'
 
         writer.write("GT:DP:AD:AF:SAC");
 
@@ -697,4 +808,5 @@ public class BamVarCall extends AbstractOutputCommand {
         writer.eol();        
         
     }
+
 }

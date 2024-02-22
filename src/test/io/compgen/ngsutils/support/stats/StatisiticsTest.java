@@ -166,5 +166,22 @@ public class StatisiticsTest {
         assertEquals(2.5, StatUtils.medianSpan(dvals, size), 0.000001);
 
     }
-
+    
+//    @Test
+//    public void testVarCall() {
+//    	for (int i=1; i<=30; i++) {
+//    		innerVarCall(i, 30, 0.02, 0.05);
+//    	}
+//
+////    	for (int i=1; i<=100; i++) {
+////    		innerVarCall(i, 100, 0.02, 0.05);
+////    	}
+//}
+//    
+//    public void innerVarCall(int alleleCount, int totalCount, double errorRate, double minAF) {
+//    	System.out.println("Alleles     : " + alleleCount +" / " + totalCount);
+//    	System.out.println("Homozygous  : "+StatUtils.calcPvalueHomozygous(alleleCount, totalCount, errorRate));
+//    	System.out.println("Heterozygous: "+StatUtils.calcPvalueHeterozygous(alleleCount, totalCount, errorRate));
+//    	System.out.println("MinAF       : "+StatUtils.calcPvalueIsError(alleleCount, totalCount, errorRate));
+//    }
 }

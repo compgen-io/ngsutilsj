@@ -9,6 +9,7 @@ import java.util.Comparator;
 import java.util.List;
 
 import org.apache.commons.math3.distribution.ChiSquaredDistribution;
+import org.apache.commons.math3.distribution.PascalDistribution;
 import org.apache.commons.math3.distribution.PoissonDistribution;
 
 import io.compgen.common.ComparablePair;
@@ -641,4 +642,106 @@ public class StatUtils {
 //        return new Trendline(reg.getSlope(), reg.getIntercept(), reg.getMeanSquareError(), reg.getRSquare());
 //    }
 //    
+
+	public static double pnbinom(int x, int r, double p) {
+		return new PascalDistribution(r, p).cumulativeProbability(x);
+	}
+	
+	public static double dnbinom(int x, int r, double p) {
+		return new PascalDistribution(r, p).probability(x);
+	}
+	
+
+
+    /** 
+     * For a homozygous variant, we will calculate the likelihood that the *minor*
+     * allele is all error.
+     * 
+     * NegBinom: number of failures before a number of successes, given a known success rate.
+     * 
+     * So, what we will really calculate is:
+     * 
+     * failures = total - allelecount
+     * number of successes = allelecount
+     * success_rate = 1-(error_rate)
+     * error_rate = # errors / (total) 
+     * 
+     * The final result is 1- this probability.
+     * 
+     * @param alleleCount
+     * @param totalCount
+	 * @param errorRate
+     * @return
+     */
+	public static double calcPvalueHomozygous(int alleleCount, int totalCount, double errorRate) {
+		double errorCount = ((Double)Math.ceil(totalCount * errorRate)).intValue();
+		if (errorCount <= 0.0) {
+			errorCount = 1.0;		
+		}
+
+		double successProb = 1 - (errorCount / totalCount); 
+		int failures = totalCount - alleleCount;
+		
+		return dnbinom(failures, totalCount, successProb);
+	}
+
+	/**
+	 * For heterozygous variants, we will calculate the likelihood that the alleleCount
+	 * is a heterozygous call (AF=0.5).
+	 * 
+     * 
+	 * @param alleleCount
+	 * @param totalCount
+	 * @return
+	 */
+	public static double calcPvalueHeterozygous(int alleleCount, int totalCount) { //, double errorRate) {
+		return StatUtils.dnbinom(alleleCount, totalCount / 2, 0.5);
+	}
+
+	/** 
+	 * For background, we will calculate the likelihood that the call is
+	 * at the error rate
+	 * 
+	 * @param alleleCount
+	 * @param totalCount
+	 * @param errorRate
+	 * @return
+	 */
+	public static double calcPvalueBackground(int alleleCount, int totalCount, double errorRate) {
+		double errorCount = ((Double)Math.ceil(totalCount * errorRate)).intValue();
+		if (errorCount <= 0.0) {
+			errorCount = 1.0;
+		}
+		
+		double successProb = 1 - (errorCount / totalCount); 
+		if (successProb == 0.0) {
+			// errorCount == totalCount, which means totalCount = 1
+			return 1.0; 
+		}
+ 
+		double p = StatUtils.dnbinom(alleleCount, totalCount, successProb);
+		return p;
+
+	}
+
+	/** 
+	 * For present calls, we will calculate the likelihood that the call is
+	 * at the allele frequency.
+	 * 
+	 * Failures = the other calls (total - alleleCount)
+	 * 
+	 * @param alleleCount
+	 * @param totalCount
+	 * @param errorRate
+	 * @return
+	 */
+	public static double calcPvaluePresent(int alleleCount, int totalCount) {
+		double successProb = (double) alleleCount / totalCount;
+		int failures = totalCount - alleleCount;
+
+		double p = StatUtils.dnbinom(failures, alleleCount, successProb);
+		return p;
+
+	}
+
 }
