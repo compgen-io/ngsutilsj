@@ -5,6 +5,7 @@ import java.util.List;
 
 import io.compgen.common.StringUtils;
 import io.compgen.ngsutils.support.stats.FisherExact;
+import io.compgen.ngsutils.support.stats.StatUtils;
 import io.compgen.ngsutils.vcf.VCFAnnotationDef;
 import io.compgen.ngsutils.vcf.VCFAttributeException;
 import io.compgen.ngsutils.vcf.VCFAttributeValue;
@@ -56,7 +57,7 @@ public class FisherStrandBias extends AbstractBasicAnnotator {
     				int total = plus + minus;
     				int half = total / 2; // this will round down in cases where total is odd.
     				
-    				fsbOuts.add(""+round(phred(calcFisherStrandBias(half, half, plus, minus)),3));
+    				fsbOuts.add(""+round(StatUtils.phred(calcFisherStrandBias(half, half, plus, minus)),3));
     			}
     			
 				try {
@@ -76,15 +77,6 @@ public class FisherStrandBias extends AbstractBasicAnnotator {
 		return String.format("%."+places+"f", val);
 	}
 
-	private double phred(double val) {
-		if (val <= 0.0) {
-			return 255.0;
-		} else if (val >= 1.0) {
-			return 0.0;
-		} else {
-			return -10 * Math.log10(val);
-		}
-	}
 
 	private double calcFisherStrandBias(int refPlus, int refMinus, int plus, int minus) {
 		return fisher.calcTwoTailedPvalue(refPlus, refMinus, plus, minus);

@@ -190,7 +190,11 @@ public class VCFRecord {
           outcols.add(StringUtils.join(";", filters));
 		}
 		
-	    outcols.add(info.toString());
+        if (info == null) {
+        	outcols.add(MISSING);
+        } else {
+        	outcols.add(info.toString());
+        }
         
 		if (sampleAttributes != null && sampleAttributes.size() > 0) {
 			List<String> keyOrder = sampleAttributes.get(0).getKeys();

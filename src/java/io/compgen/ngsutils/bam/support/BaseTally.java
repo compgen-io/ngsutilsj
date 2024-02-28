@@ -6,10 +6,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import io.compgen.ngsutils.pileup.PileupRecord;
+import io.compgen.ngsutils.pileup.PileupRecord.PileupBaseCall;
+
 public class BaseTally {
     public class BaseCount implements Comparable<BaseCount> {
         private String base;
         private int count=0;
+        private int plus=0;
+        private int minus=0;
         
         private BaseCount(String base) {
             this.base = base;
@@ -20,8 +25,13 @@ public class BaseTally {
             return Integer.compare(count, o.count);
         }
         
-        private void incr() {
+        private void incr(boolean plusStrand) {
             count++;
+            if (plusStrand) {
+                plus++;
+            } else {
+            	minus++;
+            }
         }
         
         public String getBase() {
@@ -31,9 +41,16 @@ public class BaseTally {
         public int getCount() {
             return count;
         }
+        public int getPlus() {
+            return plus;
+        }
+        public int getMinus() {
+            return minus;
+        }
     }
     
     private Map<String, BaseCount> tallies = new HashMap<String, BaseCount>();
+    private int wildCount = 0;
     
     public BaseTally(String... bases) {
         for (String base: bases) {
@@ -41,11 +58,27 @@ public class BaseTally {
         }
     }
     
-    public void incr(String base) {
+    public String toString() {
+    	String ret = "[";
+    	for (String k: tallies.keySet()) {
+    		ret += k +":"+tallies.get(k).getCount()+", ";
+    	}
+    	return ret+"]";
+    }
+    
+    public void incr(String base, boolean plusStrand) {
     	if (!tallies.containsKey(base)) {
             tallies.put(base, new BaseCount(base));
     	}
-        tallies.get(base).incr();
+        tallies.get(base).incr(plusStrand);
+    }
+    
+    public void incrWild() {
+    	this.wildCount++;
+    }
+
+    public int getWildCount() {
+    	return this.wildCount;
     }
     
     public List<BaseCount> getSorted() {
@@ -59,7 +92,26 @@ public class BaseTally {
     }
 
     public int getCount(String base) {
-        return tallies.get(base).getCount();        
+    	if (tallies.containsKey(base)) {
+    		return tallies.get(base).getCount();
+    	}
+    	return 0;
+    }
+
+    
+    public int getPlusCount(String base) {
+    	if (tallies.containsKey(base)) {
+    		return tallies.get(base).getPlus();
+    	}
+    	return 0;
+    }
+
+    
+    public int getMinusCount(String base) {
+    	if (tallies.containsKey(base)) {
+    		return tallies.get(base).getMinus();
+    	}
+    	return 0;
     }
 
     
@@ -75,5 +127,89 @@ public class BaseTally {
         }
         return acc;
     }
-   
+
+	public static BaseTally parsePileupRecord(List<PileupBaseCall> calls) {
+
+        BaseTally bt = new BaseTally("A", "C", "G", "T");
+        
+        for (PileupBaseCall call: calls) {
+            if (call.op == PileupRecord.PileupBaseCallOp.Match) {
+                if (bt.contains(call.call)) {
+                    bt.incr(call.call, call.plusStrand);
+                } else {
+                	bt.incrWild();
+                }
+            } else if (call.op == PileupRecord.PileupBaseCallOp.Ins){
+                bt.incr("+" + call.call, call.plusStrand);
+            } else if (call.op == PileupRecord.PileupBaseCallOp.Del){
+                bt.incr("-" + call.call, call.plusStrand);
+            }
+
+        }
+
+        return bt;
+	}
+
+	/**
+	 * return the total depth
+	 * @return
+	 */
+	public int calcDepth() {
+		int acc = 0;
+		for (String base: this.tallies.keySet()) {
+			acc += tallies.get(base).count;			
+		}
+		return acc;
+	}   
+
+	/**
+	 * return the depth for each base, in order: refbase:alt1:alt2...
+	 * @param refBase
+	 * @param alts
+	 * @return
+	 */
+	public int[] calcAltDepth(String refBase, List<String> alts) {
+		int[] ret = new int[alts.size()+1];
+		ret[0] = getCount(refBase);
+		for (int i=0; i<alts.size(); i++) {
+			ret[i+1] = getCount(alts.get(i));			
+		}
+		return ret;
+	}
+
+	/**
+	 * return the allele frequency for each base, in order: refbase:alt1:alt2...
+	 * @param refBase
+	 * @param alts
+	 * @return
+	 */
+	public double[] calcAltFreq(List<String> alts) {
+		double total = this.calcDepth();
+		
+		double[] ret = new double[alts.size()];
+		for (int i=0; i<alts.size(); i++) {
+			ret[i] = getCount(alts.get(i)) / total;			
+		}
+		return ret;
+	}
+
+	/**
+	 * return the depth for each base-strand, in order: ref+:ref-:alt1+:alt1-:alt2+...
+	 * @param refBase
+	 * @param alts
+	 * @return
+	 */
+	public int[] calcAltStrand(String refBase, List<String> alts) {
+		int[] ret = new int[2*(alts.size()+1)];
+		
+		ret[0] = getPlusCount(refBase);
+		ret[1] = getMinusCount(refBase);
+
+		for (int i=0; i<alts.size(); i++) {
+			ret[(2*(i+1))] = getPlusCount(alts.get(i));			
+			ret[(2*(i+1))+1] = getMinusCount(alts.get(i));			
+		}
+		return ret;
+	}
+	
 }

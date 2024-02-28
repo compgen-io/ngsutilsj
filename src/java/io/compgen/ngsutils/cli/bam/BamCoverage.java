@@ -141,7 +141,7 @@ public class BamCoverage extends AbstractOutputCommand {
         for (PileupRecord record: IterUtils.wrap(it)) {
             tmp++;
             if (verbose && tmp > 100000) {
-                System.err.println(record.ref+":"+record.pos+" "+record.getSampleCount(0));
+                System.err.println(record.ref+":"+record.pos+" "+record.getSampleDepth(0));
                 tmp = 0;
             }
             if (bed!=null) {

@@ -9,6 +9,8 @@ import java.util.Comparator;
 import java.util.List;
 
 import org.apache.commons.math3.distribution.ChiSquaredDistribution;
+import org.apache.commons.math3.distribution.PascalDistribution;
+import org.apache.commons.math3.distribution.PoissonDistribution;
 
 import io.compgen.common.ComparablePair;
 import io.compgen.common.Pair;
@@ -48,24 +50,35 @@ public class StatUtils {
         return (AB * CD * AC * BD) / (Afact * Bfact * Cfact * Dfact * Nfact);
     }
     
-//    public static double poissonMean(int lambda, int n, float mu) {
-//        return ppois(n, (int) Math.floor(lambda*mu));
-//    }
+	public static double phred(double val) {
+		if (val <= 0.0) {
+			return 255.0;
+		} else if (val >= 1.0) {
+			return 0.0;
+		} else {
+			return -10 * Math.log10(val);
+		}
+	}
 
-//    public static double dpois(int x, int lambda) {
-//        return new PoissonDistribution(lambda).probability(x);
-//        //return (Math.pow(lambda, x) / CombinatoricsUtils.factorialDouble(x)) * Math.exp(-1*lambda); 
-//    }
+    
+    public static double poissonMean(double lambda, int n, float mu) {
+        return ppois(n, (int) Math.floor(lambda*mu));
+    }
 
-//    public static double ppois(int x, int lambda) {
-//        return new PoissonDistribution(lambda).cumulativeProbability(x);
-////        double acc = 0.0;
-////        for (int i=0; i<=x; i++) {
-////            acc += (Math.pow(lambda, i) / CombinatoricsUtils.factorialDouble(i)); 
-////        }
-////        return acc * Math.exp(-lambda);
-//    }
-//
+    public static double dpois(int x, double lambda) {
+        return new PoissonDistribution(lambda).probability(x);
+        //return (Math.pow(lambda, x) / CombinatoricsUtils.factorialDouble(x)) * Math.exp(-1*lambda); 
+    }
+
+    public static double ppois(int x, double lambda) {
+        return new PoissonDistribution(lambda).cumulativeProbability(x);
+//        double acc = 0.0;
+//        for (int i=0; i<=x; i++) {
+//            acc += (Math.pow(lambda, i) / CombinatoricsUtils.factorialDouble(i)); 
+//        }
+//        return acc * Math.exp(-lambda);
+    }
+
     /* Use CombinatoricsUtils.factorial instead
     private static Map<Integer, Long> factorialMemoize = new HashMap<Integer, Long> ();
     public static long factorial(int n) {
@@ -629,4 +642,106 @@ public class StatUtils {
 //        return new Trendline(reg.getSlope(), reg.getIntercept(), reg.getMeanSquareError(), reg.getRSquare());
 //    }
 //    
+
+	public static double pnbinom(int x, int r, double p) {
+		return new PascalDistribution(r, p).cumulativeProbability(x);
+	}
+	
+	public static double dnbinom(int x, int r, double p) {
+		return new PascalDistribution(r, p).probability(x);
+	}
+	
+
+
+    /** 
+     * For a homozygous variant, we will calculate the likelihood that the *minor*
+     * allele is all error.
+     * 
+     * NegBinom: number of failures before a number of successes, given a known success rate.
+     * 
+     * So, what we will really calculate is:
+     * 
+     * failures = total - allelecount
+     * number of successes = allelecount
+     * success_rate = 1-(error_rate)
+     * error_rate = # errors / (total) 
+     * 
+     * The final result is 1- this probability.
+     * 
+     * @param alleleCount
+     * @param totalCount
+	 * @param errorRate
+     * @return
+     */
+	public static double calcPvalueHomozygous(int alleleCount, int totalCount, double errorRate) {
+		double errorCount = ((Double)Math.ceil(totalCount * errorRate)).intValue();
+		if (errorCount <= 0.0) {
+			errorCount = 1.0;		
+		}
+
+		double successProb = 1 - (errorCount / totalCount); 
+		int failures = totalCount - alleleCount;
+		
+		return dnbinom(failures, totalCount, successProb);
+	}
+
+	/**
+	 * For heterozygous variants, we will calculate the likelihood that the alleleCount
+	 * is a heterozygous call (AF=0.5).
+	 * 
+     * 
+	 * @param alleleCount
+	 * @param totalCount
+	 * @return
+	 */
+	public static double calcPvalueHeterozygous(int alleleCount, int totalCount) { //, double errorRate) {
+		return StatUtils.dnbinom(alleleCount, totalCount / 2, 0.5);
+	}
+
+	/** 
+	 * For background, we will calculate the likelihood that the call is
+	 * at the error rate
+	 * 
+	 * @param alleleCount
+	 * @param totalCount
+	 * @param errorRate
+	 * @return
+	 */
+	public static double calcPvalueBackground(int alleleCount, int totalCount, double errorRate) {
+		double errorCount = ((Double)Math.ceil(totalCount * errorRate)).intValue();
+		if (errorCount <= 0.0) {
+			errorCount = 1.0;
+		}
+		
+		double successProb = 1 - (errorCount / totalCount); 
+		if (successProb == 0.0) {
+			// errorCount == totalCount, which means totalCount = 1
+			return 1.0; 
+		}
+ 
+		double p = StatUtils.dnbinom(alleleCount, totalCount, successProb);
+		return p;
+
+	}
+
+	/** 
+	 * For present calls, we will calculate the likelihood that the call is
+	 * at the allele frequency.
+	 * 
+	 * Failures = the other calls (total - alleleCount)
+	 * 
+	 * @param alleleCount
+	 * @param totalCount
+	 * @param errorRate
+	 * @return
+	 */
+	public static double calcPvaluePresent(int alleleCount, int totalCount) {
+		double successProb = (double) alleleCount / totalCount;
+		int failures = totalCount - alleleCount;
+
+		double p = StatUtils.dnbinom(failures, alleleCount, successProb);
+		return p;
+
+	}
+
 }

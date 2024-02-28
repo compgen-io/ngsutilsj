@@ -729,6 +729,8 @@ public class ReadUtils {
 			} else if (e.getOperator() == CigarOperator.S) {
 				// soft clip -- skip these bases in read
 				readpos += e.getLength();
+			} else if (e.getOperator() == CigarOperator.H) {
+				// hard clip -- ignore
 			} else {
 				throw new IOException("Unsupported CIGAR element: " + e.getOperator()+ " / "+ read.getCigarString());
 			}

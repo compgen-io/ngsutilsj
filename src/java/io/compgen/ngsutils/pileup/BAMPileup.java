@@ -37,6 +37,10 @@ public class BAMPileup {
         this.filenames = filenames;
     }
    
+    public int getFileCount() {
+    	return this.filenames.length;
+    }
+    
     public void setTempPath(String tmpPath) {
         this.tmpPath = tmpPath;
     }

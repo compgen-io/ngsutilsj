@@ -20,23 +20,23 @@ public class StatisiticsTest {
         assertEquals("0.001346", new DecimalFormat("0.000000").format(StatUtils.fisherExact(1,9,11,3)));
 
     }
-//    @Test
-//    public void testPpois() {
-//        assertEquals("0.01831564", new DecimalFormat("0.00000000").format(StatUtils.ppois(0,4)));
-//        assertEquals("0.09157819", new DecimalFormat("0.00000000").format(StatUtils.ppois(1,4)));
-//        assertEquals("0.2381033", new DecimalFormat("0.0000000").format(StatUtils.ppois(2,4)));
-//        assertEquals("0.4334701", new DecimalFormat("0.0000000").format(StatUtils.ppois(3,4)));
-//        assertEquals("0.6288369", new DecimalFormat("0.0000000").format(StatUtils.ppois(4,4)));
-//    }
-//
-//    @Test
-//    public void testDpois() {
-//        assertEquals("0.01831564", new DecimalFormat("0.00000000").format(StatUtils.dpois(0,4)));
-//        assertEquals("0.07326256", new DecimalFormat("0.00000000").format(StatUtils.dpois(1,4)));
-//        assertEquals("0.1465251", new DecimalFormat("0.0000000").format(StatUtils.dpois(2,4)));
-//        assertEquals("0.1953668", new DecimalFormat("0.0000000").format(StatUtils.dpois(3,4)));
-//        assertEquals("0.1953668", new DecimalFormat("0.0000000").format(StatUtils.dpois(4,4)));
-//    }
+    @Test
+    public void testPpois() {
+        assertEquals("0.01831564", new DecimalFormat("0.00000000").format(StatUtils.ppois(0,4)));
+        assertEquals("0.09157819", new DecimalFormat("0.00000000").format(StatUtils.ppois(1,4)));
+        assertEquals("0.2381033", new DecimalFormat("0.0000000").format(StatUtils.ppois(2,4)));
+        assertEquals("0.4334701", new DecimalFormat("0.0000000").format(StatUtils.ppois(3,4)));
+        assertEquals("0.6288369", new DecimalFormat("0.0000000").format(StatUtils.ppois(4,4)));
+    }
+
+    @Test
+    public void testDpois() {
+        assertEquals("0.01831564", new DecimalFormat("0.00000000").format(StatUtils.dpois(0,4)));
+        assertEquals("0.07326256", new DecimalFormat("0.00000000").format(StatUtils.dpois(1,4)));
+        assertEquals("0.1465251", new DecimalFormat("0.0000000").format(StatUtils.dpois(2,4)));
+        assertEquals("0.1953668", new DecimalFormat("0.0000000").format(StatUtils.dpois(3,4)));
+        assertEquals("0.1953668", new DecimalFormat("0.0000000").format(StatUtils.dpois(4,4)));
+    }
 
     @Test
     public void testFactorial() {
@@ -166,5 +166,22 @@ public class StatisiticsTest {
         assertEquals(2.5, StatUtils.medianSpan(dvals, size), 0.000001);
 
     }
-
+    
+//    @Test
+//    public void testVarCall() {
+//    	for (int i=1; i<=30; i++) {
+//    		innerVarCall(i, 30, 0.02, 0.05);
+//    	}
+//
+////    	for (int i=1; i<=100; i++) {
+////    		innerVarCall(i, 100, 0.02, 0.05);
+////    	}
+//}
+//    
+//    public void innerVarCall(int alleleCount, int totalCount, double errorRate, double minAF) {
+//    	System.out.println("Alleles     : " + alleleCount +" / " + totalCount);
+//    	System.out.println("Homozygous  : "+StatUtils.calcPvalueHomozygous(alleleCount, totalCount, errorRate));
+//    	System.out.println("Heterozygous: "+StatUtils.calcPvalueHeterozygous(alleleCount, totalCount, errorRate));
+//    	System.out.println("MinAF       : "+StatUtils.calcPvalueIsError(alleleCount, totalCount, errorRate));
+//    }
 }
