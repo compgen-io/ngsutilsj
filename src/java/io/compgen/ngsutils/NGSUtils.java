@@ -39,6 +39,7 @@ import io.compgen.ngsutils.cli.bam.BamToBedPE;
 import io.compgen.ngsutils.cli.bam.BamToFasta;
 import io.compgen.ngsutils.cli.bam.BamToFastq;
 import io.compgen.ngsutils.cli.bam.BamVarCall;
+import io.compgen.ngsutils.cli.bam.BamWPS;
 import io.compgen.ngsutils.cli.bam.BinCount;
 import io.compgen.ngsutils.cli.bam.PileupCli;
 import io.compgen.ngsutils.cli.bed.BedCleanScore;
@@ -241,7 +242,8 @@ public class NGSUtils {
 			.addCommand(BedSort.class)
 			.addCommand(BedToBedPE.class)
 			.addCommand(BamSort.class)
-			.addCommand(BamVarCall.class);
+			.addCommand(BamVarCall.class)
+			.addCommand(BamWPS.class);
 
 
         try {

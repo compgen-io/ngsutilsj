@@ -25,6 +25,7 @@ import io.compgen.common.TabWriter;
 import io.compgen.common.progress.FileChannelStats;
 import io.compgen.common.progress.ProgressMessage;
 import io.compgen.common.progress.ProgressUtils;
+import io.compgen.ngsutils.bam.support.ReadUtils;
 import io.compgen.ngsutils.support.CloseableFinalizer;
 
 @Command(name="bam-tobedpe", desc="Writes read positions to a BEDPE file", category="bam", experimental=true, 
@@ -136,8 +137,12 @@ public class BamToBedPE extends AbstractOutputCommand {
             
             // Note: this can fail for certain BAM files with supplemental reads
             //       apparently this is addressed in a future version of the library
+            //
+            //
+            // SAMRecord pair = reader2.queryMate(read);
             
-            SAMRecord pair = reader2.queryMate(read);
+            SAMRecord pair = ReadUtils.findMate(reader2, read);
+            
             
             if (pair == null) {
             	continue;
