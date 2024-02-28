@@ -46,6 +46,11 @@ public class FlankingBases extends AbstractBasicAnnotator {
 		}
 		
 		try {
+			if (record.getPos()-1-size < 0 || record.getPos()+size > ref.getReferenceLength(record.getChrom())) {
+				// no flanking available if we extend past the first.last base
+				return;
+			}
+			
 			String refSeq = ref.fetchSequence(record.getChrom(), record.getPos()-1-size, record.getPos()+size);
 			record.getInfo().put("CG_FLANKING", new VCFAttributeValue(refSeq));
 
