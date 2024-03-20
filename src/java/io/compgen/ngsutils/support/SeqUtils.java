@@ -380,7 +380,7 @@ public class SeqUtils {
     }
     
     /**
-     * Generates a random DNA sequence
+     * Generates a random DNA sequence (using background frequencies)
      * 
      * By default uses human DNA frequencies ACGT: 0.2, 0.3, 0.3, 0.2 
      * @param len

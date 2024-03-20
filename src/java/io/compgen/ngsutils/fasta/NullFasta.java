@@ -37,4 +37,23 @@ public class NullFasta extends FastaReader {
             }};
     }
 
+	@Override
+	public Iterator<FastaChunkRecord> iteratorChunk(int size) throws IOException {
+        return new Iterator<FastaChunkRecord>() {
+
+            @Override
+            public boolean hasNext() {
+                return false;
+            }
+
+            @Override
+            public FastaChunkRecord next() {
+                return null;
+            }
+
+            @Override
+            public void remove() {
+            }};
+	}
+
 }

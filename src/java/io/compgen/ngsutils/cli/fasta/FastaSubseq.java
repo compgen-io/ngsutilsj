@@ -11,6 +11,7 @@ import io.compgen.cmdline.exceptions.CommandArgumentException;
 import io.compgen.cmdline.impl.AbstractOutputCommand;
 import io.compgen.ngsutils.annotation.GenomeSpan;
 import io.compgen.ngsutils.fasta.FastaReader;
+import io.compgen.ngsutils.support.SeqUtils;
 
 @Command(name="fasta-subseq", desc="Extract subsequences from a FASTA file (optionally, indexed)", category="fasta", doc="Note: the start-position in the region should be 1-based")
 public class FastaSubseq extends AbstractOutputCommand {
@@ -18,10 +19,16 @@ public class FastaSubseq extends AbstractOutputCommand {
     private String filename = null;
     private GenomeSpan region = null;
     private int wrap = 60;
+    private boolean revcomp = false;
     
     @Option(name="wrap", desc="Wrap the sequence to be length N", defaultValue="60")
     public void setWrap(int wrap) {
         this.wrap = wrap;
+    }
+    
+    @Option(name="revcomp", desc="Write the reverse compliment")
+    public void setRevcomp(boolean revcomp) {
+        this.revcomp = revcomp;
     }
     
     @UnnamedArg(name = "FILE chrom:start-end")
@@ -44,6 +51,11 @@ public class FastaSubseq extends AbstractOutputCommand {
         FastaReader fasta = FastaReader.open(filename);
         System.out.println(">"+region.toString(true));
         String seq = fasta.fetchSequence(region.ref, region.start, region.end);
+        
+        if (revcomp) {
+        	seq = SeqUtils.revcomp(seq);
+        }
+        
         while (seq.length() > wrap) {
             System.out.println(seq.substring(0, wrap));
             seq = seq.substring(wrap);

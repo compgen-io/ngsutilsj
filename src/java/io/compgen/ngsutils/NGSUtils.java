@@ -63,7 +63,7 @@ import io.compgen.ngsutils.cli.fasta.FastaGenerateReads;
 import io.compgen.ngsutils.cli.fasta.FastaGrep;
 import io.compgen.ngsutils.cli.fasta.FastaMask;
 import io.compgen.ngsutils.cli.fasta.FastaNames;
-import io.compgen.ngsutils.cli.fasta.FastaPWM;
+import io.compgen.ngsutils.cli.fasta.FastaMotif;
 import io.compgen.ngsutils.cli.fasta.FastaRandom;
 import io.compgen.ngsutils.cli.fasta.FastaRevcomp;
 import io.compgen.ngsutils.cli.fasta.FastaSplit;
@@ -220,7 +220,7 @@ public class NGSUtils {
     		.addCommand(VCFClearFilter.class)
     		.addCommand(BedToBedGraph.class)
     		.addCommand(VCFMerge.class)
-    		.addCommand(FastaPWM.class)
+    		.addCommand(FastaMotif.class)
 			.addCommand(FastaRandom.class)
 			.addCommand(VCFCheck.class)
 			.addCommand(BamToBedPE.class)
