@@ -143,4 +143,97 @@ public class BasicFastaReader extends FastaReader {
         };
     }
 
+    
+
+    public Iterator<FastaChunkRecord> iteratorChunk(final int size) throws IOException {
+        if (closed) {
+            throw new IOException("FastaReader closed");
+        }
+                
+        reader = new StringLineReader(filename);
+        
+        return new Iterator<FastaChunkRecord> () {
+        	String currentName = null;
+        	String currentComment = null;
+        	int pos = -1;
+        	String buffer = "";
+
+        	FastaChunkRecord next = null;
+            Iterator<String> it = null;
+
+			@Override
+			public boolean hasNext() {
+				if (next == null && pos == -1) {
+					populate();
+				}
+				return next != null;
+			}
+
+			private void populate() {
+				if (next != null) {
+					return;
+				}
+				if (buffer.length() >= size) {
+					String subseq = buffer.substring(0, size);
+					next = new FastaChunkRecord(currentName, subseq, pos, currentComment);
+					pos += size;
+					buffer = buffer.substring(size);
+					return;
+				}
+				
+				if (it == null) {
+					it = reader.iterator();
+				}
+				
+				if (!it.hasNext()) {
+					return;
+				}
+				
+				String line = it.next();
+				if (line.startsWith(">")) {
+					if (buffer.length() > 0) {
+						next = new FastaChunkRecord(currentName, buffer, pos, currentComment);
+					}
+
+					String[] spl = line.substring(1).split(" ", 2);
+					currentName = spl[0];
+					if (spl.length > 1) {
+						currentComment = spl[1];
+					} else {
+						currentComment = null;
+					}
+					buffer = "";
+					pos = 0;
+										
+				} else {
+					buffer += StringUtils.strip(line);
+				}
+				
+				if (buffer.length() < size) {
+					populate(); // keep calling this until we have enough in the buffer... 
+            					// If we already have a "next", then this is immediately returned.
+				}
+				
+				if (next == null && buffer.length() >= size) {
+					String subseq = buffer.substring(0, size);
+					next = new FastaChunkRecord(currentName, subseq, pos, currentComment);
+					pos += size;
+					buffer = buffer.substring(size);
+				}
+			}
+
+			@Override
+			public FastaChunkRecord next() {
+				FastaChunkRecord ret = next;
+				next = null;
+				populate();
+				
+				return ret;
+			}
+
+        
+
+        };
+    }
+    
 }

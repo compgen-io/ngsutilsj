@@ -3,29 +3,19 @@ package io.compgen.ngsutils.pwm;
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
-import java.util.Arrays;
-import java.util.Random;
 
-import io.compgen.ngsutils.support.SeqUtils;
-
-public class JasparPWM {
-	private static final int MAX_PERMUTATION_COUNT = 1000000; // this is overkill for anything less than 10 bases long. accurate, but overkill
-	
-	private static final double[] backgroundRates = new double[] {0.3, 0.2, 0.2, 0.3}; // a c g t
-	
-	private double[] probPermutations = null;
-	
+public class JasparPWM extends AbstractMotifFinder {
 	protected String accn;
 	protected String name;
+	protected double [][] pwm; // double[a,c,g,t][pos1, pos2, pos3...]
 
-	protected int total;
-
-	// freq are stored by position first, then a,c,g,t values
-	protected double [][] pwm;
-	
-	
 	public JasparPWM(String filename, int pseudo) throws Exception {
+		super();
 		BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(filename)));
+		
+		if (pseudo < 0) {
+			pseudo = 0;
+		}
 		
 		String header = reader.readLine();
 		if (header.charAt(0) != '>') {
@@ -121,13 +111,6 @@ public class JasparPWM {
 //			this.permCount = (int) combinations;
 //		}
 	}
-	
-	private final double LOG2_FACTOR = Math.log(2);
-	
-	public double log2(double val) {
-		return Math.log(val) / LOG2_FACTOR;
-	}
- 
 	public String getAccn() {
 		return accn;
 	}
@@ -135,11 +118,13 @@ public class JasparPWM {
 	public String getName() {
 		return name;
 	}
-
+	@Override
 	public int getLength() {
 		return pwm[0].length;
 	}
-	
+
+
+	@Override
 	public double calcScore(String seq) throws Exception {
 		double ret = 0.0;
 		
@@ -167,34 +152,35 @@ public class JasparPWM {
 		
 		return ret;
 	}
-	
-	public double calcPvalue(double score) {
-		if (probPermutations == null) {
-			buildPermutations();
+	public String writePWM() {
+		String ret = "";
+		
+		ret += "A";
+		for (int i=0; i<pwm[0].length; i++) {
+			ret += "\t" + pwm[0][i];
 		}
-		
-		int i=0;
-		while (score > probPermutations[i] && i < probPermutations.length) {
-			i++;
+		ret += "\n";
+
+		ret += "C";
+		for (int i=0; i<pwm[1].length; i++) {
+			ret += "\t" + pwm[1][i];
 		}
-		
-		return ((double)(probPermutations.length - i)) / probPermutations.length ;
-		
+		ret += "\n";
+
+		ret += "G";
+		for (int i=0; i<pwm[2].length; i++) {
+			ret += "\t" + pwm[2][i];
+		}
+		ret += "\n";
+
+		ret += "T";
+		for (int i=0; i<pwm[3].length; i++) {
+			ret += "\t" + pwm[3][i];
+		}
+		ret += "\n";
+
+		return ret;
 	}
 
-	private void buildPermutations() {
-		// Because we are generating this for p-values, let's try to be consistent
-		Random rand = new Random(123);
-		probPermutations = new double[MAX_PERMUTATION_COUNT];
-		for (int i=0; i< MAX_PERMUTATION_COUNT; i++) {
-			try {
-				probPermutations[i] = calcScore(SeqUtils.generateRandomSeq(pwm[0].length, rand));
-			} catch (Exception e) {
-				throw new RuntimeException(e);
-			}
-		}
-		
-		Arrays.sort(probPermutations);
-	}
-	
+
 }
