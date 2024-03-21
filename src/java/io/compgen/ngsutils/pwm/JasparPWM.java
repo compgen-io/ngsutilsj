@@ -70,26 +70,28 @@ public class JasparPWM extends AbstractMotifFinder {
 		// convert the a,c,g,t counts to a matrix
 		int[][] counts = new int[][] {a,c,g,t};
 
-		int n = -1;
-		for (int i=0; i<counts[0].length; i++) {
-			int tmp = 0;
-			for (int j=0; j< 4; j++) {
-				tmp += counts[j][i]; // order important!
-			}
-			if (n >0) {
-				if (tmp != n) {
-					throw new Exception("File is not in JASPAR format! (invalid counts) (expected: "+n +", got:"+tmp+", pos:"+i+")");
-				}
-			}
-			n = tmp;
-		}
-
-		total = n;
+//		int n = -1;
+//		for (int i=0; i<counts[0].length; i++) {
+//			int tmp = 0;
+//			for (int j=0; j< 4; j++) {
+//				tmp += counts[j][i]; // order important!
+//			}
+//			if (n > 0) {
+//				if (tmp != n) {
+//					throw new Exception("File is not in JASPAR format! (invalid counts) (expected: "+n +", got:"+tmp+", pos:"+i+", "+counts[0][i]+","+counts[1][i]+","+counts[2][i]+","+counts[3][i]+")");
+//				}
+//			}
+//			n = tmp;
+//		}
+//
+//		total = n;
 		
 		// convert the counts to a position probability matrix (fractional frequency)
 		double[][] ppm = new double[counts.length][counts[0].length];
 		for (int i=0; i<counts.length; i++) {
 			for (int j=0; j< counts[0].length; j++) {
+				int total = counts[0][j] + counts[1][j] + counts[2][j] + counts[3][j];
+				
 				ppm[i][j] = ((double)counts[i][j]+pseudo) / (total + (4*pseudo)); // add a pseudo count for each base
 			}
 		}
