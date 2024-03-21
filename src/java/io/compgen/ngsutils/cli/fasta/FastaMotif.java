@@ -26,6 +26,7 @@ public class FastaMotif extends AbstractOutputCommand {
     private String jasparFilename = null;
     private int pseudocount = -1;
     private int mismatches = 0;
+    private boolean bed = false;
     private boolean showAll = false;
     private boolean showPvalue = false;
     private double pvalueThres = 1.0;
@@ -60,6 +61,11 @@ public class FastaMotif extends AbstractOutputCommand {
     @Option(desc="Show all scores, not just positive matches", name="all", hide=true)
     public void setShowAll(boolean val) {
         this.showAll = val;
+    }    
+
+    @Option(desc="Output in BED format", name="bed")
+    public void setBED(boolean val) {
+        this.bed = val;
     }    
 
     @Option(desc="Motif in IUPAC format", name="motif")
@@ -102,18 +108,18 @@ public class FastaMotif extends AbstractOutputCommand {
         
                 
         TabWriter writer = new TabWriter(out);
-        
-        writer.write("seq");
-        writer.write("start");
-        writer.write("end");
-        writer.write("strand");
-        writer.write("match");
-        writer.write("score");
-        if (showPvalue) {
-        	writer.write("pvalue");
+        if (!bed) {
+	        writer.write("seq");
+	        writer.write("start");
+	        writer.write("end");
+	        writer.write("strand");
+	        writer.write("match");
+	        writer.write("score");
+	        if (showPvalue) {
+	        	writer.write("pvalue");
+	        }
+		        writer.eol();
         }
-        writer.eol();
-        
         FastaReader reader = FastaReader.open(filename);
         String curRef = null;
         String buffer = "";
@@ -160,15 +166,24 @@ public class FastaMotif extends AbstractOutputCommand {
 	
 	        			if (pval <= pvalueThres) { 
 	        				if (showAll || motif == null || score >= (motifFinder.getLength() - this.mismatches)) {
-			        	        writer.write(rec.name);
-			        	        writer.write(pos);
-			        	        writer.write(pos+motifFinder.getLength());
-			        	        writer.write("+");
-			        	        writer.write(sub);
-			        	        writer.write(score);
-			        	        if (showPvalue) {
-			        	        	writer.write(pval);
-			        	        }
+	        					if (bed) {
+				        	        writer.write(curRef);
+				        	        writer.write(pos);
+				        	        writer.write(pos+sub.length());
+				        	        writer.write(sub);
+				        	        writer.write(score);
+				        	        writer.write("+");
+	        					} else {
+				        	        writer.write(curRef);
+				        	        writer.write(pos);
+				        	        writer.write(pos+sub.length());
+				        	        writer.write("+");
+				        	        writer.write(sub);
+				        	        writer.write(score);
+				        	        if (showPvalue) {
+				        	        	writer.write(pval);
+				        	        }
+	        					}
 			        	        writer.eol();
 	        				}
 	        			}
@@ -184,15 +199,24 @@ public class FastaMotif extends AbstractOutputCommand {
 	
 	        			if (pval2 <= pvalueThres) {
 	        				if (showAll || motif == null || score2 >= (motifFinder.getLength() - this.mismatches)) {
-			        	        writer.write(rec.name);
-			        	        writer.write(pos);
-			        	        writer.write(pos+motifFinder.getLength());
-			        	        writer.write("-");
-			        	        writer.write(revcomp);
-			        	        writer.write(score2);
-			        	        if (showPvalue) {
-			        	        	writer.write(pval2);
-			        	        }
+	        					if (bed) {
+				        	        writer.write(curRef);
+				        	        writer.write(pos);
+				        	        writer.write(pos+revcomp.length());
+				        	        writer.write(revcomp);
+				        	        writer.write(score2);
+				        	        writer.write("-");
+	        					} else {
+				        	        writer.write(curRef);
+				        	        writer.write(pos);
+				        	        writer.write(pos+revcomp.length());
+				        	        writer.write("-");
+				        	        writer.write(revcomp);
+				        	        writer.write(score2);
+				        	        if (showPvalue) {
+				        	        	writer.write(pval2);
+				        	        }
+	        					}
 			        	        writer.eol();
 	        				}
 	        			}
