@@ -10,12 +10,7 @@ public abstract class AbstractMotifFinder {
 	private static final int MAX_PERMUTATION_COUNT = 1000000;
 	protected static final double[] backgroundRates = new double[] {0.3, 0.2, 0.2, 0.3};
 	private double[] probPermutations = null;
-	protected int total;
 	private final double LOG2_FACTOR = Math.log(2);
-
-	public AbstractMotifFinder() {
-		super();
-	}
 
 	public double log2(double val) {
 		return Math.log(val) / LOG2_FACTOR;
@@ -31,7 +26,7 @@ public abstract class AbstractMotifFinder {
 		}
 		
 		int i=0;
-		while (score > probPermutations[i] && i < probPermutations.length) {
+		while (i < probPermutations.length && score > probPermutations[i]) {
 			i++;
 		}
 		
