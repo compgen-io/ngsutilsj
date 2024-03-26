@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -25,6 +26,9 @@ import io.compgen.common.IterUtils;
 import io.compgen.common.StringLineReader;
 import io.compgen.common.StringUtils;
 import io.compgen.common.TabWriter;
+import io.compgen.common.progress.ProgressMessage;
+import io.compgen.common.progress.ProgressStats;
+import io.compgen.common.progress.ProgressUtils;
 import io.compgen.ngsutils.NGSUtils;
 import io.compgen.ngsutils.annotation.GenomeSpan;
 import io.compgen.ngsutils.bam.support.BaseTally;
@@ -284,11 +288,25 @@ public class BamVarCall extends AbstractOutputCommand {
             GenomeSpan span = GenomeSpan.parse(region);
             
             CloseableIterator<PileupRecord> it = pileup.pileup(span);
-            writePileupRecords(it, writer);
+            writePileupRecords(it, writer, span.length(), new File(bam1Filename).getName());
             it.close();
             writer.close();
 
         } else if (bedFilename != null){
+        	long total = 0;
+			StringLineReader strReader1 = new StringLineReader(bedFilename);
+			for (String line: strReader1) {
+			    if (line.startsWith("#") || line.trim().length()==0) {
+			        continue;
+			    }
+				String[] cols = StringUtils.strip(line).split("\t");
+				int start = Integer.parseInt(cols[1]);
+				int end = Integer.parseInt(cols[2]);
+				
+				total += (end - start);
+			}        	
+			strReader1.close();
+        	
 			StringLineReader strReader = new StringLineReader(bedFilename);
 			Set<String> chromMissingError = new HashSet<String>();
 			int regionCount=0;
@@ -324,7 +342,7 @@ public class BamVarCall extends AbstractOutputCommand {
 				}
 				
                 CloseableIterator<PileupRecord> it = pileup.pileup(span);
-                writePileupRecords(it, writer);
+                writePileupRecords(it, writer, total, new File(bam1Filename).getName());
 				it.close();
 
 			}
@@ -332,10 +350,15 @@ public class BamVarCall extends AbstractOutputCommand {
 			strReader.close();
 		} else {
 		    // output everything
+			
+			long total = 0;
+			for (int i=0; i<header.getSequenceDictionary().size(); i++) {
+				total += header.getSequence(i).getSequenceLength();
+			}
 
             writer = setupWriter(out, pileup);
 			CloseableIterator<PileupRecord> it = pileup.pileup();
-            writePileupRecords(it, writer);
+            writePileupRecords(it, writer, total, new File(bam1Filename).getName());
 			it.close();
 	        writer.close();
 		}
@@ -421,19 +444,39 @@ public class BamVarCall extends AbstractOutputCommand {
         return writer;
     }
 
-    private void writePileupRecords(CloseableIterator<PileupRecord> it,  TabWriter writer) throws IOException {
-    	int counter = 0;
-        for (PileupRecord record: IterUtils.wrap(it)) {
+    private void writePileupRecords(Iterator<PileupRecord> it,  TabWriter writer, final long totalSize, String name) throws IOException {
+    	final long[] counter = new long[] {0};
+    	int lastpos = 0;
+    	String lastref = null;
+        for (PileupRecord record: IterUtils.wrap(ProgressUtils.getIterator(name, it, new ProgressStats() {
+
+			@Override
+			public long size() {
+				return totalSize;
+			}
+
+			@Override
+			public long position() {
+				return counter[0];
+			}}, new ProgressMessage<PileupRecord>() {
+
+			@Override
+			public String msg(PileupRecord record) {
+                return record.ref+":"+record.pos;
+			}}))) {
 //        	System.out.println(record.getSampleRecords(0).calls+" :: " +record.originalLine);
             if (record.getSampleRecords(0).calls!=null && record.getSampleRecords(0).calls.size() > 0) {
                 writeVCFRecord(record, writer);
             }
 
-            counter++;
-            if (verbose && counter >= 1_000_000) {
-                System.err.println(record.ref+":"+record.pos);
-                counter = 0;
+            if (lastref == null || !lastref.equals(record.ref)) {
+            	lastpos = 0;
             }
+            
+            counter[0] = counter[0] + (record.pos - lastpos);
+            lastpos = record.pos;
+            lastref = record.ref;
+            
         }
     }
 
