@@ -648,6 +648,7 @@ public class StatUtils {
 	}
 	
 	public static double dnbinom(int x, int r, double p) {
+//		System.err.println("dnbinom("+x+", " + r +", "+ p+")");
 		return new PascalDistribution(r, p).probability(x);
 	}
 	
@@ -674,6 +675,7 @@ public class StatUtils {
      * @return
      */
 	public static double calcPvalueHomozygous(int alleleCount, int totalCount, double errorRate) {
+//		System.err.println("calcPvalueHomozygous("+alleleCount+", " + totalCount+", " + errorRate +")");
 		double errorCount = ((Double)Math.ceil(totalCount * errorRate)).intValue();
 		if (errorCount <= 0.0) {
 			errorCount = 1.0;		
@@ -695,7 +697,9 @@ public class StatUtils {
 	 * @return
 	 */
 	public static double calcPvalueHeterozygous(int alleleCount, int totalCount) { //, double errorRate) {
-		return StatUtils.dnbinom(alleleCount, totalCount / 2, 0.5);
+//		System.err.println("calcPvalueHeterozygous("+alleleCount+", " + totalCount +")");
+
+		return StatUtils.dnbinom(alleleCount, (totalCount+1) / 2, 0.5);
 	}
 
 	/** 
@@ -708,6 +712,8 @@ public class StatUtils {
 	 * @return
 	 */
 	public static double calcPvalueBackground(int alleleCount, int totalCount, double errorRate) {
+//		System.err.println("calcPvalueBackground("+alleleCount+", " + totalCount +", "+ errorRate+")");
+		
 		double errorCount = ((Double)Math.ceil(totalCount * errorRate)).intValue();
 		if (errorCount <= 0.0) {
 			errorCount = 1.0;
@@ -736,6 +742,7 @@ public class StatUtils {
 	 * @return
 	 */
 	public static double calcPvaluePresent(int alleleCount, int totalCount) {
+//		System.err.println("calcPvaluePresent("+alleleCount+", "+totalCount+")");
 		double successProb = (double) alleleCount / totalCount;
 		int failures = totalCount - alleleCount;
 

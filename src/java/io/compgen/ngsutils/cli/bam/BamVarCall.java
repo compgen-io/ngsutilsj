@@ -490,9 +490,12 @@ public class BamVarCall extends AbstractOutputCommand {
     	// calculate VCF filters, info, fields
     	
     	List<String> alts = new ArrayList<String>();
-    	Map<String, Integer> altCounts = new HashMap<String, Integer>();
-    	int totalDepth = 0;
-    	int firstDepth = 0;
+    	
+    	Map<String, Integer> altCounts = new HashMap<String, Integer>(); // AC for ALL samples
+    	Map<String, Integer> altCountsFirst = new HashMap<String, Integer>(); // AC for only the first (germline or tumor) samples
+    	
+    	int totalDepth = 0; // AD for INFO (depth across all samples)
+    	int firstDepth = 0; // AD for FORMAT tumor/first sample 
     	int altCount = 0;
     	int refCount = 0;
     	int indelCount = 0;
@@ -518,6 +521,7 @@ public class BamVarCall extends AbstractOutputCommand {
         			
         			alts.add(bc.getBase());
         			altCounts.put(bc.getBase(), bc.getCount());
+        			altCountsFirst.put(bc.getBase(), bc.getCount());
         			if (bc.getBase().startsWith("-")) {
         				// deletion
         				if (bc.getBase().length()>maxRef.length()) { 
@@ -594,7 +598,7 @@ public class BamVarCall extends AbstractOutputCommand {
         	
             for (int i=0; i<alts.size(); i++) {
             	String alt = alts.get(i);
-            	int count = altCounts.get(alt);
+            	int count = altCountsFirst.get(alt);
             	
 //            	s += count+",";
             	
@@ -643,7 +647,7 @@ public class BamVarCall extends AbstractOutputCommand {
         	
             for (int i=0; i<alts.size(); i++) {
             	String alt = alts.get(i);
-            	int count = altCounts.get(alt);
+            	int count = altCountsFirst.get(alt);
             	
     			double hom = StatUtils.calcPvalueHomozygous(count, firstDepth, this.errorRate);
     			double het = StatUtils.calcPvalueHeterozygous(count, firstDepth);
