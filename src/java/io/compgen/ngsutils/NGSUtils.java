@@ -93,6 +93,7 @@ import io.compgen.ngsutils.cli.tab.TabixQuery;
 import io.compgen.ngsutils.cli.tdf.TabJoin;
 import io.compgen.ngsutils.cli.vcf.VCFAnnotateCmd;
 import io.compgen.ngsutils.cli.vcf.VCFBedCount;
+import io.compgen.ngsutils.cli.vcf.VCFBuild;
 import io.compgen.ngsutils.cli.vcf.VCFCheck;
 import io.compgen.ngsutils.cli.vcf.VCFChrFix;
 import io.compgen.ngsutils.cli.vcf.VCFClearFilter;
@@ -243,7 +244,8 @@ public class NGSUtils {
 			.addCommand(BedToBedPE.class)
 			.addCommand(BamSort.class)
 			.addCommand(BamVarCall.class)
-			.addCommand(BamWPS.class);
+			.addCommand(BamWPS.class)
+			.addCommand(VCFBuild.class);
 
 
         try {
