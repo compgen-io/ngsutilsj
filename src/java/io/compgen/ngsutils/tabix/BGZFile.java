@@ -18,12 +18,12 @@ import io.compgen.common.io.DataIO;
 public class BGZFile {
 
     public class BGZBlock {
-        public final long pos;
+        public final long cPos; // the cpos
         public final int cLength;
         public final byte[] uBuf;
         
-        private BGZBlock(long pos, int cLength, byte[] uBuf) {
-            this.pos = pos;
+        private BGZBlock(long cPos, int cLength, byte[] uBuf) {
+            this.cPos = cPos;
             this.cLength = cLength;
             this.uBuf = uBuf;
         }
@@ -33,46 +33,74 @@ public class BGZFile {
         protected Map<Long, BGZBlock> blockCache = new HashMap<Long, BGZBlock>();
         protected Deque<Long> lru = new LinkedList<Long>();
         protected long size = 0;
-        protected long maxSize = 0;
+        protected long maxSize = 0; // max size of the uncompressed data is maxSize
+        protected long resetSize = 0;  // if the cache needs to be emptied, 
+        							   // remove blocks until the size smaller than resetSize.
         
         private BGZFileCache() {
-            this(16 * 1024 * 1024);  // 16 MB cache
+            this(16 * 1024 * 1024, 12 * 1024 * 1024);  // 16 MB cache, 12 MB reset size 
         }
-        
-        private BGZFileCache(long maxSize) {
-            this.maxSize = maxSize;
-        }
-        
-        private BGZBlock get(long pos) {
 
-            if (!blockCache.containsKey(pos)) {
+        private BGZFileCache(long maxSize) {
+        	this(maxSize, maxSize);
+        }
+
+        private BGZFileCache(long maxSize, long resetSize) {
+        	if (maxSize < resetSize) {
+        		resetSize = maxSize;
+        	}
+        	
+            this.maxSize = maxSize;
+            this.resetSize = resetSize;
+        }
+        
+        private BGZBlock get(long cPos) {
+            if (!blockCache.containsKey(cPos)) {
                 return null;
             }
             
-            lru.remove(pos);
-            lru.add(pos);
+            lru.remove(cPos);
+            lru.add(cPos);
             
-            return blockCache.get(pos);
+            return blockCache.get(cPos);
         }
         
         private void put(BGZBlock block) {
-
-            while (block.uBuf.length + this.size > this.maxSize) {
-                removeItem();
+        	if (blockCache.containsKey(block.cPos)) {
+                lru.remove(block.cPos);
+                lru.add(block.cPos);
+                return;
+        	}
+        	
+            if (block.uBuf.length + this.size > this.maxSize) {
+				while (block.uBuf.length + this.size > this.resetSize) {
+	                removeItem();
+	            }
             }
             
-            blockCache.put(block.pos, block);
-            lru.add(block.pos);
+            blockCache.put(block.cPos, block);
+            lru.add(block.cPos);
             this.size += block.uBuf.length;
+//            System.err.println("Stored block: " + block.cPos + " (" + this.size + ")");
             
         }
 
         private void removeItem() {
             if (lru.size() > 0) {
                 Long key = lru.pop();
+//                System.err.println("Removing: " + key + " from cache");
                 BGZBlock payload = blockCache.remove(key);
-                this.size = this.size - payload.uBuf.length;
-//                System.err.println("Removed: " + key + " from cache");
+//                if (payload != null) {
+                	this.size = this.size - payload.uBuf.length;
+//                	System.err.println("Removed: " + key + " from cache (" + this.size + ")");
+//                } else {
+//                	System.err.println("Cache payload not found");
+//                	System.err.println("LRU:");
+//                	for (Long l: lru) {
+//                    	System.err.println("  " + l);
+//                	}
+//                	System.exit(1);
+//                }
             }
         }
     }
@@ -179,9 +207,19 @@ public class BGZFile {
     }
 
 	public BGZBlock readCurrentBlock() throws IOException {
-//		System.err.println("reading chunk -- fname  = " + filename+ ", curpos = " + file.getFilePointer() +", length = " + file.length());
 		
 		long curOffset = file.getFilePointer();
+		
+		// If this block is in the cache, return it and seek to the next block
+	    BGZBlock b = cache.get(curOffset);
+	    if (b != null) {
+	    	file.seek(curOffset + b.cLength);
+	    	return b;
+	    }
+
+//		System.err.println("reading chunk -- fname  = " + filename+ ", curpos = " + file.getFilePointer() +", length = " + file.length());
+
+		
 		if (curOffset >= file.length()) {
 //			System.err.println(filename+" is all done!");
 			return null;
@@ -279,7 +317,9 @@ public class BGZFile {
 
 		in.close();
 //		System.err.println("read chunk -- fname  = " + filename+ ", curpos = " + file.getFilePointer() +", length = " + file.length());
-		return new BGZBlock(curOffset,bsize+1,uBuf);
+		b = new BGZBlock(curOffset,bsize+1,uBuf);
+		cache.put(b);
+		return b;
 	}
 
 //	public void dumpIndex() throws IOException {

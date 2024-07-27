@@ -93,11 +93,11 @@ public class TabixQueryIterator implements Iterator<String> {
                 int blockStart = 0;
                 int blockEnd = block.uBuf.length;
                 
-                if (block.pos == chunk.coffsetBegin) {
+                if (block.cPos == chunk.coffsetBegin) {
                     blockStart = chunk.uoffsetBegin;
                 }
                 
-                if (block.pos == chunk.coffsetEnd) {
+                if (block.cPos == chunk.coffsetEnd) {
                     blockEnd = chunk.uoffsetEnd;
                 }
 

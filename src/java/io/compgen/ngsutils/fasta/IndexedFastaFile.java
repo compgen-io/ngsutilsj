@@ -5,9 +5,13 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.List;
 
+import io.compgen.ngsutils.tabix.BGZFile;
+import io.compgen.ngsutils.tabix.IndexedBGZFile;
+
 public class IndexedFastaFile extends BasicFastaReader {
     private FAIFile fai = null;
-	public RandomAccessFile file;
+	private RandomAccessFile file = null;
+	private IndexedBGZFile bgzf = null;
 
 	public IndexedFastaFile(String filename) throws IOException {
         super(filename);
@@ -15,9 +19,13 @@ public class IndexedFastaFile extends BasicFastaReader {
         if (!new File(filename+".fai").exists()) {
             throw new IOException("Missing FAI index file!");
         }
-        
+
         this.fai = new FAIFile(filename + ".fai");        
-        this.file = new RandomAccessFile(filename, "r");
+        if (BGZFile.isBGZFile(filename) && new File(filename+".gzi").exists()) {
+        	bgzf = new IndexedBGZFile(filename);
+        } else {
+        	this.file = new RandomAccessFile(filename, "r");
+        }
     }
     
     public List<String> getReferenceNames() {
@@ -52,20 +60,33 @@ public class IndexedFastaFile extends BasicFastaReader {
         String out = "";
         
         int chars = 0;
-        file.seek(pos);
+    	if (file != null) {
+    		file.seek(pos);
+    	} else {
+    		bgzf.seek(pos);
+    	}
         while (chars < end-start) {
-            out += (char)file.readByte();
+        	if (file != null) {
+        		out += (char)file.readByte();
+        	} else {
+        		out += (char)bgzf.readByte();
+        	}
             chars++;
             lineoff++;
             
             if (lineoff >= lineSeqLength) {
-                file.skipBytes(lineOffsetLength - lineSeqLength);
+            	for (int i=0; i<lineOffsetLength - lineSeqLength; i++) {
+	            	if (file != null) {
+	            		file.readByte();
+	            	} else {
+	            		bgzf.readByte();
+	            	}
+            	}
                 lineoff = 0;
             }
         }
         
-        return out;
-        
+        return out;        
     }
     
     /* (non-Javadoc)
@@ -73,6 +94,10 @@ public class IndexedFastaFile extends BasicFastaReader {
      */
     @Override
     public void close() throws IOException {
-        file.close();
+    	if (file != null) {
+    		file.close();
+    	} else {
+    		bgzf.close();
+    	}
     }
 }
