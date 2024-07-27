@@ -21,7 +21,7 @@ public class FastaSubseq extends AbstractOutputCommand {
     private int wrap = 60;
     private boolean revcomp = false;
     
-    @Option(name="wrap", desc="Wrap the sequence to be length N", defaultValue="60")
+    @Option(name="wrap", desc="Wrap the sequence to be length N", defaultValue="80")
     public void setWrap(int wrap) {
         this.wrap = wrap;
     }
