@@ -1,5 +1,7 @@
 package io.compgen.ngsutils.tdf.annotate;
 
+import java.io.IOException;
+
 /**
  * Interface used to annotate tab-delimited (NOT tabix indexed) files
  * 
