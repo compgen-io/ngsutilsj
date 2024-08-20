@@ -28,9 +28,9 @@
             debug="true"
             includeantruntime="false"
             classpathref="classpath"
+            modulepathref="classpath"
             debuglevel="lines,vars,source"
-            target="1.9"
-            source="1.9"
+        	release="9"
             />
 		
     </target>
