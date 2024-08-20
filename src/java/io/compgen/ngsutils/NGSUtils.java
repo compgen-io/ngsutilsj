@@ -106,6 +106,7 @@ import io.compgen.ngsutils.cli.vcf.VCFMerge;
 import io.compgen.ngsutils.cli.vcf.VCFPeptide;
 import io.compgen.ngsutils.cli.vcf.VCFRenameSample;
 import io.compgen.ngsutils.cli.vcf.VCFSVToFASTA;
+import io.compgen.ngsutils.cli.vcf.VCFSamples;
 import io.compgen.ngsutils.cli.vcf.VCFStats;
 import io.compgen.ngsutils.cli.vcf.VCFStrip;
 import io.compgen.ngsutils.cli.vcf.VCFToBED;
@@ -245,7 +246,8 @@ public class NGSUtils {
 			.addCommand(BamSort.class)
 			.addCommand(BamVarCall.class)
 			.addCommand(BamWPS.class)
-			.addCommand(VCFBuild.class);
+			.addCommand(VCFBuild.class)
+			.addCommand(VCFSamples.class);
 
 
         try {
