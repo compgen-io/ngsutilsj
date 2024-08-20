@@ -13,7 +13,7 @@ import org.junit.Test;
 
 import io.compgen.common.Pair;
 
-public class StatisiticsTest {
+public class StatisticsTest {
 
     @Test
     public void testFisher() {

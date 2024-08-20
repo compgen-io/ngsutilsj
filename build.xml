@@ -1,5 +1,5 @@
 <project name="ngsutilsj" default="jar">
-    <property name="version" value="0.5.5"/>
+    <property name="version" value="0.5.6"/>
     <property name="build" value="dev"/>
     <property name="lib.dir" value="lib"/>
     <property name="blib.dir" value="blib"/>
@@ -29,8 +29,8 @@
             includeantruntime="false"
             classpathref="classpath"
             debuglevel="lines,vars,source"
-            target="1.8"
-            source="1.8"
+            target="1.9"
+            source="1.9"
             />
 		
     </target>
