@@ -60,7 +60,7 @@ public class TabDelimitedFile {
 		
 	}
 	
-	@SuppressWarnings("resource")
+//	@SuppressWarnings("resource")
 	public Pair<InputStream, FileChannel> openFile() throws IOException {
 		if (!this.filename.equals("-")) {
 	        FileInputStream fis = new FileInputStream(this.filename);
