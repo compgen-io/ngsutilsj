@@ -13,6 +13,10 @@ public class VCFContigDef {
 		this.origLine = origLine;
 	}
 	
+	public VCFContigDef clone() {
+		return new VCFContigDef(id, length, origLine);
+	}
+	
 	public String toString() {
 		if (origLine != null) {
 			return origLine;

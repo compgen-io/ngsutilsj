@@ -104,6 +104,7 @@ import io.compgen.ngsutils.cli.vcf.VCFExportCmd;
 import io.compgen.ngsutils.cli.vcf.VCFFilterCmd;
 import io.compgen.ngsutils.cli.vcf.VCFMerge;
 import io.compgen.ngsutils.cli.vcf.VCFPeptide;
+import io.compgen.ngsutils.cli.vcf.VCFRemoveInfoFlag;
 import io.compgen.ngsutils.cli.vcf.VCFRenameSample;
 import io.compgen.ngsutils.cli.vcf.VCFSVToFASTA;
 import io.compgen.ngsutils.cli.vcf.VCFSamples;
@@ -247,7 +248,8 @@ public class NGSUtils {
 			.addCommand(BamVarCall.class)
 			.addCommand(BamWPS.class)
 			.addCommand(VCFBuild.class)
-			.addCommand(VCFSamples.class);
+			.addCommand(VCFSamples.class)
+			.addCommand(VCFRemoveInfoFlag.class);
 
 
         try {

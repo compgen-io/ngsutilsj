@@ -24,6 +24,10 @@ public class VCFFilterDef {
 		this.origLine = origLine;
 	}
 	
+	public VCFFilterDef clone() {
+		return new VCFFilterDef(id, description, extras, origLine);
+	}
+	
 	public String toString() {
 		if (origLine != null) {
 			return origLine;

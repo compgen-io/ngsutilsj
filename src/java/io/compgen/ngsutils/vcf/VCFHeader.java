@@ -48,6 +48,34 @@ public class VCFHeader {
 		this("fileformat=VCFv4.2");
 		// nothing set...
 	}
+	
+	public VCFHeader clone() {
+		VCFHeader newh = new VCFHeader(this.fileformat);
+		
+		for (String id: infoDefs.keySet()) {
+			newh.infoDefs.put(id, infoDefs.get(id).clone());
+		}
+		for (String id: formatDefs.keySet()) {
+			newh.formatDefs.put(id, formatDefs.get(id).clone());
+		}
+		for (String id: filterDefs.keySet()) {
+			newh.filterDefs.put(id, filterDefs.get(id).clone());
+		}
+		for (String id: contigDefs.keySet()) {
+			newh.contigDefs.put(id, contigDefs.get(id).clone());
+		}
+		for (String id: altDefs.keySet()) {
+			newh.altDefs.put(id, altDefs.get(id).clone());
+		}
+		
+		newh.headerLine = this.headerLine;
+		newh.lines.addAll(this.lines);
+		newh.samples.addAll(this.samples);
+		
+		
+		return newh;
+	}
+	
 	public VCFHeader(String fileformat) {
 		this.fileformat = fileformat;
 		// nothing set...
@@ -364,6 +392,14 @@ public class VCFHeader {
         return infoDefs.keySet();
     }
 
+    public void clearInfoDefs() {
+    	infoDefs.clear();
+    }
+    
+    public void clearFormatDefs() {
+    	formatDefs.clear();
+    }
+    
     public boolean isFilterAllowed(String name) {
         if (removeFilter == null || removeFilter.size()==0) {
             return true;

@@ -65,6 +65,28 @@ public class VCFAnnotationDef {
 		
 	}
 	
+	
+
+	private VCFAnnotationDef(boolean isInfo, String id, String number, String type, String description, String source,
+			String version, Map<String, String> extras, String origLine, boolean isClone) {
+		this.isInfo = isInfo;
+		this.id = id;
+		this.number = number;
+		this.type = type;
+		this.description = description;
+		this.source = source;
+		this.version = version;
+		if (extras != null && extras.size()>0) {
+			Map<String, String> tmp = new HashMap<String, String>();
+			tmp.putAll(extras);
+			this.extras = Collections.unmodifiableMap(tmp);
+		} else {
+			this.extras = null;
+		}
+		this.origLine = origLine;		
+	}
+	
+
 	public String toString() {
 		if (origLine != null) {
 			return origLine;
@@ -175,4 +197,9 @@ public class VCFAnnotationDef {
 	public VCFAnnotationDef copy(String newId) throws VCFParseException {
 		return new VCFAnnotationDef(isInfo, newId, number, type, description, source, version, extras, null);
 	}
+
+	public VCFAnnotationDef clone() {
+		return new VCFAnnotationDef(isInfo, id, number, type, description, source, version, extras, null, false);
+	}
+
 }

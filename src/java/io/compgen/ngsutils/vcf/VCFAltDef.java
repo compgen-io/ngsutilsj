@@ -17,6 +17,10 @@ public class VCFAltDef {
 		this(id, desc, null);
 	}
 
+	public VCFAltDef clone()  {
+		return new VCFAltDef(id, desc, origLine);
+	}
+	
 	public String toString() {
 		if (origLine != null) {
 			return origLine;
