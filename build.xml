@@ -28,11 +28,13 @@
             debug="true"
             includeantruntime="false"
             classpathref="classpath"
-            modulepathref="classpath"
             debuglevel="lines,vars,source"
-        	release="9"
-            />
-		
+        	release="8"
+			>
+            <!--modulepathref="classpath"-->
+        			  <compilerarg value="-Xlint:-options"/>
+        </javac>
+    	
     </target>
 
 	<target name="jar" depends="compile, git.revision">
