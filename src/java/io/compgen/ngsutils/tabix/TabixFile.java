@@ -60,7 +60,10 @@ public class TabixFile {
 				line = it.next();
 				lineNo++;
 			}
-
+			
+			if (line == null) {
+				throw new IOException("Missing header in file: "+this.filename);
+			}
 			if (line.charAt(0) == index.getMeta()) {
 				line = line.substring(1);
 			}
