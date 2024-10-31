@@ -29,8 +29,9 @@ public class VCFAnnotation extends AbstractBasicAnnotator {
     final protected boolean exactMatch;
     final protected boolean passingOnly;
     final protected boolean uniqueMatch;
+    final protected boolean noheader;
 	
-	public VCFAnnotation(String name, String filename, String infoVal, boolean exact, boolean passing, boolean unique) throws IOException {
+	public VCFAnnotation(String name, String filename, String infoVal, boolean exact, boolean passing, boolean unique, boolean noheader) throws IOException {
 		this.name = name;
 		this.filename = filename;
 		this.infoVal = infoVal;
@@ -42,11 +43,12 @@ public class VCFAnnotation extends AbstractBasicAnnotator {
 		
 		this.passingOnly = passing;
 		this.uniqueMatch = unique;
+		this.noheader = noheader;
 		this.vcfTabix = getTabixFile(filename);
 	}	
 
 	public VCFAnnotation(String name, String filename, String infoVal) throws IOException {
-		this(name, filename, infoVal, false, false, false);
+		this(name, filename, infoVal, false, false, false, false);
 	}
 	
 	private static TabixFile getTabixFile(String filename) throws IOException {
@@ -58,6 +60,9 @@ public class VCFAnnotation extends AbstractBasicAnnotator {
 	
 	@Override
 	public void setHeaderInner(VCFHeader header) throws VCFAnnotatorException {
+		if (this.noheader) {
+			return;
+		}
 		try {
 		    if (name.equals("@ID")) {
 		        return;

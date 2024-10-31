@@ -474,37 +474,41 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
     }
 
 
-    @Option(desc="Add INFO annotation from a VCF file (CSI indexed, add '!' for exact matches, add '@' for only using records passing filters)", name="vcf", helpValue="NAME:FIELD:FILENAME{:!@}", allowMultiple=true)
+    @Option(desc="Add INFO annotation from a VCF file (CSI indexed, add '!' for exact matches, add '@' for only using records passing filters, '$' for unique matches, 'n' to not add a VCF header)", name="vcf", helpValue="NAME:FIELD:FILENAME{:!@$n}", allowMultiple=true)
     public void setVCF(String vcf) throws CommandArgumentException {
     	String[] spl = vcf.split(":");
     	boolean exact = false;
     	boolean passing = false;
     	boolean unique = false;
+    	boolean noheader = false;
     	if (spl.length == 4) {
             passing = spl[3].contains("@");
             exact = spl[3].contains("!");
             unique = spl[3].contains("$");
+            noheader = spl[3].contains("n");
     	}
         try {
-            chain.add(new VCFAnnotation(spl[0], FileUtils.expandUserPath(spl[2]), spl[1], exact, passing, unique));
+            chain.add(new VCFAnnotation(spl[0], FileUtils.expandUserPath(spl[2]), spl[1], exact, passing, unique, noheader));
         } catch (IOException e) {
             throw new CommandArgumentException("Unable to parse argument for --vcf: "+vcf+"\n"+e.getMessage());
         }
     }    
     
-    @Option(desc="Flag variants within a VCF file (INFO, CSI indexed, add '!' for exact matches, add '@' for only using records passing filters)", name="vcf-flag", helpValue="NAME:FILENAME{:!@}", allowMultiple=true)
+    @Option(desc="Flag variants within a VCF file (INFO, CSI indexed, add '!' for exact matches, add '@' for only using records passing filters)", name="vcf-flag", helpValue="NAME:FILENAME{:!@$n}", allowMultiple=true)
     public void setVCFFlag(String vcf) throws CommandArgumentException {
         String[] spl = vcf.split(":");
         boolean exact = false;
         boolean passing = false;
     	boolean unique = false;
+    	boolean noheader = false;
         if (spl.length == 3) {
             passing = spl[2].contains("@");
             exact = spl[2].contains("!");
             unique = spl[2].contains("$");
+            noheader = spl[3].contains("n");
         }
         try {
-            chain.add(new VCFAnnotation(spl[0], FileUtils.expandUserPath(spl[1]), null, exact, passing, unique));
+            chain.add(new VCFAnnotation(spl[0], FileUtils.expandUserPath(spl[1]), null, exact, passing, unique, noheader));
         } catch (IOException e) {
             throw new CommandArgumentException("Unable to parse argument for --vcf-flag: "+vcf+"\n"+e.getMessage());
         }
