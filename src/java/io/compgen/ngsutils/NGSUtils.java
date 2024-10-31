@@ -12,6 +12,7 @@ import io.compgen.common.StringUtils;
 import io.compgen.common.progress.SocketProgress;
 import io.compgen.ngsutils.cli.annotate.GTFAnnotate;
 import io.compgen.ngsutils.cli.annotate.RepeatAnnotate;
+import io.compgen.ngsutils.cli.bam.BaiExplore;
 import io.compgen.ngsutils.cli.bam.BamBaseCall;
 import io.compgen.ngsutils.cli.bam.BamBest;
 import io.compgen.ngsutils.cli.bam.BamCheck;
@@ -249,7 +250,8 @@ public class NGSUtils {
 			.addCommand(BamWPS.class)
 			.addCommand(VCFBuild.class)
 			.addCommand(VCFSamples.class)
-			.addCommand(VCFRemoveInfoFlag.class);
+			.addCommand(VCFRemoveInfoFlag.class)
+			.addCommand(BaiExplore.class);
 
 
         try {
