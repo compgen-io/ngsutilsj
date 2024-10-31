@@ -117,7 +117,7 @@ public class VCFAnnotation extends AbstractBasicAnnotator {
         } catch (VCFAnnotatorMissingAltException e) {
             return;
         }
-//        System.err.println("Query: " + chrom+":"+pos);
+//        System.err.println("Query: " + chrom+":"+pos + " File: "+filename);
 
 	    try {
 //			String records = ; // zero-based query
@@ -132,7 +132,7 @@ public class VCFAnnotation extends AbstractBasicAnnotator {
 			for (String line: IterUtils.wrap(vcfTabix.query(chrom, pos-1))) {
 				VCFRecord bgzfRec = VCFRecord.parseLine(line);
 
-//                System.err.println("Record: " + bgzfRec.getChrom()+":"+bgzfRec.getPos());
+//                System.err.println("Record: " + bgzfRec.getChrom()+":"+bgzfRec.getPos() + " -> "+filename);
 
 				if (bgzfRec.getPos() != record.getPos()) {
 //				    System.err.println("Wrong pos?" + record.getPos() + " vs " +  bgzfRec.getPos());
@@ -156,10 +156,12 @@ public class VCFAnnotation extends AbstractBasicAnnotator {
 				    if (bgzfRec.getRef()!=null && bgzfRec.getRef().equals(record.getRef())) {
 					    if (bgzfRec.getAlt()!=null) {
 	    					for (String a1: bgzfRec.getAlt()) {
-	    						for (String a2: record.getAlt()) {
-	    							if (a1.equals(a2)) { 
-	    								match = true;
-	    							}
+	    						if (record.getAlt() != null) {
+		    						for (String a2: record.getAlt()) {
+		    							if (a1.equals(a2)) { 
+		    								match = true;
+		    							}
+		    						}
 	    						}
 	    					}
 					    }

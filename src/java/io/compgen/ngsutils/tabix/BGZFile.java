@@ -106,7 +106,7 @@ public class BGZFile {
     }
     
     
-//	protected String filename;
+	protected String filename="-";
 	protected RandomAccessFile file;
 	protected BGZFileCache cache;
 	
@@ -114,7 +114,7 @@ public class BGZFile {
         if (!isBGZFile(filename, verbose)) {
             throw new IOException("File: "+filename+" is not a valid BGZ file!");
         }
-//        this.filename = filename;
+        this.filename = filename;
         this.file = new RandomAccessFile(filename, "r");
         this.cache = new BGZFileCache();
     }
@@ -128,12 +128,14 @@ public class BGZFile {
         if (!isBGZFile(raf)) {
             throw new IOException("RandomAccessFile is not a valid BGZ file!");
         }
-//        this.filename = filename;
         this.file = raf;
         this.cache = new BGZFileCache();
     }
 
     
+    public String getFilename() {
+    	return filename;
+    }
     
     public FileChannel getChannel() { 
         return file.getChannel();

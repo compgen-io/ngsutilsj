@@ -34,7 +34,7 @@ public class TabixQueryIterator implements Iterator<String> {
         
         this.chunks = index.find(ref, start, end);
         
-//        System.err.println("Setting up iterator for: "+ref+":"+start+"-"+end);
+//        System.err.println("Setting up iterator for: "+ref+":"+start+"-"+end + " // " + bgzf.getFilename());
         
         populateChunk();
     }

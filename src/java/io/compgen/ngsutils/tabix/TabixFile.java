@@ -157,13 +157,14 @@ public class TabixFile {
 		}
 
         if (!checkChr) {
-            checkChr = true;
             if (ref.startsWith("chr") && !containsSeq(ref) && containsSeq(ref.substring(3))) {
                 LogUtils.printOnce(System.err, "NOTE: Auto converting between UCSC/Ensembl chrom format: chr* => * ("+filename+")");
                 removeChr = true;
+                checkChr = true;
             } else if (!ref.startsWith("chr") && !containsSeq(ref) && containsSeq("chr"+ref)) {
                 LogUtils.printOnce(System.err, "NOTE: Auto converting between UCSC/Ensembl chrom format: * => chr* ("+filename+")");
                 addChr = true;
+                checkChr = true;
             }
         }
         
