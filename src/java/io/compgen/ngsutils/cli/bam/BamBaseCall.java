@@ -59,7 +59,8 @@ public class BamBaseCall extends AbstractOutputCommand {
 	
     private boolean exportBAF = false;
     private boolean exportIndel = false;
-
+    private boolean exportDepth = false;
+    
     private String bedOutputTemplate = null;
     
     @Option(desc = "Only keep properly paired reads", name = "proper-pairs")
@@ -137,6 +138,11 @@ public class BamBaseCall extends AbstractOutputCommand {
    @Option(desc="Export BAF (B-allele frequency)", name="baf")
    public void setExportBAF(boolean exportBAF) {
        this.exportBAF = exportBAF;
+   }
+   
+   @Option(desc="Export total depth", name="depth")
+   public void setDepth(boolean exportDepth) {
+       this.exportDepth = exportDepth;
    }
    
    @Option(desc="Minimum depth to output (set to 0 to output all bases)", name="min-depth", defaultValue="1")
@@ -321,6 +327,9 @@ public class BamBaseCall extends AbstractOutputCommand {
         if (exportBAF) {
             writer.write("BAF");
         }
+        if (exportDepth) {
+            writer.write("DP");
+        }
         writer.eol();
         return writer;
     }
@@ -490,6 +499,9 @@ public class BamBaseCall extends AbstractOutputCommand {
                 b = calls.get(calls.size()-1).getCount();
             }
             writer.write(b / total);
+        }
+        if (exportDepth) {
+        	writer.write(total);
         }
         writer.eol();        
         
