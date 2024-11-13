@@ -88,6 +88,7 @@ import io.compgen.ngsutils.cli.fastq.FastqToFasta;
 import io.compgen.ngsutils.cli.gtf.GTFExport;
 import io.compgen.ngsutils.cli.gtf.GTFToFASTA;
 import io.compgen.ngsutils.cli.gtf.GeneExport;
+import io.compgen.ngsutils.cli.tab.BGZStats;
 import io.compgen.ngsutils.cli.tab.TabAnnotate;
 import io.compgen.ngsutils.cli.tab.TabixCat;
 import io.compgen.ngsutils.cli.tab.TabixQuery;
@@ -251,7 +252,8 @@ public class NGSUtils {
 			.addCommand(VCFBuild.class)
 			.addCommand(VCFSamples.class)
 			.addCommand(VCFRemoveInfoFlag.class)
-			.addCommand(BaiExplore.class);
+			.addCommand(BaiExplore.class)
+			.addCommand(BGZStats.class);
 
 
         try {
