@@ -11,7 +11,8 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.zip.DataFormatException;
-import java.util.zip.GZIPInputStream;
+import java.util.zip.Inflater;
+import java.util.zip.InflaterInputStream;
 
 import io.compgen.common.io.DataIO;
 
@@ -269,8 +270,8 @@ public class BGZFile {
 		}
 
 		// payload
-		//byte[] cdata = DataIO.readRawBytes(file, bsize - xlen - 19);
-		file.skipBytes(bsize - xlen - 19);
+		byte[] cdata = DataIO.readRawBytes(file, bsize - xlen - 19);
+//		file.skipBytes(bsize - xlen - 19);
 		// crc
 		//long crc = DataIO.readUint32(file);
 		file.skipBytes(4);
@@ -298,27 +299,41 @@ public class BGZFile {
 		// jump back to the beginning of the record
 		// and read it into a byte array
 		
-		byte[] cBuf = new byte[bsize+1];
-		file.seek(curOffset);
-		file.readFully(cBuf, 0, cBuf.length);
+//		byte[] cBuf = new byte[bsize+1];
+//		file.seek(curOffset);
+//		file.readFully(cBuf, 0, cBuf.length);
+//
+//		GZIPInputStream in = new GZIPInputStream(new ByteArrayInputStream(cBuf));
+//		byte[] uBuf = new byte[(int) isize];
+//		int readPos = 0;
+//		while (readPos < isize) {
+//			int c = in.read(uBuf, readPos, uBuf.length - readPos);
+//			if (c == -1) {
+//				break;
+//			}
+//			readPos += c;
+////			System.err.println("================================");
+////	        System.err.println("reading chunk -- fname  = " + filename+ ", curOffset = " + curOffset +", clen = "+(bsize+1)+", ulen = "+isize);
+////            System.err.println("["+curOffset+"] Read "+c+" bytes from BGZF record // strlen=" + new String(uBuf).length()+", readPos="+readPos);
+////            System.err.println(new String(uBuf).substring(0,readPos));
+//		}
+//
+//		in.close();
+//		System.err.println("read chunk -- fname  = " + filename+ ", curpos = " + file.getFilePointer() +", length = " + file.length());
 
-		GZIPInputStream in = new GZIPInputStream(new ByteArrayInputStream(cBuf));
 		byte[] uBuf = new byte[(int) isize];
+		ByteArrayInputStream bis = new ByteArrayInputStream(cdata);
+		InflaterInputStream iis = new InflaterInputStream(bis, new Inflater(true));
 		int readPos = 0;
 		while (readPos < isize) {
-			int c = in.read(uBuf, readPos, uBuf.length - readPos);
+			int c = iis.read(uBuf, readPos, uBuf.length - readPos);
 			if (c == -1) {
 				break;
 			}
 			readPos += c;
-//			System.err.println("================================");
-//	        System.err.println("reading chunk -- fname  = " + filename+ ", curOffset = " + curOffset +", clen = "+(bsize+1)+", ulen = "+isize);
-//            System.err.println("["+curOffset+"] Read "+c+" bytes from BGZF record // strlen=" + new String(uBuf).length()+", readPos="+readPos);
-//            System.err.println(new String(uBuf).substring(0,readPos));
 		}
-
-		in.close();
-//		System.err.println("read chunk -- fname  = " + filename+ ", curpos = " + file.getFilePointer() +", length = " + file.length());
+		iis.close();
+		
 		b = new BGZBlock(curOffset,bsize+1,uBuf);
 		cache.put(b);
 		return b;

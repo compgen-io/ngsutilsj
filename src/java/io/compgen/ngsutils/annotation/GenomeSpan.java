@@ -311,6 +311,9 @@ public class GenomeSpan implements Comparable<GenomeSpan> {
         
         if (strand == Strand.PLUS || strand == Strand.NONE) {
             newstart = start - len;
+            if (newstart < 0) {
+            	newstart = 0;
+            }
         } else {
             newend = end + len;
         }
@@ -325,6 +328,9 @@ public class GenomeSpan implements Comparable<GenomeSpan> {
             newend = end + len;
         } else {
             newstart = start - len;
+            if (newstart < 0) {
+            	newstart = 0;
+            }
         }
         return new GenomeSpan(ref, newstart, newend, strand);
     }

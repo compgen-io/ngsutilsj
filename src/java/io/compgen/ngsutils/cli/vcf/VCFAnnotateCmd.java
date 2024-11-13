@@ -124,7 +124,7 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
     }
     
 
-    @Option(desc="Add annotations from a BED4 file (using the name column, INFO) (add ',n' to NAME to make value a number)", name="bed", helpValue="NAME:FILENAME", allowMultiple=true)
+    @Option(desc="Add annotations from a BED4 file to INFO (using the BED column 4 [name]) (add ',n' to NAME to make value a number)", name="bed", helpValue="NAME:FILENAME", allowMultiple=true)
     public void setBED(String bed) throws CommandArgumentException {
         String[] spl = bed.split(":");
         if (spl.length == 2) {
@@ -137,7 +137,7 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
             throw new CommandArgumentException("Unable to parse argument for --bed: "+bed);
         }       
     }
-    @Option(desc="Add annotations from a BED4 file (as a format field \"KEY\") (add ',n' to NAME to make value a number)", name="format-bed", helpValue="KEY:ALLELE:FILENAME", allowMultiple=true)
+    @Option(desc="Add annotations from a BED4 file (as a format field \"KEY\") (add ',n' to KEY to make value a number)", name="format-bed", helpValue="KEY:ALLELE:FILENAME", allowMultiple=true)
     public void setFormatBED(String bed) throws CommandArgumentException {
         String[] spl = bed.split(":");
         if (spl.length == 3) {
