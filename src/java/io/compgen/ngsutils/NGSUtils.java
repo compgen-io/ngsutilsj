@@ -92,6 +92,7 @@ import io.compgen.ngsutils.cli.tab.BGZStats;
 import io.compgen.ngsutils.cli.tab.TabAnnotate;
 import io.compgen.ngsutils.cli.tab.TabixCat;
 import io.compgen.ngsutils.cli.tab.TabixQuery;
+import io.compgen.ngsutils.cli.tab.TabixSplit;
 import io.compgen.ngsutils.cli.tdf.TabJoin;
 import io.compgen.ngsutils.cli.vcf.VCFAnnotateCmd;
 import io.compgen.ngsutils.cli.vcf.VCFBedCount;
@@ -253,7 +254,8 @@ public class NGSUtils {
 			.addCommand(VCFSamples.class)
 			.addCommand(VCFRemoveInfoFlag.class)
 			.addCommand(BaiExplore.class)
-			.addCommand(BGZStats.class);
+			.addCommand(BGZStats.class)
+		.addCommand(TabixSplit.class);
 
 
         try {
