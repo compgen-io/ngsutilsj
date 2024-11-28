@@ -36,12 +36,21 @@ public class BedReduce extends AbstractOutputCommand {
     private boolean scoreIsCount = false;
     private boolean noStrand = false;
     private boolean rename = false;
-    
+    private boolean output3 = false;
+
     @Option(name="extend", desc="Extend a regions N bases in both directions to find an overlap.")
     public void setExtend(int extend) {
         this.extend = extend;
     }
     
+    @Option(charName="3", desc="Output a BED3 file (3-columns only, implies --ns)")
+    public void setOutput3(boolean output3) {
+        this.output3 = output3;
+        if (output3) {
+        	this.noStrand = true;
+        }
+    }
+
     @Option(charName="c", desc="Score should be the count of merged regions (default: the sum of scores)")
     public void setScoreIsCount(boolean scoreIsCount) {
         this.scoreIsCount = scoreIsCount;
@@ -124,9 +133,17 @@ public class BedReduce extends AbstractOutputCommand {
             BedRecord rec;
             if (rename) {
                 BedRecord tmp = records.get(coord);
-                rec = new BedRecord(tmp.getCoord(), "region_"+i, tmp.getScore(), tmp.getExtras());
+                if (output3) {
+                    rec = new BedRecord(tmp.getCoord());
+                } else {
+                    rec = new BedRecord(tmp.getCoord(), "region_"+i, tmp.getScore(), tmp.getExtras());                	
+                }
             } else {
-                rec = records.get(coord);
+                if (output3) {
+                    rec = new BedRecord(records.get(coord).getCoord());
+                } else {
+                	rec = records.get(coord);
+                }
             }
             rec.write(out);
             i++;
