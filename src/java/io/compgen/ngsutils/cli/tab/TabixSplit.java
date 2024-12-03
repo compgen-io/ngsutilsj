@@ -18,12 +18,24 @@ public class TabixSplit extends AbstractOutputCommand {
     private String infile;
     private String templFilename = null;
     private boolean header = false;
+    private boolean byRef = false;
+    private int linenum = -1;
     
     @Option(desc="Output file template ({} will be replaced by the ref/chrom name, default based on infile)", name="templ")
     public void setTemplateName(String templFilename) {
         this.templFilename = templFilename;
     }
 
+    @Option(desc="Split file by ref/chrom", name="by-ref")
+    public void setByRef(boolean byRef) {
+        this.byRef = byRef;
+    }
+    
+    @Option(desc="Split file by number of lines", name="lines")
+    public void setLines(int linenum) {
+        this.linenum = linenum;
+    }
+    
     @Option(desc="Write the header to all files", name="header")
     public void setHeader(boolean val) {
         this.header = val;
@@ -46,6 +58,10 @@ public class TabixSplit extends AbstractOutputCommand {
     		}
     	}
     	
+    	if (linenum > 0 && byRef) {
+    		throw new CommandArgumentException("You can only split --by-ref or --lines, but not both at the same time.");
+    	}
+
     	if (!templFilename.contains("{}")) {
     		throw new CommandArgumentException("Missing {} in template filename");
     	}
@@ -57,38 +73,59 @@ public class TabixSplit extends AbstractOutputCommand {
         
         List<String> headerLines = new ArrayList<String>();
         
-        int lineno = 0;
+        int fileno = 0;
+        int curLineNum = 0;
+        
+        int skipLineNum = 0;
         for (String line: IterUtils.wrap(tabix.lines())) {
-        	if (lineno < tabix.getSkipLines()) {
+        	if (skipLineNum < tabix.getSkipLines()) {
         		if (header) {
         			headerLines.add(line);
         		}
-            	lineno ++;
+            	skipLineNum ++;
         		continue;
         	}
     		String[] vals = line.split("\\t");
     		String seq = vals[tabix.getColSeq()-1];
-    		
-    		if (curSeq == null || !curSeq.equals(seq)) {
-    			if (bgz != null) {
-    				bgz.close();
-    			}
-    			curSeq = seq;
-    			bgz = new BGZWriter(templFilename.replaceAll("\\{\\}", curSeq));
-    			if (header) {
-    				for (String hl: headerLines) {
-    					bgz.writeString(hl+"\n");
-    				}
-    			}
-    			System.err.println("Writing: "+templFilename.replaceAll("\\{\\}", curSeq));
+
+    		if (byRef) {
+	    		if (curSeq == null || !curSeq.equals(seq)) {
+	    			if (bgz != null) {
+	    				bgz.close();
+	    			}
+	    			curSeq = seq;
+	    			bgz = new BGZWriter(templFilename.replaceAll("\\{\\}", curSeq));
+	    			if (header) {
+	    				for (String hl: headerLines) {
+	    					bgz.writeString(hl+"\n");
+	    				}
+	    			}
+	    			System.err.println("Writing: "+templFilename.replaceAll("\\{\\}", curSeq));
+	    		}
+    		} else {
+    			if (fileno == 0 || curLineNum > this.linenum) {
+	    			if (bgz != null) {
+	    				bgz.close();
+	    			}
+    				curLineNum=0;
+    				fileno++;
+	    			bgz = new BGZWriter(templFilename.replaceAll("\\{\\}", ""+fileno));
+	    			if (header) {
+	    				for (String hl: headerLines) {
+	    					bgz.writeString(hl+"\n");
+	    				}
+	    			}
+	    			System.err.println("Writing: "+templFilename.replaceAll("\\{\\}", ""+fileno));
+    			}    				
     		}
 
     		bgz.writeString(line+"\n");
-    		
+    		if (!byRef) {
+    			curLineNum++;
+    		}
 		}
 		if (bgz != null) {
 			bgz.close();
 		}
-    }
-    
+    }    
 }
