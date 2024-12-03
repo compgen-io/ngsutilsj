@@ -4,6 +4,7 @@ import java.util.Iterator;
 
 import io.compgen.cmdline.annotation.Command;
 import io.compgen.cmdline.annotation.Exec;
+import io.compgen.cmdline.annotation.Option;
 import io.compgen.cmdline.annotation.UnnamedArg;
 import io.compgen.cmdline.exceptions.CommandArgumentException;
 import io.compgen.cmdline.impl.AbstractOutputCommand;
@@ -20,8 +21,14 @@ import io.compgen.ngsutils.vcf.VCFRecord;
 public class VCFBuild extends AbstractOutputCommand {
 	private String vcfFilename = null;
 	private String fastaFilename = null;
-	private static boolean quiet = false;
+	private boolean quiet = false;
     
+    @Option(desc = "Quiet output (no progress bar)", charName = "q", name="quiet")
+    public void setQuiet(boolean quiet) {
+        this.quiet = quiet;
+    }
+
+	
     @UnnamedArg(name = "input.vcf{.gz} input.fa", required=true)
     public void setFilename(String[] filenames) throws CommandArgumentException {
     	if (filenames == null || filenames.length != 2) {
@@ -40,7 +47,7 @@ public class VCFBuild extends AbstractOutputCommand {
 		final int[] matches = {0};
 
 		Iterator<VCFRecord> it = null;
-		if (VCFBuild.isQuiet()) {
+		if (quiet) {
 			it = reader.iterator();
 		} else {
 	        it  = ProgressUtils.getIterator(reader.getFilename(), 
@@ -92,8 +99,5 @@ public class VCFBuild extends AbstractOutputCommand {
 		System.out.println("Positions scanned: "+total[0]);
 		System.out.println("Positions matched: "+matches[0] + " (" + String.format("%.4f", ((double)matches[0] / total[0]))+")");
 		
-	}
-	public static boolean isQuiet() {
-		return quiet;
 	}
 }
