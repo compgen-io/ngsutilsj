@@ -88,8 +88,14 @@ public class VCFAttributes {
 		VCFAttributes attrs = new VCFAttributes();
 		
 		String[] spl = s.split(":");
-		
-		if (format.size() != spl.length) {
+
+//      Trailing fields can be skipped, so just split and pull key from {format}		
+//		if (format.size() != spl.length) {
+//		throw new VCFParseException("Unable to parse genotype field: "+s);
+//		}
+
+		// if GT is present in {format}, it must be in the input string for each sample.
+		if (format != null && format.size() > 0 && format.get(0).equals("GT") && spl.length<1) {
 			throw new VCFParseException("Unable to parse genotype field: "+s);
 		}
 		
