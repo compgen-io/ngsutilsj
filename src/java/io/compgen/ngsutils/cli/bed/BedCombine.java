@@ -359,28 +359,7 @@ public class BedCombine extends AbstractOutputCommand {
 		
 	            		write(left);            			
 	            		first = merged;
-	        			
-//		            } else if (start2 > start1 && start2 < end1 && end2 > end1) {
-//	            		//
-//	            		// A |-------|
-//	            		// B      |-----|
-//	            		//
-//		            	
-//	            		MultinameBedRecord left = first.clone(new GenomeSpan(curRef, start1, start2, strand));
-//
-//	            		MultinameBedRecord merged = first.clone(new GenomeSpan(curRef, start2, end1, strand));
-//	        			merged.addName(second.getNames());
-//		
-//            			MultinameBedRecord right = second.clone(new GenomeSpan(curRef, end1, end2, strand));            			
-//	        			
-//	            		write(left);            			
-//	            		first = merged;
-//
-//	            		curRecords.get(second.chainIdx).remove(0); // remove the second from list...
-//
-//	            		curRecords.get(right.chainIdx).add(0, right); // add this to the first priority chain.
-//            			Collections.sort(curRecords.get(right.chainIdx));
-	        			
+	        				        			
 		            } else if (start2 == start1 && start2 < end1 && end2 > end1) {
 	            		//
 	            		// A |-------|
@@ -413,7 +392,7 @@ public class BedCombine extends AbstractOutputCommand {
 	        			
 
 		            } else {
-	            		System.out.println("first/second odd overlap");
+	            		System.out.println("first/second unknown overlap");
 	            		System.out.println("first: " + first.getCoord());
 	            		System.out.println("second: " + second.getCoord());
 	            		System.exit(1);
@@ -427,117 +406,6 @@ public class BedCombine extends AbstractOutputCommand {
         }
     }
     	            
-            		
-            		
-            		
-            		
-        		
-//        		
-//        		
-//        		
-//        		
-//        		
-//	         	int firstIdx = -1;
-//	        	@SuppressWarnings("unused")
-//				int secondIdx = -1;
-//	        	BedRecord first = null;
-//	        	BedRecord second = null;
-//	        	
-//	        	
-//	        	
-//	            for (int i=0; i<curRecords.size(); i++)  {
-//	            	if (curRecords.get(i).size() > 0) {
-//	            		System.out.println("["+i+"] " + curRecords.get(i).get(0).getCoord());
-//	        			BedRecord rec = curRecords.get(i).get(0); // the lists are sorted...
-//	        			if (first == null || rec.compareTo(first) < 0) {
-//	        				if (first != null) {
-//	        					second = first;
-//	        					secondIdx = firstIdx;
-//	        				}
-//	        				first = rec;
-//	        				firstIdx = i;
-//	        			} else if (second == null || rec.compareTo(second) < 0) {
-//	        				second = rec;
-//	        				secondIdx = i;
-//	            		}
-//	            	}
-//	            }
-//	
-//	            if (first == null && second == null) {
-//	            	break;
-//	            }
-//	            
-//	            System.out.println("1 ["+firstIdx+"]" + first + " " + first.getCoord());
-//	            if (second != null) {
-//	            	System.out.println("2 ["+secondIdx+"]" + second + " " + second.getCoord());
-//	            }
-//	            GenomeSpan newspan;
-//	            int start, end;
-//	            if (second!=null && first.getCoord().overlaps(second.getCoord())) {
-//	            	// overlap, so find start/end and update
-//	            	start = first.getCoord().start;
-//	            	end = second.getCoord().start;
-//	            	
-//	            	if (start == end) {
-//	            		if (first.getCoord().end < second.getCoord().end) {
-//	            			end = first.getCoord().end;
-//	            		} else {
-//	            			end = second.getCoord().end;
-//	            		}
-//	            	}
-//	            	
-//	            	newspan = new GenomeSpan(curRef, start, end, strand);
-////	            	System.out.println(newspan);
-//	            } else {
-//	            	newspan = first.getCoord();
-//	            	start = first.getCoord().start;
-//	            	end = first.getCoord().start;
-//	            }
-//            	// find all overlapping records
-//            	List<String> newnames = new ArrayList<String>();
-//            	for (int i=0; i< curRecords.size(); i++) {
-//            		if (curRecords.get(i).size()>0 && curRecords.get(i).get(0).getCoord().overlaps(newspan)) {
-//            			BedRecord match = curRecords.get(i).get(0);
-//            			if (names.get(i) == null) {
-//            				newnames.add(match.getName());
-//            			} else {
-//            				newnames.add(names.get(i));
-//            			}
-//            			
-//            			if (match.getCoord().end == end) {
-//            				curRecords.get(i).remove(0);
-//            			} else {
-//	            			// update these spans
-//	            			GenomeSpan newcoord = new GenomeSpan(curRef, end, match.getCoord().end, match.getCoord().strand);
-//	            			BedRecord newRec = match.clone(newcoord);
-//	            			curRecords.get(i).set(0,  newRec);
-//            			}
-//            		}
-//	            
-//            	
-//	        		BedRecord newrec;
-//	        		if (single) {
-//	        			newrec = new BedRecord(newspan, newnames.get(0));
-//	        		} else {
-//	        			newrec = new BedRecord(newspan, StringUtils.join("|", newnames));
-//	        		}
-//	            	
-//	        		write(newrec);
-//            	}
-////	            	
-////	            } else {
-////	            	// no overlap, write the first and remove it from tree
-////	            	write(first, names.get(firstIdx));
-////	            	curRecords.get(firstIdx).remove(0);
-////	            }
-//	            
-////	            if (counter++ > 100) {            
-////	            	return;
-////	            }
-//        	}
-//        }   
-//    }
-
 
 	private void write(MultinameBedRecord rec) throws IOException {
         List<String> outs = new ArrayList<String>();
