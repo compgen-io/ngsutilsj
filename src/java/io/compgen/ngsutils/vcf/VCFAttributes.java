@@ -126,10 +126,24 @@ public class VCFAttributes {
 
 	// output in GENOTYPE format (with given FORMAT keys)
 	public String toString(List<String> format) {
+		List<VCFAttributeValue> vals = get(format);
+		
+		// GT can't be trimmed if it is present
+		int limit = 0;
+		if (format.get(0).equals("GT")) {
+			limit = 1;
+		}
+		
+		// FORMAT values can be trimmed from the end if they are missing
+		while (vals.size() > limit && vals.get(vals.size()-1) == VCFAttributeValue.MISSING) {
+			vals.remove(vals.size()-1);
+		}
+		
 		List<String> outcols = new ArrayList<String>();
-		for (VCFAttributeValue val: get(format)) {
+		for (VCFAttributeValue val: vals) {
 			outcols.add(val.toString());
 		}
+		
 		return StringUtils.join(":", outcols);
 	}
 

@@ -264,7 +264,7 @@ public class VCFRecord {
 //		System.err.println("FILTER: " + cols[6] + " => " + (filters == null ? "<null>": "?"+StringUtils.join(",", filters)));
 		
 		try {
-			List<VCFAttributes> samples = null;
+			List<VCFAttributes> sampleValues = null;
 			VCFAttributes info = new VCFAttributes();
 
 			if (cols.length > 7) {
@@ -279,14 +279,16 @@ public class VCFRecord {
 					        format.add(k);
 					}
 					
-					samples = new ArrayList<VCFAttributes>();
-					
-					for (int i=9; i<cols.length; i++) {
-						samples.add(VCFAttributes.parseFormat(cols[i], format, header));
+					if (cols.length>9) {
+						sampleValues = new ArrayList<VCFAttributes>(cols.length-9);
+
+						for (int i=9; i<cols.length; i++) {
+							sampleValues.add(VCFAttributes.parseFormat(cols[i], format, header));
+						}
 					}
 				}
 			}
-			return new VCFRecord(chrom, pos, dbSNPID, ref, alts, qual, filters, info, samples, altOrig, header);
+			return new VCFRecord(chrom, pos, dbSNPID, ref, alts, qual, filters, info, sampleValues, altOrig, header);
 
 		} catch (VCFParseException | VCFAttributeException e) {
 			if (!VCFCheck.isQuiet()) {
