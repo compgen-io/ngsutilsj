@@ -74,17 +74,20 @@ public class TabixSplit extends AbstractOutputCommand {
         List<String> headerLines = new ArrayList<String>();
         
         int fileno = 0;
-        int curLineNum = 0;
-        
+        int curLineNum = 0;        
         int skipLineNum = 0;
+        boolean inHeader = true;
+        
         for (String line: IterUtils.wrap(tabix.lines())) {
-        	if (skipLineNum < tabix.getSkipLines()) {
+        	if (skipLineNum < tabix.getSkipLines() || (inHeader && line.length()>0 && line.charAt(0) == tabix.getMeta())) {
         		if (header) {
         			headerLines.add(line);
         		}
             	skipLineNum ++;
         		continue;
         	}
+        	inHeader = false;
+        	
     		String[] vals = line.split("\\t");
     		String seq = vals[tabix.getColSeq()-1];
 
