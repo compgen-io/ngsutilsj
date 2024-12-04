@@ -17,6 +17,7 @@ public class BGZWriter {
 		return filename;
 	}
 
+	// part of bgzip spec. Seems small to me.
 	private int uncompressedMaxBlock = 65280;
 
 	private OutputStream os;
@@ -66,6 +67,10 @@ public class BGZWriter {
 		os.close();
 	}
 	
+	/**
+	 * Writes a block to the BGZip file
+	 * @throws IOException
+	 */
 	private void flush() throws IOException {
 //		System.err.println("Flushing (curpos="+curpos+") ");
 		if (curpos == 0 ) {
