@@ -93,7 +93,7 @@ public class BedCombine extends AbstractOutputCommand {
 
         public String getFirstName() {
         	if (this.names.size()>0) {
-        		return this.names.getFirst();
+        		return this.names.first();
         	}
         	return null;
         }
