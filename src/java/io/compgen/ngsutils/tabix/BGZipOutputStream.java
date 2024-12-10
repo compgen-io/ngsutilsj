@@ -11,7 +11,7 @@ import java.util.zip.DeflaterOutputStream;
 
 import io.compgen.common.io.DataIO;
 
-public class BGZWriter {
+public class BGZipOutputStream extends OutputStream {
 	private String filename;
 	public String getFilename() {
 		return filename;
@@ -25,22 +25,34 @@ public class BGZWriter {
 	private int curpos = 0;
 
 
-	public BGZWriter(String filename) throws IOException {
+	public BGZipOutputStream(String filename) throws IOException {
 		super();
 		this.filename = filename;
 		this.os = new FileOutputStream(filename);
 	}
 	
+	// Each string/line should be written to the same block, so if
+	// this string would cause a block to get written in the middle,
+	// then flush the current block first.
+	
 	public void writeString(String line) throws IOException {
 		write(line.getBytes(Charset.defaultCharset()), true);
 	}
+	
 	public void writeBytes(byte[] bytes) throws IOException {
 		write(bytes, false);
 	}
 
 	public void write(byte[] bytes, boolean keepTogether) throws IOException {
+		
+		// if we need to keep these bytes in the same block, flush the current block if
+		// {bytes} is large enough to cause a split block.
+		//
+		// note: writeBlock only operates if we have written anything (curpos > 0), so 
+		//       no need to worry about writing an empty block.
+		
 		if (keepTogether && curpos + bytes.length >= this.uncompressedMaxBlock) {
-			flush();
+			writeBlock();
 		}
 		for (int i=0; i<bytes.length; i++) {
 			write(bytes[i]);
@@ -50,13 +62,13 @@ public class BGZWriter {
 	public void write(byte b) throws IOException {
 		curBuffer[curpos++] = b;
 		if (curpos >= this.uncompressedMaxBlock) {
-			flush();
+			writeBlock();
 		}
 	}
 
 
 	public void close() throws IOException {
-		flush();
+		writeBlock();
 		
 		// The last block is empty and has a fixed 28 bytes
 		int[] last = new int[] {0x1f,0x8b,0x08,0x04,0x00,0x00,0x00,0x00,0x00,0xff,0x06,0x00,0x42,0x43,0x02,0x00,0x1b,0x00,0x03,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
@@ -71,7 +83,7 @@ public class BGZWriter {
 	 * Writes a block to the BGZip file
 	 * @throws IOException
 	 */
-	private void flush() throws IOException {
+	private void writeBlock() throws IOException {
 //		System.err.println("Flushing (curpos="+curpos+") ");
 		if (curpos == 0 ) {
 			return;
@@ -114,5 +126,10 @@ public class BGZWriter {
 		os.flush();
 
 		curpos = 0;
+	}
+
+	@Override
+	public void write(int b) throws IOException {
+		write((byte)b);
 	}
 }

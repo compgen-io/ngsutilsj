@@ -10,7 +10,7 @@ import io.compgen.cmdline.annotation.UnnamedArg;
 import io.compgen.cmdline.exceptions.CommandArgumentException;
 import io.compgen.cmdline.impl.AbstractOutputCommand;
 import io.compgen.common.IterUtils;
-import io.compgen.ngsutils.tabix.BGZWriter;
+import io.compgen.ngsutils.tabix.BGZipOutputStream;
 import io.compgen.ngsutils.tabix.TabixFile;
 
 @Command(name = "tabix-split", desc = "Splits a tabix file by ref/chrom", category = "annotation")
@@ -69,7 +69,7 @@ public class TabixSplit extends AbstractOutputCommand {
         TabixFile tabix  = new TabixFile(infile, verbose);
         String curSeq = null;
         
-        BGZWriter bgz = null;
+        BGZipOutputStream bgz = null;
         
         List<String> headerLines = new ArrayList<String>();
         
@@ -97,7 +97,7 @@ public class TabixSplit extends AbstractOutputCommand {
 	    				bgz.close();
 	    			}
 	    			curSeq = seq;
-	    			bgz = new BGZWriter(templFilename.replaceAll("\\{\\}", curSeq));
+	    			bgz = new BGZipOutputStream(templFilename.replaceAll("\\{\\}", curSeq));
 	    			if (header) {
 	    				for (String hl: headerLines) {
 	    					bgz.writeString(hl+"\n");
@@ -112,7 +112,7 @@ public class TabixSplit extends AbstractOutputCommand {
 	    			}
     				curLineNum=0;
     				fileno++;
-	    			bgz = new BGZWriter(templFilename.replaceAll("\\{\\}", ""+fileno));
+	    			bgz = new BGZipOutputStream(templFilename.replaceAll("\\{\\}", ""+fileno));
 	    			if (header) {
 	    				for (String hl: headerLines) {
 	    					bgz.writeString(hl+"\n");
