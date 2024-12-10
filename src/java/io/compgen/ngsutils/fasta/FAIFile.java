@@ -80,7 +80,7 @@ public class FAIFile {
 		return new BedRecord(new GenomeSpan(idxrec.name, 0, idxrec.length));
     }
     
-    public Iterator<BedRecord> asBed() {
+    public Iterator<BedRecord> asBedIterator() {
         return new Iterator<BedRecord>() {
         	int curidx = 0;
 			@Override
