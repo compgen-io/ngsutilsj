@@ -3,11 +3,13 @@ package io.compgen.ngsutils.cli.bed;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
+import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 import io.compgen.cmdline.annotation.Command;
 import io.compgen.cmdline.annotation.Exec;
@@ -19,25 +21,45 @@ import io.compgen.ngsutils.annotation.GenomeSpan;
 import io.compgen.ngsutils.bam.Strand;
 import io.compgen.ngsutils.bed.BedReader;
 import io.compgen.ngsutils.bed.BedRecord;
+import io.compgen.ngsutils.bed.BedStrandFilter;
 import io.compgen.ngsutils.fasta.FAIFile;
+import io.compgen.ngsutils.support.BufferedIterator;
+import io.compgen.ngsutils.support.BufferedIteratorImpl;
+import io.compgen.ngsutils.support.ListSortedBufferedIterator;
 
 @Command(name="bed-combine", desc="Given two or more (sorted) BED(3/6) files, combine the BED annotations into one output BED file. This will produce non-overlapping regions (unlike bed-reduce). All other columns (and score) are ignored.", category="bed", experimental=true)
 public class BedCombine extends AbstractOutputCommand {
     
+	public class MultinameIterator implements Iterator<MultinameBedRecord> {
+		private Iterator<BedRecord> it;
+		public MultinameIterator(Iterator<BedRecord> it) {
+			this.it = it;
+		}
+
+		@Override
+		public boolean hasNext() {
+			return it.hasNext();
+		}
+
+		@Override
+		public MultinameBedRecord next() {
+			BedRecord rec = it.next();
+			return new MultinameBedRecord(rec);
+		}
+		
+	}
+	
     public class MultinameBedRecord implements Comparable<MultinameBedRecord>{
     	private final GenomeSpan coord; 
-        private final List<String> names = new ArrayList<String>();
-        private final int chainIdx;
+        private final SortedSet<String> names = new TreeSet<String>();
         
-        public MultinameBedRecord(BedRecord bedRecord, int chainIdx) {
+        public MultinameBedRecord(BedRecord bedRecord) {
             this.coord = bedRecord.getCoord();
             this.names.add(bedRecord.getName());
-            this.chainIdx = chainIdx;
         }
         
-        public MultinameBedRecord(GenomeSpan coord, List<String> names, int chainIdx) {
+        public MultinameBedRecord(GenomeSpan coord, Set<String> names) {
             this.coord = coord;
-            this.chainIdx = chainIdx;
             for (String name: names) {
             	this.names.add(name);
             }
@@ -50,23 +72,17 @@ public class BedCombine extends AbstractOutputCommand {
 
 
         public void addName(String name) {
-        	if (!this.names.contains(name)) {
-        		this.names.add(name);
-        	}
+    		this.names.add(name);
         }
         
-        public void addName(List<String> names) {
+        public void addName(Collection<String> names) {
         	for (String name: names) {
         		this.addName(name);
         	}
         }
         
-        public String getName() {
-        	return getName("|");
-        }
-
-        public List<String> getNames() {
-        	return Collections.unmodifiableList(names);
+        public Collection<String> getNames() {
+        	return Collections.unmodifiableCollection(names);
         }
         public String getName(String delim) {
         	return StringUtils.join(delim, this.names);
@@ -77,13 +93,13 @@ public class BedCombine extends AbstractOutputCommand {
 
         public String getFirstName() {
         	if (this.names.size()>0) {
-        		return this.names.get(0);
+        		return this.names.getFirst();
         	}
         	return null;
         }
 
     	public MultinameBedRecord clone(GenomeSpan newcoord) {
-    		return new MultinameBedRecord(newcoord, this.names, this.chainIdx);
+    		return new MultinameBedRecord(newcoord, this.names);
     	}
 
     }
@@ -94,6 +110,7 @@ public class BedCombine extends AbstractOutputCommand {
     private List<String> names = new ArrayList<String>();
     
     private String defval = null;
+    private String delim = "|";
     
     private boolean ignoreStrand = false;
     private boolean single = false;
@@ -103,6 +120,11 @@ public class BedCombine extends AbstractOutputCommand {
         this.single = val;
     }
 
+    @Option(name="delim", desc="Delimited character used for combining name fields", defaultValue="|")
+    public void setDelim(String delim) {
+    	this.delim = delim;
+    }
+    
     @Option(name="bed", desc="BED file to include (order of importance)", allowMultiple=true)
     public void setBed(String bed) {
         this.bedFilenames.add(bed);
@@ -124,7 +146,7 @@ public class BedCombine extends AbstractOutputCommand {
         this.refFilename = ref;
     }
 
-    @Option(name="default", desc="Default annotation for regions that are unannotated (requires --ref)")
+    @Option(name="default", desc="Default annotation for regions that are missing (requires --ref)")
     public void setDefault(String defval) {
         this.defval = defval;
     }
@@ -142,8 +164,12 @@ public class BedCombine extends AbstractOutputCommand {
         if (refFilename == null && defval != null) {
             throw new CommandArgumentException("--default requires --ref to be set");
         }
-        
+        if (refFilename != null && defval == null) {
+        	defval = "missing";
+        }
+
         FAIFile fai = null;
+        
         if (refFilename != null) {
         	File faifile = new File(refFilename);
         
@@ -154,259 +180,284 @@ public class BedCombine extends AbstractOutputCommand {
         	fai = new FAIFile(refFilename);
         }
 
-        if (ignoreStrand) {
-        	processBedFiles(Strand.NONE, fai); // NONE matches PLUS and MINUS
-        } else {
-        	processBedFiles(Strand.PLUS, fai);
-        	processBedFiles(Strand.MINUS, fai);
+        Iterator<BedRecord> it = BedReader.readFile(bedFilenames.get(0), false);
+        
+        if (!it.hasNext()) {
+            throw new CommandArgumentException("Invalid BED file: "+ bedFilenames.get(0));
         }
         
+        // check for stranded BED file -- we will reuse this record.
+    	BedRecord rec = it.next();
+        if (rec.getCoord().strand == Strand.NONE) {
+        	System.err.println("Non-stranded BED file detected. Ignoring all strand comparisons.");
+        	ignoreStrand = true;
+        }
+        
+		if (ignoreStrand) {
+			processBedFiles(Strand.NONE, fai, it, rec); // NONE matches PLUS and MINUS
+		} else {
+	    	if (rec.getCoord().strand.matches(Strand.PLUS)) {
+	    		processBedFiles(Strand.PLUS, fai, it, rec);
+				processBedFiles(Strand.MINUS, fai, null, null);
+	    	} else if (rec.getCoord().strand.matches(Strand.MINUS)) {
+	    		processBedFiles(Strand.PLUS, fai, it, null);
+				processBedFiles(Strand.MINUS, fai, null, rec);
+	    	} else {
+	    		// this shouldn't happen
+	    	}
+	    	
+		}
     }
-
+    
+    
     protected void processBedFiles(Strand strand, FAIFile fai) throws IOException {
-//        int counter = 0;
+    	processBedFiles(strand, fai, null, null);
+    }
+    protected void processBedFiles(Strand strand, FAIFile fai, Iterator<BedRecord> firstIterator, BedRecord firstRecord) throws IOException {
+        List<BufferedIterator<MultinameBedRecord>> srcBeds = new ArrayList<BufferedIterator<MultinameBedRecord>>(); 
+        ListSortedBufferedIterator<MultinameBedRecord> bufList = new ListSortedBufferedIterator<MultinameBedRecord>();
 
-        // key = chrom
-    	// list1 = for each input bed file
-    	//  list2 = the records for that specific bedfile
-        Map<String, List<List<MultinameBedRecord>>> records = new HashMap<String, List<List<MultinameBedRecord>>>();
-        List<String> refs = new ArrayList<String>();
+    	if (firstRecord.getCoord().strand.matches(strand)) {
+    		bufList.add(new MultinameBedRecord(firstRecord));
+    	}
 
         for (int i=0; i<bedFilenames.size(); i++) {
-        	Iterator<BedRecord> it = BedReader.readFile(bedFilenames.get(i), ignoreStrand); //ignoreStrand is redundant here...
-        	while (it.hasNext()) {
-        		BedRecord rec = it.next();
-        		if (rec.getCoord().strand.matches(strand)) {
-        			// add the records
-        			if (!records.containsKey(rec.getCoord().ref)) {
-        				refs.add(rec.getCoord().ref);
-        				records.put(rec.getCoord().ref, new ArrayList<List<MultinameBedRecord>>());
-        			}
-        			while (records.get(rec.getCoord().ref).size() <= i) {
-        				records.get(rec.getCoord().ref).add(new ArrayList<MultinameBedRecord>());
-        			}
-        			
-        			if (this.names.get(i) != null) {
-        				rec = rec.clone(this.names.get(i));
-        			}
-        			
-        			records.get(rec.getCoord().ref).get(i).add(new MultinameBedRecord(rec, i));
-        		}
-        	}
-        }
-
-    	for (String ref: records.keySet()) {
-    		for (int i=0; i<records.get(ref).size(); i++) {
-    			Collections.sort(records.get(ref).get(i));
-    		}
-    	}
-        
-        if (fai!=null) {
-        	for (String ref: records.keySet()) {
-	        	BedRecord refBed = fai.getBed(ref);
-	        	refBed = refBed.clone(defval != null ? defval : ref);
-				records.get(ref).add(new ArrayList<MultinameBedRecord>());
-				records.get(ref).get(records.get(ref).size()-1).add(new MultinameBedRecord(refBed, records.get(ref).size()-1));
-        	}
-        	if (defval != null) {
-        		names.add(defval);
+        	if (i==0 && firstIterator != null) {
+            	srcBeds.add(new BufferedIteratorImpl<MultinameBedRecord>(
+            			// Convert BedRecord to Multiname records
+            			new MultinameIterator(
+            					// Only pull records matching the strand
+            					new BedStrandFilter(
+            							// primary bed reader
+            							firstIterator, 
+            							strand))));
         	} else {
-        		names.add(null);
+	        	// Buffer the iterator (so we can peek())
+	        	srcBeds.add(new BufferedIteratorImpl<MultinameBedRecord>(
+	        			// Convert BedRecord to Multiname records
+	        			new MultinameIterator(
+	        					// Only pull records matching the strand
+	        					new BedStrandFilter(
+	        							// primary bed reader
+	        							BedReader.readFile(bedFilenames.get(i), false), 
+	        							strand))));
         	}
-        }
+        }        
 
-        for (String curRef: refs) {
-//        	System.out.println("["+curRef+"]");
-        	// list of lists...
-        	// first -- sources, but priority (which is why we don't merge it all together)
-        	// second -- bedrecords for that source... sorted.
-        	List<List<MultinameBedRecord>> curRecords = records.get(curRef);
-        	MultinameBedRecord first = null;
-        	while (true) {
-	         	if (first == null) {
-		            for (int i=0; i<curRecords.size(); i++)  {
-		            	if (curRecords.get(i).size() > 0) {
-//		            		System.out.println("["+i+"] " + curRecords.get(i).get(0).getCoord());
-		            		MultinameBedRecord rec = curRecords.get(i).get(0); // the lists are sorted...
-		        			if (first == null || rec.compareTo(first) < 0) {
-		        				first = rec;
-		        			}
-		            	}
-		            }
-		            if (first != null) {
-			            // remove first from list
-		            	curRecords.get(first.chainIdx).remove(0);
-		            }
-	         	}
-	            if (first == null) {
-	            	// we are done here...
-	            	break;
-	            }
-            	            	
-//        		System.out.println("[first] " + first.getCoord());
-            	// find overlaps
+        // This is a catch-all that we can add directly to (and it will re-sort), so we can add new
+        // merged regions or FAI regions on the fly.
+        srcBeds.add(bufList);        
+        
+        MultinameBedRecord first = null;
+        String curRef = null;
+        
+        boolean found = true;
+        
+        while (found) {
+        	if (first == null) {
+        		// we don't have a current record, so let's get one.
+        		
+        		MultinameBedRecord low = null;
+                int lowIdx = -1;        
+                
+                boolean refMatch = false;
+                boolean checked = false;
+                
+		        for (int i=0;i<srcBeds.size();i++) {
+		        	MultinameBedRecord rec = srcBeds.get(i).peek();		        	
+		        	if (rec == null) {
+		        		continue;
+		        	}
+		        	checked = true;
+		        	
+		        	if (curRef == null) {
+		        		curRef = rec.getCoord().ref;
+		        		if (verbose) {
+		        			System.err.println(curRef);
+		        		}
+		        		if (fai != null) {
+		        			// we don't necessarily have the same sort order between FASTA/FAI and BED,
+		        			// so, we'll pull the BedRecord when we get the new curRef
+		        			//
+		        			// the bufList should be the last srcBed polled, so this should be the first
+		        			// record
+		        			bufList.add(new MultinameBedRecord(fai.getBed(curRef)));
+		        		}
+		        	} else if (!curRef.equals(rec.getCoord().ref)) {
+		    			continue;
+		        	}
+
+		        	refMatch = true;
+		        	
+		        	if (low == null || rec.getCoord().start < low.getCoord().start) {
+		        		low = rec;
+		        		lowIdx = i;
+		        	}
+		        }
+		        if (!refMatch && checked) {
+		        	// we don't have a current record, and none of the inputs matched the curRef
+		        	// we must have exhausted this ref, so let's go to the next one.		        	
+		        	curRef = null;
+		        	continue;
+		        }
+		        if (low != null) {
+		        	first = low;
+		        	srcBeds.get(lowIdx).next(); // remove the low record
+		        }
+        	}
+        	if (first == null) {
+        		// no current record, so we must be done here...
+        		System.err.println("Done!");
+        		break;
+        	}
+        	
+        	// we have a current record, so let's find the next lowest to look for an overlap.
+        	MultinameBedRecord second = null;
+            int secondIdx = -1;        
+
+	        for (int i=0;i<srcBeds.size();i++) {
+	        	MultinameBedRecord rec = srcBeds.get(i).peek();
+	        	if (rec == null) {
+	        		continue;
+	        	}
+	        	
+	        	if (curRef == null) {
+	        		curRef = rec.getCoord().ref;
+	        	} else if (!curRef.equals(rec.getCoord().ref)) {
+	    			continue;
+	        	}
+
+	        	if (second == null || rec.getCoord().start < second.getCoord().start) {
+	        		second = rec;
+	        		secondIdx = i;
+	        	}
+	        }
+
+	        if (second == null || !second.getCoord().overlaps(first.getCoord())) {
+	        	// no second record for the chrom/ref... or the second doesn't overlap
+	        	// write the current one out, and look for a new current
+	        	write(first);
+	        	first = null;
+	        	continue;
+	        } else {
+	        	// remove the second value from it's main buffer.
+	        	srcBeds.get(secondIdx).next();
+	        
+            	// merge first and second --
+            	int start1 = first.getCoord().start;
+            	int end1 = first.getCoord().end;
+            	int start2 = second.getCoord().start;
+            	int end2 = second.getCoord().end;
+            	
+            	boolean namematch = true;
+            	for (String name: second.getNames()) {
+            		if (!first.getNames().contains(name)) {
+            			namematch = false;
+            		}
+            	}
+            	
+            	if (namematch) {
+            		//
+            		// A |-------|
+            		// A      |-----|
+            		//
             		
-        		// look for the next smallest region
-        		MultinameBedRecord second = null;
-	            for (int i=0; i<curRecords.size(); i++)  {
-	            	if (curRecords.get(i).size() > 0) {
-//	            		System.out.println("["+i+"] " + curRecords.get(i).get(0).getCoord());
-	            		MultinameBedRecord rec = curRecords.get(i).get(0); // the lists are sorted...
-	        			if (second == null || rec.compareTo(second) < 0) {
-	        				second = rec;
-	        			}
-	            	}
-	            }
-//	            if (second != null) {
-//	            	System.out.println("[second] " + second.getCoord());
-//	            }
+            		MultinameBedRecord merged = first.clone(new GenomeSpan(curRef, Math.min(start1,  start2), Math.max(end1,  end2), strand));
+            		first = merged;
+            		
+            	} else if (start2 > start1 && start2 < end1 && end2 > end1) {
+            		//
+            		// A |-------|
+            		// B      |-----|
+            		//   LLLLLmmmmRRR
+            		MultinameBedRecord left = first.clone(new GenomeSpan(curRef, start1, start2, strand));
+            		MultinameBedRecord merged = first.clone(new GenomeSpan(curRef, start2, end1, strand));
+        			merged.addName(second.getNames());
 
-	            if (second != null && second.getCoord().overlaps(first.getCoord())) {
-//	        		System.out.println("[overlap]");
-	            	// merge first and second --
-	            	int start1 = first.getCoord().start;
-	            	int end1 = first.getCoord().end;
-	            	int start2 = second.getCoord().start;
-	            	int end2 = second.getCoord().end;
+        			MultinameBedRecord right = second.clone(new GenomeSpan(curRef, end1, end2, strand));          			
+
+            		write(left);            			
+        			first = merged;
+        			bufList.add(right);
+        			        			
+	            } else if (start2 > start1 && end2 < end1) {
+            		//
+            		// A |-------|
+            		// B    |--|
+            		//   LLLmmmmRR
+            		MultinameBedRecord left = first.clone(new GenomeSpan(curRef, start1, start2, strand));
+
+            		MultinameBedRecord merged = first.clone(new GenomeSpan(curRef, start2, end2, strand));
+        			merged.addName(second.getNames());
+
+        			MultinameBedRecord right = first.clone(new GenomeSpan(curRef, end2, end1, strand));            			
+
+            		write(left);            			
+        			first = merged;
+        			bufList.add(right);
+        			
+	            } else if (start2 == start1 && end2 < end1) {
+            		//
+            		// A |-------|
+            		// B |--|
+            		//   mmmmRRRRR
+            		MultinameBedRecord merged = first.clone(new GenomeSpan(curRef, start1, end2, strand));
+        			merged.addName(second.getNames());
+
+        			MultinameBedRecord right = first.clone(new GenomeSpan(curRef, end2, end1, strand));            			
+
+            		first = merged;
+            		bufList.add(right);
+            		        			
+	            } else if (start2 > start1 && end2 == end1) {
+            		//
+            		// A |-------|
+            		// B      |--|
+            		//   LLLLLmmmm
 	            	
-	            	boolean namematch = true;
-	            	for (String name: second.getNames()) {
-	            		if (!first.getNames().contains(name)) {
-	            			namematch = false;
-	            		}
-	            	}
+            		MultinameBedRecord left = first.clone(new GenomeSpan(curRef, start1, start2, strand));
+
+            		MultinameBedRecord merged = first.clone(new GenomeSpan(curRef, start2, end2, strand));
+        			merged.addName(second.getNames());
+	
+            		write(left);            			
+            		first = merged;
+        				        			
+	            } else if (start2 == start1 && start2 < end1 && end2 > end1) {
+            		//
+            		// A |-------|
+            		// B |-----------|
+            		//   mmmmmmmmmRRRR
 	            	
-	            	if (namematch) {
-	            		//
-	            		// A |-------|
-	            		// A      |-----|
-	            		//
-	            		
-	            		MultinameBedRecord merged = first.clone(new GenomeSpan(curRef, Math.min(start1,  start2), Math.max(end1,  end2), strand));
-	            		first = merged;
-	            		curRecords.get(second.chainIdx).remove(0); // remove the second from list...
+            		MultinameBedRecord merged = first.clone(new GenomeSpan(curRef, start1, end1, strand));
+        			merged.addName(second.getNames());
+	
+        			MultinameBedRecord right = second.clone(new GenomeSpan(curRef, end1, end2, strand));            			
+        			
+            		first = merged;
+            		bufList.add(right);
 
-	            		
-	            	} else if (start2 > start1 && start2 < end1 && end2 > end1) {
-	            		//
-	            		// A |-------|
-	            		// B      |-----|
-	            		//
-	            		MultinameBedRecord left = first.clone(new GenomeSpan(curRef, start1, start2, strand));
+	            } else if (start2 == start1 && end2 == end1) {
+            		//
+            		// A |-------|
+            		// B |-------|
+            		//
 
-	            		MultinameBedRecord merged = first.clone(new GenomeSpan(curRef, start2, end1, strand));
-            			merged.addName(second.getNames());
+	            	first.addName(second.getNames());
+        			
 
-            			MultinameBedRecord right = second.clone(new GenomeSpan(curRef, end1, end2, strand));            			
-
-	            		write(left);            			
-            			first = merged;
-            			
-            			curRecords.get(right.chainIdx).set(0, right); // replace old record with this one.
-            			Collections.sort(curRecords.get(right.chainIdx));
-            			
-    	            } else if (start2 > start1 && end2 < end1) {
-	            		//
-	            		// A |-------|
-	            		// B    |--|
-	            		//
-	            		MultinameBedRecord left = first.clone(new GenomeSpan(curRef, start1, start2, strand));
-
-	            		MultinameBedRecord merged = first.clone(new GenomeSpan(curRef, start2, end2, strand));
-            			merged.addName(second.getNames());
-
-            			MultinameBedRecord right = first.clone(new GenomeSpan(curRef, end2, end1, strand));            			
-
-	            		write(left);            			
-            			first = merged;
-            			
-	            		curRecords.get(second.chainIdx).remove(0); // remove the second from list...
-
-	            		// add flanking to correct chain and resort
-            			curRecords.get(right.chainIdx).add(right.chainIdx, right);
-            			Collections.sort(curRecords.get(right.chainIdx));
-            			
-    	            } else if (start2 == start1 && end2 < end1) {
-	            		//
-	            		// A |-------|
-	            		// B |--|
-	            		//
-	            		MultinameBedRecord merged = first.clone(new GenomeSpan(curRef, start1, end2, strand));
-            			merged.addName(second.getNames());
-
-            			MultinameBedRecord right = first.clone(new GenomeSpan(curRef, end2, end1, strand));            			
-
-	            		first = merged;
-	            		
-	            		curRecords.get(second.chainIdx).remove(0); // remove the second from list...
-
-	            		// add flanking to correct chain and resort
-            			curRecords.get(right.chainIdx).add(0, right); // add this to the first priority chain.
-            			Collections.sort(curRecords.get(right.chainIdx));
-            			
-		            } else if (start2 > start1 && end2 == end1) {
-	            		//
-	            		// A |-------|
-	            		// B      |--|
-	            		//
-		            	
-	            		MultinameBedRecord left = first.clone(new GenomeSpan(curRef, start1, start2, strand));
-
-	            		MultinameBedRecord merged = first.clone(new GenomeSpan(curRef, start2, end2, strand));
-	        			merged.addName(second.getNames());
-
-	        			curRecords.get(second.chainIdx).remove(0); // remove the second from list...
-		
-	            		write(left);            			
-	            		first = merged;
-	        				        			
-		            } else if (start2 == start1 && start2 < end1 && end2 > end1) {
-	            		//
-	            		// A |-------|
-	            		// B |-----------|
-	            		//
-		            	
-	            		MultinameBedRecord merged = first.clone(new GenomeSpan(curRef, start1, end1, strand));
-	        			merged.addName(second.getNames());
-		
-            			MultinameBedRecord right = second.clone(new GenomeSpan(curRef, end1, end2, strand));            			
-	        			
-	            		first = merged;
-
-	            		curRecords.get(second.chainIdx).remove(0); // remove the second from list...
-
-	            	
-	            		curRecords.get(right.chainIdx).add(0, right); // add this to the first priority chain.
-            			Collections.sort(curRecords.get(right.chainIdx));
-
-		            } else if (start2 == start1 && end2 == end1) {
-	            		//
-	            		// A |-------|
-	            		// B |-------|
-	            		//
-
-		            	first.addName(second.getNames());
-	        			
-
-	            		curRecords.get(second.chainIdx).remove(0); // remove the second from list...
-	        			
-
-		            } else {
-	            		System.out.println("first/second unknown overlap");
-	            		System.out.println("first: " + first.getCoord());
-	            		System.out.println("second: " + second.getCoord());
-	            		System.exit(1);
-		            }
-	            	
 	            } else {
-	            	write(first);
-	            	first = null;
+            		System.out.println("first/second unknown overlap");
+            		System.out.println("first: " + first.getCoord());
+            		System.out.println("second: " + second.getCoord());
+            		System.exit(1);
 	            }
-        	}
-        }
-    }
-    	            
+	        }
+        }    
+//		System.err.println("Out of loop!");
 
+    }
+    
 	private void write(MultinameBedRecord rec) throws IOException {
         List<String> outs = new ArrayList<String>();
         outs.add(rec.getCoord().ref);
@@ -417,7 +468,7 @@ public class BedCombine extends AbstractOutputCommand {
         	if (single) {
         		outs.add(rec.getFirstName());
         	} else {
-            outs.add(rec.getName());
+        		outs.add(rec.getName(this.delim));
         	}
             if (!ignoreStrand) {
                 outs.add(""); // ignore score
@@ -433,5 +484,3 @@ public class BedCombine extends AbstractOutputCommand {
         out.write((StringUtils.join("\t", outs) + "\n").getBytes());
     }
 }
-
-
