@@ -27,8 +27,8 @@ import io.compgen.ngsutils.support.BufferedIterator;
 import io.compgen.ngsutils.support.BufferedIteratorImpl;
 import io.compgen.ngsutils.support.ListSortedBufferedIterator;
 
-@Command(name="bed-combine", desc="Given two or more (sorted) BED(3/6) files, combine the BED annotations into one output BED file. This will produce non-overlapping regions (unlike bed-reduce). All other columns (and score) are ignored.", category="bed", experimental=true)
-public class BedCombine extends AbstractOutputCommand {
+@Command(name="bed-merge", desc="Given two or more (sorted) BED(3/6) files, combine the BED annotations into one output BED file. This can produce non-overlapping regions (--split) or unions (like bed-reduce). All other columns (and score) are ignored. Because this requires sorted inputs, it is more effcient than bed-reduce.", category="bed", experimental=true)
+public class BedMerge extends AbstractOutputCommand {
     
 	public class MultinameIterator implements Iterator<MultinameBedRecord> {
 		private Iterator<BedRecord> it;
@@ -46,7 +46,6 @@ public class BedCombine extends AbstractOutputCommand {
 			BedRecord rec = it.next();
 			return new MultinameBedRecord(rec);
 		}
-		
 	}
 	
     public class MultinameBedRecord implements Comparable<MultinameBedRecord>{
@@ -114,6 +113,7 @@ public class BedCombine extends AbstractOutputCommand {
     
     private boolean ignoreStrand = false;
     private boolean single = false;
+    private boolean split = false;
         
     @Option(name="single", desc="Use only one annotation for each position (prioritzed based on arg order)")
     public void setSingle(boolean val) {
@@ -154,6 +154,11 @@ public class BedCombine extends AbstractOutputCommand {
     @Option(name="ns", desc="Ignore strand")
     public void setIgnoreStrand(boolean val) {
         this.ignoreStrand = val;
+    }
+
+    @Option(name="split", desc="Split overlapping regions")
+    public void setSplit(boolean val) {
+        this.split = val;
     }
 
     @Exec
@@ -207,12 +212,12 @@ public class BedCombine extends AbstractOutputCommand {
 	    	}
 	    	
 		}
-    }
-    
+    }    
     
     protected void processBedFiles(Strand strand, FAIFile fai) throws IOException {
     	processBedFiles(strand, fai, null, null);
     }
+    
     protected void processBedFiles(Strand strand, FAIFile fai, Iterator<BedRecord> firstIterator, BedRecord firstRecord) throws IOException {
         List<BufferedIterator<MultinameBedRecord>> srcBeds = new ArrayList<BufferedIterator<MultinameBedRecord>>(); 
         ListSortedBufferedIterator<MultinameBedRecord> bufList = new ListSortedBufferedIterator<MultinameBedRecord>();
@@ -353,16 +358,36 @@ public class BedCombine extends AbstractOutputCommand {
             	for (String name: second.getNames()) {
             		if (!first.getNames().contains(name)) {
             			namematch = false;
+            			break;
             		}
             	}
-            	
             	if (namematch) {
+	            	for (String name: first.getNames()) {
+	            		if (!second.getNames().contains(name)) {
+	            			namematch = false;
+	            			break;
+	            		}
+	            	}
+            	}
+            	
+            	if (namematch || !split) {
             		//
             		// A |-------|
             		// A      |-----|
             		//
+            		// *or*
+            		//
+            		// A |-------|
+            		// B      |-----|
+            		// B  |-----|
+            		//
+            		// and not splitting...
+            		//
             		
             		MultinameBedRecord merged = first.clone(new GenomeSpan(curRef, Math.min(start1,  start2), Math.max(end1,  end2), strand));
+            		if (!split && !namematch) {
+            			merged.addName(second.getNames());
+            		}
             		first = merged;
             		
             	} else if (start2 > start1 && start2 < end1 && end2 > end1) {
@@ -423,7 +448,7 @@ public class BedCombine extends AbstractOutputCommand {
             		write(left);            			
             		first = merged;
         				        			
-	            } else if (start2 == start1 && start2 < end1 && end2 > end1) {
+	            } else if (start2 == start1 && end2 > end1) {
             		//
             		// A |-------|
             		// B |-----------|

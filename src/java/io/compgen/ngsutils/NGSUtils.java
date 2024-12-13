@@ -44,7 +44,7 @@ import io.compgen.ngsutils.cli.bam.BamWPS;
 import io.compgen.ngsutils.cli.bam.BinCount;
 import io.compgen.ngsutils.cli.bam.PileupCli;
 import io.compgen.ngsutils.cli.bed.BedCleanScore;
-import io.compgen.ngsutils.cli.bed.BedCombine;
+import io.compgen.ngsutils.cli.bed.BedMerge;
 import io.compgen.ngsutils.cli.bed.BedCount;
 import io.compgen.ngsutils.cli.bed.BedNearest;
 import io.compgen.ngsutils.cli.bed.BedPEToBed;
@@ -232,7 +232,7 @@ public class NGSUtils {
 			.addCommand(BamToBedPE.class)
 			.addCommand(BedPEToBed.class)
 			.addCommand(BamClean.class)
-			.addCommand(BedCombine.class)
+			.addCommand(BedMerge.class)
 			.addCommand(VCFPeptide.class)
 			.addCommand(FastaGrep.class)
 			.addCommand(BamToFasta.class)
