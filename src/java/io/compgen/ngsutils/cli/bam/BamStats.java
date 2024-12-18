@@ -241,8 +241,11 @@ public class BamStats extends AbstractOutputCommand {
         long totalBases = 0;
         long q30Bases = 0;
         boolean hasGaps = false;
+        long onTargetBases = 0;
         
         for (SAMRecord read: IterUtils.wrap(it)) {
+        	int readBases = 0;
+        
             if (rgid != null) {
                 SAMReadGroupRecord rg = read.getReadGroup();
                 if (rg == null || !rg.getId().equals(rgid)) {
@@ -266,6 +269,7 @@ public class BamStats extends AbstractOutputCommand {
                             }
                         }
                         totalBases += el.getLength();
+                        readBases += el.getLength();
                     case S:
                         i += el.getLength();
                         break;
@@ -282,6 +286,20 @@ public class BamStats extends AbstractOutputCommand {
                 }
             }
             
+            if (bedCounter != null) {
+            	if (!read.getReadUnmappedFlag() && !read.getDuplicateReadFlag() && !read.getReadFailsVendorQualityCheckFlag() && !read.getSupplementaryAlignmentFlag()) {            		
+	                if (!read.getReadPairedFlag() || (!read.getSecondOfPairFlag() && read.getProperPairFlag())) {
+	                    // We only profile the first read of a pair... and only proper pairs
+	                    bedCounter.addRead(read, Orientation.UNSTRANDED);
+	                }
+	            	if (bedCounter.readMatch(read, Orientation.UNSTRANDED)) {
+	            		// we do however want to count the number of bases that are on target.
+	            	
+	            		onTargetBases += readBases;
+	            	}
+            	}
+            }
+            
             
             if (read.getReadPairedFlag() && read.getSecondOfPairFlag()) {
                 // We only profile the first read of a pair...
@@ -296,7 +314,7 @@ public class BamStats extends AbstractOutputCommand {
                 }
             }
             
-            if (read.getDuplicateReadFlag()) {
+            if (read.getDuplicateReadFlag() || read.getReadFailsVendorQualityCheckFlag() || read.getSupplementaryAlignmentFlag()) {
                 // skip all duplicates from here on out.
                 continue;
             }
@@ -352,13 +370,6 @@ public class BamStats extends AbstractOutputCommand {
                 }
             }
 
-            if (bedCounter != null) {
-                if (!read.getReadPairedFlag() || (!read.getSecondOfPairFlag() && read.getProperPairFlag() && !read.getDuplicateReadFlag() && !read.getReadFailsVendorQualityCheckFlag() && !read.getSupplementaryAlignmentFlag())) {
-                    
-                    // We only profile the first read of a pair... and only proper pairs
-                    bedCounter.addRead(read, Orientation.UNSTRANDED);
-                }
-            }
         }
         
         reader.close();
@@ -368,26 +379,27 @@ public class BamStats extends AbstractOutputCommand {
         println("Unmapped-reads:\t" + unmapped);
         println("Multiple-mapped-reads:\t" + multiple);
         println("Uniquely-mapped-reads:\t" + (mapped - multiple));
+        
         if (bedCounter!=null) {
-            println("On-target-reads:\t" + (bedCounter.getOnTarget()));
-            println("On-target-bases:\t" + (bedCounter.getOnTargetBases()));
+            println("On-target-reads (R1 only):\t" + (bedCounter.getOnTarget()));
             println("On-target-pct:\t" + String.format("%.2f%%", (100.0*bedCounter.getOnTarget()) / bedCounter.getTotalCount()));
-            println("On-target-depth:\t" + String.format("%.2f", ((double)bedCounter.getOnTargetBases()) / bedCounter.getTotalCount()) + "X");
+
+            println("On-target-bases (R1+R2):\t" + onTargetBases);
+            println("On-target-depth:\t" + String.format("%.2f", ((double)onTargetBases) / bedCounter.getBedSize()) + "X");
+            println("On-target-length (BED):\t" + bedCounter.getBedSize());
         } 
-        println("Total-bases:\t" + totalBases);
-        if (bedCounter!=null) {
-            println("Target-length:\t" + bedCounter.getBedSize());
-        } else {
-            println("Ref-length:\t" + refTotalLength);
-        }
+
         println("Q30-pct:\t" + String.format("%.2f", 100.0 * q30Bases / totalBases) + "%");
+
+        println("Total-bases:\t" + totalBases);
+        println("Ref-length:\t" + refTotalLength);
+        
         if (!hasGaps) {
             // if we have gaps, this is RNAseq and coverage is not a meaningful measure.
-            if (bedCounter != null) {
-                println("Effective-depth:\t" + String.format("%.2f", ((double) totalBases) / bedCounter.getBedSize()) + "X");
-            } else {
-                println("Effective-depth:\t" + String.format("%.2f", ((double) totalBases) / refTotalLength) + "X");
-            }
+            println("Total-depth:\t" + String.format("%.2f", ((double) totalBases) / refTotalLength) + "X");
+//            if (bedCounter != null) {
+//                println("Effective-depth:\t" + String.format("%.2f", ((double) totalBases) / bedCounter.getBedSize()) + "X");
+//            }
         }
         if (paired && calcInsert) {
             println();

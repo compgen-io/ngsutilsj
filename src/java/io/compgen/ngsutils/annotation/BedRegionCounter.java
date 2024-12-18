@@ -39,6 +39,16 @@ public class BedRegionCounter {
         }
     }
 
+    public boolean readMatch(SAMRecord read, Orientation orient) {
+        for (GenomeSpan reg: GenomeSpan.getReadAlignmentRegions(read, orient)) {
+            List<BedRecord> foo = bed.findAnnotation(reg);
+            if (foo != null && foo.size() > 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
     public long getTotalCount() {
         return total;
     }
