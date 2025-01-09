@@ -323,7 +323,18 @@ public class VCFHeader {
 	 */
 	public int getSamplePosByName(String name) {
 	    
-        // You can ID a sample by index (1, 2, 3)
+        // By name NORMAL, TUMOR, etc...
+		// we do this check first, because the sample can also be named "123"
+		// if this is a valid name, we want to use that.
+		//
+		// only if that fails do we want to try to convert to a number
+		for (int i=0; i<samples.size(); i++) {
+			if (samples.get(i).equals(name)) {
+				return i;
+			}
+		}
+
+		// OR You can ID a sample by index (1, 2, 3)
 	    try {
 	        int i = Integer.parseInt(name);
 	        return i - 1;
@@ -332,13 +343,6 @@ public class VCFHeader {
 	        // ignore this...
 	    }
 	    
-        // OR by name NORMAL, TUMOR, etc...
-	    
-		for (int i=0; i<samples.size(); i++) {
-			if (samples.get(i).equals(name)) {
-				return i;
-			}
-		}
 		return -1;
 	}
 

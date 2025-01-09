@@ -110,6 +110,7 @@ import io.compgen.ngsutils.cli.vcf.VCFPeptide;
 import io.compgen.ngsutils.cli.vcf.VCFRemoveInfoFlag;
 import io.compgen.ngsutils.cli.vcf.VCFRenameSample;
 import io.compgen.ngsutils.cli.vcf.VCFSVToFASTA;
+import io.compgen.ngsutils.cli.vcf.VCFSampleExport;
 import io.compgen.ngsutils.cli.vcf.VCFSamples;
 import io.compgen.ngsutils.cli.vcf.VCFStats;
 import io.compgen.ngsutils.cli.vcf.VCFStrip;
@@ -255,7 +256,8 @@ public class NGSUtils {
 			.addCommand(VCFRemoveInfoFlag.class)
 			.addCommand(BaiExplore.class)
 			.addCommand(BGZStats.class)
-		.addCommand(TabixSplit.class);
+			.addCommand(TabixSplit.class)
+			.addCommand(VCFSampleExport.class);
 
 
         try {
