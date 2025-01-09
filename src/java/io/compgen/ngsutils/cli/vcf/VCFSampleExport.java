@@ -131,7 +131,9 @@ public class VCFSampleExport extends AbstractOutputCommand {
 			}
 			for (String g: validKeys) {
 	            if (GlobUtils.matches(key, g)) {
-					keys.add(key);
+	            	if (!keys.contains(key)) {
+	            		keys.add(key);
+	            	}
 	            }
 			}
 		}
