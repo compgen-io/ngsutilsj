@@ -130,7 +130,7 @@ public class VCFAttributes {
 		
 		// GT can't be trimmed if it is present
 		int limit = 0;
-		if (format.get(0).equals("GT")) {
+		if (format.size()>0 && format.get(0).equals("GT")) {
 			limit = 1;
 		}
 		
