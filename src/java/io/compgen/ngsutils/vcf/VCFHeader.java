@@ -27,8 +27,10 @@ public class VCFHeader {
 	
 	protected String headerLine;
 	
+	protected List<String> origSamples = new ArrayList<String>();
 	protected List<String> samples = new ArrayList<String>();
-	
+	protected Map<String, Integer> newSampleOrder = new HashMap<String, Integer>();
+
     private Set<String> removeFilter = null;
     private Set<String> removeInfo = null;
     private Set<String> removeFormat = null;
@@ -198,25 +200,25 @@ public class VCFHeader {
 		String[] spl = headerLine.split("\t");
 		
 		if (spl.length > 9) {
-			
 //			List<String> sampleList = new ArrayList<String>();
 			for (int i=9; i< spl.length; i++) {
-                boolean match = false;
+                boolean removeMe = false;
                 if (removeSample != null) {
                     for (String remove: removeSample) {
                         if (GlobUtils.matches(spl[i], remove)) {
-                            match = true;
+                            removeMe = true;
     	                    if (keepSample != null) {
     	                    	for (String keep: keepSample) {
     	    	                    if (GlobUtils.matches(spl[i], keep)) {
-    	    	                        match = false;
+    	    	                        removeMe = false;
     	    	                    }    	                    		
     	                    	}
     	                    }
                         }
                     }
                 }
-                if (!match) {
+                origSamples.add(spl[i]);
+                if (!removeMe) {
                 	addSample(spl[i]);
 //                	sampleList.add(spl[i]);
 //    				samples[i-9]=spl[i];
@@ -228,13 +230,21 @@ public class VCFHeader {
 	}
 
 	public void addSample(String sample) {
+		this.newSampleOrder.put(sample, this.samples.size());
 		this.samples.add(sample);
+	}
+	
+	public String getOrigSampleName(int idx) {
+		if (idx > -1 && idx < origSamples.size()) {
+			return origSamples.get(idx);
+		}
+		return null;
 	}
 	
 	public List<String> getSamples() {
 		return Collections.unmodifiableList(this.samples);
 	}
-	
+		
 	public void renameSample(String oldname, String newname) throws VCFParseException {
 		int idx = getSamplePosByName(oldname);
 		if (idx > -1) {
@@ -328,9 +338,18 @@ public class VCFHeader {
 		// if this is a valid name, we want to use that.
 		//
 		// only if that fails do we want to try to convert to a number
-		for (int i=0; i<samples.size(); i++) {
-			if (samples.get(i).equals(name)) {
-				return i;
+		
+		if (newSampleOrder != null) {
+			if (newSampleOrder.containsKey(name)) {
+				return newSampleOrder.get(name);
+			} else { 
+				return -1;
+			}
+		} else {
+			for (int i=0; i<samples.size(); i++) {
+				if (samples.get(i).equals(name)) {
+					return i;
+				}
 			}
 		}
 

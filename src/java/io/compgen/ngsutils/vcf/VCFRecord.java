@@ -198,10 +198,16 @@ public class VCFRecord {
         
 		if (sampleAttributes != null && sampleAttributes.size() > 0) {
 			List<String> keyOrder = sampleAttributes.get(0).getKeys();
-            outcols.add(StringUtils.join(":", keyOrder));
-			
-			for (VCFAttributes attrs: sampleAttributes) {
-                outcols.add(attrs.toString(keyOrder));
+			if (keyOrder.size() > 0) {
+	            outcols.add(StringUtils.join(":", keyOrder));
+				
+				for (VCFAttributes attrs: sampleAttributes) {
+					if (attrs == null) {
+						outcols.add(".");
+					} else {
+						outcols.add(attrs.toString(keyOrder));
+					}
+				}
 			}
 		}
 		
@@ -280,10 +286,24 @@ public class VCFRecord {
 					}
 					
 					if (cols.length>9) {
-						sampleValues = new ArrayList<VCFAttributes>(cols.length-9);
-
+						sampleValues = new ArrayList<VCFAttributes>(header.getSamples().size());
+						
+//						System.out.println("header.getSamples().size()=" + header.getSamples().size());
+//						System.out.println("sampleValues.size()=" + sampleValues.size());
+//
 						for (int i=9; i<cols.length; i++) {
-							sampleValues.add(VCFAttributes.parseFormat(cols[i], format, header));
+							String origSample = header.getOrigSampleName(i - 9);
+//							System.out.println("origSample=" + origSample);
+							if (origSample != null) {
+								int newSampleIdx = header.getSamplePosByName(origSample);
+//								System.out.println("newSampleIdx=" + newSampleIdx);
+								if (newSampleIdx > -1) {
+									while (sampleValues.size() <= newSampleIdx) {
+										sampleValues.add(null);
+									}
+									sampleValues.set(newSampleIdx, VCFAttributes.parseFormat(cols[i], format, header));
+								}
+							}
 						}
 					}
 				}
