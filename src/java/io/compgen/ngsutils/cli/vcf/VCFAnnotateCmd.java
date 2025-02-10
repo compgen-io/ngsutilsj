@@ -505,7 +505,7 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
             passing = spl[2].contains("@");
             exact = spl[2].contains("!");
             unique = spl[2].contains("$");
-            noheader = spl[3].contains("n");
+            noheader = spl[2].contains("n");
         }
         try {
             chain.add(new VCFAnnotation(spl[0], FileUtils.expandUserPath(spl[1]), null, exact, passing, unique, noheader));
