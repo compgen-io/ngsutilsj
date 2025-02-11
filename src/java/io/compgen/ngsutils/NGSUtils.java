@@ -91,6 +91,7 @@ import io.compgen.ngsutils.cli.gtf.GeneExport;
 import io.compgen.ngsutils.cli.tab.BGZStats;
 import io.compgen.ngsutils.cli.tab.TabAnnotate;
 import io.compgen.ngsutils.cli.tab.TabixCat;
+import io.compgen.ngsutils.cli.tab.TabixConcat;
 import io.compgen.ngsutils.cli.tab.TabixQuery;
 import io.compgen.ngsutils.cli.tab.TabixSplit;
 import io.compgen.ngsutils.cli.tdf.TabJoin;
@@ -257,7 +258,8 @@ public class NGSUtils {
 			.addCommand(BaiExplore.class)
 			.addCommand(BGZStats.class)
 			.addCommand(TabixSplit.class)
-			.addCommand(VCFSampleExport.class);
+			.addCommand(VCFSampleExport.class)
+			.addCommand(TabixConcat.class);
 
 
         try {
