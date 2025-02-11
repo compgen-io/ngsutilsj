@@ -1,5 +1,6 @@
 package io.compgen.ngsutils.vcf;
 
+import java.io.BufferedOutputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -12,7 +13,7 @@ public class VCFWriter {
 	
 	public VCFWriter(String filename, VCFHeader header) throws FileNotFoundException {
 		this.header = header;
-		out = new FileOutputStream(filename);
+		out = new BufferedOutputStream(new FileOutputStream(filename));
 	}
 
 	public VCFWriter(OutputStream stream, VCFHeader header) throws FileNotFoundException {
@@ -27,6 +28,12 @@ public class VCFWriter {
 		}
 		out.flush();
 		out.close();
+	}
+	
+	public void flush() throws IOException {
+		if (headerWritten) {
+			out.flush();
+		}
 	}
 	
 	public void write(VCFRecord record) throws IOException {

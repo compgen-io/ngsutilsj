@@ -217,9 +217,10 @@ public class VCFRecord {
     public static VCFRecord parseLine(String line) throws VCFParseException {
         return parseLine(line, false, null);
     }
-
+    
     public static VCFRecord parseLine(String line, boolean removeID, VCFHeader header) throws VCFParseException {
 		String[] cols = line.split("\t");
+
 		if (cols.length< 5) {
 			throw new VCFParseException("Missing columns in VCFRecord! => " + StringUtils.join(",", cols));
 		}
@@ -308,6 +309,7 @@ public class VCFRecord {
 					}
 				}
 			}
+			
 			return new VCFRecord(chrom, pos, dbSNPID, ref, alts, qual, filters, info, sampleValues, altOrig, header);
 
 		} catch (VCFParseException | VCFAttributeException e) {

@@ -11,6 +11,7 @@ import java.util.zip.DataFormatException;
 
 import io.compgen.common.IterUtils;
 import io.compgen.common.StringUtils;
+import io.compgen.common.cache.LRUCache;
 import io.compgen.ngsutils.tabix.TabixFile;
 import io.compgen.ngsutils.vcf.VCFAnnotationDef;
 import io.compgen.ngsutils.vcf.VCFAttributeException;
@@ -21,6 +22,7 @@ import io.compgen.ngsutils.vcf.VCFRecord;
 
 public class VCFAnnotation extends AbstractBasicAnnotator {
 	private static Map<String, TabixFile> cache = new HashMap<String, TabixFile>();
+	private static LRUCache<String, VCFRecord> recCache = new LRUCache<String, VCFRecord>();
 	
 	final protected String name;
 	final protected String filename;
@@ -130,7 +132,13 @@ public class VCFAnnotation extends AbstractBasicAnnotator {
 
 //			System.err.println("VCF query: " + chrom+":" + pos);
 			for (String line: IterUtils.wrap(vcfTabix.query(chrom, pos-1))) {
-				VCFRecord bgzfRec = VCFRecord.parseLine(line);
+
+				// Treat this as a LRUCache so that we don't re-parse the same line again (can be expensive)
+				VCFRecord bgzfRec = recCache.get(line);
+				if (bgzfRec == null) {
+					bgzfRec = VCFRecord.parseLine(line);
+					recCache.put(line, bgzfRec);
+				}
 
 //                System.err.println("Record: " + bgzfRec.getChrom()+":"+bgzfRec.getPos() + " -> "+filename);
 
@@ -160,8 +168,12 @@ public class VCFAnnotation extends AbstractBasicAnnotator {
 		    						for (String a2: record.getAlt()) {
 		    							if (a1.equals(a2)) { 
 		    								match = true;
+		    								break;
 		    							}
 		    						}
+	    						}
+	    						if (match) {
+	    							break;
 	    						}
 	    					}
 					    }
