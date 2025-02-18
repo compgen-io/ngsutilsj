@@ -138,10 +138,12 @@ public class VCFMerge extends AbstractOutputCommand {
 					}
 				}
 				
-				for (int i=0; i<rec.getSampleAttributes().size(); i++) {
-					for (String k: next.getSampleAttributes().get(i).getKeys()) {
-						if (!rec.getSampleAttributes().get(i).contains(k)) {
-							rec.getSampleAttributes().get(i).put(k, next.getSampleAttributes().get(i).get(k));
+				if (rec.getSampleAttributes()!=null) {
+					for (int i=0; i<rec.getSampleAttributes().size(); i++) {
+						for (String k: next.getSampleAttributes().get(i).getKeys()) {
+							if (!rec.getSampleAttributes().get(i).contains(k)) {
+								rec.getSampleAttributes().get(i).put(k, next.getSampleAttributes().get(i).get(k));
+							}
 						}
 					}
 				}
