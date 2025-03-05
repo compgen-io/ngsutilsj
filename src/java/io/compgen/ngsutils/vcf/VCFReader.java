@@ -12,14 +12,18 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.zip.DataFormatException;
 import java.util.zip.GZIPInputStream;
 
+import io.compgen.ngsutils.annotation.GenomeSpan;
 import io.compgen.ngsutils.tabix.BGZFile;
 import io.compgen.ngsutils.tabix.BGZInputStream;
+import io.compgen.ngsutils.tabix.TabixFile;
 
 public class VCFReader {
 	protected BufferedReader in;
 	protected VCFHeader header=null;
+	protected TabixFile tabix=null;
 	private boolean closed = false;
     private FileChannel channel = null;
     private String filename = null;
@@ -43,6 +47,9 @@ public class VCFReader {
             BGZFile bgzf = new BGZFile(filename);
             channel = bgzf.getChannel();
             in = new BufferedReader(new InputStreamReader(new BGZInputStream(bgzf)));               
+            if (TabixFile.isTabixFile(filename)) {
+                this.tabix = new TabixFile(bgzf);
+            }
         } else if (isGZipFile(filename)){
             this.filename = filename;
             FileInputStream fis = new FileInputStream(filename);
@@ -54,18 +61,6 @@ public class VCFReader {
             channel = fis.getChannel();
             in = new BufferedReader(new InputStreamReader(fis));
         }
-
-//        if (filename.equals("-")) {
-//            in = new BufferedReader(new InputStreamReader(System.in));
-//        } else if (filename.endsWith(".gz") || filename.endsWith(".bgz") ||filename.endsWith(".bgzf")) {
-//            if (BGZFile.isBGZFile(filename)) {
-//                in = new BufferedReader(new InputStreamReader(new BGZInputStream(filename)));               
-//            } else {
-//                in = new BufferedReader(new InputStreamReader(new GZIPInputStream(new FileInputStream(filename))));
-//            }
-//        } else {
-//            in = new BufferedReader(new FileReader(filename));
-//        }
 
 	}
 	
@@ -179,6 +174,85 @@ public class VCFReader {
 			}
 		};
 	}
+
+	/**
+	 * 
+	 * @param ref
+	 * @param start zero-based!
+	 * @param end
+	 * @return
+	 * @throws IOException
+	 * @throws VCFParseException
+	 * @throws DataFormatException 
+	 */
+	public Iterator<VCFRecord> query(String ref, int start, int end) throws IOException, VCFParseException, DataFormatException {
+		if (tabix == null) {
+			throw new IOException("Tabix indexed VCF required");
+		}
+
+		if (header == null) {
+	        readHeader();
+	    }
+
+		Iterator<String> it = tabix.query(ref, start, end);
+		return new Iterator<VCFRecord> () {
+
+			@Override
+			public boolean hasNext() {
+				return it.hasNext();
+			}
+
+			@Override
+			public VCFRecord next() {
+				try {
+					return VCFRecord.parseLine(it.next(), false, header);
+				} catch (VCFParseException e) {
+					throw new RuntimeException(e);
+				}
+			}
+		};
+	}
+
+    public Iterator<VCFRecord> query(GenomeSpan span) throws IOException, DataFormatException, VCFParseException {
+    	return query(span.ref, span.start, span.end);
+    }
+
+    public boolean isIndexed(){
+		return this.tabix != null;
+	}
+
+    /**
+     * 
+     * @param ref
+     * @param pos -- 1-based (for a VCF)
+     * @param refBase
+     * @param alt
+     * @return
+     * @throws IOException
+     * @throws DataFormatException
+     * @throws VCFParseException
+     */
+    public VCFRecord getVariant(String chrom, int pos, String ref, String alt) throws IOException, DataFormatException, VCFParseException {
+    	Iterator<VCFRecord> it = query(chrom, pos-1, pos);
+    	while (it.hasNext()) {
+    		VCFRecord rec = it.next();
+    		if (!rec.chrom.equals(chrom)) {
+    			continue;
+    		}
+    		if (rec.pos != pos) {
+    			continue;
+    		}
+    		if (!rec.ref.equals(ref)) {
+    			continue;
+    		}
+    		for (String recAlt: rec.alt) {
+    			if (recAlt.equals(alt)) {
+    				return rec;
+    			}
+    		}    		
+    	}
+    	return null;
+    } 
 
 
     public void setRemoveID(boolean removeID) {

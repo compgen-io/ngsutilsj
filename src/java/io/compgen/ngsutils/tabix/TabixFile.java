@@ -22,13 +22,39 @@ public class TabixFile {
     private boolean removeChr = false;
     
     private boolean closed = false;
+    
+	static public boolean isTabixFile(String filename) {
+		return isTabixFile(filename, false);
+	}
+	static public boolean isTabixFile(String filename, boolean verbose) {
+		if (!BGZFile.isBGZFile(filename, verbose)) {
+			return false;
+		}
         
+		if (new File(filename+".csi").exists()) {
+        	return true;
+        }
+        
+        if (new File(filename+".tbi").exists()) {
+        	return true;
+        }
+        return false;
+	}
+
+    
 	public TabixFile(String filename) throws IOException {
 		this(filename, false);
 	}
+	public TabixFile(BGZFile bgzf) throws IOException {
+		this(bgzf, false);
+	}
 	public TabixFile(String filename, boolean verbose) throws IOException {
-		this.filename = filename;
-		this.bgzf = new BGZFile(filename, verbose);
+		this(new BGZFile(filename, verbose), verbose);
+	}
+	
+	public TabixFile(BGZFile bgzf, boolean verbose) throws IOException {
+		this.bgzf = bgzf;
+		this.filename = bgzf.filename;
         this.index = null;
         
         if (new File(filename+".csi").exists()) {

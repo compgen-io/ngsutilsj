@@ -67,15 +67,17 @@ public class PileupRecord {
 		public final boolean plusStrand;
 		public final int readPos; // Note: this is always relative to the + strand position of the read, regardless of if the read is on the plus or minus strand.
 		                          //       Will be "-1" if missing from file
+		public final String qname;
 		
-		public PileupBaseCall(PileupBaseCallOp op, String call, int qual, int readPos) {
-		    this(op, call, qual, "", readPos);
+		public PileupBaseCall(PileupBaseCallOp op, String call, int qual, int readPos, String qname) {
+		    this(op, call, qual, "", readPos, qname);
 		}
 
-        public PileupBaseCall(PileupBaseCallOp op, String call, int qual, String refBase, int readPos) {
+        public PileupBaseCall(PileupBaseCallOp op, String call, int qual, String refBase, int readPos, String qname) {
             this.op = op;
             this.qual = qual;
             this.readPos = readPos;
+            this.qname = qname;
             
             if (op == PileupBaseCallOp.Match) {
                 if (call.equals(".")) {
@@ -124,33 +126,69 @@ public class PileupRecord {
 	private List<PileupSampleRecord> records = new ArrayList<PileupSampleRecord>();
 	
     public static PileupRecord parse(String line) {
-        return parse(line, 0, false);
+        return parse(line, 0, false, false);
     }
-    public static PileupRecord parse(String line, int minBaseQual, boolean nogaps) {
+    public static PileupRecord parse(String line, int minBaseQual, boolean nogaps, boolean hasQname) {
 //		System.err.println(StringUtils.strip(line));
 		String[] cols = StringUtils.strip(line).split("\t");
 		
-		// check to see if there are two or three columns per sample
-		// if there are three, the third is the read position.
-		// if there are two, we don't know the read positions...
+		int offset;
+		boolean hasReadPos;
 		
-		boolean hasReadPos = cols.length >=7 && (cols.length-3) % 4 == 0;
-		
-		for (int i=3; hasReadPos && i<cols.length; i+=4) {
-		    try {
-		        Integer.parseInt(cols[i]);
-		    } catch (NumberFormatException e) {
-		        hasReadPos = false;
-		    }
+		if (!hasQname) {
+			// [cols] 
+			// chrom
+			// pos
+			// ref
+			// [start sample cols]
+			//   number-of-reads
+			//   base-calls
+			//   qual
+			//   read-pos (opt)
+			//   qname (opt)
+			// [end sample cols]
+			//
+			// check to see if there are three or four columns per sample
+			// if there are four, the fourth is the read position.
+			// if there are three, we don't know the read positions...
+			
+			hasReadPos = cols.length >=7 && (cols.length-3) % 4 == 0;
+			
+			for (int i=3; hasReadPos && i<cols.length; i+=4) {
+			    try {
+			        Integer.parseInt(cols[i]);
+			    } catch (NumberFormatException e) {
+			        hasReadPos = false;
+			    }
+			}
+			
+			offset = 4;
+			
+			if (!hasReadPos) {
+			    offset = 3;
+			}
+		} else {
+			// check to see if there are four or five columns per sample
+			// if there are five, the fifth this the qname, fourth is the read position.
+			// if there are four, we don't know the read positions... but we know the qname			
+
+			hasReadPos = cols.length >=8 && (cols.length-3) % 5 == 0;
+			
+			for (int i=3; hasReadPos && i<cols.length; i+=5) {
+			    try {
+			        Integer.parseInt(cols[i]);
+			    } catch (NumberFormatException e) {
+			        hasReadPos = false;
+			    }
+			}
+			
+			offset = 5;
+			
+			if (!hasReadPos) {
+			    offset = 4;
+			}
 		}
-		
-		int offset = 4;
-		
-		if (!hasReadPos) {
-		    offset = 3;
-		}
-		
-		
+				
 		String ref = cols[0];
 		int pos = Integer.parseInt(cols[1]) - 1; // we store this as a 0-based value... Pileup uses 1-based
 		String refBase = cols[2].toUpperCase();
@@ -167,12 +205,18 @@ public class PileupRecord {
 			int qual_idx = 0;
 			
 			int[] readPos = null;
+			String[] qnames = null;
+			
 			if (hasReadPos) {
     			String[] readPosSpl = cols[i+3].split(",");
     			readPos = new int[readPosSpl.length];
     			for (int j=0; j<readPosSpl.length; j++) {
     			    readPos[j] = Integer.parseInt(readPosSpl[j]);
     			}
+			}
+			
+			if (hasQname) {
+    			qnames = cols[i+offset-1].split(",");
 			}
 			
 			for (int j=0; j<cols[i+1].length(); j++) {
@@ -204,9 +248,9 @@ public class PileupRecord {
 
 					// always add indels (no good qual scores avail)
 					if (base == '+') {
-						calls.add(record.new PileupBaseCall(PileupBaseCallOp.Ins, indel, -1, hasReadPos ? readPos[qual_idx-1] : -1));
+						calls.add(record.new PileupBaseCall(PileupBaseCallOp.Ins, indel, -1, hasReadPos ? readPos[qual_idx-1] : -1, hasQname ? qnames[qual_idx-1] : null));
 					} else {
-						calls.add(record.new PileupBaseCall(PileupBaseCallOp.Del, indel, -1, hasReadPos ? readPos[qual_idx-1] : -1));
+						calls.add(record.new PileupBaseCall(PileupBaseCallOp.Del, indel, -1, hasReadPos ? readPos[qual_idx-1] : -1, hasQname ? qnames[qual_idx-1] : null));
 					}
 					
 					j += indelLen-1;
@@ -214,13 +258,13 @@ public class PileupRecord {
                     // < or > is a "refskip" (N CIGAR op)
                     if (cols[i+2].charAt(qual_idx)-33 > minBaseQual) {
                         if (!nogaps) {
-                            calls.add(record.new PileupBaseCall(PileupBaseCallOp.Gap, ""+base, cols[i+2].charAt(qual_idx)-33, refBase, hasReadPos ? readPos[qual_idx] : -1));
+                            calls.add(record.new PileupBaseCall(PileupBaseCallOp.Gap, ""+base, cols[i+2].charAt(qual_idx)-33, refBase, hasReadPos ? readPos[qual_idx] : -1, hasQname ? qnames[qual_idx] : null));
                         }
                     }
                     qual_idx++;
 				} else {
 				    if (cols[i+2].charAt(qual_idx)-33 >= minBaseQual) {
-				        calls.add(record.new PileupBaseCall(PileupBaseCallOp.Match, ""+base, cols[i+2].charAt(qual_idx)-33, refBase, hasReadPos ? readPos[qual_idx] : -1));
+				        calls.add(record.new PileupBaseCall(PileupBaseCallOp.Match, ""+base, cols[i+2].charAt(qual_idx)-33, refBase, hasReadPos ? readPos[qual_idx] : -1, hasQname ? qnames[qual_idx] : null));
 				    }
 					qual_idx++;
 				}

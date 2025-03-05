@@ -26,6 +26,7 @@ import io.compgen.ngsutils.cli.bam.BamExtract;
 import io.compgen.ngsutils.cli.bam.BamFilterCli;
 import io.compgen.ngsutils.cli.bam.BamFlagDuplicates;
 import io.compgen.ngsutils.cli.bam.BamPhase;
+import io.compgen.ngsutils.cli.bam.BamPhaseInformativeReads;
 import io.compgen.ngsutils.cli.bam.BamReadGroup;
 import io.compgen.ngsutils.cli.bam.BamRefCount;
 import io.compgen.ngsutils.cli.bam.BamRemoveClipping;
@@ -259,7 +260,8 @@ public class NGSUtils {
 			.addCommand(BGZStats.class)
 			.addCommand(TabixSplit.class)
 			.addCommand(VCFSampleExport.class)
-			.addCommand(TabixConcat.class);
+			.addCommand(TabixConcat.class)
+			.addCommand(BamPhaseInformativeReads.class);
 
 
         try {

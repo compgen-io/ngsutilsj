@@ -25,6 +25,7 @@ public class BAMPileup {
     private int filterFlags = -1;
     private int requiredFlags = -1;
     private boolean nogaps = false;
+    private boolean showQname = false;
     
     private boolean disableBAQ = true;
     private boolean extendedBAQ = false;
@@ -49,6 +50,10 @@ public class BAMPileup {
         this.verbose = verbose;
     }
     
+    public void setQname(boolean showQname) {
+        this.showQname = showQname;
+    }
+    
     public CloseableIterator<PileupRecord> pileup() throws IOException {
         return pileup(null);
     }
@@ -62,6 +67,10 @@ public class BAMPileup {
         cmd.add("samtools");
         cmd.add("mpileup");
         cmd.add("-O");
+        
+        if (showQname) {
+        	cmd.add("--output-QNAME");
+        }
         if (minMappingQual > -1) {
             cmd.add("-q");
             cmd.add(""+minMappingQual);
@@ -158,7 +167,7 @@ public class BAMPileup {
             throw new RuntimeException("Cannot start samtools mpileup! " + e.getMessage());
         }
         InputStream bis = new BufferedInputStream(proc.getInputStream());
-        final PileupReader reader = new PileupReader(bis, minBaseQual, nogaps);
+        final PileupReader reader = new PileupReader(bis, minBaseQual, nogaps, showQname);
         
         Thread t = new Thread(new Runnable() {
             @Override
