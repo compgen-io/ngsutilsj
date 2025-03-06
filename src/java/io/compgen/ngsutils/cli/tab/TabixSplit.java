@@ -8,13 +8,13 @@ import io.compgen.cmdline.annotation.Exec;
 import io.compgen.cmdline.annotation.Option;
 import io.compgen.cmdline.annotation.UnnamedArg;
 import io.compgen.cmdline.exceptions.CommandArgumentException;
-import io.compgen.cmdline.impl.AbstractOutputCommand;
+import io.compgen.cmdline.impl.AbstractCommand;
 import io.compgen.common.IterUtils;
 import io.compgen.ngsutils.tabix.BGZipOutputStream;
 import io.compgen.ngsutils.tabix.TabixFile;
 
 @Command(name = "tabix-split", desc = "Splits a tabix file by ref/chrom", category = "annotation")
-public class TabixSplit extends AbstractOutputCommand {
+public class TabixSplit extends AbstractCommand {
     private String infile;
     private String templFilename = null;
     private boolean header = false;
