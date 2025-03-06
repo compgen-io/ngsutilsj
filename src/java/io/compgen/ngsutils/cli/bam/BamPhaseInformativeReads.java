@@ -43,7 +43,8 @@ import io.compgen.ngsutils.vcf.VCFRecord;
 
 @Command(name="bam-pir", 
 		 desc="For a BAM file, extract the phase-informative reads", 
-		 category="bam" 
+		 category="bam" ,
+		 experimental=true
 		 )
 
 public class BamPhaseInformativeReads extends AbstractOutputCommand {
