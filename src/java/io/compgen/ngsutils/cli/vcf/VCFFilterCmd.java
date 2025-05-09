@@ -25,6 +25,8 @@ import io.compgen.ngsutils.vcf.VCFHeader;
 import io.compgen.ngsutils.vcf.VCFReader;
 import io.compgen.ngsutils.vcf.VCFRecord;
 import io.compgen.ngsutils.vcf.VCFWriter;
+import io.compgen.ngsutils.vcf.filter.ChromFailFilter;
+import io.compgen.ngsutils.vcf.filter.ChromPassFilter;
 import io.compgen.ngsutils.vcf.filter.Contains;
 import io.compgen.ngsutils.vcf.filter.Equals;
 import io.compgen.ngsutils.vcf.filter.FlagAbsent;
@@ -58,6 +60,16 @@ public class VCFFilterCmd extends AbstractOutputCommand {
     private boolean onlyOutputPass = false;
     private boolean onlyOutputFail = false;
     private String statsFilename=null;
+	
+    @Option(desc="Filter variants not on these chromosomes (CSV)", name="chrom-pass")
+    public void setChromPass(String chroms) {
+        filterChain.add(new ChromPassFilter(chroms.split(",")));
+    }
+	
+    @Option(desc="Filter variants on these chromosomes (CSV)", name="chrom-fail")
+    public void setChromFail(String chroms) {
+        filterChain.add(new ChromFailFilter(chroms.split(",")));
+    }
 	
     @Option(desc="Write filter stats to a file", name="stats")
     public void setStatsFilename(String statsFilename) {

@@ -36,6 +36,12 @@ public abstract class VCFAbstractFilter implements VCFFilter {
 		}
 	}
 	
+	/**
+	 * If this returns true, then the FILTER field is added
+	 * @param record
+	 * @return
+	 * @throws VCFFilterException
+	 */
 	protected abstract boolean innerFilter(VCFRecord record) throws VCFFilterException;
 	
 	@Override
