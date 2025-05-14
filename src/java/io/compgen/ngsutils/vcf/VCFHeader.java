@@ -300,9 +300,10 @@ public class VCFHeader {
 		}
 
 		if (includeAll) {
-			String header = "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT";
+			String header = "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO";
 			
-			if (samples != null) {
+			if (samples != null && samples.size()>0) {
+				header += "\tFORMAT"; // format only is set when there are samples...
 				for (String sample: samples) {
 					header = header + "\t" + sample;
 				}
