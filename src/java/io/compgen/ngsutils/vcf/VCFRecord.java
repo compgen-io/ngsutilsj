@@ -199,8 +199,10 @@ public class VCFRecord {
 		if (sampleAttributes != null && sampleAttributes.size() > 0) {
 			List<String> keyOrder = sampleAttributes.get(0).getKeys();
 			if (keyOrder.size() > 0) {
+				// Write FORMAT
 	            outcols.add(StringUtils.join(":", keyOrder));
 				
+				// Write sample values
 				for (VCFAttributes attrs: sampleAttributes) {
 					if (attrs == null) {
 						outcols.add(".");
