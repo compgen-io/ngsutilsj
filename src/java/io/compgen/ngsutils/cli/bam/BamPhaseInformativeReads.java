@@ -68,7 +68,9 @@ public class BamPhaseInformativeReads extends AbstractOutputCommand {
     
     private boolean onlySNVs = false;
     private boolean onlyPassing = false;
+    private boolean onlyPresent = false;
     private boolean onlyHet = false;
+    private boolean vcfGT = false;
     
     private String bedOutputTemplate = null;
     
@@ -90,6 +92,7 @@ public class BamPhaseInformativeReads extends AbstractOutputCommand {
             filterFlags |= ReadUtils.READ_UNMAPPED_FLAG | ReadUtils.MATE_UNMAPPED_FLAG;
         }
     }
+    
 
     @Option(desc = "No supplementary mappings", name = "no-supplementary")
     public void seNoSupplmentary(boolean val) {
@@ -183,18 +186,27 @@ public class BamPhaseInformativeReads extends AbstractOutputCommand {
     	this.region = region;
     }
 
-    @Option(desc="Only include variants from this VCF file", name="vcf")
+    @Option(desc="Find variants in this VCF file", name="vcf")
     public void setVCFFilename(String vcfFilename) {
     	this.vcfFilename = vcfFilename;
     }
-    @Option(desc = "Only include passing variants (req --vcf)", name = "only-passing")
+    @Option(desc = "Only include passing variants (req --vcf)", name = "vcf-passing")
     public void setOnlyPassing(boolean val) {
     	this.onlyPassing = val;
     }
 
-    @Option(desc = "Only include variants with a heterozygous GT call (req --vcf)", name = "only-het")
+    @Option(desc = "Only include variants with a heterozygous GT call (req --vcf, implies --vcf-present)", name = "vcf-het")
     public void setOnlyHet(boolean val) {
     	this.onlyHet = val;
+    	this.onlyPresent = val;
+    }
+    @Option(desc = "Only include variants present in the VCF file (req --vcf)", name = "vcf-present")
+    public void setOnlyPresent(boolean val) {
+    	onlyPresent = val;
+    }
+    @Option(desc = "Include the GT value from the VCF record (first sample listed, req --vcf)", name = "vcf-gt")
+    public void setVCFGT(boolean val) {
+    	vcfGT = val;
     }
 
 
@@ -225,11 +237,19 @@ public class BamPhaseInformativeReads extends AbstractOutputCommand {
         }
         
         if (onlyPassing && vcfFilename==null) {
-            throw new CommandArgumentException("You must set --vcf with --only-passing");
+            throw new CommandArgumentException("You must set --vcf with --vcf-passing");
         }
         
         if (onlyHet && vcfFilename==null) {
-            throw new CommandArgumentException("You must set --vcf with --only-het");
+            throw new CommandArgumentException("You must set --vcf with --vcf-het");
+        }
+        
+        if (onlyPresent && vcfFilename==null) {
+            throw new CommandArgumentException("You must set --vcf with --vcf-present");
+        }
+        
+        if (vcfGT && vcfFilename==null) {
+            throw new CommandArgumentException("You must set --vcf with --vcf-gt");
         }
         
         if (vcfFilename!=null && vcfFilename.equals("-")) {
@@ -385,6 +405,9 @@ public class BamPhaseInformativeReads extends AbstractOutputCommand {
         writer.eol();
 
         writer.write("#chrom", "pos", "ref", "alt");
+        if (vcfGT) {
+        	writer.write("GT");
+        }
         for (String fname: bamFilenames) {
         	writer.write(new File(fname).getName()+" refcount");
         	writer.write(new File(fname).getName()+" altcount");
@@ -426,11 +449,13 @@ public class BamPhaseInformativeReads extends AbstractOutputCommand {
             lastpos = record.pos;
             lastref = record.ref;
 	    	Map<String, List<Set<String>>> variantReads = new HashMap<String, List<Set<String>>>();
+	    	Map<String, String> variantGT = new HashMap<String, String>();
 	    	Set<String> skipRec = new HashSet<String>();
 	    	for(int i=0; i<record.getNumSamples(); i++) {
 	    		PileupSampleRecord rec = record.getSampleRecords(i);
 	    		for (int j=0; j<rec.calls.size(); j++) {
 	    			String variant;
+	    			String gtVal = "";
 	    			if (rec.calls.get(j).call.equals(record.refBase)) {
 	    				variant = record.ref+":"+record.pos+":"+record.refBase+":"+record.refBase;
 	    			} else {
@@ -441,43 +466,60 @@ public class BamPhaseInformativeReads extends AbstractOutputCommand {
 	    				}
 	    				
 	    				if (!variantReads.containsKey(variant)) {
-		    				
+//		    				System.err.println("Looking for variant: " + variant);
 		    				if (onlySNVs) {
 		    					if (record.refBase.length()!=1 || rec.calls.get(j).call.length() != 1) {
+//		    						System.err.println("REJECT: Not an SNV");
 		    						continue;
 		    					}
 		    				}
 		    				
 		    				boolean good = true;
 		    				if (vcfFile != null) {
-		    					good = false;
+								if (onlyPresent) {
+									good = false;
+								}
 		    					
 		    					VCFRecord vcfrec = vcfFile.getVariant(record.ref, record.pos+1, record.refBase, rec.calls.get(j).call);
 		    					if (vcfrec != null) {
-			    					good = true;
+									if (onlyPresent) {
+//			    						System.err.println("Found in VCF!");
+										good = true;
+									}
+									
 		    						if (onlyPassing && vcfrec.isFiltered()) {
+//			    						System.err.println("REJECT: Filtered in VCF");
 		    							good = false;
 		    						}
 		    						
-		    						if (onlyHet) {
-		    							VCFAttributeValue attr = vcfrec.getSampleAttributes().get(0).get("GT");
-		    							if (attr == null) {
-		    								good = false;
-		    							} else {
-		    								String val = attr.toString();
-		    								String[] spl = null;
-		    								
-		    								if (val.contains("/")) {
-		    									spl = val.split("/");
-		    								} else if (val.contains("|")) {
-		    									spl = val.split("|");
-		    								}
-		    								
-		    								if (spl == null || spl.length!=2 || !spl[0].equals(spl[1])) {
-		    									good = false;
-		    								}
-		    							}
-		    						}
+		    						boolean isHet = false;
+		    						
+	    							VCFAttributeValue attr = vcfrec.getSampleAttributes().get(0).get("GT");
+	    							if (attr != null) {
+	    								String val = attr.toString();
+	    								String[] spl = null;
+	    								
+	    								if (val.contains("/")) {
+	    									spl = val.split("/");
+	    								} else if (val.contains("|")) {
+	    									spl = val.split("\\|");
+	    								}
+	    								
+	    								if (spl != null) {
+	    									gtVal = val;
+	    								}
+	    								
+//	    								System.err.println("Found GT: " + val+ " / " + StringUtils.join(",", spl));
+	    								
+	    								if (spl != null && spl.length==2 && !spl[0].equals(spl[1])) {
+//				    						System.err.println("Is a Het!");
+	    									isHet = true;
+	    								}
+	    							}
+	    							if (onlyHet && !isHet) {
+//			    						System.err.println("REJECT: Not a het");
+		    							good = false;
+	    							}
 		    					}	    					
 		    				}
 		    				
@@ -494,6 +536,7 @@ public class BamPhaseInformativeReads extends AbstractOutputCommand {
 							list.add(new HashSet<String>());
 						}
 						variantReads.put(variant, list);
+						variantGT.put(variant, gtVal);
 					}
 					
 					variantReads.get(variant).get(i).add(qname);
@@ -504,12 +547,16 @@ public class BamPhaseInformativeReads extends AbstractOutputCommand {
 	    		int[] refCount = new int[record.getNumSamples()];
 	    		List<Set<String>> refReads = new ArrayList<Set<String>>();
 	    		
+				for (int k=0;k<record.getNumSamples(); k++) {
+					refCount[k] = 0;
+					refReads.add(new HashSet<String>());
+				}
 	    		for (String variant: variantReads.keySet()) {
 	    			String[] v = variant.split(":");
 	    			if (v[2].equals(v[3])) {
 						for (int k=0;k<record.getNumSamples(); k++) {
 							refCount[k] = variantReads.get(variant).get(k).size();
-							refReads.add(variantReads.get(variant).get(k));
+							refReads.set(k, variantReads.get(variant).get(k));
 						}
 	    			}
 	    		}
@@ -519,6 +566,9 @@ public class BamPhaseInformativeReads extends AbstractOutputCommand {
 	    				continue;
 	    			}
 	    			writer.write(v);
+	    			if (vcfGT) {
+	    				writer.write(variantGT.get(variant));
+	    			}
 					for (int k=0;k<record.getNumSamples(); k++) {
 						writer.write(refCount[k]);
 						writer.write(variantReads.get(variant).get(k).size());
