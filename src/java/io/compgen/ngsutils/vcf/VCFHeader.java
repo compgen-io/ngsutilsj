@@ -384,6 +384,10 @@ public class VCFHeader {
         contigDefs.remove(id);
     }
     
+    public VCFContigDef getContigDef(String id) {
+        return contigDefs.get(id);
+    }
+    
     public void addAlt(VCFAltDef def) {
         altDefs.put(def.id, def);
     }
@@ -391,6 +395,10 @@ public class VCFHeader {
     public void removeAlt(String id) {
     	altDefs.remove(id);
     }
+    public VCFAltDef getAltDef(String id) {
+        return altDefs.get(id);
+    }
+    
     
 
 	public VCFAnnotationDef getFormatDef(String id) {

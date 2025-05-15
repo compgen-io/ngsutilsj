@@ -83,6 +83,17 @@ public class VCFMerge extends AbstractOutputCommand {
 					header.addFormat(r.getHeader().getFormatDef(format));
 				}
 			}
+			for (String contig: r.getHeader().getContigNames()) {
+				if (!header.getContigNames().contains(contig)) {
+					header.addContig(r.getHeader().getContigDef(contig));
+				}
+			}
+			for (String alt: r.getHeader().getAlts()) {
+				if (!header.getAlts().contains(alt)) {
+					header.addAlt(r.getHeader().getAltDef(alt));
+				}
+			}
+
 			for (String line: r.getHeader().getLines()) {
 				if (!header.contains(line)) {
 					header.addLine(line);

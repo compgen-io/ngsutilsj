@@ -102,6 +102,7 @@ import io.compgen.ngsutils.cli.vcf.VCFBuild;
 import io.compgen.ngsutils.cli.vcf.VCFCheck;
 import io.compgen.ngsutils.cli.vcf.VCFChrFix;
 import io.compgen.ngsutils.cli.vcf.VCFClearFilter;
+import io.compgen.ngsutils.cli.vcf.VCFConcat;
 import io.compgen.ngsutils.cli.vcf.VCFConsensus;
 import io.compgen.ngsutils.cli.vcf.VCFCount;
 import io.compgen.ngsutils.cli.vcf.VCFEffect;
@@ -261,7 +262,8 @@ public class NGSUtils {
 			.addCommand(TabixSplit.class)
 			.addCommand(VCFSampleExport.class)
 			.addCommand(TabixConcat.class)
-			.addCommand(BamPhaseInformativeReads.class);
+			.addCommand(BamPhaseInformativeReads.class)
+			.addCommand(VCFConcat.class);
 
 
         try {
