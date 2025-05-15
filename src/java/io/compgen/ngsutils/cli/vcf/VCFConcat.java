@@ -115,43 +115,50 @@ public class VCFConcat extends AbstractOutputCommand {
 		}
 		
 		VCFWriter writer = new VCFWriter(out, header);
-
-		for (int i=0; i<readers.size(); i++) {
-			if (curRecords.get(i) == null && iterators.get(i).hasNext()) {
-				curRecords.set(i,  iterators.get(i).next());
+		
+		while (true) {
+			boolean hasRecords = false;
+			for (int i=0; i<readers.size(); i++) {
+				if (curRecords.get(i) == null && iterators.get(i).hasNext()) {
+					curRecords.set(i,  iterators.get(i).next());
+				}
+				if (curRecords.get(i) != null) {
+					hasRecords = true;
+				}
 			}
-			
+			if (!hasRecords) {
+				break;
+			}
 			int lowIdx = -1;
 			int lowChrIdx = -1;
 			int lowPos = -1;
 			
 			for (int j=0; j< curRecords.size(); j++) {
-				int chrIdx = contigOrder.get(curRecords.get(i).getChrom());
-				int pos = curRecords.get(i).getPos();
-
-				if (lowIdx == -1) {
-					lowIdx = j;
-					lowChrIdx = chrIdx;
-					lowPos = pos;
-				} else if (chrIdx < lowChrIdx) {
-					lowIdx = j;
-					lowChrIdx = chrIdx;
-					lowPos = pos;
-				} else if (pos < lowPos) {
-					lowIdx = j;
-					lowChrIdx = chrIdx;
-					lowPos = pos;
-				} else {
-		    		throw new CommandArgumentException("Overlapping variant positions found: "+  curRecords.get(i).getChrom() +":"+pos);
-				}				
+				if (curRecords.get(j)!=null) {
+					int chrIdx = contigOrder.get(curRecords.get(j).getChrom());
+					int pos = curRecords.get(j).getPos();
+	
+					if (lowIdx == -1) {
+						lowIdx = j;
+						lowChrIdx = chrIdx;
+						lowPos = pos;
+					} else if (chrIdx < lowChrIdx) {
+						lowIdx = j;
+						lowChrIdx = chrIdx;
+						lowPos = pos;
+					} else if (pos < lowPos) {
+						lowIdx = j;
+						lowChrIdx = chrIdx;
+						lowPos = pos;
+					} else if (chrIdx == lowChrIdx && pos == lowPos){
+			    		throw new CommandArgumentException("Overlapping variant positions found: "+  curRecords.get(j).getChrom() +":"+pos);
+					}				
+				}
 			}
-			
+				
 			writer.write(curRecords.get(lowIdx));
 			curRecords.set(lowIdx, null);
-			
-		}
-		
-		
+		}		
 		for (VCFReader r: readers) {
 			r.close();
 		}
