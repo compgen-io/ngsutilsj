@@ -116,49 +116,64 @@ public class VCFConcat extends AbstractOutputCommand {
 		
 		VCFWriter writer = new VCFWriter(out, header);
 		
+		int[] curChrom = new int[readers.size()];
+		int[] curPos = new int[readers.size()];
+		
 		while (true) {
 			boolean hasRecords = false;
 			for (int i=0; i<readers.size(); i++) {
-				if (curRecords.get(i) == null && iterators.get(i).hasNext()) {
-					curRecords.set(i,  iterators.get(i).next());
-				}
-				if (curRecords.get(i) != null) {
+				if (curRecords.get(i) == null) {
+					if (iterators.get(i).hasNext()) {
+						VCFRecord rec = iterators.get(i).next();
+						curRecords.set(i,  rec);
+
+						curChrom[i] = contigOrder.get(rec.getChrom());
+						curPos[i] = rec.getPos();
+
+						hasRecords = true;
+					} else {
+						if (verbose) {
+							System.err.println("Exhausted VCF file: "+filenames[i]);
+						}
+						curChrom[i] = -1;
+						curPos[i] = -1;
+					}
+				} else {
 					hasRecords = true;
 				}
 			}
 			if (!hasRecords) {
 				break;
 			}
+			
 			int lowIdx = -1;
 			int lowChrIdx = -1;
 			int lowPos = -1;
 			
-			for (int j=0; j< curRecords.size(); j++) {
-				if (curRecords.get(j)!=null) {
-					int chrIdx = contigOrder.get(curRecords.get(j).getChrom());
-					int pos = curRecords.get(j).getPos();
-	
+			for (int i=0; i<readers.size(); i++) {
+				if (curChrom[i] > -1) {
 					if (lowIdx == -1) {
-						lowIdx = j;
-						lowChrIdx = chrIdx;
-						lowPos = pos;
-					} else if (chrIdx < lowChrIdx) {
-						lowIdx = j;
-						lowChrIdx = chrIdx;
-						lowPos = pos;
-					} else if (pos < lowPos) {
-						lowIdx = j;
-						lowChrIdx = chrIdx;
-						lowPos = pos;
-					} else if (chrIdx == lowChrIdx && pos == lowPos){
-			    		throw new CommandArgumentException("Overlapping variant positions found: "+  curRecords.get(j).getChrom() +":"+pos);
+						lowIdx = i;
+						lowChrIdx = curChrom[i];
+						lowPos = curPos[i];
+					} else if (curChrom[i] < lowChrIdx) {
+						lowIdx = i;
+						lowChrIdx = curChrom[i];
+						lowPos = curPos[i];
+					} else if (curPos[i] < lowPos) {
+						lowIdx = i;
+						lowChrIdx = curChrom[i];
+						lowPos = curPos[i];
+					} else if (curChrom[i] == lowChrIdx && curPos[i] == lowPos){
+			    		throw new CommandArgumentException("Overlapping variant positions found: "+  curRecords.get(i).getChrom() +":"+curPos[i]);
 					}				
 				}
 			}
-				
+
 			writer.write(curRecords.get(lowIdx));
 			curRecords.set(lowIdx, null);
-		}		
+		}
+
 		for (VCFReader r: readers) {
 			r.close();
 		}
