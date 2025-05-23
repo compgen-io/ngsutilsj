@@ -24,7 +24,7 @@ import io.compgen.ngsutils.vcf.VCFWriter;
 		+ "several smaller chunks. Crucially, this command will merge the files \n"
 		+ "in a sorted manner the same time.\n"
 		+ "\n"
-		+ "This assumes the VCF file is coordinate sorted and the chromosomes are in a"
+		+ "This assumes the VCF file is coordinate sorted and the chromosomes are in a \n"
 		+ "consistent order. If present in the header, chromosome order will be \n"
 		+ "determined by the order of ##contig lines.\n")
 
@@ -87,9 +87,10 @@ public class VCFConcat extends AbstractOutputCommand {
 					header.addFormat(r.getHeader().getFormatDef(format));
 				}
 			}
+			// TODO: actually check the order
 			for (String contig: r.getHeader().getContigNames()) {
 				if (!header.getContigNames().contains(contig)) {
-					header.addContig(r.getHeader().getContigDef(contig));
+		    		throw new CommandArgumentException("Unknown contig: " + contig +"! All chromosomes must be listed as a contig and the order must be the same between input files.");
 				}
 			}
 			for (String alt: r.getHeader().getAlts()) {
@@ -127,6 +128,10 @@ public class VCFConcat extends AbstractOutputCommand {
 						VCFRecord rec = iterators.get(i).next();
 						curRecords.set(i,  rec);
 
+						if (!contigOrder.containsKey(rec.getChrom())) {
+				    		throw new CommandArgumentException("Unknown chromosome: " + rec.getChrom()+"!\nAll chromosomes must be listed as a contig and the order must be the same between input files.");
+						}
+						
 						curChrom[i] = contigOrder.get(rec.getChrom());
 						curPos[i] = rec.getPos();
 

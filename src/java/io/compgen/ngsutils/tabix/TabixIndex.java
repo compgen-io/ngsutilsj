@@ -30,6 +30,7 @@ public interface TabixIndex {
     public int getColEnd();
     public int getFormat();
     public boolean containsSeq(String name);
+    public String[] getSeqNames();
     public void dump() throws IOException;
     public int getSkipLines();
     

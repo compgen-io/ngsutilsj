@@ -5,6 +5,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.zip.GZIPInputStream;
 
@@ -184,6 +185,10 @@ public class TBIFile implements TabixIndex {
         return false;
     }
 
+    public String[] getSeqNames() {
+    	return Arrays.copyOf(seqNames, seqNames.length);
+    }
+    
     public void dump() throws IOException {
         System.out.println("magic: " + StringUtils.byteArrayToString(magic) + " => "
                 + (char) magic[0] + (char) magic[1] + (char) magic[2] + "\\" + magic[3] + "");
