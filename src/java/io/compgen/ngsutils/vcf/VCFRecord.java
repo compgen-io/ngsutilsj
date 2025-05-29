@@ -199,12 +199,6 @@ public class VCFRecord {
         }
         
 		if (sampleAttributes != null && sampleAttributes.size() > 0) {
-
-			// TODO: BUGFIX: If the first sample is missing a value for a key, it will be removed for all other samples.
-			//       Example, if the FORMAT field is AA:BB:CC and the first sample only has values for AA:BB, then any
-			//       other samples with CC will be truncated.
-			//
-
 			if (formatKeys != null && formatKeys.size() > 0) {
 				// Write FORMAT
 	            outcols.add(StringUtils.join(":", formatKeys));
