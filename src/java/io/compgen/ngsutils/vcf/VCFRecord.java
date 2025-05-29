@@ -128,6 +128,7 @@ public class VCFRecord {
 	protected List<String> filters = null;
 
 	protected VCFAttributes info = null;
+	protected List<String> formatKeys = null;
 	protected List<VCFAttributes> sampleAttributes = null;
 
 	protected VCFHeader parentHeader = null;
@@ -139,7 +140,7 @@ public class VCFRecord {
 	}
 	
 	public VCFRecord(String chrom, int pos, String dbSNPID, String ref, List<String> alt, double qual,
-			List<String> filters, VCFAttributes info, List<VCFAttributes> sampleAttributes, String altFull, VCFHeader header) {
+			List<String> filters, VCFAttributes info, List<String> formatKeys, List<VCFAttributes> sampleAttributes, String altFull, VCFHeader header) {
 		this.chrom = chrom;
 		this.pos = pos;
 		this.dbSNPID = dbSNPID;
@@ -150,6 +151,7 @@ public class VCFRecord {
 		this.info = info;
 		this.sampleAttributes = sampleAttributes;
 		this.altOrig = altFull;
+		this.formatKeys = formatKeys;
 		this.parentHeader = header;
 	}
 
@@ -197,17 +199,16 @@ public class VCFRecord {
         }
         
 		if (sampleAttributes != null && sampleAttributes.size() > 0) {
-			List<String> keyOrder = sampleAttributes.get(0).getKeys();
-			if (keyOrder.size() > 0) {
+			if (formatKeys != null && formatKeys.size() > 0) {
 				// Write FORMAT
-	            outcols.add(StringUtils.join(":", keyOrder));
+	            outcols.add(StringUtils.join(":", formatKeys));
 				
 				// Write sample values
 				for (VCFAttributes attrs: sampleAttributes) {
 					if (attrs == null) {
 						outcols.add(".");
 					} else {
-						outcols.add(attrs.toString(keyOrder));
+						outcols.add(attrs.toString(formatKeys));
 					}
 				}
 			}
@@ -271,7 +272,8 @@ public class VCFRecord {
 		}
 
 //		System.err.println("FILTER: " + cols[6] + " => " + (filters == null ? "<null>": "?"+StringUtils.join(",", filters)));
-		
+		List<String> formatKeys = null;
+
 		try {
 			List<VCFAttributes> sampleValues = null;
 			VCFAttributes info = new VCFAttributes();
@@ -283,9 +285,9 @@ public class VCFRecord {
 				
 				
 				if (cols.length>8) {
-					List<String> format = new ArrayList<String>();
+					formatKeys = new ArrayList<String>();
 					for (String k: cols[8].split(":")) {
-					        format.add(k);
+						formatKeys.add(k);
 					}
 					
 					if (cols.length>9) {
@@ -304,7 +306,7 @@ public class VCFRecord {
 									while (sampleValues.size() <= newSampleIdx) {
 										sampleValues.add(null);
 									}
-									sampleValues.set(newSampleIdx, VCFAttributes.parseFormat(cols[i], format, header));
+									sampleValues.set(newSampleIdx, VCFAttributes.parseFormat(cols[i], formatKeys, header));
 								}
 							}
 						}
@@ -312,7 +314,7 @@ public class VCFRecord {
 				}
 			}
 			
-			return new VCFRecord(chrom, pos, dbSNPID, ref, alts, qual, filters, info, sampleValues, altOrig, header);
+			return new VCFRecord(chrom, pos, dbSNPID, ref, alts, qual, filters, info, formatKeys, sampleValues, altOrig, header);
 
 		} catch (VCFParseException | VCFAttributeException e) {
 			if (!VCFCheck.isQuiet()) {
