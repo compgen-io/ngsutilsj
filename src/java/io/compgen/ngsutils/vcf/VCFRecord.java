@@ -205,7 +205,6 @@ public class VCFRecord {
 			//       other samples with CC will be truncated.
 			//
 
-			List<String> keyOrder = sampleAttributes.get(0).getKeys();
 			if (formatKeys != null && formatKeys.size() > 0) {
 				// Write FORMAT
 	            outcols.add(StringUtils.join(":", formatKeys));
@@ -215,7 +214,7 @@ public class VCFRecord {
 					if (attrs == null) {
 						outcols.add(".");
 					} else {
-						outcols.add(attrs.toString(keyOrder));
+						outcols.add(attrs.toString(formatKeys));
 					}
 				}
 			}
