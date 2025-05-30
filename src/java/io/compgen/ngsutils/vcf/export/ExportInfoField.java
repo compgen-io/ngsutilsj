@@ -44,7 +44,7 @@ public class ExportInfoField implements VCFExport {
 		        if (!exportedFields.contains(pair)) {
 		            // don't export a field more than once across multiple instances.
 		            // this stops a glob (*) from exporting something that was explicitly
-		            // added eariler.
+		            // added earlier.
 		            exportedFields.add(pair);
 		            ids.add(id);
 		        }
