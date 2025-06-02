@@ -294,13 +294,15 @@ public class GTFAnnotationSource extends AbstractAnnotationSource<GTFGene> {
 //            this.ref = ref;
 //        }
 
-        public GTFGene(String geneId, String geneName, String ref, Strand strand, String bioType, String status) {
+        public GTFGene(String geneId, String geneName, String ref, int start, int end, Strand strand, String bioType, String status) {
             this.geneId = geneId;
             this.geneName = geneName;
             this.ref = ref;
             this.strand = strand;
             this.bioType = bioType;
             this.status = status;
+            this.start = start;
+            this.end = end;
         }
 
         public String toString() {
@@ -486,6 +488,7 @@ public class GTFAnnotationSource extends AbstractAnnotationSource<GTFGene> {
             String geneId = "";
             String transcriptId = "";
             String geneName = "";
+            String geneStr = "";
             String bioType = null;
             String status = null;
 
@@ -505,6 +508,9 @@ public class GTFAnnotationSource extends AbstractAnnotationSource<GTFGene> {
                         break;
                     case "gene_name":
                         geneName = v;
+                        break;
+                    case "gene":
+                    	geneStr = v;
                         break;
                     case "transcript_id":
                         transcriptId = v;
@@ -526,6 +532,10 @@ public class GTFAnnotationSource extends AbstractAnnotationSource<GTFGene> {
                         }
                     }
                 }
+            }
+            if ("".equals(geneName) && !"".equals(geneStr)) {
+            	// refseq GTFs use "gene" as opposed to "gene_name"
+            	geneName = geneStr;
             }
 
             if (requiredTags != null) {
@@ -555,7 +565,8 @@ public class GTFAnnotationSource extends AbstractAnnotationSource<GTFGene> {
                 gene = cache.get(geneId);
             } else {
 //                System.err.println("Adding gene: "+geneId+" ("+geneName+", "+ chrom +")");
-                gene = new GTFGene(geneId, geneName, chrom, strand, bioType, status);
+            	// send start/end here for gene, as there are genes w/o transcript annotations (refseq)
+                gene = new GTFGene(geneId, geneName, chrom, start, end, strand, bioType, status);
                 cache.put(geneId, gene);
             }
 
@@ -789,7 +800,7 @@ public class GTFAnnotationSource extends AbstractAnnotationSource<GTFGene> {
             }
             isGene = true;
 
-            if (gene.getStrand() != origStrand) {
+            if (origStrand != Strand.NONE && gene.getStrand() != origStrand) {
                 isGeneRev = true;
             }
 
@@ -799,7 +810,7 @@ public class GTFAnnotationSource extends AbstractAnnotationSource<GTFGene> {
                         if (cds.toRegion().contains(unstrandedPos)) {
                             isExon = true;
                             isCoding = true;
-                            if (gene.getStrand() != origStrand) {
+                            if (origStrand != Strand.NONE && gene.getStrand() != origStrand) {
                                 isCodingRev = true;
                             }
                         }
@@ -808,7 +819,7 @@ public class GTFAnnotationSource extends AbstractAnnotationSource<GTFGene> {
                         for (GTFExon exon: txpt.exons) {
                             if (exon.toRegion().contains(unstrandedPos)) {
                                 isExon = true;
-                                if (gene.getStrand() != origStrand) {
+                                if (origStrand != Strand.NONE && gene.getStrand() != origStrand) {
                                     isExonRev = true;
                                 }
                             }
@@ -818,24 +829,24 @@ public class GTFAnnotationSource extends AbstractAnnotationSource<GTFGene> {
                         if (gene.getStrand() == Strand.PLUS) {
                             if (unstrandedPos.start < txpt.getCdsStart()) {
                                 isUtr5 = true;
-                                if (gene.getStrand() != origStrand) {
+                                if (origStrand != Strand.NONE && gene.getStrand() != origStrand) {
                                     isUtr5Rev = true;
                                 }
                             } else if (unstrandedPos.start > txpt.getCdsEnd()) {
                                 isUtr3 = true;
-                                if (gene.getStrand() != origStrand) {
+                                if (origStrand != Strand.NONE && gene.getStrand() != origStrand) {
                                     isUtr3Rev = true;
                                 }
                             }
                         } else {
                             if (unstrandedPos.start < txpt.getCdsStart()) {
                                 isUtr3 = true;
-                                if (gene.getStrand() != origStrand) {
+                                if (origStrand != Strand.NONE && gene.getStrand() != origStrand) {
                                     isUtr3Rev = true;
                                 }
                             } else if (unstrandedPos.start > txpt.getCdsEnd()) {
                                 isUtr5 = true;
-                                if (gene.getStrand() != origStrand) {
+                                if (origStrand != Strand.NONE && gene.getStrand() != origStrand) {
                                     isUtr5Rev = true;
                                 }
                             }
@@ -863,7 +874,7 @@ public class GTFAnnotationSource extends AbstractAnnotationSource<GTFGene> {
                     for (GTFExon exon: txpt.exons) {
                         if (exon.toRegion().contains(unstrandedPos)) {
                             isExon = true;
-                            if (gene.getStrand() != origStrand) {
+                            if (origStrand != Strand.NONE && gene.getStrand() != origStrand) {
                                 isExonRev = true;
                             }
                         }
