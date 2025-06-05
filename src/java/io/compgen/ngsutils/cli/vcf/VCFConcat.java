@@ -111,6 +111,9 @@ public class VCFConcat extends AbstractOutputCommand {
 
 		Map<String, Integer> contigOrder = new HashMap<String, Integer>();
 		for (String contig: header.getContigNames()) {
+			if (verbose) {
+				System.err.println(contig+" ["+contigOrder.size()+"]");
+			}
 			contigOrder.put(contig, contigOrder.size());
 		}
 		
@@ -118,6 +121,8 @@ public class VCFConcat extends AbstractOutputCommand {
 		
 		int[] curChrom = new int[readers.size()];
 		int[] curPos = new int[readers.size()];
+		
+		boolean first = true;
 		
 		while (true) {
 			boolean hasRecords = false;
@@ -132,7 +137,7 @@ public class VCFConcat extends AbstractOutputCommand {
 
 						hasRecords = true;
 					} else {
-						if (verbose) {
+						if (curChrom[i] != -1 && verbose) {
 							System.err.println("Exhausted VCF file: "+filenames[i]);
 						}
 						curChrom[i] = -1;
@@ -146,6 +151,12 @@ public class VCFConcat extends AbstractOutputCommand {
 				break;
 			}
 			
+			if (first && verbose) {
+				for (int i=0; i<readers.size(); i++) {
+					System.err.println("["+i+"] "+curRecords.get(i).getChrom()+":"+curRecords.get(i).getPos()+" => "+curChrom[i]+","+curPos[i]);
+				}
+			}
+			
 			int lowIdx = -1;
 			int lowChrIdx = -1;
 			int lowPos = -1;
@@ -153,14 +164,17 @@ public class VCFConcat extends AbstractOutputCommand {
 			for (int i=0; i<readers.size(); i++) {
 				if (curChrom[i] > -1) {
 					if (lowIdx == -1) {
+						// not set, take this one.
 						lowIdx = i;
 						lowChrIdx = curChrom[i];
 						lowPos = curPos[i];
 					} else if (curChrom[i] < lowChrIdx) {
+						// lower chrom, so choose this one.
 						lowIdx = i;
 						lowChrIdx = curChrom[i];
 						lowPos = curPos[i];
-					} else if (curPos[i] < lowPos) {
+					} else if (curChrom[i] == lowChrIdx && curPos[i] < lowPos) {
+						// lower pos, so take this one.
 						lowIdx = i;
 						lowChrIdx = curChrom[i];
 						lowPos = curPos[i];
@@ -168,6 +182,11 @@ public class VCFConcat extends AbstractOutputCommand {
 			    		throw new CommandArgumentException("Overlapping variant positions found: "+  curRecords.get(i).getChrom() +":"+curPos[i]);
 					}				
 				}
+			}
+			if (first && verbose) {
+				System.err.println("Writing: "+curRecords.get(lowIdx).getChrom()+":"+curRecords.get(lowIdx).getPos());
+				System.err.println("["+lowIdx+"] "+curRecords.get(lowIdx).getChrom()+":"+curRecords.get(lowIdx).getPos()+" => "+curChrom[lowIdx]+","+curPos[lowIdx]);
+				first = false;
 			}
 
 			writer.write(curRecords.get(lowIdx));
