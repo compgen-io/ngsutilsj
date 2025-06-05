@@ -19,6 +19,7 @@ import io.compgen.ngsutils.vcf.VCFWriter;
 import io.compgen.ngsutils.vcf.annotate.BEDAnnotation;
 import io.compgen.ngsutils.vcf.annotate.ConstantTag;
 import io.compgen.ngsutils.vcf.annotate.CopyNumberLogRatio;
+import io.compgen.ngsutils.vcf.annotate.Dosage;
 import io.compgen.ngsutils.vcf.annotate.FisherStrandBias;
 import io.compgen.ngsutils.vcf.annotate.FlankingBases;
 import io.compgen.ngsutils.vcf.annotate.GTFGene;
@@ -90,6 +91,11 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
     @Option(desc="Add a TS, TV annotations (TS: A<->G, C<->T)", name="tstv")
     public void setTsTv() throws CommandArgumentException {
     	chain.add(new TransitionTransversion());
+    }
+    
+    @Option(desc="Calculate dosage values from GT", name="dosage")
+    public void setDosage() throws CommandArgumentException {
+    	chain.add(new Dosage());
     }
     
     @Option(desc="Add minor strand pct (FORMAT:CG_SBPCT, requires SAC)", name="minor-strand")
