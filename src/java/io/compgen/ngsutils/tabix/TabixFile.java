@@ -131,6 +131,14 @@ public class TabixFile {
 	    return false;
 	}
 	
+	public String[] getSeqNames() {
+	    if (index != null) {
+	        return index.getSeqNames();
+	    } 
+	    return null;
+	}
+	
+
 	/**
 	 * 
 	 * @param ref

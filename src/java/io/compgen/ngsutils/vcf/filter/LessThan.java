@@ -82,11 +82,13 @@ public class LessThan extends VCFAbstractFilter {
 		}
 		if (sampleIdx < 0) {
 			// either it was not set or was set as "".
-			for (VCFAttributes attr: record.getSampleAttributes()) {
-				if (filter(attr.get(key))) {
-					return true;
-				}
- 			}
+			if (record.getSampleAttributes()!=null) {
+				for (VCFAttributes attr: record.getSampleAttributes()) {
+					if (filter(attr.get(key))) {
+						return true;
+					}
+	 			}
+			}
 			return false;
 		} else {
 			return filter(record.getSampleAttributes().get(sampleIdx).get(key));

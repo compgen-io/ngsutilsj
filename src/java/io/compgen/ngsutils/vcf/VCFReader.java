@@ -221,6 +221,13 @@ public class VCFReader {
 		return this.tabix != null;
 	}
 
+    public String[] getIndexedSeqNames() {
+    	if (this.tabix!=null) {
+    		return this.tabix.getSeqNames();
+    	}
+    	return null;
+    }
+    
     /**
      * 
      * @param ref

@@ -296,15 +296,23 @@ public class GTFExport extends AbstractOutputCommand {
                 }
             }
             if (exportGene) {
-                if (codingOnly) {
+            	// For genes... if coding-only is set, only return genes that have a CDS.
+            	//              if noncoding-only is set, only return genes that lack a CDS.
+            	//
+            	// For all other regions, this is region-specific (coding/non-coding exons, etc...)
+            	//
+                if (codingOnly || nonCodingOnly) {
                     boolean isCoding = false;
-                    for (GTFTranscript txpt: gene.getTranscripts(codingOnly, nonCodingOnly)) {
+                    for (GTFTranscript txpt: gene.getTranscripts(true, false)) {
                         if (txpt.hasCDS()) {
                             isCoding = true;
                             break;
                         }
                     }
-                    if (!isCoding) {
+                    if (codingOnly && !isCoding) {
+                        continue;
+                    }
+                    if (nonCodingOnly && isCoding) {
                         continue;
                     }
                 }
@@ -322,16 +330,16 @@ public class GTFExport extends AbstractOutputCommand {
             }
             if (exportTranscript) {
                 for (GTFTranscript txpt: gene.getTranscripts(codingOnly, nonCodingOnly)) {
-                    boolean isCoding = false;
-	                if (codingOnly) {
-                        if (txpt.hasCDS()) {
-                            isCoding = true;
-                            break;
-                        }
-                    }
-                    if (!isCoding) {
-                        continue;
-                    }
+//                    boolean isCoding = false;
+//	                if (codingOnly) {
+//                        if (txpt.hasCDS()) {
+//                            isCoding = true;
+//                            break;
+//                        }
+//                    }
+//                    if (!isCoding) {
+//                        continue;
+//                    }
 	                    
 	                writer.write(gene.getRef());
 	                writer.write(txpt.getStart());

@@ -19,9 +19,15 @@ public class GTFGene extends AbstractBasicAnnotator {
 	final protected String filename;
 	protected GTFAnnotationSource gtf;
 	protected List<String> requiredTags = null;
+	protected String prefix = null;
 	
 	public GTFGene(String filename) throws IOException {
 		this.filename = filename;
+		this.prefix = "CG_";
+	}
+	public GTFGene(String filename, String prefix) throws IOException {
+		this.filename = filename;
+		this.prefix = prefix;
 	}
 	
 	public void addRequiredTags(List<String> tags) {
@@ -58,9 +64,11 @@ public class GTFGene extends AbstractBasicAnnotator {
 
 			 */
 			
-			header.addInfo(VCFAnnotationDef.info("CG_GENE", "1", "String", "Gene name", filename, null, null, null));
-			header.addInfo(VCFAnnotationDef.info("CG_GENE_STRAND", "1", "String", "Gene strand", filename, null, null, null));
-			header.addInfo(VCFAnnotationDef.info("CG_GENE_REGION", "1", "String", "Gene region", filename, null, null, null));
+			header.addInfo(VCFAnnotationDef.info(prefix+"GENE", "1", "String", "Gene name", filename, null, null, null));
+			header.addInfo(VCFAnnotationDef.info(prefix+"GENEID", "1", "String", "Gene ID", filename, null, null, null));
+			header.addInfo(VCFAnnotationDef.info(prefix+"BIOTYPE", "1", "String", "Gene biotype (if available)", filename, null, null, null));
+			header.addInfo(VCFAnnotationDef.info(prefix+"STRAND", "1", "String", "Gene strand", filename, null, null, null));
+			header.addInfo(VCFAnnotationDef.info(prefix+"REGION", "1", "String", "Gene region", filename, null, null, null));
 		} catch (VCFParseException e) {
 			throw new VCFAnnotatorException(e);
 		}
@@ -82,29 +90,58 @@ public class GTFGene extends AbstractBasicAnnotator {
             return;
         }
 		
+		List<String> geneIds = new ArrayList<String>();
 		List<String> geneNames = new ArrayList<String>();
+		List<String> bioTypes = new ArrayList<String>();
 		List<String> strands = new ArrayList<String>();
+		List<String> regions = new ArrayList<String>();
 
+		boolean hasBiotype = false;
+		boolean hasRegion = false;
+		
 		for (io.compgen.ngsutils.annotation.GTFAnnotationSource.GTFGene gene : gtf.findAnnotation(pos)) {
-			geneNames.add(gene.getGeneName());
+			String geneName= gene.getGeneName();
+			geneIds.add(gene.getGeneId());
+			geneNames.add(geneName);
 			strands.add(gene.getStrand().toString());
+			if (gene.getBioType() != null) {
+				bioTypes.add(gene.getBioType());
+				hasBiotype = true;
+			} else {
+				bioTypes.add(".");
+			}
+
+			GenicRegion region = gtf.findGenicRegionForPos(pos, gene.getGeneId());
+			if (region != null) {
+				// VCF output should use the code name for better downstream processing.
+				regions.add(region.code);
+				hasRegion = true;
+			} else {
+				regions.add(".");
+			}
+
 		}
 		
 		try {
-			if (geneNames.size() == 0) {
-				record.getInfo().put("CG_GENE", VCFAttributeValue.MISSING);
-				record.getInfo().put("CG_GENE_REGION", VCFAttributeValue.MISSING);
-				record.getInfo().put("CG_GENE_STRAND", VCFAttributeValue.MISSING);
-			} else {
-				GenicRegion region = gtf.findGenicRegionForPos(pos);
-				String geneRegionName = ".";
-				if (region != null) {
-					geneRegionName = region.name;
+			if (geneIds.size() > 0) {
+//				record.getInfo().put(prefix+"GENEID", VCFAttributeValue.MISSING);
+//				record.getInfo().put(prefix+"GENE", VCFAttributeValue.MISSING);
+//				if (hasBiotype) {
+//					record.getInfo().put(prefix+"BIOTYPE", VCFAttributeValue.MISSING);
+//				}
+//				record.getInfo().put(prefix+"REGION", VCFAttributeValue.MISSING);
+//				record.getInfo().put(prefix+"STRAND", VCFAttributeValue.MISSING);
+//			} else {
+								
+				record.getInfo().put(prefix+"GENEID", new VCFAttributeValue(StringUtils.join(",", geneIds)));
+				record.getInfo().put(prefix+"GENE", new VCFAttributeValue(StringUtils.join(",", geneNames)));
+				if (hasBiotype) {
+					record.getInfo().put(prefix+"BIOTYPE", new VCFAttributeValue(StringUtils.join(",", bioTypes)));
 				}
-				
-				record.getInfo().put("CG_GENE", new VCFAttributeValue(StringUtils.join(",", geneNames)));
-				record.getInfo().put("CG_GENE_REGION", new VCFAttributeValue(geneRegionName));
-				record.getInfo().put("CG_GENE_STRAND", new VCFAttributeValue(StringUtils.join(",", strands)));
+				if (hasRegion) {
+					record.getInfo().put(prefix+"REGION", new VCFAttributeValue(StringUtils.join(",", regions)));
+				}
+				record.getInfo().put(prefix+"STRAND", new VCFAttributeValue(StringUtils.join(",", strands)));
 			}
 		} catch (VCFAttributeException e) {
 			throw new VCFAnnotatorException(e);

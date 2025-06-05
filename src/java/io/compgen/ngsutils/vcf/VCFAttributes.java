@@ -84,7 +84,7 @@ public class VCFAttributes {
 		return attrs;
 	}
 	
-	public static VCFAttributes parseFormat(String s, List<String> format, VCFHeader header) throws VCFParseException, VCFAttributeException {
+	public static VCFAttributes parseFormat(String s, List<String> formatKeys, VCFHeader header) throws VCFParseException, VCFAttributeException {
 		VCFAttributes attrs = new VCFAttributes();
 		
 		String[] spl = s.split(":");
@@ -95,13 +95,13 @@ public class VCFAttributes {
 //		}
 
 		// if GT is present in {format}, it must be in the input string for each sample.
-		if (format != null && format.size() > 0 && format.get(0).equals("GT") && spl.length<1) {
+		if (formatKeys != null && formatKeys.size() > 0 && formatKeys.get(0).equals("GT") && spl.length<1) {
 			throw new VCFParseException("Unable to parse genotype field: "+s);
 		}
 		
 		for (int i=0; i< spl.length; i++) {
-		    if (header == null || header.isFormatAllowed(format.get(i))) {
-		        attrs.put(format.get(i), VCFAttributeValue.parse(spl[i]));
+		    if (header == null || header.isFormatAllowed(formatKeys.get(i))) {
+		        attrs.put(formatKeys.get(i), VCFAttributeValue.parse(spl[i]));
 		    }
 		}
 		return attrs;
