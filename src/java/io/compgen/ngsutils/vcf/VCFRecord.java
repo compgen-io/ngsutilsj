@@ -128,7 +128,7 @@ public class VCFRecord {
 	protected List<String> filters = null;
 
 	protected VCFAttributes info = null;
-	protected List<String> formatKeys = null;
+//	protected List<String> formatKeys = null;
 	protected List<VCFAttributes> sampleAttributes = null;
 
 	protected VCFHeader parentHeader = null;
@@ -140,7 +140,9 @@ public class VCFRecord {
 	}
 	
 	public VCFRecord(String chrom, int pos, String dbSNPID, String ref, List<String> alt, double qual,
-			List<String> filters, VCFAttributes info, List<String> formatKeys, List<VCFAttributes> sampleAttributes, String altFull, VCFHeader header) {
+			List<String> filters, VCFAttributes info, 
+			//List<String> formatKeys, 
+			List<VCFAttributes> sampleAttributes, String altFull, VCFHeader header) {
 		this.chrom = chrom;
 		this.pos = pos;
 		this.dbSNPID = dbSNPID;
@@ -151,7 +153,7 @@ public class VCFRecord {
 		this.info = info;
 		this.sampleAttributes = sampleAttributes;
 		this.altOrig = altFull;
-		this.formatKeys = formatKeys;
+//		this.formatKeys = formatKeys;
 		this.parentHeader = header;
 	}
 
@@ -199,19 +201,20 @@ public class VCFRecord {
         }
         
 		if (sampleAttributes != null && sampleAttributes.size() > 0) {
-			if (formatKeys != null && formatKeys.size() > 0) {
-				// Write FORMAT
-	            outcols.add(StringUtils.join(":", formatKeys));
-				
-				// Write sample values
-				for (VCFAttributes attrs: sampleAttributes) {
-					if (attrs == null) {
-						outcols.add(".");
-					} else {
-						outcols.add(attrs.toString(formatKeys));
-					}
+//			if (formatKeys != null && formatKeys.size() > 0) {
+			List<String> formatKeys = sampleAttributes.get(0).getKeys();
+			// Write FORMAT
+            outcols.add(StringUtils.join(":", formatKeys));
+			
+			// Write sample values
+			for (VCFAttributes attrs: sampleAttributes) {
+				if (attrs == null) {
+					outcols.add(".");
+				} else {
+					outcols.add(attrs.toString(formatKeys));
 				}
 			}
+			//}			
 		}
 		
 		StringUtils.writeOutputStream(out, StringUtils.join("\t", outcols)+"\n");
@@ -314,7 +317,8 @@ public class VCFRecord {
 				}
 			}
 			
-			return new VCFRecord(chrom, pos, dbSNPID, ref, alts, qual, filters, info, formatKeys, sampleValues, altOrig, header);
+//			return new VCFRecord(chrom, pos, dbSNPID, ref, alts, qual, filters, info, formatKeys, sampleValues, altOrig, header);
+			return new VCFRecord(chrom, pos, dbSNPID, ref, alts, qual, filters, info, sampleValues, altOrig, header);
 
 		} catch (VCFParseException | VCFAttributeException e) {
 			if (!VCFCheck.isQuiet()) {
@@ -703,4 +707,5 @@ public class VCFRecord {
         }
         return baos.toString();
 	}
+    
 }

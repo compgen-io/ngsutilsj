@@ -46,11 +46,11 @@ public class VCFAnnotationDef {
 		
 		if (isInfo) {
 			if (!VALID_INFO_TYPE.contains(type)) {
-				throw new VCFParseException("Invalid \"Type\" value for INFO line!");
+				throw new VCFParseException("Invalid \"Type\" value for INFO line! ("+type+")");
 			}
 		} else {
 			if (!VALID_FORMAT_TYPE.contains(type)) {
-				throw new VCFParseException("Invalid \"Type\" value for FORMAT line!");
+				throw new VCFParseException("Invalid \"Type\" value for FORMAT line! ("+type+")");
 			}
 		}
 		

@@ -99,9 +99,13 @@ public class VCFAttributes {
 			throw new VCFParseException("Unable to parse genotype field: "+s);
 		}
 		
-		for (int i=0; i< spl.length; i++) {
+		for (int i=0; i<formatKeys.size(); i++) {
 		    if (header == null || header.isFormatAllowed(formatKeys.get(i))) {
-		        attrs.put(formatKeys.get(i), VCFAttributeValue.parse(spl[i]));
+		    	if (spl.length > i) {
+		    		attrs.put(formatKeys.get(i), VCFAttributeValue.parse(spl[i]));
+		    	} else {
+		    		attrs.put(formatKeys.get(i), VCFAttributeValue.MISSING);
+		    	}
 		    }
 		}
 		return attrs;
