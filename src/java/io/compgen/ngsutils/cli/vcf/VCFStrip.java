@@ -1,5 +1,8 @@
 package io.compgen.ngsutils.cli.vcf;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -10,6 +13,7 @@ import io.compgen.cmdline.annotation.UnnamedArg;
 import io.compgen.cmdline.exceptions.CommandArgumentException;
 import io.compgen.cmdline.impl.AbstractOutputCommand;
 import io.compgen.common.IterUtils;
+import io.compgen.common.StringLineReader;
 import io.compgen.ngsutils.NGSUtils;
 import io.compgen.ngsutils.vcf.VCFHeader;
 import io.compgen.ngsutils.vcf.VCFReader;
@@ -51,7 +55,7 @@ public class VCFStrip extends AbstractOutputCommand {
     }
     
     @Option(desc="Remove ALL annotations", name="all")
-    public void setStripAll(boolean strip) {
+    public void setStripAll(boolean strip) throws CommandArgumentException {
         setStripDBSNP(true);
         setStripInfo("*");
         setStripFormat("*");
@@ -59,36 +63,81 @@ public class VCFStrip extends AbstractOutputCommand {
         setStripSample("*");
     }
     
-    @Option(desc="Remove specific INFO annotations (multiple allowed, wildcard '*' allowed)", name="info", allowMultiple=true)
-    public void setStripInfo(String remove) {
+    @Option(desc="Remove specific INFO annotations (multiple allowed, wildcard '*' allowed, file input allowed)", name="info", allowMultiple=true)
+    public void setStripInfo(String remove) throws CommandArgumentException {
         if (removeInfo == null) {
             removeInfo = new HashSet<String>();
         }
-        removeInfo.add(remove);
+        
+        File f = new File(remove);
+        if (f.exists()) {
+        	try {
+				for (String line: new StringLineReader(new FileInputStream(f))) {
+		        	removeInfo.add(line.strip());
+				}
+			} catch (FileNotFoundException e) {
+				throw new CommandArgumentException(e);
+			}
+        } else {
+        	removeInfo.add(remove);
+        }
     }
     
-    @Option(desc="Remove specific FORMAT annotations (multiple allowed, wildcard '*' allowed)", name="format", allowMultiple=true)
-    public void setStripFormat(String remove) {
+    @Option(desc="Remove specific FORMAT annotations (multiple allowed, wildcard '*' allowed, file input allowed)", name="format", allowMultiple=true)
+    public void setStripFormat(String remove) throws CommandArgumentException {
         if (removeFormat == null) {
             removeFormat = new HashSet<String>();
         }
-        removeFormat.add(remove);
+        File f = new File(remove);
+        if (f.exists()) {
+        	try {
+				for (String line: new StringLineReader(new FileInputStream(f))) {
+					removeFormat.add(line.strip());
+				}
+			} catch (FileNotFoundException e) {
+				throw new CommandArgumentException(e);
+			}
+        } else {
+        	removeFormat.add(remove);
+        }
     }
     
-    @Option(desc="Remove specific SAMPLE annotations (multiple allowed, wildcard '*' allowed)", name="sample", allowMultiple=true)
-    public void setStripSample(String remove) {
+    @Option(desc="Remove specific SAMPLE annotations (multiple allowed, wildcard '*' allowed, file input allowed)", name="sample", allowMultiple=true)
+    public void setStripSample(String remove) throws CommandArgumentException {
         if (removeSample == null) {
         	removeSample = new HashSet<String>();
         }
-        removeSample.add(remove);
+        File f = new File(remove);
+        if (f.exists()) {
+        	try {
+				for (String line: new StringLineReader(new FileInputStream(f))) {
+					removeSample.add(line.strip());
+				}
+			} catch (FileNotFoundException e) {
+				throw new CommandArgumentException(e);
+			}
+        } else {
+        	removeSample.add(remove);
+        }
     }
     
-    @Option(desc="Remove specific FILTER annotations (multiple allowed, wildcard '*' allowed)", name="filter", allowMultiple=true)
-    public void setStripFilter(String remove) {
+    @Option(desc="Remove specific FILTER annotations (multiple allowed, wildcard '*' allowed, file input allowed)", name="filter", allowMultiple=true)
+    public void setStripFilter(String remove) throws CommandArgumentException {
         if (removeFilter == null) {
             removeFilter = new HashSet<String>();
         }
-        removeFilter.add(remove);
+        File f = new File(remove);
+        if (f.exists()) {
+        	try {
+				for (String line: new StringLineReader(new FileInputStream(f))) {
+					removeFilter.add(line.strip());
+				}
+			} catch (FileNotFoundException e) {
+				throw new CommandArgumentException(e);
+			}
+        } else {
+        	removeFilter.add(remove);
+        }
     }
     
     @Option(desc="Remove DBSNP annotations", name="dbsnp")
@@ -97,34 +146,80 @@ public class VCFStrip extends AbstractOutputCommand {
     }    
 
     
-    @Option(desc="Keep specific INFO annotations (multiple allowed, wildcard '*' allowed)", name="keep-info", allowMultiple=true)
-    public void setKeepInfo(String keep) {
+    @Option(desc="Keep specific INFO annotations (multiple allowed, wildcard '*' allowed, file input allowed)", name="keep-info", allowMultiple=true)
+    public void setKeepInfo(String keep) throws CommandArgumentException {
         if (keepInfo == null) {
         	keepInfo = new HashSet<String>();
         }
-        keepInfo.add(keep);
+
+        File f = new File(keep);
+        if (f.exists()) {
+        	try {
+				for (String line: new StringLineReader(new FileInputStream(f))) {
+					keepInfo.add(line.strip());
+				}
+			} catch (FileNotFoundException e) {
+				throw new CommandArgumentException(e);
+			}
+        } else {
+        	keepInfo.add(keep);
+        }
     }
     
-    @Option(desc="Keep specific FORMAT annotations (multiple allowed, wildcard '*' allowed)", name="keep-format", allowMultiple=true)
-    public void setKeepFormat(String keep) {
+    @Option(desc="Keep specific FORMAT annotations (multiple allowed, wildcard '*' allowed, file input allowed)", name="keep-format", allowMultiple=true)
+    public void setKeepFormat(String keep) throws CommandArgumentException {
         if (keepFormat == null) {
         	keepFormat = new HashSet<String>();
         }
-        keepFormat.add(keep);
+        File f = new File(keep);
+        if (f.exists()) {
+        	try {
+				for (String line: new StringLineReader(new FileInputStream(f))) {
+					keepFormat.add(line.strip());
+				}
+			} catch (FileNotFoundException e) {
+				throw new CommandArgumentException(e);
+			}
+        } else {
+        	keepFormat.add(keep);
+        }
     }
     
-    @Option(desc="Keep specific SAMPLE annotations (multiple allowed, wildcard '*' allowed)", name="keep-sample", allowMultiple=true)
-    public void setKeepSample(String keep) {
+    @Option(desc="Keep specific SAMPLE annotations (multiple allowed, wildcard '*' allowed, file input allowed)", name="keep-sample", allowMultiple=true)
+    public void setKeepSample(String keep) throws CommandArgumentException {
         if (keepSample == null) {
         	keepSample = new HashSet<String>();
         }
-        keepSample.add(keep);
+        File f = new File(keep);
+        if (f.exists()) {
+        	try {
+				for (String line: new StringLineReader(new FileInputStream(f))) {
+					keepSample.add(line.strip());
+				}
+			} catch (FileNotFoundException e) {
+				throw new CommandArgumentException(e);
+			}
+        } else {
+        	keepSample.add(keep);
+        }
     }
     
-    @Option(desc="Keep specific FILTER annotations (multiple allowed, wildcard '*' allowed)", name="keep-filter", allowMultiple=true)
-    public void setKeepFilter(String keep) {
+    @Option(desc="Keep specific FILTER annotations (multiple allowed, wildcard '*' allowed, file input allowed)", name="keep-filter", allowMultiple=true)
+    public void setKeepFilter(String keep) throws CommandArgumentException {
         if (keepFilter == null) {
         	keepFilter = new HashSet<String>();
+        }
+        File f = new File(keep);
+        if (f.exists()) {
+        	try {
+				for (String line: new StringLineReader(new FileInputStream(f))) {
+					keepInfo.add(line.strip());
+				}
+			} catch (FileNotFoundException e) {
+				throw new CommandArgumentException(e);
+			}
+        } else {
+        	keepInfo.add(keep);
         }
         keepFilter.add(keep);
     }
