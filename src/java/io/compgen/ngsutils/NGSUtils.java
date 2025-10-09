@@ -108,6 +108,7 @@ import io.compgen.ngsutils.cli.vcf.VCFCount;
 import io.compgen.ngsutils.cli.vcf.VCFEffect;
 import io.compgen.ngsutils.cli.vcf.VCFExportCmd;
 import io.compgen.ngsutils.cli.vcf.VCFFilterCmd;
+import io.compgen.ngsutils.cli.vcf.VCFHeaderInfo;
 import io.compgen.ngsutils.cli.vcf.VCFMerge;
 import io.compgen.ngsutils.cli.vcf.VCFPeptide;
 import io.compgen.ngsutils.cli.vcf.VCFRemoveInfoFlag;
@@ -263,7 +264,8 @@ public class NGSUtils {
 			.addCommand(VCFSampleExport.class)
 			.addCommand(TabixConcat.class)
 			.addCommand(BamPhaseInformativeReads.class)
-			.addCommand(VCFConcat.class);
+			.addCommand(VCFConcat.class)
+        	.addCommand(VCFHeaderInfo.class);
 
 
         try {
