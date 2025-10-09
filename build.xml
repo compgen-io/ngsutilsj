@@ -29,7 +29,7 @@
             includeantruntime="false"
             classpathref="classpath"
             debuglevel="lines,vars,source"
-        	release="8"
+        	release="11"
 			>
             <!--modulepathref="classpath"-->
         			  <compilerarg value="-Xlint:-options"/>
