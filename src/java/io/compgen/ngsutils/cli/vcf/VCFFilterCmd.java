@@ -36,6 +36,7 @@ import io.compgen.ngsutils.vcf.filter.GreaterThan;
 import io.compgen.ngsutils.vcf.filter.GreaterThanEqual;
 import io.compgen.ngsutils.vcf.filter.HeterozygousFilter;
 import io.compgen.ngsutils.vcf.filter.HomozygousFilter;
+import io.compgen.ngsutils.vcf.filter.InList;
 import io.compgen.ngsutils.vcf.filter.IndelFilter;
 import io.compgen.ngsutils.vcf.filter.LessThan;
 import io.compgen.ngsutils.vcf.filter.LessThanEqual;
@@ -43,6 +44,7 @@ import io.compgen.ngsutils.vcf.filter.MaxDel;
 import io.compgen.ngsutils.vcf.filter.MaxIns;
 import io.compgen.ngsutils.vcf.filter.NotContains;
 import io.compgen.ngsutils.vcf.filter.NotEquals;
+import io.compgen.ngsutils.vcf.filter.NotInList;
 import io.compgen.ngsutils.vcf.filter.QualityScore;
 import io.compgen.ngsutils.vcf.filter.SNVFilter;
 import io.compgen.ngsutils.vcf.filter.VCFFilter;
@@ -289,6 +291,34 @@ public class VCFFilterCmd extends AbstractOutputCommand {
 		} catch (NumberFormatException e) {
     		throw new CommandArgumentException("2. Malformed argument. Should be in form => KEY:VAL or KEY:VAL:SAMPLEID or KEY:VAL:SAMPLEID:ALLELE");
 		}
+    }
+    
+    @Option(desc="Values for {KEY} is in the {VAL} list (CSV) (set SAMPLEID to 'INFO' to filter on an INFO field)", name="in", helpValue="KEY:VAL:SAMPLEID:ALLELE", allowMultiple=true)
+    public void setIN(String val) throws CommandArgumentException {
+        String[] spl = val.split(":",-1);
+        if (spl.length==2) {
+            filterChain.add(new InList(spl[0], spl[1].split(","), null, null));
+        } else if (spl.length==3) {
+            filterChain.add(new InList(spl[0], spl[1].split(","), spl[2], null));
+        } else if (spl.length==4) {
+            filterChain.add(new InList(spl[0], spl[1].split(","), spl[2], spl[3]));
+        } else {
+            throw new CommandArgumentException("1. Malformed argument. Should be in form => KEY:VAL or KEY:VAL:SAMPLEID or KEY:VAL:SAMPLEID:ALLELE");
+        }
+    }
+    
+    @Option(desc="Values for {KEY} is not in the {VAL} list (CSV) (set SAMPLEID to 'INFO' to filter on an INFO field)", name="not-in", helpValue="KEY:VAL:SAMPLEID:ALLELE", allowMultiple=true)
+    public void setNotIN(String val) throws CommandArgumentException {
+        String[] spl = val.split(":",-1);
+        if (spl.length==2) {
+            filterChain.add(new NotInList(spl[0], spl[1].split(","), null, null));
+        } else if (spl.length==3) {
+            filterChain.add(new NotInList(spl[0], spl[1].split(","), spl[2], null));
+        } else if (spl.length==4) {
+            filterChain.add(new NotInList(spl[0], spl[1].split(","), spl[2], spl[3]));
+        } else {
+            throw new CommandArgumentException("1. Malformed argument. Should be in form => KEY:VAL or KEY:VAL:SAMPLEID or KEY:VAL:SAMPLEID:ALLELE");
+        }
     }
     
     @UnnamedArg(name = "input.vcf", required=true)
