@@ -91,7 +91,6 @@ public class VCFReader {
 		String headerLine = null;
 		while (headerLine == null) {
 			String line = in.readLine();
-			//System.err.println(line);
 			if (line == null || line.equals("")) {
 				throw new IOException("Bad VCF header? Missing header line?");
 			}
