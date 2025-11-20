@@ -14,11 +14,11 @@ public class ConstantTag extends AbstractBasicAnnotator {
 	public ConstantTag(String key) {
 		this(key, null);
 	}
+
 	public ConstantTag(String key, String value) {
 		this.key = key;
 		this.value = value;				
 	}
-	
 	
 	public VCFAnnotationDef[] getAnnotationTypes() throws VCFAnnotatorException {
 		try {
@@ -39,7 +39,7 @@ public class ConstantTag extends AbstractBasicAnnotator {
 	@Override
 	public void setHeaderInner(VCFHeader header) throws VCFAnnotatorException {
 		for (VCFAnnotationDef def : getAnnotationTypes()) {
-			header.addFormat(def);
+			header.addInfo(def);
 		}
 	}
 

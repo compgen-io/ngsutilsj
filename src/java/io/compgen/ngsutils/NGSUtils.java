@@ -45,8 +45,8 @@ import io.compgen.ngsutils.cli.bam.BamWPS;
 import io.compgen.ngsutils.cli.bam.BinCount;
 import io.compgen.ngsutils.cli.bam.PileupCli;
 import io.compgen.ngsutils.cli.bed.BedCleanScore;
-import io.compgen.ngsutils.cli.bed.BedMerge;
 import io.compgen.ngsutils.cli.bed.BedCount;
+import io.compgen.ngsutils.cli.bed.BedMerge;
 import io.compgen.ngsutils.cli.bed.BedNearest;
 import io.compgen.ngsutils.cli.bed.BedPEToBed;
 import io.compgen.ngsutils.cli.bed.BedReduce;
@@ -113,6 +113,7 @@ import io.compgen.ngsutils.cli.vcf.VCFMerge;
 import io.compgen.ngsutils.cli.vcf.VCFPeptide;
 import io.compgen.ngsutils.cli.vcf.VCFRemoveInfoFlag;
 import io.compgen.ngsutils.cli.vcf.VCFRenameSample;
+import io.compgen.ngsutils.cli.vcf.VCFReorder;
 import io.compgen.ngsutils.cli.vcf.VCFSVToFASTA;
 import io.compgen.ngsutils.cli.vcf.VCFSampleExport;
 import io.compgen.ngsutils.cli.vcf.VCFSamples;
@@ -265,7 +266,8 @@ public class NGSUtils {
 			.addCommand(TabixConcat.class)
 			.addCommand(BamPhaseInformativeReads.class)
 			.addCommand(VCFConcat.class)
-        	.addCommand(VCFHeaderInfo.class);
+        	.addCommand(VCFHeaderInfo.class)
+    		.addCommand(VCFReorder.class);
 
 
         try {

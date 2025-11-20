@@ -30,7 +30,7 @@ public class VCFRenameSample extends AbstractOutputCommand {
     	this.filename = filename;
     }
 
-    @Option(desc="Sample to rename (colon delimited: NAME:NEWNAME, can use sample number for NAME)", name="sample", allowMultiple=true)
+    @Option(desc="Sample to rename (colon delimited: OLDNAME:NEWNAME, can use sample number for OLDNAME)", name="sample", allowMultiple=true)
     public void setSample(String val) throws CommandArgumentException {
     	String[] spl = val.split(":");
     	if (spl.length != 2) {

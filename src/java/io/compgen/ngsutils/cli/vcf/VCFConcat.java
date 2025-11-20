@@ -19,14 +19,17 @@ import io.compgen.ngsutils.vcf.VCFRecord;
 import io.compgen.ngsutils.vcf.VCFWriter;
 
 
-@Command(name="vcf-concat", desc="Concatenate VCF files that have the same annotations, but different variants.", category="vcf", doc=""
+@Command(name="vcf-concat", desc="Concatenate VCF files that have different variants but the same samples.", category="vcf", doc=""
 		+ "This command can be used to re-combine VCF files that have been split into \n"
 		+ "several smaller chunks. Crucially, this command will merge the files \n"
 		+ "in a sorted manner the same time.\n"
 		+ "\n"
 		+ "This assumes the VCF file is coordinate sorted and the chromosomes are in a \n"
 		+ "consistent order. If present in the header, chromosome order will be \n"
-		+ "determined by the order of ##contig lines.\n")
+		+ "determined by the order of ##contig lines.\n"
+		+ "\n"
+		+ "If the files have different INFO, FORMAT, or FILTER elements, they will all \n"
+		+ "be present in the output file.")
 
 public class VCFConcat extends AbstractOutputCommand {
 	private String[] filenames = null;
