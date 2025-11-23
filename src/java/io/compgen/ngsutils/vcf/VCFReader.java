@@ -21,6 +21,8 @@ import io.compgen.ngsutils.tabix.BGZInputStream;
 import io.compgen.ngsutils.tabix.TabixFile;
 
 public class VCFReader {
+	private static final int BUFFER_SIZE = 1024 * 1024; // use a 1MiB buffer (default is 8KB)
+	
 	protected BufferedReader in;
 	protected VCFHeader header=null;
 	protected TabixFile tabix=null;
@@ -41,12 +43,12 @@ public class VCFReader {
 	public VCFReader(String filename) throws IOException, VCFParseException {
         if (filename.equals("-")) {
             this.filename = "<stdin>";
-            in = new BufferedReader(new InputStreamReader(System.in));
+            in = new BufferedReader(new InputStreamReader(System.in), BUFFER_SIZE);
         } else if (BGZFile.isBGZFile(filename)) {
             this.filename = filename;
             BGZFile bgzf = new BGZFile(filename);
             channel = bgzf.getChannel();
-            in = new BufferedReader(new InputStreamReader(new BGZInputStream(bgzf)));               
+            in = new BufferedReader(new InputStreamReader(new BGZInputStream(bgzf)), BUFFER_SIZE);               
             if (TabixFile.isTabixFile(filename)) {
                 this.tabix = new TabixFile(bgzf);
             }
@@ -54,12 +56,12 @@ public class VCFReader {
             this.filename = filename;
             FileInputStream fis = new FileInputStream(filename);
             channel = fis.getChannel();
-            in = new BufferedReader(new InputStreamReader(new GZIPInputStream(fis)));
+            in = new BufferedReader(new InputStreamReader(new GZIPInputStream(fis)), BUFFER_SIZE);
         } else {
             this.filename = filename;
             FileInputStream fis = new FileInputStream(filename);
             channel = fis.getChannel();
-            in = new BufferedReader(new InputStreamReader(fis));
+            in = new BufferedReader(new InputStreamReader(fis), BUFFER_SIZE);
         }
 
 	}
