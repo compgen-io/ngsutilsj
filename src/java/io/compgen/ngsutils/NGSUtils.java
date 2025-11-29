@@ -117,6 +117,7 @@ import io.compgen.ngsutils.cli.vcf.VCFReorder;
 import io.compgen.ngsutils.cli.vcf.VCFSVToFASTA;
 import io.compgen.ngsutils.cli.vcf.VCFSampleExport;
 import io.compgen.ngsutils.cli.vcf.VCFSamples;
+import io.compgen.ngsutils.cli.vcf.VCFSplit;
 import io.compgen.ngsutils.cli.vcf.VCFStats;
 import io.compgen.ngsutils.cli.vcf.VCFStrip;
 import io.compgen.ngsutils.cli.vcf.VCFToBED;
@@ -267,7 +268,8 @@ public class NGSUtils {
 			.addCommand(BamPhaseInformativeReads.class)
 			.addCommand(VCFConcat.class)
         	.addCommand(VCFHeaderInfo.class)
-    		.addCommand(VCFReorder.class);
+    		.addCommand(VCFReorder.class)
+    		.addCommand(VCFSplit.class);
 
 
         try {
