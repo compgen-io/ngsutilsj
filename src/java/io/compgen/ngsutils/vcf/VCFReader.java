@@ -83,7 +83,7 @@ public class VCFReader {
 	}
 	
 	public VCFReader(InputStream stream) throws IOException, VCFParseException {
-		in = new BufferedReader(new InputStreamReader(stream));
+		in = new BufferedReader(new InputStreamReader(stream), BUFFER_SIZE);
 //		readHeader();
 	}
 
