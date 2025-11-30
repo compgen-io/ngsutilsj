@@ -128,9 +128,9 @@ public class VCFSplit extends AbstractCommand {
 						sb = null;
 
 						// add extra header lines now...
-						headerLines.add("##ngsutilsj_vcf_concatCommand="+NGSUtils.getArgs()+"\n");
-						if (!headerLines.contains("##ngsutilsj_vcf_concatVersion="+NGSUtils.getVersion()+"\n")) {
-							headerLines.add("##ngsutilsj_vcf_concatVersion="+NGSUtils.getVersion()+"\n");
+						headerLines.add("##ngsutilsj_vcf_splitCommand="+NGSUtils.getArgs()+"\n");
+						if (!headerLines.contains("##ngsutilsj_vcf_splitVersion="+NGSUtils.getVersion()+"\n")) {
+							headerLines.add("##ngsutilsj_vcf_splitVersion="+NGSUtils.getVersion()+"\n");
 						}
 						
 						if (verbose) {
