@@ -41,8 +41,8 @@ public class VCFConcat extends AbstractOutputCommand {
 
 	@Exec
 	public void exec() throws Exception {
-		if (filenames == null || filenames.length < 2) {
-    		throw new CommandArgumentException("You need to specify at least two input VCF files.");
+		if (filenames == null || filenames.length < 1) {
+    		throw new CommandArgumentException("You need to specify at least one input VCF file.");
 		}
 
 		for (String fname: filenames) {
@@ -62,7 +62,7 @@ public class VCFConcat extends AbstractOutputCommand {
 		iterators.add(primary.iterator());
 		curRecords.add(null);
 
-		for (int i=1; i< filenames.length; i++) {
+		for (int i=1; i<filenames.length; i++) {
 			VCFReader r = new VCFReader(filenames[i]);
 			readers.add(r);
 			iterators.add(r.iterator());
