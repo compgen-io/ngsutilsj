@@ -1,5 +1,6 @@
 package io.compgen.ngsutils.cli.vcf;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -10,6 +11,7 @@ import io.compgen.cmdline.annotation.UnnamedArg;
 import io.compgen.cmdline.exceptions.CommandArgumentException;
 import io.compgen.cmdline.impl.AbstractOutputCommand;
 import io.compgen.common.IterUtils;
+import io.compgen.common.StringLineReader;
 import io.compgen.ngsutils.NGSUtils;
 import io.compgen.ngsutils.vcf.VCFHeader;
 import io.compgen.ngsutils.vcf.VCFReader;
@@ -30,6 +32,17 @@ public class VCFRenameSample extends AbstractOutputCommand {
     	this.filename = filename;
     }
 
+    @Option(desc="Tab delimited file for names: oldname\\tnewname", name="samples-file", charName="f", allowMultiple=true)
+    public void setSampleFile(String val) throws CommandArgumentException, IOException {
+    	for (String line: IterUtils.wrap(new StringLineReader(val).iterator())) {
+    		String[] cols = line.strip().split("\t");
+    		if (cols.length == 2) {
+    			oldNames.add(cols[0]);
+    			newNames.add(cols[1]);
+    		}
+    	}
+    }
+    
     @Option(desc="Sample to rename (colon delimited: OLDNAME:NEWNAME, can use sample number for OLDNAME)", name="sample", allowMultiple=true)
     public void setSample(String val) throws CommandArgumentException {
     	String[] spl = val.split(":");
@@ -67,7 +80,6 @@ public class VCFRenameSample extends AbstractOutputCommand {
 //		}
 
 		for (VCFRecord rec: IterUtils.wrap(reader.iterator())) {
-
             writer.write(rec);
 		}		
 		reader.close();
