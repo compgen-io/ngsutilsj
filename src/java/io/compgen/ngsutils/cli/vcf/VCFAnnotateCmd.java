@@ -615,7 +615,7 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
     }
 
     @Option(desc="Set the @ID value to be chrom_pos_ref_alt1;chrom_pos_ref_alt2", name="auto-id")
-    public void setAutoID(String arg) throws CommandArgumentException {
+    public void setAutoID() throws CommandArgumentException {
 		chain.add(new AutoID());
     }
     
