@@ -16,6 +16,7 @@ import io.compgen.ngsutils.vcf.VCFHeader;
 import io.compgen.ngsutils.vcf.VCFReader;
 import io.compgen.ngsutils.vcf.VCFRecord;
 import io.compgen.ngsutils.vcf.VCFWriter;
+import io.compgen.ngsutils.vcf.annotate.AutoID;
 import io.compgen.ngsutils.vcf.annotate.BEDAnnotation;
 import io.compgen.ngsutils.vcf.annotate.ConstantTag;
 import io.compgen.ngsutils.vcf.annotate.CopyNumberLogRatio;
@@ -602,7 +603,6 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
 		}    	
     }
 
-
     @Option(desc="Add a constant INFO annotation to each record (KEY:VALUE or FLAG)", name="tag", helpValue="KEY{:VALUE}")
     public void setTag(String arg) throws CommandArgumentException {
     	if (arg.contains(":")) {
@@ -614,6 +614,10 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
     	}
     }
 
+    @Option(desc="Set the @ID value to be chrom_pos_ref_alt1;chrom_pos_ref_alt2", name="auto-id")
+    public void setAutoID(String arg) throws CommandArgumentException {
+		chain.add(new AutoID());
+    }
     
     @UnnamedArg(name = "input.vcf", required=true)
     public void setFilename(String filename) throws CommandArgumentException {
