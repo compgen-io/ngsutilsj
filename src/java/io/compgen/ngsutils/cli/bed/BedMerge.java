@@ -222,7 +222,7 @@ public class BedMerge extends AbstractOutputCommand {
         List<BufferedIterator<MultinameBedRecord>> srcBeds = new ArrayList<BufferedIterator<MultinameBedRecord>>(); 
         ListSortedBufferedIterator<MultinameBedRecord> bufList = new ListSortedBufferedIterator<MultinameBedRecord>();
 
-    	if (firstRecord.getCoord().strand.matches(strand)) {
+    	if (firstRecord!=null && firstRecord.getCoord().strand.matches(strand)) {
     		bufList.add(new MultinameBedRecord(firstRecord));
     	}
 
