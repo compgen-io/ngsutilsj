@@ -207,6 +207,4 @@ public class VCFConcat extends AbstractOutputCommand {
 		
 		writer.close();
 	}
-
-
 }
