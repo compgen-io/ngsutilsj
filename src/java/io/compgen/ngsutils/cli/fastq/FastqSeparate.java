@@ -10,7 +10,7 @@ import io.compgen.cmdline.annotation.UnnamedArg;
 import io.compgen.cmdline.exceptions.CommandArgumentException;
 import io.compgen.cmdline.impl.AbstractCommand;
 import io.compgen.common.Counter;
-import io.compgen.common.io.FileUtils;
+import io.compgen.common.FileUtils;
 import io.compgen.ngsutils.fastq.Fastq;
 import io.compgen.ngsutils.fastq.FastqRead;
 import io.compgen.ngsutils.fastq.FastqReader;
