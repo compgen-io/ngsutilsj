@@ -137,6 +137,7 @@ public class VCFConcatN extends AbstractCommand {
 		writer.close();
 		
 		int[] curChrom = new int[filenames.length];
+		String[] curChromStr = new String[filenames.length];
 		int[] curPos = new int[filenames.length];
 		
 		int[] inputIndex = new int[filenames.length];
@@ -205,6 +206,7 @@ public class VCFConcatN extends AbstractCommand {
 						int pos = readPos(readers[i]);
 						System.err.println("  pos: " + pos);
 						curChrom[i] = contigOrder.get(chrom);
+						curChromStr[i] = chrom;
 						curPos[i] = pos;
 					}
 				} else {
@@ -221,16 +223,19 @@ public class VCFConcatN extends AbstractCommand {
 			int minIdx = -1;
 			int minChrom = -1;
 			int minPos = -1;
+			String minChromStr = null;
 			for (int i=0; i<readers.length; i++) {
 				if (curChrom[i] > -1) {
 					if (minChrom == -1 || curChrom[i] < minChrom) {
 						minIdx = i;
 						minChrom = curChrom[i];
 						minPos = curPos[i];
+						minChromStr = curChromStr[i];
 					} else if (curChrom[i] == minChrom && curPos[i] < minPos) {
 						minIdx = i;
 						minChrom = curChrom[i];
 						minPos = curPos[i];
+						minChromStr = curChromStr[i];
 					}
 				}
 			}
@@ -240,10 +245,12 @@ public class VCFConcatN extends AbstractCommand {
 			if (minIdx == -1) {
 				break;
 			}
-			
+		
+			System.out.print(minChromStr + "\t" + minPos + "\t");	
 			writeEOL(readers[minIdx], System.out);
 
 			curChrom[minIdx] = -1;
+			curChromStr[minIdx] = null;
 			curPos[minIdx] = -1;
 
 			String chrom = readChrom(readers[minIdx]);
@@ -251,6 +258,7 @@ public class VCFConcatN extends AbstractCommand {
 				int pos = readPos(readers[minIdx]);
 				curChrom[minIdx] = contigOrder.get(chrom);
 				curPos[minIdx] = pos;
+				curChromStr[minIdx] = chrom;
 			} else {
 				while (chrom == null) {
 					String fname = buildFilename(fnamePrefix[minIdx], fnameSuffix[minIdx], inputIndex[minIdx], inputPadding[minIdx]);
@@ -268,6 +276,7 @@ public class VCFConcatN extends AbstractCommand {
 							System.err.println("  pos: " + pos);
 							curChrom[minIdx] = contigOrder.get(chrom);
 							curPos[minIdx] = pos;
+							curChromStr[minIdx] = chrom;
 						}
 					}
 				}
