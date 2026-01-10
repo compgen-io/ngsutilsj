@@ -146,6 +146,7 @@ public class VCFConcatN extends AbstractCommand {
 		String[] fnamePrefix = new String[filenames.length];
 		String[] fnameSuffix = new String[filenames.length];
 		String[] curFilename = new String[filenames.length];
+		boolean[] fnameDone = new boolean[filenames.length];
 		
 		BufferedReader[] readers = new BufferedReader[filenames.length];
 
@@ -154,6 +155,7 @@ public class VCFConcatN extends AbstractCommand {
 			inputIndex[i] = 1;
 			fnamePrefix[i] = null;
 			fnameSuffix[i] = "";
+			fnameDone[i] = false;
 			String[] spl = f.getName().split("\\.");
 			boolean found = false;
 			for (String el: spl) {
@@ -213,6 +215,7 @@ public class VCFConcatN extends AbstractCommand {
 					readers[i] = null;
 					curChrom[i] = -1;
 					curPos[i] = -1;
+					fnameDone[i] = true;
 					break;
 				}
 			}
@@ -260,7 +263,7 @@ public class VCFConcatN extends AbstractCommand {
 				curPos[minIdx] = pos;
 				curChromStr[minIdx] = chrom;
 			} else {
-				while (chrom == null) {
+				while (chrom == null && !fnameDone[minIdx]) {
 					String fname = buildFilename(fnamePrefix[minIdx], fnameSuffix[minIdx], inputIndex[minIdx], inputPadding[minIdx]);
 					System.err.println("Opening file: "+fname);
 					File f = new File(fname);
@@ -278,6 +281,9 @@ public class VCFConcatN extends AbstractCommand {
 							curPos[minIdx] = pos;
 							curChromStr[minIdx] = chrom;
 						}
+					} else {
+						fnameDone[minIdx] = true;
+						System.err.println("Missing file: "+fname+ ". Done with this input.");
 					}
 				}
 			}
