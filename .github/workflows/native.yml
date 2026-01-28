@@ -16,7 +16,7 @@ jobs:
         include:
           - os: macos
             arch: aarch64
-            runs-on: macos-15-arm
+            runs-on: macos-15
             target: native.macos.aarch64
           - os: macos
             arch: x86_64

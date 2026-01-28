@@ -8,7 +8,7 @@
     <property name="dist.dir" value="dist"/>
     <property name="src.dir" value="src"/>
     <property name="graal.config.dir" value="graal"/>
-    <property name="native.image" value="native-image"/>
+    <property name="native.image" value=""/>
     <property name="native.image.args" value=""/>
     <property name="native.os" value=""/>
     <property name="native.arch" value=""/>
@@ -29,7 +29,22 @@
         </and>
     </condition>
     <condition property="native.image" value="native-image.cmd">
-        <os family="windows"/>
+        <and>
+            <os family="windows"/>
+            <not>
+                <isset property="env.GRAALVM_HOME"/>
+            </not>
+        </and>
+    </condition>
+    <condition property="native.image" value="native-image">
+        <and>
+            <not>
+                <os family="windows"/>
+            </not>
+            <not>
+                <isset property="env.GRAALVM_HOME"/>
+            </not>
+        </and>
     </condition>
 	
     <target name="clean">
