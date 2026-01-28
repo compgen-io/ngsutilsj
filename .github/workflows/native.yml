@@ -75,9 +75,14 @@ jobs:
                 GRAALVM_VERSION=17.0.9
                 GRAALVM_BUILD=9.1
                 GRAALVM_TAG=jdk-${GRAALVM_VERSION}+${GRAALVM_BUILD}
-                GRAALVM_TGZ=graalvm-community-jdk-${GRAALVM_VERSION}_linux-x64_bin.tar.gz
-                GRAALVM_URL=https://github.com/graalvm/graalvm-ce-builds/releases/download/${GRAALVM_TAG}/${GRAALVM_TGZ}
-                curl -fL -o /tmp/${GRAALVM_TGZ} ${GRAALVM_URL}
+                RELEASE_JSON=$(curl -fsSL https://api.github.com/repos/graalvm/graalvm-ce-builds/releases/tags/${GRAALVM_TAG})
+                ASSET_URL=$(echo "$RELEASE_JSON" | grep -o "https://[^\"]*linux-x64_bin.tar.gz" | head -n1)
+                if [[ -z "$ASSET_URL" ]]; then
+                  echo "Unable to find GraalVM linux-x64 tarball for tag ${GRAALVM_TAG}" >&2
+                  exit 2
+                fi
+                GRAALVM_TGZ=$(basename "$ASSET_URL")
+                curl -fL -o /tmp/${GRAALVM_TGZ} ${ASSET_URL}
                 mkdir -p /opt/graalvm
                 tar -xzf /tmp/${GRAALVM_TGZ} -C /opt/graalvm
                 export GRAALVM_HOME=/opt/graalvm/graalvm-community-jdk-${GRAALVM_VERSION}+${GRAALVM_BUILD}
