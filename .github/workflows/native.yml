@@ -81,7 +81,7 @@ jobs:
                 curl -fL -o /tmp/${GRAALVM_TGZ} ${ASSET_URL}
                 mkdir -p /opt/graalvm
                 tar -xzf /tmp/${GRAALVM_TGZ} -C /opt/graalvm
-                export GRAALVM_HOME=/opt/graalvm/graalvm-community-jdk-${GRAALVM_VERSION}+${GRAALVM_BUILD}
+                export GRAALVM_HOME=/opt/graalvm/graalvm-community-jdk-${GRAALVM_VERSION}
                 export JAVA_HOME=$GRAALVM_HOME
                 export PATH=$GRAALVM_HOME/bin:$PATH
                 gu install native-image
