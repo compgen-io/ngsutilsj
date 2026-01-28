@@ -70,7 +70,7 @@ jobs:
               -v "${PWD}:/workspace" -w /workspace \
               rockylinux:8 bash -lc '
                 set -euo pipefail
-                dnf -y install tar gzip curl unzip gcc gcc-c++ make zlib-devel libstdc++-static ant git
+                dnf -y install tar gzip curl unzip gcc gcc-c++ make zlib-devel ant git
                 # Install GraalVM CE 17 (Linux x64)
                 GRAALVM_VERSION=17.0.9
                 GRAALVM_BUILD=9.1
