@@ -103,6 +103,7 @@ import io.compgen.ngsutils.cli.vcf.VCFCheck;
 import io.compgen.ngsutils.cli.vcf.VCFChrFix;
 import io.compgen.ngsutils.cli.vcf.VCFClearFilter;
 import io.compgen.ngsutils.cli.vcf.VCFConcat;
+import io.compgen.ngsutils.cli.vcf.VCFConcatN;
 import io.compgen.ngsutils.cli.vcf.VCFConsensus;
 import io.compgen.ngsutils.cli.vcf.VCFCount;
 import io.compgen.ngsutils.cli.vcf.VCFEffect;
@@ -269,7 +270,8 @@ public class NGSUtils {
 			.addCommand(VCFConcat.class)
         	.addCommand(VCFHeaderInfo.class)
     		.addCommand(VCFReorder.class)
-    		.addCommand(VCFSplit.class);
+    		.addCommand(VCFSplit.class)
+    		.addCommand(VCFConcatN.class);
 
 
         try {
