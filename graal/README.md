@@ -6,6 +6,14 @@ reflect-config.json, resource-config.json, jni-config.json).
 Build:
   ant native-build -Dnative.os=macos -Dnative.arch=aarch64
 
+Test (native binary):
+  ant test-native -Dnative.os=macos -Dnative.arch=aarch64
+
+Notes:
+- The standard JAR build stays on Java 11 (dist/ngsutilsj.jar).
+- Native builds use a separate Java 17 compile in build-native/ and a shaded
+  dist/ngsutilsj-native.jar for native-image.
+
 Notes:
 - Set GRAALVM_HOME to point at a GraalVM Community install, or ensure
   native-image is on PATH.

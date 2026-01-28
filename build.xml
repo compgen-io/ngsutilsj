@@ -4,6 +4,7 @@
     <property name="lib.dir" value="lib"/>
     <property name="blib.dir" value="blib"/>
     <property name="build.dir" value="build"/>
+    <property name="build.native.dir" value="build-native"/>
     <property name="dist.dir" value="dist"/>
     <property name="src.dir" value="src"/>
     <property name="graal.config.dir" value="graal"/>
@@ -19,6 +20,7 @@
 	
     <target name="clean">
         <delete dir="${build.dir}"/>
+        <delete dir="${build.native.dir}"/>
         <delete dir="${dist.dir}"/>
     </target>
 
@@ -47,6 +49,24 @@
         			  <compilerarg value="-Xlint:-options"/>
         </javac>
     	
+    </target>
+
+    <target name="compile-native">
+        <mkdir dir="${build.native.dir}/classes"/>
+        <javac
+            srcdir="${src.dir}/java"
+            destdir="${build.native.dir}/classes"
+            encoding="UTF-8"
+            debug="true"
+            includeantruntime="false"
+            classpathref="classpath"
+            debuglevel="lines,vars,source"
+            release="17"
+            source="17"
+            target="17"
+            >
+            <compilerarg value="-Xlint:-options"/>
+        </javac>
     </target>
 
 	<target name="jar" depends="compile, git.revision">
@@ -86,13 +106,40 @@
 		<chmod file="${dist.dir}/ngsutilsj" perm="755"/>
 	</target>
 
-    <target name="native-build" depends="jar" description="Build a GraalVM native-image binary (requires -Dnative.os and -Dnative.arch)">
+    <target name="jar-native" depends="compile-native, git.revision" description="Build shaded JAR for GraalVM native-image (Java 17)">
+        <copy file="LICENSE" todir="${build.native.dir}/classes/"/>
+        <copy file="INCLUDES" todir="${build.native.dir}/classes/"/>
+        <echo file="${build.native.dir}/classes/io/compgen/ngsutils/ngsutilsj.properties" message="build=${build}${line.separator}"/>
+        <echo file="${build.native.dir}/classes/io/compgen/ngsutils/ngsutilsj.properties" message="version=${version}${line.separator}" append="true"/>
+        <echo file="${build.native.dir}/classes/io/compgen/ngsutils/ngsutilsj.properties" message="gitcommit=${repository.version}${line.separator}" append="true"/>
+
+        <mkdir dir="${dist.dir}"/>
+        <taskdef name="jarjar" classname="com.tonicsystems.jarjar.JarJarTask"
+            classpath="${blib.dir}/jarjar-1.4.jar"/>
+        <jarjar jarfile="${dist.dir}/ngsutilsj-native.jar">
+            <manifest>
+                <attribute name="Main-Class" value="io.compgen.ngsutils.NGSUtils"/>
+            </manifest>
+            <fileset dir="${build.native.dir}/classes"/>
+            <zipfileset src="${lib.dir}/htsjdk-1.126.jar"/>
+            <zipfileset src="${lib.dir}/snappy-java-1.0.3-rc3.jar"/>
+            <zipfileset src="${lib.dir}/commons-jexl-2.1.1.jar"/>
+            <zipfileset src="${lib.dir}/commons-logging-1.1.1.jar"/>
+            <zipfileset src="${lib.dir}/commons-math3-3.3.jar"/>
+            <zipfileset src="${lib.dir}/compgen-common-0.4.6.jar"/>
+            <zipfileset src="${lib.dir}/compgen-cmdline-0.4.5.jar"/>
+            <zipfileset src="${lib.dir}/commons-compress-1.8.1.jar"/>
+            <zap pattern="*.java"/>
+        </jarjar>
+    </target>
+
+    <target name="native-build" depends="jar-native" description="Build a GraalVM native-image binary (requires -Dnative.os and -Dnative.arch)">
         <fail unless="native.os" message="Missing -Dnative.os (example: macos or linux)"/>
         <fail unless="native.arch" message="Missing -Dnative.arch (example: aarch64 or x86_64)"/>
         <mkdir dir="${dist.dir}"/>
         <exec executable="${native.image}" failifexecutionfails="true">
             <arg value="-jar"/>
-            <arg value="${dist.dir}/ngsutilsj.jar"/>
+            <arg value="${dist.dir}/ngsutilsj-native.jar"/>
             <arg value="-H:Name=${dist.dir}/ngsutilsj.${native.os}_${native.arch}"/>
             <arg value="-H:+ReportExceptionStackTraces"/>
             <arg value="--no-fallback"/>
@@ -136,6 +183,15 @@
             <param name="native.os" value="windows"/>
             <param name="native.arch" value="x86_64"/>
         </antcall>
+    </target>
+
+    <target name="test-native" depends="native" description="Run full native binary test sweep (test-data/setup_data.sh + run_all.sh)">
+        <exec executable="/bin/bash" failifexecutionfails="true">
+            <arg value="test-data/setup_data.sh"/>
+        </exec>
+        <exec executable="/bin/bash" failifexecutionfails="true">
+            <arg value="test-data/run_all.sh"/>
+        </exec>
     </target>
 
 	<!-- See http://stackoverflow.com/questions/2974106/how-to-lookup-the-latest-git-commit-hash-from-an-ant-build-script -->

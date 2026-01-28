@@ -1,4 +1,4 @@
-Using random seed: 858450681
+Using random seed: 2000849627
 File: /Users/mbreese/Projects/ngsutilsj/test-data/reads.fastq
 Target reads: 1
 /Users/mbreese/Projects/ngsutilsj/test-data/reads.fastq

@@ -1,6 +1,6 @@
 reads.fastq
 Done! Elapsed: 0:00
-.fastq-sort-2104547993525181768.gz
+.fastq-sort-13483739499234197692.gz
 @read1
 ACGTACGTACGT
 +
