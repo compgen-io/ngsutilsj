@@ -84,7 +84,7 @@ jobs:
                 export GRAALVM_HOME=/opt/graalvm/graalvm-community-jdk-${GRAALVM_VERSION}
                 export JAVA_HOME=$GRAALVM_HOME
                 export PATH=$GRAALVM_HOME/bin:$PATH
-                gu install native-image
+                "$GRAALVM_HOME/bin/gu" install native-image
                 ant clean native.linux.x86_64
                 mv dist/ngsutilsj.linux_x86_64 dist/ngsutilsj.linux_x86_64.rhel8
               '
