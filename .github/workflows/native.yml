@@ -82,7 +82,7 @@ jobs:
 
       - name: Flatten artifacts
         run: |
-          find dist -type f -maxdepth 2 -mindepth 2 -exec mv {} dist/ \\;
+          find dist -type f -maxdepth 2 -mindepth 2 -exec mv {} dist/ \;
           find dist -type d -empty -delete
 
       - name: Release artifacts
