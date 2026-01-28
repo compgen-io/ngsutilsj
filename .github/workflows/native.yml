@@ -34,11 +34,17 @@ jobs:
             arch: x86_64
             runs-on: windows-latest
             target: native.windows.x86_64
+          - os: linux
+            arch: x86_64
+            runs-on: ubuntu-latest
+            target: native.linux.x86_64
+            rhel8: true
 
     steps:
       - uses: actions/checkout@v4
 
       - name: Set up GraalVM
+        if: ${{ !matrix.rhel8 }}
         uses: graalvm/setup-graalvm@v1
         with:
           java-version: '17'
@@ -46,19 +52,51 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           components: 'native-image'
 
+      - name: Set up GraalVM (RHEL8 container)
+        if: ${{ matrix.rhel8 }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -y
+          sudo apt-get install -y docker.io
+          docker pull rockylinux:8
+
       - name: Build native binary
         env:
           GRAALVM_HOME: ${{ env.GRAALVM_HOME }}
           JAVA_HOME: ${{ env.GRAALVM_HOME }}
         shell: bash
         run: |
-          export PATH="$GRAALVM_HOME/bin:$PATH"
-          ant clean ${{ matrix.target }}
+          if [[ "${{ matrix.rhel8 || 'false' }}" == "true" ]]; then
+            docker run --rm -t \
+              -v "${PWD}:/workspace" -w /workspace \
+              rockylinux:8 bash -lc '
+                set -euo pipefail
+                dnf -y install tar gzip curl unzip gcc gcc-c++ make zlib-devel libstdc++-static ant git
+                # Install GraalVM CE 17 (Linux x64)
+                GRAALVM_VERSION=17.0.9
+                GRAALVM_BUILD=9.1
+                GRAALVM_TGZ=graalvm-community-jdk-${GRAALVM_VERSION}_linux-x64_bin.tar.gz
+                GRAALVM_URL=https://github.com/graalvm/graalvm-ce-builds/releases/download/jdk-${GRAALVM_VERSION}+${GRAALVM_BUILD}/${GRAALVM_TGZ}
+                curl -L -o /tmp/${GRAALVM_TGZ} ${GRAALVM_URL}
+                mkdir -p /opt/graalvm
+                tar -xzf /tmp/${GRAALVM_TGZ} -C /opt/graalvm
+                export GRAALVM_HOME=/opt/graalvm/graalvm-community-jdk-${GRAALVM_VERSION}+${GRAALVM_BUILD}
+                export JAVA_HOME=$GRAALVM_HOME
+                export PATH=$GRAALVM_HOME/bin:$PATH
+                gu install native-image
+                ant clean native.linux.x86_64
+                mv dist/ngsutilsj.linux_x86_64 dist/ngsutilsj.linux_x86_64.rhel8
+              '
+          else
+            export PATH="$GRAALVM_HOME/bin:$PATH"
+            ant clean ${{ matrix.target }}
+          fi
 
       - name: Upload native artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ngsutilsj.${{ matrix.os }}_${{ matrix.arch }}
+          name: ngsutilsj.${{ matrix.os }}_${{ matrix.arch }}${{ matrix.rhel8 && '.rhel8' || '' }}
           path: dist/ngsutilsj.${{ matrix.os }}_${{ matrix.arch }}*
 
       - name: Upload JAR artifacts (linux x86_64 only)
