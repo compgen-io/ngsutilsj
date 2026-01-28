@@ -39,11 +39,11 @@ public class BGZFile {
         							   // remove blocks until the size smaller than resetSize.
         
         private BGZFileCache() {
-            this(16 * 1024 * 1024, 12 * 1024 * 1024);  // 16 MB cache, 12 MB reset size 
+            this(getDefaultBGZCacheSize());
         }
 
         private BGZFileCache(long maxSize) {
-        	this(maxSize, maxSize);
+        	this(maxSize, (maxSize * 3) / 4);
         }
 
         private BGZFileCache(long maxSize, long resetSize) {
@@ -54,6 +54,8 @@ public class BGZFile {
             this.maxSize = maxSize;
             this.resetSize = resetSize;
         }
+        
+        
         
         private BGZBlock get(long cPos) {
             if (!blockCache.containsKey(cPos)) {
@@ -140,6 +142,22 @@ public class BGZFile {
     
     public FileChannel getChannel() { 
         return file.getChannel();
+    }
+
+    private static long getDefaultBGZCacheSize() {
+        String prop = System.getProperty("ngsutilsj.bgzf.cache.mb");
+        long mb = 32;
+        if (prop != null && !prop.equals("")) {
+            try {
+                mb = Long.parseLong(prop);
+            } catch (NumberFormatException e) {
+                mb = 32;
+            }
+        }
+        if (mb < 1) {
+            mb = 1;
+        }
+        return mb * 1024 * 1024;
     }
     
 	public void close() throws IOException {

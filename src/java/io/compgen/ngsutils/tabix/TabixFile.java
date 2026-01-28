@@ -6,6 +6,7 @@ import java.nio.channels.FileChannel;
 import java.util.Iterator;
 import java.util.zip.DataFormatException;
 
+import io.compgen.ngsutils.support.CachedIterator;
 import io.compgen.common.StringLineReader;
 import io.compgen.ngsutils.annotation.GenomeSpan;
 import io.compgen.ngsutils.support.LogUtils;
@@ -22,6 +23,11 @@ public class TabixFile {
     private boolean removeChr = false;
     
     private boolean closed = false;
+
+    private String lastRef = null;
+    private int lastStart = -1;
+    private int lastEnd = -1;
+    private CachedIterator<String> lastIter = null;
     
 	static public boolean isTabixFile(String filename) {
 		return isTabixFile(filename, false);
@@ -209,7 +215,22 @@ public class TabixFile {
             ref = ref.substring(3);
         }
 
-        return new TabixQueryIterator(ref, start, end, index, bgzf);
+        if (lastIter != null && ref.equals(lastRef) && start == lastStart && end == lastEnd) {
+        	if (!lastIter.isExhausted()) {
+        		while (lastIter.hasNext()) {
+        			lastIter.next();
+        		}
+        	}
+        	lastIter.reset();
+        	return lastIter;
+        }
+        
+        CachedIterator<String> iter = new CachedIterator<String>(new TabixQueryIterator(ref, start, end, index, bgzf));
+        lastRef = ref;
+        lastStart = start;
+        lastEnd = end;
+        lastIter = iter;
+        return iter;
 	}
 
     public Iterator<String> query(GenomeSpan span) throws IOException, DataFormatException {
