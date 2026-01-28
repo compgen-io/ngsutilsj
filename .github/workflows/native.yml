@@ -74,9 +74,10 @@ jobs:
                 # Install GraalVM CE 17 (Linux x64)
                 GRAALVM_VERSION=17.0.9
                 GRAALVM_BUILD=9.1
-                GRAALVM_TGZ=graalvm-community-jdk-${GRAALVM_VERSION}_linux-x64_bin.tar.gz
-                GRAALVM_URL=https://github.com/graalvm/graalvm-ce-builds/releases/download/jdk-${GRAALVM_VERSION}+${GRAALVM_BUILD}/${GRAALVM_TGZ}
-                curl -L -o /tmp/${GRAALVM_TGZ} ${GRAALVM_URL}
+                GRAALVM_TAG=jdk-${GRAALVM_VERSION}+${GRAALVM_BUILD}
+                GRAALVM_TGZ=graalvm-community-jdk-${GRAALVM_VERSION}+${GRAALVM_BUILD}_linux-x64_bin.tar.gz
+                GRAALVM_URL=https://github.com/graalvm/graalvm-ce-builds/releases/download/${GRAALVM_TAG}/${GRAALVM_TGZ}
+                curl -fL -o /tmp/${GRAALVM_TGZ} ${GRAALVM_URL}
                 mkdir -p /opt/graalvm
                 tar -xzf /tmp/${GRAALVM_TGZ} -C /opt/graalvm
                 export GRAALVM_HOME=/opt/graalvm/graalvm-community-jdk-${GRAALVM_VERSION}+${GRAALVM_BUILD}
