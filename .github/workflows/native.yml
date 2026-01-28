@@ -16,11 +16,11 @@ jobs:
         include:
           - os: macos
             arch: aarch64
-            runs-on: macos-14
+            runs-on: macos-15-arm
             target: native.macos.aarch64
           - os: macos
             arch: x86_64
-            runs-on: macos-13
+            runs-on: macos-15-intel
             target: native.macos.x86_64
           - os: linux
             arch: x86_64
@@ -28,7 +28,7 @@ jobs:
             target: native.linux.x86_64
           - os: linux
             arch: aarch64
-            runs-on: ubuntu-24.04-arm64
+            runs-on: ubuntu-24.04-arm
             target: native.linux.aarch64
           - os: windows
             arch: x86_64

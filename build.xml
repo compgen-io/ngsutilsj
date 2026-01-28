@@ -14,8 +14,22 @@
     <property name="native.arch" value=""/>
 
     <property environment="env"/>
+    <condition property="native.image" value="${env.GRAALVM_HOME}/bin/native-image.cmd">
+        <and>
+            <os family="windows"/>
+            <isset property="env.GRAALVM_HOME"/>
+        </and>
+    </condition>
     <condition property="native.image" value="${env.GRAALVM_HOME}/bin/native-image">
-        <isset property="env.GRAALVM_HOME"/>
+        <and>
+            <not>
+                <os family="windows"/>
+            </not>
+            <isset property="env.GRAALVM_HOME"/>
+        </and>
+    </condition>
+    <condition property="native.image" value="native-image.cmd">
+        <os family="windows"/>
     </condition>
 	
     <target name="clean">
