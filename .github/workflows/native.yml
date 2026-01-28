@@ -73,14 +73,10 @@ jobs:
                 dnf -y install tar gzip curl unzip gcc gcc-c++ make zlib-devel ant git
                 # Install GraalVM CE 17 (Linux x64)
                 GRAALVM_VERSION=17.0.9
-                GRAALVM_BUILD=9.1
-                GRAALVM_TAG=jdk-${GRAALVM_VERSION}+${GRAALVM_BUILD}
-                RELEASE_JSON=$(curl -fsSL https://api.github.com/repos/graalvm/graalvm-ce-builds/releases/tags/${GRAALVM_TAG})
-                ASSET_URL=$(echo "$RELEASE_JSON" | grep -o "https://[^\"]*linux-x64_bin.tar.gz" | head -n1)
-                if [[ -z "$ASSET_URL" ]]; then
-                  echo "Unable to find GraalVM linux-x64 tarball for tag ${GRAALVM_TAG}" >&2
-                  exit 2
-                fi
+                GRAALVM_TAG=jdk-${GRAALVM_VERSION}
+                ASSET_URL=https://github.com/graalvm/graalvm-ce-builds/releases/download/${GRAALVM_TAG}/graalvm-community-jdk-${GRAALVM_VERSION}_linux-x64_bin.tar.gz
+                echo "GraalVM URL: ${ASSET_URL}"
+                curl -fIL ${ASSET_URL}
                 GRAALVM_TGZ=$(basename "$ASSET_URL")
                 curl -fL -o /tmp/${GRAALVM_TGZ} ${ASSET_URL}
                 mkdir -p /opt/graalvm
