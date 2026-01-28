@@ -376,7 +376,9 @@ public class BamBest extends AbstractCommand {
                 curList.add(buffer[idx]);
                 buffer[idx] = null;
 
+                boolean foundOnce = false;
                 while (it.hasNext()) {
+                	foundOnce = true;
                     SAMRecord next = it.next();
                     if (!next.getReadName().equals(currentReadName)) {
                         buffer[idx] = next;
@@ -386,6 +388,10 @@ public class BamBest extends AbstractCommand {
                         hasNext = false;
                     }
                     curList.add(next);
+                }
+                
+                if (!foundOnce) {
+                	hasNext = false;
                 }
                 
                 for (SAMRecord read: curList) {
