@@ -16,3 +16,5 @@ or you can use the embedded JAR version, which is a small shell script shim in f
     ./ngsutilsj
 
 Using the embedded JAR version is easier for typing at the command-line, but uses the exact same JAR file. If you use the embedded JAR version, but need to set any extra command-line parameters for java, you can use the `JAVA_OPT` environmental variable, or set `JAVA_OPT` in `$HOME/.ngsutilsjrc`. If needed, you can also set `JAVA_HOME` on the command-line or in `$HOME/.ngsutilsjrc`.
+
+BGZF cache sizing: set `-Dngsutilsj.bgzf.cache.mb=<MB>` to override the default 32 MB BGZF uncompressed block cache.
