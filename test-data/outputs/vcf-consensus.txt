@@ -15,8 +15,8 @@
 ##INFO=<ID=VCF1_ORIG_FILTER,Number=.,Type=String,Description="Original filter values from the VCF1 input (before rescue)">
 ##FILTER=<ID=PASS,Description="All filters passed">
 ##contig=<ID=chr1,length=32>
-##VCF1_inputVCFfilename=/Users/mbreese/Projects/ngsutilsj/test-data/variants.vcf
-##ngsutilsj_vcf_svconsensusCommand=vcf-consensus /Users/mbreese/Projects/ngsutilsj/test-data/variants.vcf
+##VCF1_inputVCFfilename=/Users/mbreese/Projects/ngsutilsj/test-data/data/variants.vcf
+##ngsutilsj_vcf_svconsensusCommand=vcf-consensus /Users/mbreese/Projects/ngsutilsj/test-data/data/variants.vcf
 ##ngsutilsj_vcf_svconsensusVersion=ngsutilsj-0.5.9 (dev)
 #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO
 chr1	3	VCF1_null	G	A	.	PASS	CG_VCF_MATCHES=VCF1

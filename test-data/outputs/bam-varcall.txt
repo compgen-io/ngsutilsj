@@ -15,11 +15,11 @@ test.bam
 ##FORMAT=<ID=SAC,Number=.,Type=Integer,Description="Number of reads on the forward and reverse strand supporting each allele (including reference)">
 ##INFO=<ID=DP,Number=1,Type=Integer,Description="Total depth across all samples">
 ##INFO=<ID=AD,Number=R,Type=Integer,Description="Allelic depths for the ref and alt alleles (in same order)">
-##SAMPLE=<ID=SAMPLE,File=/Users/mbreese/Projects/ngsutilsj/test-data/test.bam>
+##SAMPLE=<ID=SAMPLE,File=/Users/mbreese/Projects/ngsutilsj/test-data/data/test.bam>
 ##contig=<ID=chr1,length=32>
 ##contig=<ID=chr2,length=14>
-##reference=file:///Users/mbreese/Projects/ngsutilsj/test-data/ref.fa
-##pileup_cmd=samtools mpileup -O -q 0 -Q 0 -f /Users/mbreese/Projects/ngsutilsj/test-data/ref.fa -B /Users/mbreese/Projects/ngsutilsj/test-data/test.bam
+##reference=file:///Users/mbreese/Projects/ngsutilsj/test-data/data/ref.fa
+##pileup_cmd=samtools mpileup -O -q 0 -Q 0 -f /Users/mbreese/Projects/ngsutilsj/test-data/data/ref.fa -B /Users/mbreese/Projects/ngsutilsj/test-data/data/test.bam
 ##ngsutilsj_version=ngsutilsj-0.5.9 (dev)
-##ngsutilsj_cmd=bam-varcall --ref /Users/mbreese/Projects/ngsutilsj/test-data/ref.fa /Users/mbreese/Projects/ngsutilsj/test-data/test.bam
+##ngsutilsj_cmd=bam-varcall --ref /Users/mbreese/Projects/ngsutilsj/test-data/data/ref.fa /Users/mbreese/Projects/ngsutilsj/test-data/data/test.bam
 #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	SAMPLE

@@ -4,7 +4,7 @@
 ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
 ##FORMAT=<ID=AD,Number=R,Type=Integer,Description="Allelic depths">
 ##contig=<ID=chr1,length=32>
-##ngsutilsj_vcf_stripCommand=vcf-remove-flags /Users/mbreese/Projects/ngsutilsj/test-data/variants_samples.vcf
+##ngsutilsj_vcf_stripCommand=vcf-remove-flags /Users/mbreese/Projects/ngsutilsj/test-data/data/variants_samples.vcf
 ##ngsutilsj_vcf_stripVersion=ngsutilsj-0.5.9 (dev)
 #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	sample1
 chr1	3	.	G	A	.	PASS	FLAGS=FLAG1	GT:AD	0/1:5,3

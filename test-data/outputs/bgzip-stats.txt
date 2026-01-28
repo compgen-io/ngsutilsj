@@ -1,4 +1,4 @@
-Examining file: /Users/mbreese/Projects/ngsutilsj/test-data/variants.vcf.gz
+Examining file: /Users/mbreese/Projects/ngsutilsj/test-data/data/variants.vcf.gz
 ===========================
 magic1: 31
 magic2: 139

@@ -1,7 +1,7 @@
 ##fileformat=VCFv4.2
 ##fileDate=20260128
 ##contig=<ID=chr1,length=32>
-##ngsutilsj_vcf_stripCommand=vcf-strip /Users/mbreese/Projects/ngsutilsj/test-data/variants.vcf
+##ngsutilsj_vcf_stripCommand=vcf-strip /Users/mbreese/Projects/ngsutilsj/test-data/data/variants.vcf
 ##ngsutilsj_vcf_stripVersion=ngsutilsj-0.5.9 (dev)
 #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO
 chr1	3	.	G	A	.	PASS	.

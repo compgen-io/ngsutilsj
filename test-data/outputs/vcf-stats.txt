@@ -1,4 +1,4 @@
-/Users/mbreese/Projects/ngsutilsj/test-data/variants.vcf
+/Users/mbreese/Projects/ngsutilsj/test-data/data/variants.vcf
 Done! Elapsed: 0:00
 Total variants:	2
 Filtered variants:	0

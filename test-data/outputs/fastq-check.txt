@@ -1,4 +1,4 @@
-Reading file: /Users/mbreese/Projects/ngsutilsj/test-data/reads.fastq
-/Users/mbreese/Projects/ngsutilsj/test-data/reads.fastq
+Reading file: /Users/mbreese/Projects/ngsutilsj/test-data/data/reads.fastq
+/Users/mbreese/Projects/ngsutilsj/test-data/data/reads.fastq
 Done! Elapsed: 0:00
 OK 2 valid reads found.

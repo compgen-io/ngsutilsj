@@ -1,4 +1,4 @@
-/Users/mbreese/Projects/ngsutilsj/test-data/ref.fa
+/Users/mbreese/Projects/ngsutilsj/test-data/data/ref.fa
 >chr1
 ACGTACGT
 ACGTACGT

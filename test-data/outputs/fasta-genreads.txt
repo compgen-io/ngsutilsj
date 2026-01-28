@@ -1,2 +1,2 @@
-/Users/mbreese/Projects/ngsutilsj/test-data/ref.fa
+/Users/mbreese/Projects/ngsutilsj/test-data/data/ref.fa
 Done! Elapsed: 0:00

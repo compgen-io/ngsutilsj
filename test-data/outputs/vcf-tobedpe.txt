@@ -1,4 +1,4 @@
-##ngsutilsj_vcf_tobedpeCommand=vcf-tobedpe /Users/mbreese/Projects/ngsutilsj/test-data/variants.vcf
+##ngsutilsj_vcf_tobedpeCommand=vcf-tobedpe /Users/mbreese/Projects/ngsutilsj/test-data/data/variants.vcf
 ##ngsutilsj_vcf_tobedpeVersion=ngsutilsj-0.5.9 (dev)
 #chrom1	start1	stop1	chrom2	start2	stop2	name
 chr1	2	3	chr1	2	3	A

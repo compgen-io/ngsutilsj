@@ -1,7 +1,7 @@
-/Users/mbreese/Projects/ngsutilsj/test-data/test.bam
+/Users/mbreese/Projects/ngsutilsj/test-data/data/test.bam
 Done! Elapsed: 0:00
-/Users/mbreese/Projects/ngsutilsj/test-data/test.bam: 1
-/Users/mbreese/Projects/ngsutilsj/test-data/test2.bam
+/Users/mbreese/Projects/ngsutilsj/test-data/data/test.bam: 1
+/Users/mbreese/Projects/ngsutilsj/test-data/data/test2.bam
 Done! Elapsed: 0:00
-/Users/mbreese/Projects/ngsutilsj/test-data/test2.bam: 2
+/Users/mbreese/Projects/ngsutilsj/test-data/data/test2.bam: 2
 Total reads: 3

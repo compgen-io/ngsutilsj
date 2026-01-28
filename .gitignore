@@ -1,4 +1,5 @@
 build/
+build-native/
 dist/
 .project
 .classpath
@@ -9,3 +10,4 @@ dist/
 /bin/
 ngsutilsj
 graal/agent/
+test-data/data/

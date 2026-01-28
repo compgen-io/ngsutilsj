@@ -1,8 +1,8 @@
 test.bam
 Done! Elapsed: 0:00
 ## program: ngsutilsj-0.5.9 (dev)
-## cmd: bam-bins /Users/mbreese/Projects/ngsutilsj/test-data/test.bam
-## input: /Users/mbreese/Projects/ngsutilsj/test-data/test.bam
+## cmd: bam-bins /Users/mbreese/Projects/ngsutilsj/test-data/data/test.bam
+## input: /Users/mbreese/Projects/ngsutilsj/test-data/data/test.bam
 ## library-orientation: unstranded
 ## binsize: 50
 ## stranded: false

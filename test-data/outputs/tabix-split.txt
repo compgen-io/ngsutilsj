@@ -1,2 +1,2 @@
-Writing: /Users/mbreese/Projects/ngsutilsj/test-data/tab.tsv.1.gz
-Writing: /Users/mbreese/Projects/ngsutilsj/test-data/tab.tsv.2.gz
+Writing: /Users/mbreese/Projects/ngsutilsj/test-data/data/tab.tsv.1.gz
+Writing: /Users/mbreese/Projects/ngsutilsj/test-data/data/tab.tsv.2.gz

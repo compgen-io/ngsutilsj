@@ -1,6 +1,6 @@
 test_paired.bam
 Done! Elapsed: 0:00
 ## program: ngsutilsj-0.5.9 (dev)
-## cmd: bam-wps /Users/mbreese/Projects/ngsutilsj/test-data/test_paired.bam
+## cmd: bam-wps /Users/mbreese/Projects/ngsutilsj/test-data/data/test_paired.bam
 chrom	pos	wps
 Successfully read: 0 records.

@@ -1,4 +1,4 @@
-/Users/mbreese/Projects/ngsutilsj/test-data/reads.fastq
+/Users/mbreese/Projects/ngsutilsj/test-data/data/reads.fastq
 >read1
 ACGTACGTACGT
 >read2

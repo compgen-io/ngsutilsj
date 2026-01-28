@@ -1,4 +1,4 @@
-/Users/mbreese/Projects/ngsutilsj/test-data/variants_samples.vcf
+/Users/mbreese/Projects/ngsutilsj/test-data/data/variants_samples.vcf
 Done! Elapsed: 0:00
 chrom	pos	ref	alt	sample	GT
 chr1	3	G	A	sample1	0/1

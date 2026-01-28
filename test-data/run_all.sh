@@ -2,8 +2,8 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-DATA_DIR="$ROOT_DIR/test-data"
-OUT_DIR="$DATA_DIR/outputs"
+DATA_DIR="$ROOT_DIR/test-data/data"
+OUT_DIR="$ROOT_DIR/test-data/outputs"
 
 mkdir -p "$OUT_DIR"
 
@@ -16,7 +16,7 @@ fi
 
 # Ensure data exists
 if [[ ! -f "$DATA_DIR/ref.fa" ]]; then
-  echo "Missing test data. Run test-data/setup_data.sh first." >&2
+  echo "Missing test data. Run test-data/bin/setup_data.sh first." >&2
   exit 1
 fi
 

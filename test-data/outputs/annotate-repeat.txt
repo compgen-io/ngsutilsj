@@ -1,6 +1,6 @@
 ## program: ngsutilsj-0.5.9 (dev)
-## cmd: annotate-repeat --repeat /Users/mbreese/Projects/ngsutilsj/test-data/repeat.out --bed3 --noheader /Users/mbreese/Projects/ngsutilsj/test-data/regions3.bed
-## repeat-annotations: /Users/mbreese/Projects/ngsutilsj/test-data/repeat.out
+## cmd: annotate-repeat --repeat /Users/mbreese/Projects/ngsutilsj/test-data/data/repeat.out --bed3 --noheader /Users/mbreese/Projects/ngsutilsj/test-data/data/regions3.bed
+## repeat-annotations: /Users/mbreese/Projects/ngsutilsj/test-data/data/repeat.out
 chr1	0	4	Alu	SINE/Alu
 chr1	4	8	Alu	SINE/Alu
 chr2	0	4		

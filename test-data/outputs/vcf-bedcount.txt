@@ -1,9 +1,9 @@
-/Users/mbreese/Projects/ngsutilsj/test-data/variants.vcf
+/Users/mbreese/Projects/ngsutilsj/test-data/data/variants.vcf
 Done! Elapsed: 0:00
 ## program: ngsutilsj-0.5.9 (dev)
-## cmd: vcf-bedcount /Users/mbreese/Projects/ngsutilsj/test-data/regions3.bed /Users/mbreese/Projects/ngsutilsj/test-data/variants.vcf
-## vcf-input: /Users/mbreese/Projects/ngsutilsj/test-data/variants.vcf
-## bed-input: /Users/mbreese/Projects/ngsutilsj/test-data/regions3.bed
+## cmd: vcf-bedcount /Users/mbreese/Projects/ngsutilsj/test-data/data/regions3.bed /Users/mbreese/Projects/ngsutilsj/test-data/data/variants.vcf
+## vcf-input: /Users/mbreese/Projects/ngsutilsj/test-data/data/variants.vcf
+## bed-input: /Users/mbreese/Projects/ngsutilsj/test-data/data/regions3.bed
 chrom	start	end	varcount	variants_per_mb
 chr1	0	4	1	250000.0
 chr1	4	8	1	250000.0

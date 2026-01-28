@@ -1,4 +1,4 @@
-##ngsutilsj_vcf_tobedCommand=vcf-tobed /Users/mbreese/Projects/ngsutilsj/test-data/variants.vcf
+##ngsutilsj_vcf_tobedCommand=vcf-tobed /Users/mbreese/Projects/ngsutilsj/test-data/data/variants.vcf
 ##ngsutilsj_vcf_tobedVersion=ngsutilsj-0.5.9 (dev)
 chr1	2	3	SNV
 chr1	7	8	SNV

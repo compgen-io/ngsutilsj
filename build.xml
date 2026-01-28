@@ -195,9 +195,9 @@
         </antcall>
     </target>
 
-    <target name="test-native" depends="native" description="Run full native binary test sweep (test-data/setup_data.sh + run_all.sh)">
+    <target name="test-native" depends="native" description="Run full native binary test sweep (test-data/bin/setup_data.sh + run_all.sh)">
         <exec executable="/bin/bash" failifexecutionfails="true">
-            <arg value="test-data/setup_data.sh"/>
+            <arg value="test-data/bin/setup_data.sh"/>
         </exec>
         <exec executable="/bin/bash" failifexecutionfails="true">
             <arg value="test-data/run_all.sh"/>

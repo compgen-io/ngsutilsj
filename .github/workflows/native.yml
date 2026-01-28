@@ -80,9 +80,18 @@ jobs:
                 GRAALVM_TGZ=$(basename "$ASSET_URL")
                 curl -fL -o /tmp/${GRAALVM_TGZ} ${ASSET_URL}
                 mkdir -p /opt/graalvm
+                GRAALVM_DIR="$(tar -tzf /tmp/${GRAALVM_TGZ} | head -n 1 | cut -d/ -f1)"
+                if [[ -z "${GRAALVM_DIR}" ]]; then
+                  echo "Unable to detect GraalVM root directory from ${GRAALVM_TGZ}" >&2
+                  exit 1
+                fi
                 tar -xzf /tmp/${GRAALVM_TGZ} -C /opt/graalvm
-                export GRAALVM_HOME=/opt/graalvm/graalvm-community-jdk-${GRAALVM_VERSION}
-                export JAVA_HOME=$GRAALVM_HOME
+                export GRAALVM_HOME="/opt/graalvm/${GRAALVM_DIR}"
+                if [[ ! -x "${GRAALVM_HOME}/bin/gu" ]]; then
+                  echo "Missing gu at ${GRAALVM_HOME}/bin/gu" >&2
+                  exit 1
+                fi
+                export JAVA_HOME="${GRAALVM_HOME}"
                 export PATH=$GRAALVM_HOME/bin:$PATH
                 "$GRAALVM_HOME/bin/gu" install native-image
                 ant clean native.linux.x86_64

@@ -1,5 +1,5 @@
 ##contig=<ID=chr1,length=32>
-##ngsutilsj_vcf_exportCommand=vcf-export /Users/mbreese/Projects/ngsutilsj/test-data/variants.vcf
+##ngsutilsj_vcf_exportCommand=vcf-export /Users/mbreese/Projects/ngsutilsj/test-data/data/variants.vcf
 ##ngsutilsj_vcf_exportVersion=ngsutilsj-0.5.9 (dev)
 chrom	pos	ref	alt
 chr1	3	G	A
