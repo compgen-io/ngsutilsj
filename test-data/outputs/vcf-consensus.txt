@@ -1,0 +1,23 @@
+##fileformat=VCFv4.2
+##fileDate=20260128
+##INFO=<ID=END,Number=1,Type=Integer,Description="END position for the SV">
+##INFO=<ID=IMPRECISE,Number=0,Type=Flag,Description="SV pos is IMPRECISE">
+##INFO=<ID=SVTYPE,Number=1,Type=Integer,Description="Type of SV">
+##INFO=<ID=CG_VCF_MATCHES,Number=.,Type=String,Description="Input VCF files that have matches for this SV">
+##INFO=<ID=CHR2,Number=1,Type=String,Description="Chromosome for the END value for BND SVs">
+##INFO=<ID=PRECISE,Number=0,Type=Flag,Description="SV pos is PRECISE">
+##INFO=<ID=CT,Number=1,Type=String,Description="SV connection type">
+##INFO=<ID=INSLEN,Number=1,Type=Integer,Description="Length of insertion (INS only, min of input estimates)">
+##INFO=<ID=EVENT,Number=1,Type=String,Description="IDs of event associated to breakend">
+##INFO=<ID=CG_PASS_RESCUE,Number=0,Type=Flag,Description="SV was filtered by at least one input VCF">
+##INFO=<ID=CG_EVENT_RESCUE,Number=0,Type=Flag,Description="SV was filtered but is linked to an EVENT with at least one passing member">
+##INFO=<ID=VCF1_FILTER,Number=.,Type=String,Description="Filter values from the VCF1 input">
+##INFO=<ID=VCF1_ORIG_FILTER,Number=.,Type=String,Description="Original filter values from the VCF1 input (before rescue)">
+##FILTER=<ID=PASS,Description="All filters passed">
+##contig=<ID=chr1,length=32>
+##VCF1_inputVCFfilename=/Users/mbreese/Projects/ngsutilsj/test-data/variants.vcf
+##ngsutilsj_vcf_svconsensusCommand=vcf-consensus /Users/mbreese/Projects/ngsutilsj/test-data/variants.vcf
+##ngsutilsj_vcf_svconsensusVersion=ngsutilsj-0.5.9 (dev)
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO
+chr1	3	VCF1_null	G	A	.	PASS	CG_VCF_MATCHES=VCF1
+chr1	8	VCF1_null	T	C	.	PASS	CG_VCF_MATCHES=VCF1

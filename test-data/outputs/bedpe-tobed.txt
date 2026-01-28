@@ -1,0 +1,2 @@
+chr1	0	6	name1	0	+
+chr2	1	6	name2	0	+

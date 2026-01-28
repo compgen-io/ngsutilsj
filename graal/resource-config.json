@@ -1,0 +1,10 @@
+{
+  "resources": {
+    "includes": [
+      { "pattern": "\\Qio/compgen/ngsutils/ngsutilsj.properties\\E" },
+      { "pattern": "\\QLICENSE\\E" },
+      { "pattern": "\\QINCLUDES\\E" }
+    ]
+  },
+  "bundles": []
+}

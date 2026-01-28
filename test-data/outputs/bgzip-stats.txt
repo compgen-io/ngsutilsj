@@ -1,0 +1,76 @@
+Examining file: /Users/mbreese/Projects/ngsutilsj/test-data/variants.vcf.gz
+===========================
+magic1: 31
+magic2: 139
+cm    : 8
+flg   : 4
+mtime : 0
+xfl   : 0
+os    : 255
+xlen  : 6
+  s1    : 66
+  s2    : 67
+  slen  : 2
+   bsize: 116
+bsize : 116
+cdata : <91 bytes>
+crc   : 4086266789
+isize : 89
+ >> ##fileformat=VCFv4.2
+##contig=<ID=chr1,length=32>
+
+ >> ..
+ >> length=32>
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO
+
+DEFLATED: <91 bytes>
+CRC32   : 4086266789
+EXPECTED: 53 56 4e cb cc 49 4d cb 2f ca 4d 2c b1 0d 73 76 2b 33 d1 33 e2 52 56 4e ce cf 2b c9 4c b7 b5 f1 74 b1 4d ce 28 32 d4 c9 
+GOT     : 53 56 4e cb cc 49 4d cb 2f ca 4d 2c b1 0d 73 76 2b 33 d1 33 e2 52 56 4e ce cf 2b c9 4c b7 b5 f1 74 b1 4d ce 28 32 d4 c9 
+===========================
+magic1: 31
+magic2: 139
+cm    : 8
+flg   : 4
+mtime : 0
+xfl   : 0
+os    : 255
+xlen  : 6
+  s1    : 66
+  s2    : 67
+  slen  : 2
+   bsize: 58
+bsize : 58
+cdata : <33 bytes>
+crc   : 993231323
+isize : 44
+ >> chr1	3	.	G	A	.	PASS	.
+chr1	8	.	T	C	.	PASS	.
+
+DEFLATED: <33 bytes>
+CRC32   : 993231323
+EXPECTED: 4b ce 28 32 e4 34 e6 d4 e3 74 e7 74 04 92 01 8e c1 c1 9c 7a 5c c9 20 51 0b 20 3f 84 d3 19 21 0a 00 
+GOT     : 4b ce 28 32 e4 34 e6 d4 e3 74 e7 74 04 92 01 8e c1 c1 9c 7a 5c c9 20 51 0b 20 3f 84 d3 19 21 0a 00 
+===========================
+magic1: 31
+magic2: 139
+cm    : 8
+flg   : 4
+mtime : 0
+xfl   : 0
+os    : 255
+xlen  : 6
+  s1    : 66
+  s2    : 67
+  slen  : 2
+   bsize: 27
+bsize : 27
+cdata : <2 bytes>
+crc   : 0
+isize : 0
+ >> 
+DEFLATED: <2 bytes>
+CRC32   : 0
+EXPECTED: 03 00 
+GOT     : 03 00 
+===========================

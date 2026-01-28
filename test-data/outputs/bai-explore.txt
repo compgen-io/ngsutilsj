@@ -1,0 +1,12 @@
+n_ref: 2
+  [ref 0]
+  n_bin: 2
+    [bin 0, bin: 4681, n_chunk: 1]
+    [bin 1, bin: 37450, n_chunk: 2]
+      [magic bin unmapped_begin=99, unmapped_end=8781824, n_mapped=1, n_unmapped=0]
+  n_intv: 1
+    [intv 0, ioffset=99]
+  [ref 1]
+  n_bin: 0
+  n_intv: 0
+[n_no_coor=0]

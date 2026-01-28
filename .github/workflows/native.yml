@@ -1,0 +1,100 @@
+name: Native Binaries
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "*"
+
+jobs:
+  build-native:
+    name: Build (${{ matrix.os }} / ${{ matrix.arch }})
+    runs-on: ${{ matrix.runs-on }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos
+            arch: aarch64
+            runs-on: macos-14
+            target: native.macos.aarch64
+          - os: macos
+            arch: x86_64
+            runs-on: macos-13
+            target: native.macos.x86_64
+          - os: linux
+            arch: x86_64
+            runs-on: ubuntu-latest
+            target: native.linux.x86_64
+          - os: linux
+            arch: aarch64
+            runs-on: ubuntu-24.04-arm64
+            target: native.linux.aarch64
+          - os: windows
+            arch: x86_64
+            runs-on: windows-latest
+            target: native.windows.x86_64
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up GraalVM
+        uses: graalvm/setup-graalvm@v1
+        with:
+          java-version: '17'
+          distribution: 'graalvm-community'
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          components: 'native-image'
+
+      - name: Build native binary
+        env:
+          GRAALVM_HOME: ${{ env.GRAALVM_HOME }}
+          JAVA_HOME: ${{ env.GRAALVM_HOME }}
+        shell: bash
+        run: |
+          export PATH="$GRAALVM_HOME/bin:$PATH"
+          ant clean ${{ matrix.target }}
+
+      - name: Upload native artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ngsutilsj.${{ matrix.os }}_${{ matrix.arch }}
+          path: dist/ngsutilsj.${{ matrix.os }}_${{ matrix.arch }}*
+
+      - name: Upload JAR artifacts (linux x86_64 only)
+        if: matrix.os == 'linux' && matrix.arch == 'x86_64'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ngsutilsj-jar
+          path: |
+            dist/ngsutilsj
+            dist/ngsutilsj*.jar
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: build-native
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+
+      - name: Flatten artifacts
+        run: |
+          find dist -type f -maxdepth 2 -mindepth 2 -exec mv {} dist/ \\;
+          find dist -type d -empty -delete
+
+      - name: Release artifacts
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            dist/ngsutilsj
+            dist/ngsutilsj*.jar
+            dist/ngsutilsj.macos_aarch64
+            dist/ngsutilsj.macos_x86_64
+            dist/ngsutilsj.linux_x86_64
+            dist/ngsutilsj.linux_aarch64
+            dist/ngsutilsj.windows_x86_64.exe
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

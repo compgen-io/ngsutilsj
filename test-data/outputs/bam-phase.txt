@@ -1,0 +1,2 @@
+Skipping variant: chr1:3:G>A (not enough reads found for one allele)
+Skipping variant: chr1:8:T>C (not enough reads found for one allele)

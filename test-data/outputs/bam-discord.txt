@@ -1,0 +1,6 @@
+test_paired.bam
+Done! Elapsed: 0:00
+Total reads     : 2
+Concordant reads: 0
+Discordant reads: 2
+Orphan reads    : 0

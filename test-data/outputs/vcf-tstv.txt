@@ -1,0 +1,3 @@
+Transitions (Ts)	2
+Transversions (Tv)	0
+Ts/Tv ratio	Infinity

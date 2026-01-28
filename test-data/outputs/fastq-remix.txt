@@ -1,0 +1,10 @@
+Using random seed: 858450681
+File: /Users/mbreese/Projects/ngsutilsj/test-data/reads.fastq
+Target reads: 1
+/Users/mbreese/Projects/ngsutilsj/test-data/reads.fastq
+Done! Elapsed: 0:00
+File reads: 2
+Shuffling reads... (1/2)
+Writing reads...
+/Users/mbreese/Projects/ngsutilsj/test-data/reads.fastq
+Reads written: 1

@@ -1,0 +1,4 @@
+Reading file...test.bam
+Done! Elapsed: 0:00
+ done
+Generating list #1...

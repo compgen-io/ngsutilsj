@@ -1,0 +1,5 @@
+test.bam
+Done! Elapsed: 0:00
+Total reads     : 1
+Soft-clipped reads: 0
+Filtered: 0

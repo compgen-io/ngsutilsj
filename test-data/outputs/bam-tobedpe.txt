@@ -1,0 +1,4 @@
+test_paired.bam
+Done! Elapsed: 0:00
+chr1	1	8	chr1	5	12	pair1	60	+	+
+Successfully read: 1 records.

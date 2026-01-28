@@ -1,0 +1,17 @@
+seq	start	end	strand	match	score
+chr1	0	3	+	ACG	3.0
+chr1	1	4	-	ACG	3.0
+chr1	4	7	+	ACG	3.0
+chr1	5	8	-	ACG	3.0
+chr1	8	11	+	ACG	3.0
+chr1	9	12	-	ACG	3.0
+chr1	12	15	+	ACG	3.0
+chr1	13	16	-	ACG	3.0
+chr1	16	19	+	ACG	3.0
+chr1	17	20	-	ACG	3.0
+chr1	20	23	+	ACG	3.0
+chr1	21	24	-	ACG	3.0
+chr1	24	27	+	ACG	3.0
+chr1	25	28	-	ACG	3.0
+chr1	28	31	+	ACG	3.0
+chr1	29	32	-	ACG	3.0

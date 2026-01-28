@@ -1,0 +1,4 @@
+/Users/mbreese/Projects/ngsutilsj/test-data/variants.vcf
+Done! Elapsed: 0:00
+Positions scanned: 2
+Positions matched: 2 (1.0000)

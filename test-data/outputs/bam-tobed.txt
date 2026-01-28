@@ -1,0 +1,4 @@
+test.bam
+Done! Elapsed: 0:00
+chr1	1	12	read1	60	+
+Successfully wrote: 1 records.

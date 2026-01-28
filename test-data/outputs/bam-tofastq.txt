@@ -1,0 +1,6 @@
+test.bam
+Done! Elapsed: 0:00
+@read1
+ACGTACGTACGT
++
+FFFFFFFFFFFF

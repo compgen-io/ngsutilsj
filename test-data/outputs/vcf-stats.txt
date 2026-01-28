@@ -1,0 +1,15 @@
+/Users/mbreese/Projects/ngsutilsj/test-data/variants.vcf
+Done! Elapsed: 0:00
+Total variants:	2
+Filtered variants:	0
+Passing variants:	2
+
+SNV:	2
+Indels:	0
+Reference-only:	0
+
+Transitions:	2
+Transversions:	0
+Ts/Tv ratio:	
+
+[Filters]

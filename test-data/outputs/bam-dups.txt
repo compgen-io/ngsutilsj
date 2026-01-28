@@ -1,0 +1,6 @@
+test_paired.bam
+Done! Elapsed: 0:00
+Total-reads:	2
+Duplicate-sites:	0
+Duplicate-reads:	0
+Unmapped-reads (skipped):	0

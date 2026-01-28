@@ -1,0 +1,17 @@
+## program: ngsutilsj-0.5.9 (dev)
+## cmd: bam-basecall /Users/mbreese/Projects/ngsutilsj/test-data/test.bam
+## input: /Users/mbreese/Projects/ngsutilsj/test-data/test.bam
+## pileup-cmd: samtools mpileup -O -q 0 -Q 0 -B /Users/mbreese/Projects/ngsutilsj/test-data/test.bam
+chrom	pos	ref	A	C	G	T	N	plus-strand	minus-strand
+chr1	1	N	1	0	0	0	0	1	0
+chr1	2	N	0	1	0	0	0	1	0
+chr1	3	N	0	0	1	0	0	1	0
+chr1	4	N	0	0	0	1	0	1	0
+chr1	5	N	1	0	0	0	0	1	0
+chr1	6	N	0	1	0	0	0	1	0
+chr1	7	N	0	0	1	0	0	1	0
+chr1	8	N	0	0	0	1	0	1	0
+chr1	9	N	1	0	0	0	0	1	0
+chr1	10	N	0	1	0	0	0	1	0
+chr1	11	N	0	0	1	0	0	1	0
+chr1	12	N	0	0	0	1	0	1	0

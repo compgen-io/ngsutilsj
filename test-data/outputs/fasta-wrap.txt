@@ -1,0 +1,10 @@
+/Users/mbreese/Projects/ngsutilsj/test-data/ref.fa
+>chr1
+ACGTACGT
+ACGTACGT
+ACGTACGT
+ACGTACGT
+>chr2
+TTGGAATT
+Done! Elapsed: 0:00
+CCGGAA

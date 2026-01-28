@@ -1,0 +1,4 @@
+reads_illumina.fastq
+Done! Elapsed: 0:00
+Group RG1: 2 reads
+Unmatched: 0 reads

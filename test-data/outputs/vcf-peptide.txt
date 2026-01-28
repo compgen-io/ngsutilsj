@@ -1,0 +1,3 @@
+Reading GTF... done
+g1 / Variant: chr1:3 G>A
+g1 / Variant: chr1:8 T>C

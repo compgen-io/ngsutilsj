@@ -1,0 +1,12 @@
+/Users/mbreese/Projects/ngsutilsj/test-data/variants.vcf
+##fileformat=VCFv4.2
+##fileDate=20260128
+##contig=<ID=chr1,length=32>
+##ngsutilsj_vcf_filterCommand=vcf-filter /Users/mbreese/Projects/ngsutilsj/test-data/variants.vcf
+##ngsutilsj__filterVersion=ngsutilsj-0.5.9 (dev)
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO
+chr1	3	.	G	A	.	PASS	.
+chr1	8	.	T	C	.	PASS	.
+Done! Elapsed: 0:00
+Wrote   : 2 variants
+

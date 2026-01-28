@@ -1,0 +1,2 @@
+/Users/mbreese/Projects/ngsutilsj/test-data/variants.vcf
+Done! Elapsed: 0:00

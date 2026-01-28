@@ -1,0 +1,18 @@
+/Users/mbreese/Projects/ngsutilsj/test-data/reads.fastq
+@read1
+ACGTACGTACGT
++
+FFFFFFFFFFFF
+@read1
+ACGTACGTACGT
++
+FFFFFFFFFFFF
+@read2
+TTGGAATTCCGG
++
+FFFFFFFFFFFF
+@read2
+TTGGAATTCCGG
++
+FFFFFFFFFFFF
+Done! Elapsed: 0:00

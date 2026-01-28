@@ -1,0 +1,6 @@
+## program: ngsutilsj-0.5.9 (dev)
+## cmd: annotate-gtf --gtf /Users/mbreese/Projects/ngsutilsj/test-data/genes.gtf --bed3 /Users/mbreese/Projects/ngsutilsj/test-data/regions3.bed
+## gtf-annotations: /Users/mbreese/Projects/ngsutilsj/test-data/genes.gtf
+chr1	0	4	gene_id	gene_name
+chr1	4	8	g1	g1
+chr2	0	4		

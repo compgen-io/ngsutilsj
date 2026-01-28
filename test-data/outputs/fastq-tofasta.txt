@@ -1,0 +1,7 @@
+/Users/mbreese/Projects/ngsutilsj/test-data/reads.fastq
+>read1
+ACGTACGTACGT
+>read2
+TTGGAATTCCGG
+Done! Elapsed: 0:00
+2 reads found.

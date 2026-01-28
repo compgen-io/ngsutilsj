@@ -1,0 +1,4 @@
+test.bam
+Done! Elapsed: 0:00
+Total reads     : 1
+Altered reads: 0

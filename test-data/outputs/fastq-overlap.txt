@@ -1,0 +1,2 @@
+/Users/mbreese/Projects/ngsutilsj/test-data/reads.fastq
+Done! Elapsed: 0:00

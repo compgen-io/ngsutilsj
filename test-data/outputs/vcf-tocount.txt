@@ -1,0 +1,8 @@
+## program: ngsutilsj-0.5.9 (dev)
+## cmd: vcf-tocount /Users/mbreese/Projects/ngsutilsj/test-data/variants_samples.vcf
+## vcf-input: /Users/mbreese/Projects/ngsutilsj/test-data/variants_samples.vcf
+chrom	pos	ref	alt	ref_count	alt_count
+/Users/mbreese/Projects/ngsutilsj/test-data/variants_samples.vcf
+chr1	3	G	A	5	3
+chr1	8	T	C	7	2
+Done! Elapsed: 0:00

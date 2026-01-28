@@ -1,0 +1,8 @@
+/Users/mbreese/Projects/ngsutilsj/test-data/tab.tsv.gz
+chrom	start	end	name
+chr1	2	6	row1
+chr2	1	5	row2
+/Users/mbreese/Projects/ngsutilsj/test-data/tab.tsv.gz
+chrom	start	end	name
+chr1	2	6	row1
+chr2	1	5	row2

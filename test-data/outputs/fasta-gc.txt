@@ -1,0 +1,15 @@
+>chr1
+>chr2
+chrom	start	end	gc_fraction
+chr1	0	4	0.5
+chr1	4	8	0.5
+chr1	8	12	0.5
+chr1	12	16	0.5
+chr1	16	20	0.5
+chr1	20	24	0.5
+chr1	24	28	0.5
+chr1	28	32	0.5
+chr2	0	4	0.5
+chr2	4	8	0.0
+chr2	8	12	1.0
+chr2	12	14	0.0

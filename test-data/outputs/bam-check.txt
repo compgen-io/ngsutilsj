@@ -1,0 +1,3 @@
+test.bam
+Done! Elapsed: 0:00
+Successfully read 1 records.

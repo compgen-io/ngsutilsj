@@ -1,0 +1,3 @@
+reads_illumina.fastq
+Done! Elapsed: 0:00
+FCID:1	ACGT	2	1.0

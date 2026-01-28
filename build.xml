@@ -6,6 +6,16 @@
     <property name="build.dir" value="build"/>
     <property name="dist.dir" value="dist"/>
     <property name="src.dir" value="src"/>
+    <property name="graal.config.dir" value="graal"/>
+    <property name="native.image" value="native-image"/>
+    <property name="native.image.args" value=""/>
+    <property name="native.os" value=""/>
+    <property name="native.arch" value=""/>
+
+    <property environment="env"/>
+    <condition property="native.image" value="${env.GRAALVM_HOME}/bin/native-image">
+        <isset property="env.GRAALVM_HOME"/>
+    </condition>
 	
     <target name="clean">
         <delete dir="${build.dir}"/>
@@ -53,7 +63,7 @@
             <fileset dir="${build.dir}/classes"/>
             <fileset dir="${src.dir}/java" includes="**/*.java"/>
         </jar>
-	    <jarjar jarfile="${dist.dir}/ngsutilsj.jar.tmp">
+	    <jarjar jarfile="${dist.dir}/ngsutilsj.jar">
             <manifest>
                 <attribute name="Main-Class" value="io.compgen.ngsutils.NGSUtils"/>
             </manifest>
@@ -71,11 +81,62 @@
         <delete file="${dist.dir}/ngsutilsj"/>
  		<concat destfile="${dist.dir}/ngsutilsj" binary="true">
  		     <fileset file="${src.dir}/scripts/stub.sh" />
- 		     <fileset file="${dist.dir}/ngsutilsj.jar.tmp" />
+ 		     <fileset file="${dist.dir}/ngsutilsj.jar" />
  		</concat>
-        <delete file="${dist.dir}/ngsutilsj.jar.tmp"/>
 		<chmod file="${dist.dir}/ngsutilsj" perm="755"/>
 	</target>
+
+    <target name="native-build" depends="jar" description="Build a GraalVM native-image binary (requires -Dnative.os and -Dnative.arch)">
+        <fail unless="native.os" message="Missing -Dnative.os (example: macos or linux)"/>
+        <fail unless="native.arch" message="Missing -Dnative.arch (example: aarch64 or x86_64)"/>
+        <mkdir dir="${dist.dir}"/>
+        <exec executable="${native.image}" failifexecutionfails="true">
+            <arg value="-jar"/>
+            <arg value="${dist.dir}/ngsutilsj.jar"/>
+            <arg value="-H:Name=${dist.dir}/ngsutilsj.${native.os}_${native.arch}"/>
+            <arg value="-H:+ReportExceptionStackTraces"/>
+            <arg value="--no-fallback"/>
+            <arg value="-H:ConfigurationFileDirectories=${graal.config.dir}"/>
+            <arg line="${native.image.args}"/>
+        </exec>
+    </target>
+
+    <target name="native" depends="native-build" description="Build native binary for the current host (pass -Dnative.os and -Dnative.arch)"/>
+
+    <target name="native.macos.aarch64" description="Build macOS arm64 native binary on macOS arm host">
+        <antcall target="native-build">
+            <param name="native.os" value="macos"/>
+            <param name="native.arch" value="aarch64"/>
+        </antcall>
+    </target>
+
+    <target name="native.macos.x86_64" description="Build macOS x86_64 native binary on macOS x86_64 host">
+        <antcall target="native-build">
+            <param name="native.os" value="macos"/>
+            <param name="native.arch" value="x86_64"/>
+        </antcall>
+    </target>
+
+    <target name="native.linux.x86_64" description="Build Linux x86_64 native binary on Linux x86_64 host">
+        <antcall target="native-build">
+            <param name="native.os" value="linux"/>
+            <param name="native.arch" value="x86_64"/>
+        </antcall>
+    </target>
+
+    <target name="native.linux.aarch64" description="Build Linux arm64 native binary on Linux arm64 host">
+        <antcall target="native-build">
+            <param name="native.os" value="linux"/>
+            <param name="native.arch" value="aarch64"/>
+        </antcall>
+    </target>
+
+    <target name="native.windows.x86_64" description="Build Windows x86_64 native binary on Windows host">
+        <antcall target="native-build">
+            <param name="native.os" value="windows"/>
+            <param name="native.arch" value="x86_64"/>
+        </antcall>
+    </target>
 
 	<!-- See http://stackoverflow.com/questions/2974106/how-to-lookup-the-latest-git-commit-hash-from-an-ant-build-script -->
 	<available file=".git" type="dir" property="git.present"/>

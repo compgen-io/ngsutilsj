@@ -1,0 +1,6 @@
+>|chr1:0-4
+ACGT
+>|chr1:4-8
+ACGT
+>|chr2:0-4
+TTGG

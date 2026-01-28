@@ -1,0 +1,10 @@
+Total number of regions:	3
+Total number of bases:	12
+
+Mean region size:	4.0
+Median region size:	4
+Max region size:	4
+Min region size:	4
+
+chr1	2
+chr2	1

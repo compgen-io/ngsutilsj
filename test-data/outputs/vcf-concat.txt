@@ -1,0 +1,9 @@
+##fileformat=VCFv4.2
+##fileDate=20260128
+##contig=<ID=chr1,length=32>
+##ngsutilsj_vcf_concatCommand=vcf-concat /Users/mbreese/Projects/ngsutilsj/test-data/variants.vcf /Users/mbreese/Projects/ngsutilsj/test-data/variants2.vcf
+##ngsutilsj_vcf_concatVersion=ngsutilsj-0.5.9 (dev)
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO
+chr1	3	.	G	A	.	PASS	.
+chr1	8	.	T	C	.	PASS	.
+chr1	12	.	A	G	.	PASS	.

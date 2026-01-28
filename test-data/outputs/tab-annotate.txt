@@ -1,0 +1,8 @@
+/Users/mbreese/Projects/ngsutilsj/test-data/tab.tsv.gz
+Skipping line 1
+chrom	start	end	name
+##ngsutilsj_tab_annotateCommand=tab-annotate --tab name:/Users/mbreese/Projects/ngsutilsj/test-data/tab.tsv.gz,4 /Users/mbreese/Projects/ngsutilsj/test-data/tab.tsv.gz
+##ngsutilsj_tab_annotateVersion=ngsutilsj-0.5.9 (dev)
+chr1	2	6	row1	row1
+chr2	1	5	row2	row2
+Done! Elapsed: 0:00

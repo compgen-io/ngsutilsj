@@ -1,0 +1,7 @@
+chr1	1
+chr1	5
+chr1	9
+chr1	13
+chr1	17
+chr1	21
+chr1	25

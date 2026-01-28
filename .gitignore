@@ -7,3 +7,5 @@ dist/
 .zedstate
 .DS_Store
 /bin/
+ngsutilsj
+graal/agent/

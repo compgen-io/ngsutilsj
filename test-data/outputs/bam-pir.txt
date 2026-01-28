@@ -1,0 +1,8 @@
+
+Done! Elapsed: 0:00
+## program: ngsutilsj-0.5.9 (dev)
+## cmd: bam-pir --vcf /Users/mbreese/Projects/ngsutilsj/test-data/variants_samples.vcf --ref /Users/mbreese/Projects/ngsutilsj/test-data/ref.fa /Users/mbreese/Projects/ngsutilsj/test-data/test.bam
+## input: /Users/mbreese/Projects/ngsutilsj/test-data/test.bam
+## vcf-file: /Users/mbreese/Projects/ngsutilsj/test-data/variants_samples.vcf
+## pileup-cmd: samtools mpileup -O --output-QNAME -q 0 -Q 0 -f /Users/mbreese/Projects/ngsutilsj/test-data/ref.fa -B /Users/mbreese/Projects/ngsutilsj/test-data/test.bam
+#chrom	pos	ref	alt	test.bam refcount	test.bam altcount	test.bam refreads	test.bam altreads

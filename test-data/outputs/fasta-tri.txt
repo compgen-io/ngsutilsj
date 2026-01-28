@@ -1,0 +1,34 @@
+/Users/mbreese/Projects/ngsutilsj/test-data/ref.fa
+Done! Elapsed: 0:00
+ACA	0
+ACC	0
+ACG	16
+ACT	0
+ATA	0
+ATC	0
+ATG	0
+ATT	2
+CCA	1
+CCC	0
+CCG	2
+CCT	0
+CTA	0
+CTC	0
+CTG	0
+CTT	0
+GCA	0
+GCC	0
+GCG	0
+GCT	0
+GTA	14
+GTC	0
+GTG	0
+GTT	0
+TCA	0
+TCC	3
+TCG	0
+TCT	0
+TTA	0
+TTC	3
+TTG	1
+TTT	0

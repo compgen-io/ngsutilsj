@@ -1,0 +1,6 @@
+/Users/mbreese/Projects/ngsutilsj/test-data/test.bam
+Done! Elapsed: 0:00
+/Users/mbreese/Projects/ngsutilsj/test-data/test.bam	0
+/Users/mbreese/Projects/ngsutilsj/test-data/test2.bam	0
+ambiguous	1
+unmapped	0

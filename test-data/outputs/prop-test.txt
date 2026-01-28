@@ -1,0 +1,5 @@
+    S	| F
+A | 1	| 2
+B | 3	| 4
+
+Yate's corrected ChiSquared p-value:	1.0

@@ -1,0 +1,10 @@
+## program: ngsutilsj-0.5.9 (dev)
+## cmd: vcf-count --ref /Users/mbreese/Projects/ngsutilsj/test-data/ref.fa /Users/mbreese/Projects/ngsutilsj/test-data/variants_samples.vcf /Users/mbreese/Projects/ngsutilsj/test-data/test.bam
+## vcf-input: /Users/mbreese/Projects/ngsutilsj/test-data/variants_samples.vcf
+## bam-input: /Users/mbreese/Projects/ngsutilsj/test-data/test.bam
+## pileup-cmd: samtools mpileup -O -q 0 -Q 0 --ff 3844 -f /Users/mbreese/Projects/ngsutilsj/test-data/ref.fa -B /Users/mbreese/Projects/ngsutilsj/test-data/test.bam
+chrom	pos	ref	alt	ref_count	alt_count
+/Users/mbreese/Projects/ngsutilsj/test-data/variants_samples.vcf
+chr1	3	G	A	1	0
+Done! Elapsed: 0:00
+chr1	8	T	C	1	0

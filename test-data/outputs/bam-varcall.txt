@@ -1,0 +1,25 @@
+test.bam
+Done! Elapsed: 0:00
+##fileformat=VCFv4.2
+##FILTER=<ID=PASS,Description="All filters passed">
+##FILTER=<ID=min_depth,Description="Depth in sample too low (1)">
+##FILTER=<ID=min_abs_count,Description="Alt read count too low (0)">
+##FILTER=<ID=min_af,Description="Allele-frequency too low (0.0)">
+##FILTER=<ID=multi_indel,Description="Multiple indels reported at position">
+##FILTER=<ID=multi_alleles,Description="More than 3 alleles reported at position">
+##FILTER=<ID=low_pred_call_germline,Description="Germline variant prediction not above background">
+##FORMAT=<ID=AD,Number=R,Type=Integer,Description="Allelic depths for the ref and alt alleles (in same order)">
+##FORMAT=<ID=AF,Number=A,Type=Float,Description="Allele fraction of alt alleles">
+##FORMAT=<ID=DP,Number=1,Type=Integer,Description="Approximate read depth in sample">
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+##FORMAT=<ID=SAC,Number=.,Type=Integer,Description="Number of reads on the forward and reverse strand supporting each allele (including reference)">
+##INFO=<ID=DP,Number=1,Type=Integer,Description="Total depth across all samples">
+##INFO=<ID=AD,Number=R,Type=Integer,Description="Allelic depths for the ref and alt alleles (in same order)">
+##SAMPLE=<ID=SAMPLE,File=/Users/mbreese/Projects/ngsutilsj/test-data/test.bam>
+##contig=<ID=chr1,length=32>
+##contig=<ID=chr2,length=14>
+##reference=file:///Users/mbreese/Projects/ngsutilsj/test-data/ref.fa
+##pileup_cmd=samtools mpileup -O -q 0 -Q 0 -f /Users/mbreese/Projects/ngsutilsj/test-data/ref.fa -B /Users/mbreese/Projects/ngsutilsj/test-data/test.bam
+##ngsutilsj_version=ngsutilsj-0.5.9 (dev)
+##ngsutilsj_cmd=bam-varcall --ref /Users/mbreese/Projects/ngsutilsj/test-data/ref.fa /Users/mbreese/Projects/ngsutilsj/test-data/test.bam
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	SAMPLE

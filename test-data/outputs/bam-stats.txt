@@ -1,0 +1,17 @@
+test.bam
+Done! Elapsed: 0:00
+Total-reads:	1
+Mapped-reads:	1
+Unmapped-reads:	0
+Multiple-mapped-reads:	0
+Uniquely-mapped-reads:	1
+Q30-pct:	100.00%
+Total-bases:	12
+Ref-length:	46
+Total-depth:	0.26X
+
+[Flags]
+
+[References]
+chr1	1
+

@@ -1,0 +1,12 @@
+/Users/mbreese/Projects/ngsutilsj/test-data/regions3.bed
+Done! Elapsed: 0:00
+## program: ngsutilsj-0.5.9 (dev)
+## cmd: bam-count --bed /Users/mbreese/Projects/ngsutilsj/test-data/regions3.bed /Users/mbreese/Projects/ngsutilsj/test-data/test.bam
+## input: /Users/mbreese/Projects/ngsutilsj/test-data/test.bam
+## library-orientation: unstranded
+## counts: number of reads 
+## source: bed /Users/mbreese/Projects/ngsutilsj/test-data/regions3.bed
+chrom	start	end	read_count
+chr1	0	4	1
+chr1	4	8	1
+chr2	0	4	0

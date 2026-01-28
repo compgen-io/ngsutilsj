@@ -1,0 +1,4 @@
+Non-stranded BED file detected. Ignoring all strand comparisons.
+chr1	0	10	query1|query2
+chr2	0	5	query3
+Done!

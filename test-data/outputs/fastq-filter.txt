@@ -1,0 +1,10 @@
+reads.fastq
+@read1
+ACGTACGTACGT
++
+FFFFFFFFFFFF
+@read2
+TTGGAATTCCGG
++
+FFFFFFFFFFFF
+Done! Elapsed: 0:00

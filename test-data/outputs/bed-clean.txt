@@ -1,0 +1,3 @@
+chr1	0	4	region1	0	+
+chr1	4	8	region2	0	+
+chr2	0	4	region3	0	+
