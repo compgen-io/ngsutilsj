@@ -8,7 +8,6 @@
     <property name="dist.dir" value="dist"/>
     <property name="src.dir" value="src"/>
     <property name="graal.config.dir" value="graal"/>
-    <property name="native.image" value=""/>
     <property name="native.image.args" value=""/>
     <property name="native.os" value=""/>
     <property name="native.arch" value=""/>
@@ -20,10 +19,10 @@
     <condition property="native.image.nix" value="${env.GRAALVM_HOME}/bin/native-image" else="native-image">
         <isset property="env.GRAALVM_HOME"/>
     </condition>
-    <condition property="native.image" value="${native.image.win}">
+    <condition property="native.image.exec" value="${native.image.win}">
         <os family="windows"/>
     </condition>
-    <condition property="native.image" value="${native.image.nix}">
+    <condition property="native.image.exec" value="${native.image.nix}">
         <not>
             <os family="windows"/>
         </not>
@@ -148,7 +147,7 @@
         <fail unless="native.os" message="Missing -Dnative.os (example: macos or linux)"/>
         <fail unless="native.arch" message="Missing -Dnative.arch (example: aarch64 or x86_64)"/>
         <mkdir dir="${dist.dir}"/>
-        <exec executable="${native.image}" failifexecutionfails="true">
+        <exec executable="${native.image.exec}" failifexecutionfails="true">
             <arg value="-jar"/>
             <arg value="${dist.dir}/ngsutilsj-native.jar"/>
             <arg value="-H:Name=${dist.dir}/ngsutilsj.${native.os}_${native.arch}"/>
