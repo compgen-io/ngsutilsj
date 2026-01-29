@@ -109,6 +109,7 @@ jobs:
         with:
           name: ngsutilsj.${{ matrix.os }}_${{ matrix.arch }}${{ matrix.rhel8 && '.rhel8' || '' }}
           path: dist/ngsutilsj.${{ matrix.os }}_${{ matrix.arch }}*
+          overwrite: true
 
       - name: Upload JAR artifacts (linux x86_64 only)
         if: matrix.os == 'linux' && matrix.arch == 'x86_64'
@@ -118,6 +119,7 @@ jobs:
           path: |
             dist/ngsutilsj
             dist/ngsutilsj*.jar
+          overwrite: true
 
   release:
     if: startsWith(github.ref, 'refs/tags/')
