@@ -80,7 +80,9 @@ jobs:
                 GRAALVM_TGZ=$(basename "$ASSET_URL")
                 curl -fL -o /tmp/${GRAALVM_TGZ} ${ASSET_URL}
                 mkdir -p /opt/graalvm
+                set +o pipefail
                 GRAALVM_DIR="$(tar -tzf /tmp/${GRAALVM_TGZ} | head -n 1 | cut -d/ -f1)"
+                set -o pipefail
                 if [[ -z "${GRAALVM_DIR}" ]]; then
                   echo "Unable to detect GraalVM root directory from ${GRAALVM_TGZ}" >&2
                   exit 1
