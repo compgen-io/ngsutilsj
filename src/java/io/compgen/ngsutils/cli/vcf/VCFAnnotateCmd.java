@@ -481,7 +481,7 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
     }
 
 
-    @Option(desc="Add INFO annotation from a VCF file (CSI indexed, add '!' for exact matches, add '@' for only using records passing filters, '$' for unique matches, 'n' to not add a VCF header)", name="vcf", helpValue="NAME:FIELD:FILENAME{:!@$n}", allowMultiple=true)
+    @Option(desc="Add INFO annotation from a second VCF file (CSI indexed, add '!' for exact matches, add '@' for only using records passing filters, '$' for unique matches, 'n' to not add a VCF header)", name="vcf", helpValue="NAME:FIELD:FILENAME{:!@$n}", allowMultiple=true)
     public void setVCF(String vcf) throws CommandArgumentException {
     	String[] spl = vcf.split(":");
     	boolean exact = false;
@@ -501,7 +501,7 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
         }
     }    
     
-    @Option(desc="Flag variants within a VCF file (INFO, CSI indexed, add '!' for exact matches, add '@' for only using records passing filters)", name="vcf-flag", helpValue="NAME:FILENAME{:!@$n}", allowMultiple=true)
+    @Option(desc="Flag variants present in a second VCF file (INFO, CSI indexed, add '!' for exact matches, add '@' for only using records passing filters)", name="vcf-flag", helpValue="NAME:FILENAME{:!@$n}", allowMultiple=true)
     public void setVCFFlag(String vcf) throws CommandArgumentException {
         String[] spl = vcf.split(":");
         boolean exact = false;
@@ -521,7 +521,7 @@ public class VCFAnnotateCmd extends AbstractOutputCommand {
         }
     }
     
-    @Option(desc="Copy the VCF ID field from this source VCF file (exact matches only)", name="vcf-id", helpValue="FILENAME", allowMultiple=false)
+    @Option(desc="Copy the VCF ID field from a second VCF file (exact matches only)", name="vcf-id", helpValue="FILENAME", allowMultiple=false)
     public void setVCFID(String vcf) throws CommandArgumentException {
         try {
             chain.add(new VCFAnnotation("@ID", vcf, null));
