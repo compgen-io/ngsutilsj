@@ -75,10 +75,16 @@ public class VCFAnnotation extends AbstractBasicAnnotator {
 		// we have to store exact and position matches in separate
 		// caches.
 		if (exact) {
+			if (curMatchesExact == null) {
+				curMatchesExact = new HashMap<String, VCFRecordCache>();
+			}
 			if (!curMatchesExact.containsKey(filename)) {
 				curMatchesExact.put(filename, new VCFRecordCache());
 			}
 			return curMatchesExact.get(filename);
+		}
+		if (curMatchesAll == null) {
+			curMatchesAll = new HashMap<String, VCFRecordCache>();
 		}
 		if (!curMatchesAll.containsKey(filename)) {
 			curMatchesAll.put(filename, new VCFRecordCache());
