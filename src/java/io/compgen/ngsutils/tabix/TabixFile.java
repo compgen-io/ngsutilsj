@@ -6,9 +6,9 @@ import java.nio.channels.FileChannel;
 import java.util.Iterator;
 import java.util.zip.DataFormatException;
 
-import io.compgen.ngsutils.support.CachedIterator;
 import io.compgen.common.StringLineReader;
 import io.compgen.ngsutils.annotation.GenomeSpan;
+import io.compgen.ngsutils.support.CachedIterator;
 import io.compgen.ngsutils.support.LogUtils;
 import io.compgen.ngsutils.tabix.BGZFile.BGZBlock;
 

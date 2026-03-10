@@ -5,7 +5,9 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.zip.GZIPOutputStream;
 
@@ -36,7 +38,7 @@ public class BamToFastq extends AbstractCommand {
     private boolean split = false;
     private boolean compress = false;
     private boolean force = false;
-    private boolean comments = false;
+    private List<String> tags = null;
     
     private boolean onlyFirst = false;
     private boolean onlySecond = false;
@@ -123,10 +125,20 @@ public class BamToFastq extends AbstractCommand {
     public void setSilent(boolean silent) {
         this.silent = silent;
     }
-   
+    
     @Option(desc="Include comments tag from BAM file", name="comments")
     public void setComments(boolean val) {
-        this.comments = val;
+       	if (val) {
+       		setTag("CO");
+       	}
+    }
+    
+    @Option(desc="Include tag value from BAM file in FASTQ comment (do not include type: ex: ZA)", name="tag", allowMultiple=true)
+    public void setTag(String name) {
+    	if (this.tags == null) {
+    		this.tags = new ArrayList<String>();
+    	}
+        this.tags.add(name);
     }
 
     @Exec
@@ -185,7 +197,12 @@ public class BamToFastq extends AbstractCommand {
         bfq.setSilent(silent);
         bfq.setFirst(!onlySecond);
         bfq.setSecond(!onlyFirst);
-        bfq.setComments(comments);
+//        bfq.setComments(comments);
+        if (tags!=null) {
+        	for (String tag:tags) {
+        		bfq.addTag(tag);
+        	}
+        }
         bfq.setIncludeUnmapped(unmapped);
         bfq.setIncludeMapped(mapped);
         if (!readNameSorted) {

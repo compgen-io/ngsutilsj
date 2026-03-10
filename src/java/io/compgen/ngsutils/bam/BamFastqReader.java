@@ -7,9 +7,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.channels.FileChannel;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import htsjdk.samtools.SAMReadGroupRecord;
@@ -18,6 +20,7 @@ import htsjdk.samtools.SAMRecordIterator;
 import htsjdk.samtools.SamInputResource;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.TextTagCodec;
 import htsjdk.samtools.ValidationStringency;
 import io.compgen.common.RadixSet;
 import io.compgen.common.StringUtils;
@@ -35,7 +38,7 @@ public class BamFastqReader implements FastqReader {
 
     private SamReader reader = null;
     private String name = null;
-    private boolean comments = true;
+    private List<String> tags = null;
     
     private boolean first = true;
     private boolean second = true;
@@ -122,9 +125,12 @@ public class BamFastqReader implements FastqReader {
         }
     }
    
-    public void setComments(boolean val) {
+    public void addTag(String tag) {
         if (samIterator == null) {
-            this.comments = val;
+            if (this.tags == null) {
+            	this.tags = new ArrayList<String>();
+            }
+            this.tags.add(tag);
         }
     }
     
@@ -203,8 +209,21 @@ public class BamFastqReader implements FastqReader {
                     }
                       
                     String comment = null;
-                    if (comments) {
-                        comment = read.getStringAttribute("CO");
+                    if (tags != null) {
+                    	TextTagCodec tagCodec = new TextTagCodec();
+                    	StringBuilder sb = new StringBuilder();
+                    	boolean written = false;
+                    	for (String tag: tags) {
+                    		Object val = read.getAttribute(tag);
+                    		if (val != null) {
+                        		if (written) {
+                        			sb.append("\t");
+                        		}
+                    			sb.append(tagCodec.encode(tag, val));
+                    			written=true;
+                    		}
+                    	}
+                        comment = sb.toString();
                     }
   
                     FastqRead fq = new FastqRead(name, seq, qual, comment);
