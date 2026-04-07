@@ -613,9 +613,8 @@ public class VCFHeader {
 					inquote = true;
 				} else if (inquote && s.charAt(i) == '"') {
 					inquote = false;
-				} else if (s.charAt(i) == ',') {
+				} else if (!inquote && s.charAt(i) == ',') {
 					values.put(k, acc);
-					
 					k = null;
 					acc = "";		
 				} else if (inquote && s.charAt(i) == '\\' && i < s.length()-1) {
